@@ -9,7 +9,7 @@ To learn more, see https://edna.arslexis.io/help
 * `go run ./server/ -build-frontend`
 * `go build -o edna ./server/` (on Windows, `-o edna.exe`)
 
-This generates a stand-along `edna` binary that can run on Windows desktop, Mac desktop or Linux server.
+This generates a stand-alone `edna` binary that can run on Windows desktop, Mac desktop or Linux server.
 
 To run: `./edna -run-prod`
 
