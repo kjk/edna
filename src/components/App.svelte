@@ -69,6 +69,7 @@
   import {
     getAltChar,
     getClipboardText,
+    hasClipboardPermissions,
     isAltNumEvent,
     isDev,
     len,
@@ -1093,15 +1094,6 @@
     return contextMenu;
   }
 
-  // getting clipboard status is async, this allows us to make
-  // menuItemStatus not async
-  let mostRecentHasClipboardText = false;
-
-  async function updateMostRcentHasCliboardText() {
-    mostRecentHasClipboardText = (await getClipboardText()) != "";
-    console.log("updateMostRcentHasCliboardText:", mostRecentHasClipboardText);
-  }
-
   /**
    * @param {import("../Menu.svelte").MenuItemDef} mi
    * @returns {number}
@@ -1142,9 +1134,11 @@
       if (readOnly || lang.token !== "javascript") {
         return kMenuStatusDisabled;
       }
-      if (!mostRecentHasClipboardText) {
-        return kMenuStatusDisabled;
-      }
+      // it would be nice to check clipboard for empty text but that triggers clipboard
+      // permissions dialog https://github.com/kjk/edna/issues/81
+      // if (!mostRecentHasClipboardText) {
+      //   return kMenuStatusDisabled;
+      // }
     } else if (mid === kCmdSmartRun) {
       if (readOnly) {
         return kMenuStatusDisabled;
@@ -1356,13 +1350,11 @@
    * @param {{x: number, y: number}} pos
    */
   async function openContextMenu(ev, pos = null) {
-    console.log("openContextMenu:", ev);
     ev.preventDefault();
     ev.stopPropagation();
     ev.stopImmediatePropagation();
     contextMenuDef = buildMenuDef();
     contextMenuPos = pos || { x: ev.x, y: ev.y };
-    await updateMostRcentHasCliboardText();
     showingMenu = true;
   }
 

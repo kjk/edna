@@ -415,7 +415,31 @@ export function getKeyEventNumber(ev) {
 }
 
 export async function getClipboardText() {
-  return await navigator.clipboard.readText();
+  try {
+    return await navigator.clipboard.readText();
+  } catch (error) {
+    // console.error("Error reading clipboard text:", error);
+    return "";
+  }
+}
+
+export async function hasClipboardPermissions() {
+  try {
+    const permissionStatus = await navigator.permissions.query({
+      // @ts-ignore
+      name: "clipboard-read",
+    });
+    switch (permissionStatus.state) {
+      case "granted":
+        return true;
+      case "denied":
+        return false;
+      case "prompt":
+        return false;
+    }
+  } catch (error) {
+    return false;
+  }
 }
 
 /**
