@@ -1,6 +1,6 @@
 {
   "name": "edna",
-  "version": "1.18",
+  "version": "1.19",
   "main": "webapp/main.js",
   "description": "A scratch pad and note taking app for devs",
   "author": "Krzysztof Kowalczyk (https://blog.kowalczyk.info) based on Jonatan Heyman (https://heyman.info)",

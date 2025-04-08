@@ -22,7 +22,7 @@ Use:
 
 - `Mod + L` to assign a type for current block
 - `Mod + B` to navigate between blocks
-- `Mod + A` and `Delete` to delete block (select block test and delete)
+- `Mod + A` and `Delete` to delete block (select block text and delete)
 
 Use [keyboard shortcuts](#keyboard-shortcuts) to create blocks, move between blocks.
 

@@ -2,6 +2,15 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.19
+
+- fix https://github.com/kjk/edna/issues/81 : don't require clipboard permissions for showing context menu
+- hilight search phrase in note selectors
+- fix https://github.com/kjk/edna/issues/84 : add 'move block to another note'
+- show current day and time in status bar
+- `Esc` toggles between note and full page note selector
+- tweak mouse / keyboard note selection in selectors
+
 ## 1.18
 
 - fix https://github.com/kjk/edna/issues/78 : duplicate running of functions
