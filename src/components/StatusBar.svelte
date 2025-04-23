@@ -103,9 +103,13 @@
   </div>
 
   <div class="text-gray-400">&bull;</div>
-  <button onclick={toggleSpellCheck} class="clickable">
+  <button
+    onclick={toggleSpellCheck}
+    class="clickable"
+    title="Toggle spell check"
+  >
     <span
-      >{#if isSpellChecking}Disable{:else}Enable{/if} spell checking</span
+      >Spell check is {#if isSpellChecking}on{:else}off{/if}</span
     >
   </button>
   <div class="text-gray-400">&bull;</div>
@@ -154,9 +158,7 @@
   <button onclick={openSettings} class="clickable-icon ml-1" title="Settings">
     <IconSettings></IconSettings>
   </button>
-  <a href="/help" title="Documentation" target="_blank" class="clickable"
-    >Help</a
-  >
+  <a href="/help" title="Documentation" target="_blank" class="clickable">?</a>
   <a
     class="clickable-icon mt-[1px]"
     href="https://github.com/kjk/edna"
