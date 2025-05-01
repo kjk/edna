@@ -1,7 +1,7 @@
 {
   "name": "edna",
   "version": "1.19",
-  "main": "webapp/main.js",
+  "main": "src/main.js",
   "description": "A scratch pad and note taking app for devs",
   "author": "Krzysztof Kowalczyk (https://blog.kowalczyk.info) based on Jonatan Heyman (https://heyman.info)",
   "license": "Commons Clause MIT",
@@ -11,8 +11,8 @@
   "scripts": {
     "preview": "vite preview",
     "build_grammar": "lezer-generator src/editor/lang-heynote/heynote.grammar -o src/editor/lang-heynote/parser.js",
-    "dev": "vite webapp",
-    "build": "vite build webapp",
+    "dev": "vite src",
+    "build": "vite build src",
     "gen": "bun ./src/gen.mjs",
     "test": "playwright test",
     "test:ui": "playwright test --ui"

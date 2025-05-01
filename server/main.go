@@ -360,7 +360,7 @@ func testCompress() {
 		u.RunLoggedInDirMust(".", "npm", "build")
 	}
 
-	dir := filepath.Join("webapp", "dist", "assets")
+	dir := filepath.Join("src", "dist", "assets")
 	files, err := os.ReadDir(dir)
 	panicIfErr(err)
 	var e fs.DirEntry

@@ -162,8 +162,8 @@ func rebuildFrontend() {
 	} else {
 		u.RunLoggedInDirMust(".", "npm", "run", "build")
 	}
-	// copy files from webapp\dist => server\dist
-	copyFilesRecurMust(filepath.Join("webapp", "dist"), frontEndBuildDir)
+	// copy files from src\dist => server\dist
+	copyFilesRecurMust(filepath.Join("src", "dist"), frontEndBuildDir)
 }
 
 // get date and hash of current git checkin
