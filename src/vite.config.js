@@ -19,8 +19,21 @@ export default defineConfig({
         return [];
       },
     },
+    minify: "terser",
+    terserOptions: {
+      mangle: {
+        keep_fnames: true,
+        keep_classnames: true,
+      },
+      compress: {
+        keep_fnames: true,
+        keep_classnames: true,
+      },
+    },
     rollupOptions: {
       output: {
+        // Preserve function names in the output
+        minifyInternalExports: false,
         manualChunks: {
           prettier: [
             "prettier",
