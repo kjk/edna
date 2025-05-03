@@ -52,7 +52,7 @@ import {
   removeNoteFromMetadata,
   renameNoteInMetadata,
 } from "./metadata";
-import { logNoteOp } from "./log";
+import { tick } from "svelte";
 
 // is set if we store notes on disk, null if in localStorage
 /** @type {FileSystemDirectoryHandle | null} */
@@ -959,6 +959,25 @@ export function canDeleteNote(name) {
   return !isSystemNoteName(name);
 }
 
+/* I've seen loadNoteNames() fail. I assume that's because of doing directory read
+right after deleting a file, so retry it after a tick */
+async function loadNoteNamesMoreRobust() {
+  try {
+    await loadNoteNames();
+  } catch (e) {
+    console.error("loadNoteNames", e);
+    tick().then(() => {
+      loadNoteNames()
+        .then(() => {
+          console.log("loadNoteNames retry succeeded");
+        })
+        .catch((e) => {
+          console.error("loadNoteNames", e);
+        });
+    });
+  }
+}
+
 /**
  * @param {string} name
  */
@@ -974,7 +993,7 @@ export async function deleteNote(name) {
   incNoteDeleteCount();
   removeNoteFromHistory(name);
   await removeNoteFromMetadata(name);
-  await loadNoteNames();
+  await loadNoteNamesMoreRobust();
 }
 
 /**

@@ -1,14 +1,4 @@
-import {
-  blobFromUint8Array,
-  fsFileExists,
-  fsReadBinaryFile,
-  fsWriteBlob,
-  readDir,
-} from "./fileutil";
-import {
-  clearModalMessage,
-  showModalMessageHTML,
-} from "./components/ModalMessage.svelte";
+import { blobFromUint8Array, fsReadBinaryFile, readDir } from "./fileutil";
 import {
   forEachNoteFileFS,
   getStorageFS,
@@ -18,7 +8,7 @@ import {
 } from "./notes";
 import { kMetadataName, loadNotesMetadata } from "./metadata";
 import { formatDateYYYYMMDD, len, throwIf } from "./util";
-import { getSettings, kSettingsPath, loadSettings } from "./settings";
+import { kSettingsPath, loadSettings } from "./settings";
 
 /**
  * @param {any} libZip

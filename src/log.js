@@ -1,4 +1,4 @@
-import { getLatestNoteNames, getNotesCount, loadNoteNames } from "./notes";
+import { getLatestNoteNames, getNotesCount } from "./notes";
 import { getSessionDurationInMs, getStats } from "./state";
 import { len, throwIf } from "./util";
 
