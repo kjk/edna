@@ -237,8 +237,9 @@
   });
 
   $effect(() => {
-    console.log("App.svelte did mount");
-    window.addEventListener("keydown", onKeyDown);
+    // console.log("App.svelte did mount");
+    // capture: true so that we get those before codemirror can process it
+    window.addEventListener("keydown", onKeyDown, { capture: true });
 
     window.addEventListener("beforeunload", async (ev) => {
       // I would prevent to just save the content but
@@ -293,14 +294,10 @@
    */
   function onKeyDown(ev) {
     if (ev.key === "Escape") {
-      // console.log(ev);
       if (isShowingDialog) {
         return;
       }
-      // TODO: searchPanelOpen() is always false because seemingly Esc is processed
-      // there (and closes the panel) before it gets here. Would have to patch search module
-      // or don't use search keymap or modify search keymap to handle Esc and handle closing
-      // of search panel here
+      // don't process if codemirror is showing search panel
       let view = getEditorView();
       if (view && searchPanelOpen(view.state)) {
         return;
