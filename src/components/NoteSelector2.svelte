@@ -13,7 +13,7 @@
     len,
     makeHilightRegExp,
   } from "../util";
-  import { focus } from "../actions";
+  import { focus, smartfocus, trapfocus } from "../actions";
   import ListBox from "./ListBox.svelte";
   import IconStar from "./IconStar.svelte";
   import { appState } from "../state.svelte";
@@ -142,7 +142,7 @@
   /**
    * @param {KeyboardEvent} ev
    */
-  function onKeydown(ev) {
+  function onkeydown(ev) {
     // console.log("onKeyDown:", event);
     let altN = isAltNumEvent(ev);
     if (altN !== null) {
@@ -239,144 +239,148 @@
   let listbox;
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<form
-  onkeydown={onKeydown}
-  tabindex="-1"
-  class="fixed inset-0 overflow-hidden flex flex-col z-20 w-full h-full p-2 text-sm bg-white dark:bg-gray-900 dark:text-gray-300"
->
-  <div class="">
-    <input
-      type="text"
-      use:focus
-      bind:this={input}
-      bind:value={filter}
-      class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
-    />
-    <div class="absolute right-[1rem] top-[0.75rem] italic text-gray-400">
-      {itemsCountMsg}
-    </div>
-  </div>
-
-  <ListBox
-    bind:this={listbox}
-    items={itemsFiltered}
-    {selectionChanged}
-    onclick={(item) => emitOpenNote(item)}
-  >
-    {#snippet renderItem(item)}
-      {@const hili = hilightText(item.name, hiliRegExp)}
-      <button
-        class="ml-[-6px]"
-        onclick={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          toggleStarred(item);
-        }}
-        ><IconStar fill={item.isStarred ? "yellow" : "none"}></IconStar></button
-      >
-      <div class="ml-2 truncate {sysNoteCls(item) ? 'italic' : ''}">
-        {@html hili}
-      </div>
-      <div class="grow"></div>
-      <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap">
-        {noteShortcut(item)}
-      </div>
-    {/snippet}
-  </ListBox>
-
-  <div class="grow"></div>
-
-  {#if canOpenSelected || canDeleteSelected || filter.length > 0}
-    <!-- <hr class="mt-2 border-gray-300 dark:border-gray-600" /> -->
-  {/if}
-
-  {#if appState.noteSelectorInfoCollapsed}
-    <div
-      class="flex justify-between text-gray-700 text-xs max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
+<div class="fixed inset-0 overflow-hidden">
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="z-10" {onkeydown} tabindex="-1" use:smartfocus use:trapfocus>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <form
+      class="absolute flex flex-col w-full h-full p-2 text-sm bg-white dark:bg-gray-900 dark:text-gray-300"
     >
-      <div></div>
-      <button
-        onclick={(ev) => {
-          ev.preventDefault();
-          toggleInfoPanelCollapsed();
-        }}
-        title="show info panel"
-        class="underline underline-offset-2 cursor-pointer"
-      >
-        show</button
-      >
-    </div>
-  {:else}
-    <div class="selector-info">
-      <div class="flex flex-col items-right absolute bottom-3 right-4">
-        <button
-          onclick={(ev) => {
-            ev.preventDefault();
-            toggleInfoPanelCollapsed();
-          }}
-          title="hide info panel"
-          class="underline underline-offset-2 cursor-pointer"
-        >
-          hide</button
-        >
+      <div class="">
+        <input
+          type="text"
+          use:focus
+          bind:this={input}
+          bind:value={filter}
+          class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
+        />
+        <div class="absolute right-[1rem] top-[0.75rem] italic text-gray-400">
+          {itemsCountMsg}
+        </div>
       </div>
 
-      {#if canOpenSelected}
-        <div class="kbd">Enter</div>
-        <div class="truncate">
-          open note <span class="font-bold">
-            {selectedName}
-          </span>
-        </div>
+      <ListBox
+        bind:this={listbox}
+        items={itemsFiltered}
+        {selectionChanged}
+        onclick={(item) => emitOpenNote(item)}
+      >
+        {#snippet renderItem(item)}
+          {@const hili = hilightText(item.name, hiliRegExp)}
+          <button
+            class="ml-[-6px]"
+            onclick={(ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              toggleStarred(item);
+            }}
+            ><IconStar fill={item.isStarred ? "yellow" : "none"}
+            ></IconStar></button
+          >
+          <div class="ml-2 truncate {sysNoteCls(item) ? 'italic' : ''}">
+            {@html hili}
+          </div>
+          <div class="grow"></div>
+          <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap">
+            {noteShortcut(item)}
+          </div>
+        {/snippet}
+      </ListBox>
+
+      <div class="grow"></div>
+
+      {#if canOpenSelected || canDeleteSelected || filter.length > 0}
+        <!-- <hr class="mt-2 border-gray-300 dark:border-gray-600" /> -->
       {/if}
 
-      {#if canCreateWithEnter}
-        <div class="kbd">Enter</div>
-      {/if}
-      {#if canCreate && !canCreateWithEnter}
-        <div class="kbd">Ctrl + Enter</div>
-      {/if}
-      {#if canCreate}
-        <div class="truncate">
-          create note <span class="font-bold">
-            {filter}
-          </span>
-        </div>
-      {/if}
-
-      {#if showDelete && canDeleteSelected}
-        <div class="kbd">Ctrl + Delete</div>
-        <div class="red truncate">
-          delete note <span class="font-bold">
-            {selectedName}
-          </span>
-        </div>
-      {/if}
-
-      {#if showDelete && !canDeleteSelected}
-        <div class="kbd">Ctrl + Delete</div>
-        <div class="red truncate">
-          can't delete <span class="font-bold">{selectedName}</span>
-        </div>
-      {/if}
-
-      {#if canOpenSelected}
-        <div class="kbd">{altChar} + 1...9</div>
-        <div>
-          assign quick access shortcut to <span class="font-bold"
-            >{selectedName}</span
+      {#if appState.noteSelectorInfoCollapsed}
+        <div
+          class="flex justify-between text-gray-700 text-xs max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
+        >
+          <div></div>
+          <button
+            onclick={(ev) => {
+              ev.preventDefault();
+              toggleInfoPanelCollapsed();
+            }}
+            title="show info panel"
+            class="underline underline-offset-2 cursor-pointer"
+          >
+            show</button
           >
         </div>
-      {/if}
+      {:else}
+        <div class="selector-info">
+          <div class="flex flex-col items-right absolute bottom-3 right-4">
+            <button
+              onclick={(ev) => {
+                ev.preventDefault();
+                toggleInfoPanelCollapsed();
+              }}
+              title="hide info panel"
+              class="underline underline-offset-2 cursor-pointer"
+            >
+              hide</button
+            >
+          </div>
 
-      {#if canOpenSelected}
-        <div class="kbd">{altChar} + S</div>
-        <div>toggle favorite</div>
-      {/if}
+          {#if canOpenSelected}
+            <div class="kbd">Enter</div>
+            <div class="truncate">
+              open note <span class="font-bold">
+                {selectedName}
+              </span>
+            </div>
+          {/if}
 
-      <div class="kbd">Esc</div>
-      <div>back to note</div>
-    </div>
-  {/if}
-</form>
+          {#if canCreateWithEnter}
+            <div class="kbd">Enter</div>
+          {/if}
+          {#if canCreate && !canCreateWithEnter}
+            <div class="kbd">Ctrl + Enter</div>
+          {/if}
+          {#if canCreate}
+            <div class="truncate">
+              create note <span class="font-bold">
+                {filter}
+              </span>
+            </div>
+          {/if}
+
+          {#if showDelete && canDeleteSelected}
+            <div class="kbd">Ctrl + Delete</div>
+            <div class="red truncate">
+              delete note <span class="font-bold">
+                {selectedName}
+              </span>
+            </div>
+          {/if}
+
+          {#if showDelete && !canDeleteSelected}
+            <div class="kbd">Ctrl + Delete</div>
+            <div class="red truncate">
+              can't delete <span class="font-bold">{selectedName}</span>
+            </div>
+          {/if}
+
+          {#if canOpenSelected}
+            <div class="kbd">{altChar} + 1...9</div>
+            <div>
+              assign quick access shortcut to <span class="font-bold"
+                >{selectedName}</span
+              >
+            </div>
+          {/if}
+
+          {#if canOpenSelected}
+            <div class="kbd">{altChar} + S</div>
+            <div>toggle favorite</div>
+          {/if}
+
+          <div class="kbd">Esc</div>
+          <div>back to note</div>
+        </div>
+      {/if}
+    </form>
+  </div>
+</div>

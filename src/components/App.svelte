@@ -130,6 +130,7 @@
   import { toFileName } from "../filenamify";
   import { tick } from "svelte";
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
+  import { searchPanelOpen } from "@codemirror/search";
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
@@ -292,7 +293,16 @@
    */
   function onKeyDown(ev) {
     if (ev.key === "Escape") {
+      // console.log(ev);
       if (isShowingDialog) {
+        return;
+      }
+      // TODO: searchPanelOpen() is always false because seemingly Esc is processed
+      // there (and closes the panel) before it gets here. Would have to patch search module
+      // or don't use search keymap or modify search keymap to handle Esc and handle closing
+      // of search panel here
+      let view = getEditorView();
+      if (view && searchPanelOpen(view.state)) {
         return;
       }
       ev.preventDefault();

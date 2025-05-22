@@ -70,36 +70,37 @@ you take this package's source (which is just a bunch of imports
 and an array literal), copy it into your own code, and adjust it
 as desired.
 */
-const customSetup = /*@__PURE__*/(() => [
-    //lineNumbers(),
-    highlightActiveLineGutter(),
-    highlightSpecialChars(),
-    history(),
-    //foldGutter(),
-    drawSelection(),
-    dropCursor(),
-    EditorState.allowMultipleSelections.of(true),
-    EditorView.clickAddsSelectionRange.of(e => e.altKey),
-    indentOnInput(),
-    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-    bracketMatching(),
-    //closeBrackets(),
-    //autocompletion(),
-    rectangularSelection(),
-    crosshairCursor(),
-    highlightActiveLine(),
-    highlightSelectionMatches(),
-    EditorView.lineWrapping,
-    scrollPastEnd(),
-    keymap.of([
-        ...closeBracketsKeymap,
-        ...defaultKeymap,
-        ...searchKeymap,
-        ...historyKeymap,
-        ...foldKeymap,
-        //...completionKeymap,
-        //...lintKeymap
-    ])
+const customSetup = /*@__PURE__*/ (() => [
+  //lineNumbers(),
+  highlightActiveLineGutter(),
+  highlightSpecialChars(),
+  history(),
+  //foldGutter(),
+  drawSelection(),
+  dropCursor(),
+  EditorState.allowMultipleSelections.of(true),
+  EditorView.clickAddsSelectionRange.of((e) => e.altKey),
+  indentOnInput(),
+  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  bracketMatching(),
+  //closeBrackets(),
+  //autocompletion(),
+  rectangularSelection(),
+  crosshairCursor(),
+  highlightActiveLine(),
+  highlightSelectionMatches(),
+  EditorView.lineWrapping,
+  scrollPastEnd(),
+  // @ts-ignore
+  keymap.of([
+    ...closeBracketsKeymap,
+    ...defaultKeymap,
+    ...searchKeymap,
+    ...historyKeymap,
+    ...foldKeymap,
+    //...completionKeymap,
+    //...lintKeymap
+  ]),
 ])();
 /**
 A minimal set of extensions to create a functional editor. Only
@@ -109,15 +110,13 @@ highlighting](https://codemirror.net/6/docs/ref/#view.highlightSpecialChars), [c
 drawing](https://codemirror.net/6/docs/ref/#view.drawSelection), and [default highlight
 style](https://codemirror.net/6/docs/ref/#language.defaultHighlightStyle).
 */
-const minimalSetup = /*@__PURE__*/(() => [
-    highlightSpecialChars(),
-    history(),
-    drawSelection(),
-    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-    keymap.of([
-        ...defaultKeymap,
-        ...historyKeymap,
-    ])
+const minimalSetup = /*@__PURE__*/ (() => [
+  highlightSpecialChars(),
+  history(),
+  drawSelection(),
+  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  // @ts-ignore
+  keymap.of([...defaultKeymap, ...historyKeymap]),
 ])();
 
 export { customSetup, minimalSetup };
