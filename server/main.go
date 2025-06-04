@@ -174,9 +174,9 @@ func main() {
 	if flgClean {
 		emptyFrontEndBuildDir()
 		must(os.RemoveAll("node_modules"))
-		os.Remove("bun.lockb")
-		os.Remove("package-lock.json")
-		os.Remove("yarn.lock")
+		for _, f := range []string{"bun.lockb", "bun.lock", "package-lock.json", "yarn.lock"} {
+			os.Remove(f)
+		}
 		return
 	}
 
