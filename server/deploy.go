@@ -137,7 +137,6 @@ func emptyFrontEndBuildDir() {
 
 func reinstallPackages() {
 	must(os.RemoveAll("node_modules"))
-	os.Remove("bun.lockb")
 	os.Remove("yarn.lock")
 	os.Remove("package-lock.json")
 	if hasBun() {

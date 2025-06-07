@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"embed"
 	"fmt"
 	"io"
@@ -21,9 +20,6 @@ import (
 	hutil "github.com/kjk/common/httputil"
 	"github.com/kjk/common/logtastic"
 	"github.com/kjk/common/u"
-
-	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 )
 
 var (
@@ -32,113 +28,6 @@ var (
 	//go:embed secrets.env
 	secretsEnv []byte
 )
-
-var (
-	// random string for oauth2 API calls to protect against CSRF
-	oauthSecretPrefix = "231411243-"
-	gitHubEndpoint    = oauth2.Endpoint{
-		AuthURL:  "https://github.com/login/oauth/authorize",
-		TokenURL: "https://github.com/login/oauth/access_token",
-	}
-	githubConfig = oauth2.Config{
-		ClientID:     "",
-		ClientSecret: "",
-		// select level of access you want https://developer.github.com/v3/oauth/#scopes
-		Scopes:   []string{"user:email", "read:user", "gist"},
-		Endpoint: gitHubEndpoint,
-	}
-)
-
-func getGithubConfig(r *http.Request) *oauth2.Config {
-	logf("getGithubConfig: r.Host: '%s'\n", r.Host)
-	host := strings.ToLower(r.Host)
-	if githubConfig.ClientID == "" {
-		// we need to register a GitHub app for each callback domain
-		if strings.Contains(host, "localhost") {
-			// https://github.com/settings/applications/1159176 : localhost
-			githubConfig.ClientID = "77ba1cbe7c0eff7c462b"
-			// githubConfig.ClientSecret = secretGitHubLocal
-			logf("getGithubConfig: using localhost config\n")
-		} else if strings.Contains(host, "edna.arslexis.io") {
-			// https://github.com/settings/applications/2495749 : tools.arslexis.io
-			githubConfig.ClientID = "ff6bcecdb5df037a208d"
-			// githubConfig.ClientSecret = secretGitHubToolsArslexis
-			logf("getGithubConfig: using edna.arslexis.io config\n")
-		} else {
-			panicIf(true, "unsupported host: %s", host)
-		}
-	}
-	return &githubConfig
-}
-
-func logLogin(ctx context.Context, r *http.Request, token *oauth2.Token) {
-	conf := getGithubConfig(r)
-	oauthClient := conf.Client(ctx, token)
-	client := github.NewClient(oauthClient)
-	user, _, err := client.Users.Get(ctx, "")
-	if err != nil {
-		logf("client.Users.Get() faled with '%s'\n", err)
-		return
-	}
-	logf("logged in as GitHub user: %s\n", *user.Login)
-	m := map[string]string{}
-	if user.Login != nil {
-		m["user"] = *user.Login
-	}
-	if user.Email != nil {
-		m["email"] = *user.Email
-	}
-	if user.Name != nil {
-		m["name"] = *user.Name
-	}
-	// pirschSendEvent(r, "github_login", 0, m)
-}
-
-// /auth/ghlogin
-func handleLoginGitHub(w http.ResponseWriter, r *http.Request) {
-	conf := getGithubConfig(r)
-	if conf.ClientID == "" {
-		serveInternalError(w, e("missing github client id"))
-		return
-	}
-	if conf.ClientSecret == "" {
-		serveInternalError(w, e("missing github client secret"))
-		return
-	}
-	uri := conf.AuthCodeURL(oauthSecretPrefix, oauth2.AccessTypeOnline)
-	logf("handleLoginGitHub: redirect to '%s'\n", uri)
-	tempRedirect(w, r, uri)
-}
-
-// /auth/githubcb
-func handleGithubCallback(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	logf("handleGithubCallback: '%s'\n", r.URL)
-	state := r.FormValue("state")
-	if !strings.HasPrefix(state, oauthSecretPrefix) {
-		logErrorf("invalid oauth state, expected '%s*', got '%s'\n", oauthSecretPrefix, state)
-		tempRedirect(w, r, "/")
-		return
-	}
-
-	code := r.FormValue("code")
-	conf := getGithubConfig(r)
-	token, err := conf.Exchange(context.Background(), code)
-	if err != nil {
-		logErrorf("oauthGoogleConf.Exchange() failed with '%s'\n", err)
-		tempRedirect(w, r, "/")
-		return
-	}
-	logf("token: %#v", token)
-	ac := token.AccessToken
-	uri := "/github_success?access_token=" + ac
-	logf("token: %#v\nuri: %s\n", token, uri)
-	tempRedirect(w, r, uri)
-
-	// can't put in the background because that cancels ctx
-	logLogin(ctx, r, token)
-}
 
 var (
 	cachedCurrencyRatesJSON []byte
