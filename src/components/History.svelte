@@ -1,5 +1,5 @@
 <script>
-  import { getHistory } from "../history";
+  import { getHistory } from "../state.svelte";
   import { getKeyEventNumber, len } from "../util";
   import { focus } from "../actions";
   import ListBox from "./ListBox.svelte";
@@ -57,8 +57,8 @@
     listbox.onkeydown(ev, true);
   }
 
-  function selectItem(token) {
-    selectHistory(token);
+  function selectItem(noteName) {
+    selectHistory(noteName);
   }
   let listbox;
 </script>

@@ -1910,7 +1910,7 @@
   class="grid w-screen max-h-screen h-screen fixed grid-rows-[1fr_auto]"
   {oncontextmenu}
 >
-  <TopNav {noteName} shortcut={noteShortcut} />
+  <TopNav {noteName} shortcut={noteShortcut} selectHistory={onSelectHistory} />
   <Editor
     cursorChange={onCursorChange}
     debugSyntaxTree={false}

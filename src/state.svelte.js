@@ -10,3 +10,13 @@ class AppState {
 }
 
 export const appState = new AppState();
+
+/** @type {string[]} */
+export const openedHistory = $state([]);
+
+/**
+ * @returns {string[]}
+ */
+export function getHistory() {
+  return openedHistory;
+}

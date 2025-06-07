@@ -1,11 +1,8 @@
 // history of opened files
 
-import { len } from "./util";
-
 const kMaxHistory = 16;
 
-/** @type {string[]} */
-let openedHistory = [];
+import { openedHistory } from "./state.svelte";
 
 /**
  * @param {string} name
@@ -17,13 +14,6 @@ export function historyPush(name) {
   if (openedHistory.length > kMaxHistory) {
     openedHistory.pop();
   }
-}
-
-/**
- * @returns {string[]}
- */
-export function getHistory() {
-  return openedHistory;
 }
 
 /**

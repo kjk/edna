@@ -40,7 +40,11 @@ import {
   incNoteDeleteCount,
   incNoteSaveCount,
 } from "./state";
-import { historyPush, removeNoteFromHistory, renameInHistory } from "./history";
+import {
+  historyPush,
+  removeNoteFromHistory,
+  renameInHistory,
+} from "./history.js";
 
 import { KV } from "./dbutil";
 import { dirtyState } from "./state.svelte";
