@@ -196,7 +196,8 @@
           ev.preventDefault();
           ev.stopPropagation();
         }}
-        ><IconStar fill={item.isStarred ? "yellow" : "none"}></IconStar></button
+        ><IconStar fill={item.isStarred ? "var(--color-yellow-300)" : "none"}
+        ></IconStar></button
       >
       <div class="truncate ml-2">
         {item.name}

@@ -256,7 +256,8 @@
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
       {#if item.isStarred}
-        <IconStar class="inline-block mt-[-3px]" fill="yellow"></IconStar>
+        <IconStar class="inline-block mt-[-3px]" fill="var(--color-yellow-300)"
+        ></IconStar>
       {/if}
       {@html hili}
       <span class="ml-0.5 text-xs text-gray-400 whitespace-nowrap"

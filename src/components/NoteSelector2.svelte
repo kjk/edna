@@ -274,7 +274,8 @@
               ev.stopPropagation();
               toggleStarred(item);
             }}
-            ><IconStar fill={item.isStarred ? "yellow" : "none"}
+            ><IconStar
+              fill={item.isStarred ? "var(--color-yellow-300)" : "none"}
             ></IconStar></button
           >
           <div class="ml-2 truncate {sysNoteCls(item) ? 'italic' : ''}">
