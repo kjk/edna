@@ -4,25 +4,24 @@
   import { openCommandPalette, openNoteSelector } from "../globals.js";
   import IconCommandPalette from "./IconCommandPalette.svelte";
   import { fixUpShortcuts } from "../key-helper.js";
-  import { getHistory } from "../state.svelte.js";
   import { onMount } from "svelte";
 
   /** @type {{ 
     noteName: string,
     shortcut: string,
-    selectHistory: (name: string) => void,
+    selectNote: (name: string) => void,
   }} */
-  let { noteName = "", shortcut = "", selectHistory } = $props();
+  let { noteName = "", shortcut = "", selectNote } = $props();
 
   /**
    * @typedef {Object} HistoryItem
    * @property {string} name
-   * @property {string} key
    * @property {string} nameLC
+   * @property {string} key
    * @property {HTMLElement} ref
    */
 
-  let history = getHistory();
+  let history = appState.history;
 
   /**
    * @returns {HistoryItem[]}
@@ -52,19 +51,19 @@
   onMount(() => {
     let dx = getScrollbarWidth();
     style = `right: ${dx}px`;
+    console.log("style: ", style);
   });
 
   function selectItem(noteName) {
-    selectHistory(noteName);
+    selectNote(noteName);
   }
 </script>
 
 {#if !appState.isDirtyFast}
-  <div
-    class="fixed top-0 text-sm flex flex-col z-10 px-1 mt-[-1px] select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 dark:bg-gray-700"
-    {style}
-  >
-    <div class="flex items-center bg-white border-b border-l rounded-bl-lg">
+  <div class="fixed top-0 flex flex-col z-10 mt-[-1px]" {style}>
+    <div
+      class="text-sm flex px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 dark:bg-gray-700 items-center bg-white border-b border-l rounded-bl-lg"
+    >
       <button
         class="cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500"
         onclick={openNoteSelector}

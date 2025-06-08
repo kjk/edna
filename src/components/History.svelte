@@ -1,5 +1,5 @@
 <script>
-  import { getHistory } from "../state.svelte";
+  import { appState } from "../state.svelte";
   import { getKeyEventNumber, len } from "../util";
   import { focus } from "../actions";
   import ListBox from "./ListBox.svelte";
@@ -17,7 +17,7 @@
    * @property {HTMLElement} ref
    */
 
-  let history = getHistory();
+  let history = appState.history;
 
   /**
    * @returns {HistoryItem[]}
