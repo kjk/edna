@@ -1,7 +1,11 @@
 <script>
   import { getScrollbarWidth, len } from "../util.js";
   import { appState } from "../state.svelte.js";
-  import { openCommandPalette, openNoteSelector } from "../globals.js";
+  import {
+    openCommandPalette,
+    openContextMenu,
+    openNoteSelector,
+  } from "../globals.js";
   import IconCommandPalette from "./IconCommandPalette.svelte";
   import { fixUpShortcuts } from "../key-helper.js";
   import { onMount } from "svelte";
@@ -59,14 +63,14 @@
     <div
       class="text-sm flex px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 dark:bg-gray-700 items-center bg-white border-b border-l rounded-bl-lg self-end"
     >
-      <!-- <button
-        onclick={openCommandPalette}
+      <button
+        onclick={openContextMenu}
         class="clickable-icon mt-[3px]"
         title="open menu"
       >
         <IconMenu></IconMenu>
       </button>
-      <div class="text-gray-400 px-1">&bull;</div> -->
+      <div class="text-gray-400 px-1">&bull;</div>
 
       <button
         class="flex cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500 items-center"

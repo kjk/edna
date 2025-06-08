@@ -470,15 +470,17 @@
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
       <button
+        tabindex="-1"
         class="ml-[-6px] cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
           ev.preventDefault();
           ev.stopPropagation();
           toggleStarred(item);
         }}
-        ><IconStar fill={item.isStarred ? "var(--color-yellow-300)" : "none"}
-        ></IconStar></button
       >
+        <IconStar fill={item.isStarred ? "var(--color-yellow-300)" : "none"}
+        ></IconStar>
+      </button>
       <div class="ml-2 truncate {sysNoteCls(item) ? 'italic' : ''}">
         {@html hili}
       </div>

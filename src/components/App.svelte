@@ -203,6 +203,7 @@
     openCreateNewNote: openCreateNewNote,
     openNoteSelector: openNoteSelector,
     openCommandPalette: openCommandPalette,
+    openContextMenu: openContextMenu,
     openHistorySelector: openHistorySelector,
     createScratchNote: createScratchNote,
     openBlockSelector: openBlockSelector,

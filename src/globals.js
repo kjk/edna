@@ -4,6 +4,7 @@
   openCreateNewNote: () => void,
   openNoteSelector: () => void,
   openCommandPalette: () => void,
+  openContextMenu: (MouseEvent) => void,
   openHistorySelector: () => void,
   createScratchNote: () => void,
   openBlockSelector: () => void,
@@ -56,6 +57,10 @@ export function openNoteSelector() {
 
 export function openCommandPalette() {
   globalFunctions.openCommandPalette();
+}
+
+export function openContextMenu(ev) {
+  globalFunctions.openContextMenu(ev);
 }
 
 export function openHistorySelector() {
