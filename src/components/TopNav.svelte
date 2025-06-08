@@ -87,13 +87,17 @@
       >
     </div>
     {#if showQuickNoteAccess && len(quickAccessNotes) > 0}
-      <div class="flex flex-col items-end pl-[4px] pr-[2px] text-xs mt-[-3px]">
+      <div
+        class="flex flex-col items-end pl-[4px] pr-[2px] text-xs text-gray-500 bg-white/10"
+      >
         {#each quickAccessNotes as name (name)}
           <button
             onclick={() => selectItem(name)}
-            class="truncate max-w-[32ch] text-right cursor-pointer pl-[6px] pr-[2px] py-[1px] hover:font-bold dark:hover:bg-gray-500 bg-white"
-            >{name}</button
+            class="truncate max-w-[32ch] text-right cursor-pointer pl-[6px] pr-[2px] py-[1px] hover:text-gray-900 dark:hover:bg-gray-500 hover:bg-white flex items-center"
+            title="open note '{name}'"
           >
+            {name}
+          </button>
         {/each}
       </div>
     {/if}
