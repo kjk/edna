@@ -10,7 +10,7 @@
   } from "../notes.js";
   import { rememberEditor } from "../state.js";
   import { getSettings, onSettingsChange } from "../settings.js";
-  import { dirtyState } from "../state.svelte.js";
+  import { appState } from "../state.svelte.js";
   import debounce from "debounce";
   import { throwIf } from "../util.js";
   import { EditorView } from "@codemirror/view";
@@ -93,7 +93,7 @@
       if (isCtrlS) {
         e.preventDefault();
         // TODO: track isDirty state here?
-        if (dirtyState.isDirty) {
+        if (appState.isDirty) {
           saveForce();
         }
       }

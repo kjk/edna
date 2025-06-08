@@ -1,6 +1,6 @@
 <script>
   import { getScrollbarWidth, len } from "../util.js";
-  import { dirtyState } from "../state.svelte.js";
+  import { appState } from "../state.svelte.js";
   import { openCommandPalette, openNoteSelector } from "../globals.js";
   import IconCommandPalette from "./IconCommandPalette.svelte";
   import { fixUpShortcuts } from "../key-helper.js";
@@ -59,7 +59,7 @@
   }
 </script>
 
-{#if !dirtyState.isDirtyFast}
+{#if !appState.isDirtyFast}
   <div
     class="fixed top-0 text-sm flex flex-col z-10 px-1 mt-[-1px] select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 dark:bg-gray-700"
     {style}

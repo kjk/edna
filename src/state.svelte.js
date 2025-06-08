@@ -1,14 +1,9 @@
-class DocDirtyState {
-  isDirty = $state(false);
-  isDirtyFast = $state(false);
-}
-
-export const dirtyState = new DocDirtyState();
-
 class AppState {
   /** @type {string[]} */
   noteNames = $state([]);
   noteSelectorInfoCollapsed = $state(false);
+  isDirty = $state(false);
+  isDirtyFast = $state(false);
 }
 
 export const appState = new AppState();

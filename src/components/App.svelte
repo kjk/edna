@@ -98,7 +98,6 @@
   import CommandPalette2 from "./CommandPalette2.svelte";
   import Find from "./Find.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
-  import { dirtyState } from "../state.svelte";
   import {
     formatBlockContent,
     insertAfterActiveBlock,
@@ -131,6 +130,7 @@
   import { tick } from "svelte";
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import { searchPanelOpen } from "@codemirror/search";
+  import { appState } from "../state.svelte";
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
@@ -251,7 +251,7 @@
         }
       */
 
-      if (dirtyState.isDirty) {
+      if (appState.isDirty) {
         // show a dialog that the content might be lost
         ev.preventDefault();
         ev.returnValue = true;

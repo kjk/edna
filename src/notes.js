@@ -47,7 +47,7 @@ import {
 } from "./history.js";
 
 import { KV } from "./dbutil";
-import { appState, dirtyState } from "./state.svelte";
+import { appState } from "./state.svelte";
 import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import {
   kMetadataName,
@@ -635,7 +635,7 @@ export async function saveCurrentNote(content) {
     }
     console.log("saveCurrentNote: ok:", ok);
     await fsFileHandleWriteText(fh, content);
-    dirtyState.isDirty = false;
+    appState.isDirty = false;
     incNoteSaveCount();
     return;
   }
@@ -647,7 +647,7 @@ export async function saveCurrentNote(content) {
   } else {
     await writeMaybeEncryptedFS(dh, name, content);
   }
-  dirtyState.isDirty = false;
+  appState.isDirty = false;
   incNoteSaveCount();
 }
 
