@@ -349,10 +349,10 @@
         ev.preventDefault();
         toggleInfoPanelCollapsed();
       }}
-      title="show info panel"
+      title="show help"
       class="underline underline-offset-2 cursor-pointer"
     >
-      show</button
+      show help</button
     >
   </div>
 {/snippet}
@@ -366,17 +366,18 @@
           switchToWideNoteSelector();
         }}
         title="switch to wide note selector"
-        class="underline underline-offset-2 mb-1 cursor-pointer">wide</button
+        class="underline underline-offset-2 mb-1 cursor-pointer text-right"
+        >wide</button
       >
       <button
         onclick={(ev) => {
           ev.preventDefault();
           toggleInfoPanelCollapsed();
         }}
-        title="hide info panel"
+        title="hide help"
         class="underline underline-offset-2 cursor-pointer"
       >
-        hide</button
+        hide help</button
       >
     </div>
     {#if canOpenSelected}

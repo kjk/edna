@@ -304,10 +304,10 @@
               ev.preventDefault();
               toggleInfoPanelCollapsed();
             }}
-            title="show info panel"
+            title="show help"
             class="underline underline-offset-2 cursor-pointer"
           >
-            show</button
+            show help</button
           >
         </div>
       {:else}
@@ -318,10 +318,10 @@
                 ev.preventDefault();
                 toggleInfoPanelCollapsed();
               }}
-              title="hide info panel"
+              title="hide help"
               class="underline underline-offset-2 cursor-pointer"
             >
-              hide</button
+              hide help</button
             >
           </div>
 
