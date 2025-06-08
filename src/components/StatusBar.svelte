@@ -72,7 +72,7 @@
 
 <div
   {style}
-  class="fixed bottom-0 text-[8pt] flex justify-end items-center z-10 px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 border-t border-l rounded-tl-lg bg-white dark:bg-gray-700"
+  class="fixed bottom-0 text-[9pt] flex justify-end items-center z-10 px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 border-t border-l rounded-tl-lg bg-white dark:bg-gray-700"
 >
   <div class="px-1" title="Cursor: line {line} column {column}">
     Ln <span class="num">{line}</span>
@@ -150,7 +150,9 @@
     <IconGitHub></IconGitHub>
   </a>
   <div class="text-gray-400">&bull;</div>
-  <CurrentTime class="ml-1"></CurrentTime>
+  <CurrentTime class="ml-1 mr-1"></CurrentTime>
+  <div class="text-gray-400">&bull;</div>
+  <a class="clickable" href="/help" title="Documentation" target="_blank">?</a>
 </div>
 
 <style scoped>

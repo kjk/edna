@@ -5,6 +5,7 @@
   import IconCommandPalette from "./IconCommandPalette.svelte";
   import { fixUpShortcuts } from "../key-helper.js";
   import { onMount } from "svelte";
+  import IconMenu from "./IconMenu.svelte";
 
   /** @type {{ 
     noteName: string,
@@ -58,12 +59,22 @@
     <div
       class="text-sm flex px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 dark:bg-gray-700 items-center bg-white border-b border-l rounded-bl-lg self-end"
     >
+      <!-- <button
+        onclick={openCommandPalette}
+        class="clickable-icon mt-[3px]"
+        title="open menu"
+      >
+        <IconMenu></IconMenu>
+      </button>
+      <div class="text-gray-400 px-1">&bull;</div> -->
+
       <button
-        class="cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500"
+        class="flex cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500 items-center"
         onclick={openNoteSelector}
         title={fixUpShortcuts("Open Another Note (Mod + P)")}
       >
-        <span class="max-w-32 truncate">{noteName}</span> ⏷</button
+        <div class="max-w-32 truncate">{noteName}</div>
+        <div class="mt-[-2px]">&nbsp;⏷</div></button
       >
       {#if shortcut}
         <div
@@ -73,18 +84,15 @@
           {shortcut}
         </div>
       {/if}
+      <div class="text-gray-400 px-1">&bull;</div>
 
       <button
         onclick={openCommandPalette}
-        class="clickable-icon"
+        class="clickable-icon mt-[3px]"
         title={fixUpShortcuts("Command Palette (Mod + Shift + P)")}
       >
         <IconCommandPalette></IconCommandPalette>
       </button>
-
-      <a class="clickable" href="/help" title="Documentation" target="_blank"
-        >?</a
-      >
     </div>
     {#if showQuickNoteAccess && len(quickAccessNotes) > 0}
       <div
