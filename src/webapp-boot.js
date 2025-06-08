@@ -11,11 +11,7 @@ import {
   setStorageFS,
 } from "./notes";
 import { loadNotesMetadata, upgradeMetadata } from "./metadata";
-import {
-  getSettings,
-  loadInitialSettings,
-  setSetting,
-} from "./settings.svelte";
+import { getSettings } from "./settings.svelte";
 import { isDev } from "./util";
 import { mount, unmount } from "svelte";
 
@@ -34,7 +30,7 @@ export async function boot() {
 
   // await testFuncs();
 
-  loadInitialSettings();
+  getSettings();
 
   let dh = await dbGetDirHandle();
   if (dh) {
@@ -108,7 +104,7 @@ export async function boot() {
   }
 
   // will open this note in Editor.vue on mounted()
-  setSetting("currentNoteName", toOpenAtStartup);
+  settings.currentNoteName = toOpenAtStartup;
   console.log("mounting App");
   if (appSvelte) {
     unmount(appSvelte);

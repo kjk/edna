@@ -33,7 +33,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { getSettings, loadSettings, saveSettings } from "./settings.svelte";
+import { getSettings } from "./settings.svelte";
 import {
   getStats,
   incNoteCreateCount,
@@ -1130,11 +1130,10 @@ export async function switchToStoringNotesOnDisk(dh) {
   openedNotes = []; // can't guarantee names will be unique
 
   // migrate settings, update currentNoteName
-  let settings = loadSettings();
+  let settings = getSettings();
   let name = settings.currentNoteName;
   if (!noteNames.includes(name)) {
     settings.currentNoteName = kScratchNoteName;
-    saveSettings(settings);
   }
   return noteNames;
 }

@@ -3,13 +3,10 @@
     kDefaultFontFamily,
     kDefaultFontSize,
     getVersion,
-    saveSettings,
-    setSetting,
     getSettings,
     getGitHash,
   } from "../settings.svelte";
   import { platform } from "../util";
-  import { getStorageFS } from "../notes";
   import { focus } from "../actions";
 
   import { getSessionDur } from "../globals";
@@ -21,17 +18,7 @@
 
   let isMac = platform.isMac;
 
-  let initialSettings = getSettings();
-  let keymap = $state(initialSettings.keymap);
-  let metaKey = $state(initialSettings.emacsMetaKey);
-  let showLineNumberGutter = $state(initialSettings.showLineNumberGutter);
-  let showFoldGutter = $state(initialSettings.showFoldGutter);
-  let bracketClosing = $state(initialSettings.bracketClosing);
-  let fontFamily = $state(initialSettings.fontFamily || kDefaultFontFamily);
-  let fontSize = $state(initialSettings.fontSize || kDefaultFontSize);
-  let theme = $state(initialSettings.theme);
-  let useWideSelectors = $state(initialSettings.useWideSelectors);
-  let showQuickNoteAccess = $state(initialSettings.showQuickNoteAccess);
+  let settings = getSettings();
 
   let defFont = [kDefaultFontFamily, kDefaultFontFamily + " (default)"];
   let systemFonts = $state([defFont]);
@@ -45,7 +32,6 @@
   let appVersion = getVersion();
   let gitHash = getGitHash();
   let gitURL = "https://github.com/kjk/edna/commit/" + gitHash;
-  let currentNoteName = initialSettings.currentNoteName;
 
   let fontSizes = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
   $effect(() => {
@@ -80,30 +66,6 @@
     }
     systemFonts = a;
   }
-
-  function updateTheme() {
-    console.log("updateTheme", theme);
-    //$emit("setTheme", theme);
-    setSetting("theme", theme);
-  }
-
-  function updateSettings() {
-    /** @type {import("../settings.svelte").Settings} */
-    let newSettings = {
-      bracketClosing: bracketClosing,
-      currentNoteName: currentNoteName,
-      emacsMetaKey: platform.isMac ? metaKey : "alt",
-      fontFamily: fontFamily === kDefaultFontFamily ? undefined : fontFamily,
-      fontSize: fontSize === kDefaultFontSize ? undefined : fontSize,
-      keymap: keymap,
-      showFoldGutter: showFoldGutter,
-      showLineNumberGutter: showLineNumberGutter,
-      useWideSelectors: useWideSelectors,
-      showQuickNoteAccess: showQuickNoteAccess,
-      theme: theme,
-    };
-    saveSettings(newSettings);
-  }
 </script>
 
 <div
@@ -112,12 +74,7 @@
   <div>
     <h2>Input settings</h2>
     <label>
-      <input
-        use:focus
-        type="checkbox"
-        bind:checked={bracketClosing}
-        onchange={updateSettings}
-      />
+      <input use:focus type="checkbox" bind:checked={settings.bracketClosing} />
       Auto-close brackets and quotation marks
     </label>
   </div>
@@ -125,52 +82,48 @@
   <div class="mt-2 flex flex-col">
     <h2>Gutters</h2>
     <label>
-      <input
-        type="checkbox"
-        bind:checked={showLineNumberGutter}
-        onchange={updateSettings}
-      />
+      <input type="checkbox" bind:checked={settings.showLineNumberGutter} />
       Show line numbers
     </label>
 
     <label>
-      <input
-        type="checkbox"
-        bind:checked={showFoldGutter}
-        onchange={updateSettings}
-      />
+      <input type="checkbox" bind:checked={settings.showFoldGutter} />
       Show fold gutter
     </label>
   </div>
 
   <div class="mt-2 flex justify-end items-center">
     <h2>Keymap</h2>
-    <select bind:value={keymap} onchange={updateSettings}>
+    <select bind:value={settings.keymap}>
       {#each keymaps as km (km.value)}
-        <option selected={km.value === keymap} value={km.value}
+        <option selected={km.value === settings.keymap} value={km.value}
           >{km.name}</option
         >
       {/each}
     </select>
   </div>
 
-  {#if keymap == "emacs" && isMac}
+  {#if settings.keymap == "emacs" && isMac}
     <div class="mt-2 flex justify-end items-center">
       <h2>Meta Key</h2>
-      <select bind:value={metaKey} onchange={updateSettings}>
-        <option selected={metaKey === "meta"} value="meta">Command</option>
-        <option selected={metaKey === "alt"} value="alt">Option</option>
+      <select bind:value={settings.emacsMetaKey}>
+        <option selected={settings.emacsMetaKey === "meta"} value="meta"
+          >Command</option
+        >
+        <option selected={settings.emacsMetaKey === "alt"} value="alt"
+          >Option</option
+        >
       </select>
     </div>
   {/if}
 
   <div class="mt-2 flex justify-end items-center">
     <h2>Font Family</h2>
-    <select bind:value={fontFamily} onchange={updateSettings}>
+    <select bind:value={settings.fontFamily}>
       {#each systemFonts as font}
         {@const family = font[0]}
         {@const label = font[1]}
-        <option selected={family === fontFamily} value={family}
+        <option selected={family === settings.fontFamily} value={family}
           >{label}
         </option>
       {/each}
@@ -179,9 +132,9 @@
 
   <div class="mt-2 flex justify-end items-center">
     <h2>Font Size</h2>
-    <select bind:value={fontSize} onchange={updateSettings}>
+    <select bind:value={settings.fontSize}>
       {#each fontSizes as size}
-        <option selected={size === fontSize} value={size}
+        <option selected={size === settings.fontSize} value={size}
           >{size}px{size === defaultFontSize ? " (default)" : ""}</option
         >
       {/each}
@@ -190,11 +143,11 @@
 
   <div class="mt-2 flex justify-end items-center">
     <h2>Theme</h2>
-    <select bind:value={theme} onchange={updateTheme}>
+    <select bind:value={settings.theme}>
       {#each themes as t}
         {@const th = t[0]}
         {@const label = t[1]}
-        <option selected={th === theme} value={th}>{label} </option>
+        <option selected={th === settings.theme} value={th}>{label} </option>
       {/each}
     </select>
   </div>
@@ -202,19 +155,11 @@
   <div class="mt-2 flex flex-col">
     <h2>Misc</h2>
     <label class="flex">
-      <input
-        type="checkbox"
-        bind:checked={useWideSelectors}
-        onchange={updateSettings}
-      />
+      <input type="checkbox" bind:checked={settings.useWideSelectors} />
       <div>Use wide selectors</div>
     </label>
     <label class="flex">
-      <input
-        type="checkbox"
-        bind:checked={showQuickNoteAccess}
-        onchange={updateSettings}
-      />
+      <input type="checkbox" bind:checked={settings.showQuickNoteAccess} />
       <div>Show Quick Notes Access</div>
     </label>
   </div>
@@ -242,7 +187,6 @@
 
   option {
     @apply px-2 py-4;
-    @apply text-[16px];
   }
 
   label {

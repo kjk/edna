@@ -481,3 +481,11 @@ export function hilightText(s, regexp) {
   // console.log("hilightText:", s, regexp);
   return s.replace(regexp, '<span class="hili">$1</span>');
 }
+
+export function copyObj(src, keys) {
+  let res = {};
+  for (let k of keys) {
+    res[k] = src[k];
+  }
+  return res;
+}

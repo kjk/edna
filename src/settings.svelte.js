@@ -1,23 +1,51 @@
-import { cloneObjectDeep, objectEqualDeep, platform, throwIf } from "./util";
+import { copyObj, len, platform, throwIf } from "./util";
+import { appState } from "./state.svelte";
 
-import { ipcRenderer } from "./ipcrenderer";
 import { kScratchNoteName } from "./notes";
 
-/** @typedef {{
-  bracketClosing: boolean,
-  currentNoteName: string,
-  emacsMetaKey: string,
-  fontFamily?: string,
-  fontSize?: number,
-  keymap: string,
-  showFoldGutter: boolean,
-  showLineNumberGutter: boolean,
-  useWideSelectors: boolean,
-  theme?: string, // "system", "light", "dark"
-  showQuickNoteAccess: boolean,
-}} Settings */
+const settingsKeys = [
+  "bracketClosing",
+  "currentNoteName",
+  "emacsMetaKey",
+  "fontFamily",
+  "fontSize",
+  "keymap",
+  "showFoldGutter",
+  "showLineNumberGutter",
+  "useWideSelectors",
+  "theme",
+  "showQuickNoteAccess",
+];
 
-export const kEventSettingsChange = "settings-change";
+export class Settings {
+  bracketClosing = $state(true);
+  currentNoteName = $state(kScratchNoteName);
+  emacsMetaKey = $state("alt");
+  /** @type { string} */
+  fontFamily = $state(undefined);
+  /** @type { number } */
+  fontSize = $state(undefined);
+  keymap = $state("default");
+  showFoldGutter = $state(true);
+  showLineNumberGutter = $state(true);
+  useWideSelectors = $state(false);
+  theme = $state("system"); // "system", "light", "dark"
+  showQuickNoteAccess = $state(false);
+
+  constructor(settings) {
+    if (!settings) {
+      return;
+    }
+    for (let key of settingsKeys) {
+      if (key in settings) {
+        this[key] = settings[key];
+      }
+    }
+  }
+  toJSON() {
+    return copyObj(this, settingsKeys);
+  }
+}
 
 // TODO: should be "Consolas" instead of "Cascadia Code"?
 // TODO: something else for Linux?
@@ -29,38 +57,34 @@ export let kDefaultFontSize = isMobileDevice ? 16 : 12;
 
 export const kSettingsPath = "settings.json";
 
-// current settings, kept in sync with persisted settings
-// shouldn't be modified directly but via setSetting)
-/** @type {Settings} */
-let settings;
+let lastSettings;
 
-/**
- * @returns {Settings}
- */
+/** @returns {Settings} */
 export function getSettings() {
-  throwIf(!settings);
-  return settings;
-}
-
-/**
- * @returns {Settings}
- */
-export function loadSettings() {
+  if (appState.settings) {
+    // console.log("getSettings: already loaded");
+    // logSettings(appState.settings);
+    return appState.settings;
+  }
   let d = localStorage.getItem(kSettingsPath) || "{}";
-  // also set settings to the latest version
+  console.log("getSettings: loaded from localStorage:", d);
   let settings = d === null ? {} : JSON.parse(d);
-  localStorage.removeItem("theme"); // TODO: temporary, theme moved to settings object
-  return settings;
+  appState.settings = new Settings(settings);
+  if (!appState.settings.currentNoteName) {
+    appState.settings.currentNoteName = kScratchNoteName;
+  }
+  lastSettings = appState.settings.toJSON();
+  return appState.settings;
 }
 
 const mediaMatch = window.matchMedia("(prefers-color-scheme: dark)");
-export function updateWebsiteTheme() {
-  console.log("updateWebsiteTheme, settings.theme:", settings.theme);
-  let theme = settings.theme || "system";
+function updateWebsiteTheme() {
+  // console.log("updateWebsiteTheme, settings.theme:", appState.settings.theme);
+  let theme = appState.settings.theme || "system";
   if (theme === "system") {
     theme = mediaMatch.matches ? "dark" : "light";
   }
-  console.log("setting theme:", theme);
+  // console.log("setting theme:", theme);
   let el = document.documentElement;
   if (theme === "dark") {
     el.classList.add("dark");
@@ -68,6 +92,44 @@ export function updateWebsiteTheme() {
     el.classList.remove("dark");
   }
 }
+
+/**
+ * @param {Settings} newSettings
+ * @returns {boolean}
+ */
+function saveSettings(newSettings) {
+  throwIf(!newSettings.currentNoteName);
+  let settings = newSettings.toJSON();
+  let changed = [];
+  for (let key of settingsKeys) {
+    let valLast = lastSettings[key];
+    let valNew = settings[key];
+    if (valNew !== valLast) {
+      changed.push(key);
+    }
+  }
+  if (len(changed) === 0) {
+    console.log("saveSettings: no changes");
+    return false;
+  }
+  for (let key of changed) {
+    console.log(
+      `saveSettings: ${key} changed from ${lastSettings[key]} to ${settings[key]}`,
+    );
+  }
+
+  // console.log("saveSettings:", s);
+  localStorage.setItem(kSettingsPath, JSON.stringify(settings, null, 2));
+  lastSettings = settings;
+  updateWebsiteTheme();
+  return true;
+}
+
+$effect.root(() => {
+  $effect(() => {
+    saveSettings(appState.settings);
+  });
+});
 
 // returns "light" or "dark"
 export function getActiveTheme() {
@@ -90,69 +152,11 @@ export function getOverlayScrollbarOptions() {
 }
 
 mediaMatch.addEventListener("change", async () => {
-  if (settings.theme === "system") {
+  if (appState.settings.theme === "system") {
     console.log("change event listener");
     updateWebsiteTheme();
   }
 });
-
-/**
- * @param {Settings} newSettings
- * @returns {boolean}
- */
-export function saveSettings(newSettings) {
-  console.log("saveSettings:", newSettings);
-  throwIf(!newSettings.currentNoteName);
-  if (objectEqualDeep(settings, newSettings)) {
-    console.log("saveSettings: no change");
-    return false;
-  }
-  let s = JSON.stringify(newSettings, null, 2);
-  localStorage.setItem(kSettingsPath, s);
-  settings = newSettings;
-  updateWebsiteTheme();
-  ipcRenderer.send(kEventSettingsChange, newSettings);
-  return true;
-}
-
-export function loadInitialSettings() {
-  let settings = loadSettings();
-  console.log("settings loaded:", settings);
-  if (!settings.currentNoteName) {
-    settings.currentNoteName = kScratchNoteName;
-  }
-
-  // ensure all possible settings are present. Start with defaults and overwrite with persisted settings
-  /** @type {Settings} */
-  let initialSettings = {
-    bracketClosing: true,
-    currentNoteName: kScratchNoteName,
-    emacsMetaKey: "alt",
-    keymap: "default",
-    showFoldGutter: true,
-    showLineNumberGutter: true,
-    useWideSelectors: false,
-    theme: "system",
-    showQuickNoteAccess: false,
-  };
-  let updatedSettings = Object.assign(initialSettings, settings);
-  saveSettings(updatedSettings);
-}
-
-/**
- * @param {string} key
- * @param {any} value
- */
-export function setSetting(key, value) {
-  console.log("setSetting:", key, value);
-  let s = cloneObjectDeep(settings);
-  s[key] = value;
-  saveSettings(s);
-}
-
-export function onSettingsChange(callback) {
-  ipcRenderer.on(kEventSettingsChange, (event, settings) => callback(settings));
-}
 
 /**
  * @returns {string}

@@ -28,11 +28,7 @@
   import Overlay from "./Overlay.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
 
-  import {
-    getSettings,
-    onSettingsChange,
-    setSetting,
-  } from "../settings.svelte";
+  import { getSettings } from "../settings.svelte";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import {
     createNewScratchNote,
@@ -138,16 +134,15 @@
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
-  let initialSettings = getSettings();
+  let settings = getSettings();
 
   let column = $state(1);
   let docSize = $state(0);
   let language = $state("plaintext");
   let languageAuto = $state(true);
   let line = $state(1);
-  let noteName = $state(initialSettings.currentNoteName);
+  let noteName = $derived(settings.currentNoteName);
   let selectionSize = $state(0);
-  let settings = $state(initialSettings);
   let showingMenu = $state(false);
   let showingLanguageSelector = $state(false);
   let showingNoteSelector = $state(false);
@@ -167,8 +162,6 @@
   let showingFind = $state(false);
   let isSpellChecking = $state(false);
   let altChar = getAltChar();
-  let useWideSelectors = $state(initialSettings.useWideSelectors);
-  let showQuickNoteAccess = $state(initialSettings.showQuickNoteAccess);
 
   let contextMenuPos = $state({ x: 0, y: 0 });
 
@@ -181,15 +174,6 @@
   $effect(() => {
     console.log("showingCreateNewNote changed to:", showingCreateNewNote);
   });
-
-  /**
-   * @param {import("../settings.svelte").Settings} settings
-   */
-  function updateForSettings(settings) {
-    useWideSelectors = settings.useWideSelectors;
-    showQuickNoteAccess = settings.showQuickNoteAccess;
-  }
-  onSettingsChange(updateForSettings);
 
   let isShowingDialog = $derived.by(() => {
     return (
@@ -721,14 +705,12 @@
   }
 
   function switchToWideNoteSelector() {
-    useWideSelectors = true;
-    setSetting("useWideSelectors", true);
+    settings.useWideSelectors = true;
     reOpenNoteSelector();
   }
 
   async function switchToRegularNoteSelector() {
-    useWideSelectors = false;
-    setSetting("useWideSelectors", false);
+    settings.useWideSelectors = false;
     reOpenNoteSelector();
   }
 
@@ -1892,7 +1874,7 @@
     if (!noPushHistory) {
       pushHistory(name);
     }
-    setSetting("currentNoteName", name);
+    settings.currentNoteName = name;
     updateDocSize();
   }
 
@@ -1919,21 +1901,14 @@
     {noteName}
     shortcut={noteShortcut}
     selectNote={onSelectHistory}
-    {showQuickNoteAccess}
+    showQuickNoteAccess={settings.showQuickNoteAccess}
   />
   <Editor
     cursorChange={onCursorChange}
     debugSyntaxTree={false}
-    keymap={settings.keymap}
-    emacsMetaKey={settings.emacsMetaKey}
-    showLineNumberGutter={settings.showLineNumberGutter}
-    showFoldGutter={settings.showFoldGutter}
-    bracketClosing={settings.bracketClosing}
-    fontFamily={settings.fontFamily}
-    fontSize={settings.fontSize}
-    bind:this={editor}
     {didOpenNote}
     {docDidChange}
+    bind:this={editor}
   />
   <StatusBar
     {line}
@@ -1985,7 +1960,7 @@
 {/if}
 
 {#if showingNoteSelector}
-  {#if useWideSelectors}
+  {#if settings.useWideSelectors}
     <Overlay onclose={closeNoteSelector} blur={true}>
       <NoteSelectorWide
         {switchToRegularNoteSelector}

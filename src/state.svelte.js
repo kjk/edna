@@ -10,6 +10,8 @@ class AppState {
   isDirtyFast = $state(false);
   /** @type {string[]} */
   history = $state([]); // names of opened notes
+  /** @type {import("./settings.svelte").Settings} */
+  settings = $state(undefined); // user settings
 }
 
 /** @returns {string[]} */

@@ -8,7 +8,8 @@ import {
 } from "./notes";
 import { kMetadataName, loadNotesMetadata } from "./metadata";
 import { formatDateYYYYMMDD, len, throwIf } from "./util";
-import { kSettingsPath, loadSettings } from "./settings.svelte";
+import { kSettingsPath } from "./settings.svelte";
+import { appState } from "./state.svelte";
 
 /**
  * @param {any} libZip
@@ -58,8 +59,7 @@ export async function exportUnencryptedNotesToZipBlob() {
   }
   {
     // note: note sure if I should export this
-    let settings = await loadSettings();
-    let s = JSON.stringify(settings, null, 2);
+    let s = JSON.stringify(appState.settings, null, 2);
     await addTextFile(libZip, zipWriter, kSettingsPath, s);
   }
   let blob = await zipWriter.close();
@@ -90,7 +90,7 @@ export async function exportRawNotesToZipBlob() {
   }
   {
     // note: note sure if I should export this
-    let settings = await loadSettings();
+    let settings = appState.settings;
     let s = JSON.stringify(settings, null, 2);
     await addTextFile(libZip, zipWriter, kSettingsPath, s);
   }

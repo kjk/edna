@@ -9,13 +9,14 @@
     saveCurrentNote as saveCurrentNoteContent,
   } from "../notes.js";
   import { rememberEditor } from "../state.js";
-  import { getSettings, onSettingsChange } from "../settings.svelte.js";
+  import { getSettings } from "../settings.svelte.js";
   import { appState } from "../state.svelte.js";
   import debounce from "debounce";
   import { throwIf } from "../util.js";
   import { EditorView } from "@codemirror/view";
   import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
   import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
+  import { onMount } from "svelte";
 
   let enableDiskRefresh = false;
 
@@ -23,36 +24,18 @@
 
   /** @type {{
     debugSyntaxTree: boolean,
-    keymap: string,
-    emacsMetaKey: string,
-    showLineNumberGutter: boolean,
-    showFoldGutter: boolean,
-    bracketClosing: boolean,
-    fontFamily: string,
-    fontSize: number,
     cursorChange: (e: SelectionChangeEvent) => void,
     docDidChange: () => void,
     didOpenNote: (name: string, noPushHistory: boolean) => void,
    }}*/
 
-  let {
-    debugSyntaxTree,
-    keymap = "default",
-    emacsMetaKey = "alt",
-    showLineNumberGutter = true,
-    showFoldGutter = true,
-    bracketClosing = false,
-    fontFamily,
-    fontSize,
-    cursorChange,
-    docDidChange,
-    didOpenNote,
-  } = $props();
+  let { debugSyntaxTree, cursorChange, docDidChange, didOpenNote } = $props();
 
   let syntaxTreeDebugContent = $state(null);
   let diskContent = $state(null);
   let debouncedRefreshFunc = $state(null);
-  let didMount = false;
+  let settings = getSettings();
+  let theme = settings.theme;
 
   /** @type {EdnaEditor} */
   let editor;
@@ -60,30 +43,35 @@
   /** @type {HTMLElement} */
   let editorEl;
 
-  let theme = getSettings().theme;
+  $effect(() => {
+    /* TODO: it's not reactive if I do:
+      editor?.setLineNumberGutter(settings.showLineNumberGutter);
+      also, reactive breaks if I do: 
+      if (!editor) { return; }
+    */
+    let showLineNumberGutter = settings.showLineNumberGutter;
+    editor?.setLineNumberGutter(showLineNumberGutter);
+    let showFoldGutter = settings.showFoldGutter;
+    editor?.setFoldGutter(showFoldGutter);
+    let theme = settings.theme;
+    editor?.setTheme(theme);
+    let keymap = settings.keymap;
+    let emacsMetaKey = settings.emacsMetaKey;
+    editor?.setKeymap(keymap, emacsMetaKey);
+    let bracketClosing = settings.bracketClosing;
+    editor?.setBracketClosing(bracketClosing);
+    let fontFamily = settings.fontFamily;
+    let fontSize = settings.fontSize;
+    editor?.setFont(fontFamily, fontSize);
+  });
 
-  /**
-   * @param {import("../settings.svelte.js").Settings} settings
-   */
-  function updateForSettings(settings) {
-    if (!editor) {
-      return;
-    }
-    editor.setTheme(settings.theme);
-    editor.setKeymap(settings.keymap, settings.emacsMetaKey);
-    editor.setBracketClosing(settings.bracketClosing);
-    editor.setFoldGutter(settings.showFoldGutter);
-    editor.setLineNumberGutter(settings.showLineNumberGutter);
-    editor.setFont(settings.fontFamily, settings.fontSize);
-  }
-  onSettingsChange(updateForSettings);
+  onMount(mounted);
 
   function mounted() {
     console.log("Editor.svelte: mounted, editorEl:", editorEl);
-    if (!editorEl || didMount) {
+    if (!editorEl) {
       return;
     }
-    didMount = true;
 
     document.addEventListener("keydown", (e) => {
       // console.log(e);
@@ -111,6 +99,15 @@
     editorEl.addEventListener("docChanged", (e) => {
       docDidChange();
     });
+
+    throwIf(!settings);
+    let showLineNumberGutter = settings.showLineNumberGutter;
+    let keymap = settings.keymap;
+    let emacsMetaKey = settings.emacsMetaKey;
+    let showFoldGutter = settings.showFoldGutter;
+    let bracketClosing = settings.bracketClosing;
+    let fontFamily = settings.fontFamily;
+    let fontSize = settings.fontSize;
 
     // load buffer content and create editor
     loadCurrentNote().then((content) => {
@@ -166,42 +163,6 @@
       setCurrenciesLoadedCb(null);
     };
   }
-
-  $effect(() => {
-    mounted();
-  });
-
-  $effect(() => {
-    console.log("changing theme");
-    if (editor) {
-      editor.setTheme(theme);
-    }
-  });
-  $effect(() => {
-    if (editor) {
-      editor.setKeymap(keymap, emacsMetaKey);
-    }
-  });
-  $effect(() => {
-    if (editor) {
-      editor.setLineNumberGutter(showLineNumberGutter);
-    }
-  });
-  $effect(() => {
-    if (editor) {
-      editor.setFoldGutter(showFoldGutter);
-    }
-  });
-  $effect(() => {
-    if (editor) {
-      editor.setBracketClosing(bracketClosing);
-    }
-  });
-  $effect(() => {
-    if (editor) {
-      editor.setFont(fontFamily, fontSize);
-    }
-  });
 
   function maybeRefreshFromDisk() {
     loadCurrentNoteIfOnDisk().then((latestContentOnDisk) => {
