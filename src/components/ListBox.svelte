@@ -2,7 +2,7 @@
   import { len } from "../util";
   import "overlayscrollbars/overlayscrollbars.css";
   import { OverlayScrollbars } from "overlayscrollbars";
-  import { getOverlayScrollbarOptions } from "../settings";
+  import { getOverlayScrollbarOptions } from "../settings.svelte";
 
   /** @type {{ 
     items: any[],

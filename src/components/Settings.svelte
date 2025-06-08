@@ -7,7 +7,7 @@
     setSetting,
     getSettings,
     getGitHash,
-  } from "../settings";
+  } from "../settings.svelte";
   import { platform } from "../util";
   import { getStorageFS } from "../notes";
   import { focus } from "../actions";
@@ -88,7 +88,7 @@
   }
 
   function updateSettings() {
-    /** @type {import("../settings").Settings} */
+    /** @type {import("../settings.svelte").Settings} */
     let newSettings = {
       bracketClosing: bracketClosing,
       currentNoteName: currentNoteName,

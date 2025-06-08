@@ -1,7 +1,7 @@
 <script>
   import { len } from "../util";
   import "overlayscrollbars/overlayscrollbars.css";
-  import { getOverlayScrollbarOptions } from "../settings";
+  import { getOverlayScrollbarOptions } from "../settings.svelte";
   import { OverlayScrollbars } from "overlayscrollbars";
 
   /** @type {{ 

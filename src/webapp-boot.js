@@ -11,7 +11,11 @@ import {
   setStorageFS,
 } from "./notes";
 import { loadNotesMetadata, upgradeMetadata } from "./metadata";
-import { getSettings, loadInitialSettings, setSetting } from "./settings";
+import {
+  getSettings,
+  loadInitialSettings,
+  setSetting,
+} from "./settings.svelte";
 import { isDev } from "./util";
 import { mount, unmount } from "svelte";
 
@@ -19,7 +23,7 @@ import App from "./components/App.svelte";
 import AskFSPermissions from "./components/AskFSPermissions.svelte";
 import { hasHandlePermission } from "./fileutil";
 
-/** @typedef {import("./settings").Settings} Settings */
+/** @typedef {import("./settings.svelte").Settings} Settings */
 
 // window.onunhandledrejection = console.warn;
 

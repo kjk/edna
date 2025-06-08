@@ -101,7 +101,7 @@ mediaMatch.addEventListener("change", async () => {
  * @returns {boolean}
  */
 export function saveSettings(newSettings) {
-  // console.log("saveSettings:", newSettings);
+  console.log("saveSettings:", newSettings);
   throwIf(!newSettings.currentNoteName);
   if (objectEqualDeep(settings, newSettings)) {
     console.log("saveSettings: no change");

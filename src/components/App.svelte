@@ -28,7 +28,11 @@
   import Overlay from "./Overlay.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
 
-  import { getSettings, onSettingsChange, setSetting } from "../settings";
+  import {
+    getSettings,
+    onSettingsChange,
+    setSetting,
+  } from "../settings.svelte";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import {
     createNewScratchNote,
@@ -166,7 +170,6 @@
   let useWideSelectors = $state(initialSettings.useWideSelectors);
   let showQuickNoteAccess = $state(initialSettings.showQuickNoteAccess);
 
-
   let contextMenuPos = $state({ x: 0, y: 0 });
 
   // /** @type {import("../editor/editor").EdnaEditor} */
@@ -180,7 +183,7 @@
   });
 
   /**
-   * @param {import("../settings").Settings} settings
+   * @param {import("../settings.svelte").Settings} settings
    */
   function updateForSettings(settings) {
     useWideSelectors = settings.useWideSelectors;

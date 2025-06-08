@@ -1,4 +1,4 @@
-import { kDefaultFontFamily, kDefaultFontSize } from "../../settings";
+import { kDefaultFontFamily, kDefaultFontSize } from "../../settings.svelte";
 
 import { EditorView } from "@codemirror/view";
 

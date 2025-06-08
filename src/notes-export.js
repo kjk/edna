@@ -8,7 +8,7 @@ import {
 } from "./notes";
 import { kMetadataName, loadNotesMetadata } from "./metadata";
 import { formatDateYYYYMMDD, len, throwIf } from "./util";
-import { kSettingsPath, loadSettings } from "./settings";
+import { kSettingsPath, loadSettings } from "./settings.svelte";
 
 /**
  * @param {any} libZip

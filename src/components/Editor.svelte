@@ -9,7 +9,7 @@
     saveCurrentNote as saveCurrentNoteContent,
   } from "../notes.js";
   import { rememberEditor } from "../state.js";
-  import { getSettings, onSettingsChange } from "../settings.js";
+  import { getSettings, onSettingsChange } from "../settings.svelte.js";
   import { appState } from "../state.svelte.js";
   import debounce from "debounce";
   import { throwIf } from "../util.js";
@@ -63,7 +63,7 @@
   let theme = getSettings().theme;
 
   /**
-   * @param {import("../settings").Settings} settings
+   * @param {import("../settings.svelte.js").Settings} settings
    */
   function updateForSettings(settings) {
     if (!editor) {

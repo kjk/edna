@@ -33,7 +33,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { getSettings, loadSettings, saveSettings } from "./settings";
+import { getSettings, loadSettings, saveSettings } from "./settings.svelte";
 import {
   getStats,
   incNoteCreateCount,
