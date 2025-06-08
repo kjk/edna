@@ -164,6 +164,8 @@
   let isSpellChecking = $state(false);
   let altChar = getAltChar();
   let useWideSelectors = $state(initialSettings.useWideSelectors);
+  let showQuickNoteAccess = $state(initialSettings.showQuickNoteAccess);
+
 
   let contextMenuPos = $state({ x: 0, y: 0 });
 
@@ -181,8 +183,8 @@
    * @param {import("../settings").Settings} settings
    */
   function updateForSettings(settings) {
-    console.log("updateForSettings");
     useWideSelectors = settings.useWideSelectors;
+    showQuickNoteAccess = settings.showQuickNoteAccess;
   }
   onSettingsChange(updateForSettings);
 
@@ -1910,7 +1912,12 @@
   class="grid w-screen max-h-screen h-screen fixed grid-rows-[1fr_auto]"
   {oncontextmenu}
 >
-  <TopNav {noteName} shortcut={noteShortcut} selectNote={onSelectHistory} />
+  <TopNav
+    {noteName}
+    shortcut={noteShortcut}
+    selectNote={onSelectHistory}
+    {showQuickNoteAccess}
+  />
   <Editor
     cursorChange={onCursorChange}
     debugSyntaxTree={false}

@@ -4,16 +4,17 @@ import { ipcRenderer } from "./ipcrenderer";
 import { kScratchNoteName } from "./notes";
 
 /** @typedef {{
- bracketClosing: boolean,
- currentNoteName: string,
-emacsMetaKey: string,
-fontFamily?: string,
-fontSize?: number,
-keymap: string,
-showFoldGutter: boolean,
-showLineNumberGutter: boolean,
-useWideSelectors: boolean,
-theme?: string, // "system", "light", "dark"
+  bracketClosing: boolean,
+  currentNoteName: string,
+  emacsMetaKey: string,
+  fontFamily?: string,
+  fontSize?: number,
+  keymap: string,
+  showFoldGutter: boolean,
+  showLineNumberGutter: boolean,
+  useWideSelectors: boolean,
+  theme?: string, // "system", "light", "dark"
+  showQuickNoteAccess: boolean,
 }} Settings */
 
 export const kEventSettingsChange = "settings-change";
@@ -132,6 +133,7 @@ export function loadInitialSettings() {
     showLineNumberGutter: true,
     useWideSelectors: false,
     theme: "system",
+    showQuickNoteAccess: false,
   };
   let updatedSettings = Object.assign(initialSettings, settings);
   saveSettings(updatedSettings);

@@ -31,6 +31,7 @@
   let fontSize = $state(initialSettings.fontSize || kDefaultFontSize);
   let theme = $state(initialSettings.theme);
   let useWideSelectors = $state(initialSettings.useWideSelectors);
+  let showQuickNoteAccess = $state(initialSettings.showQuickNoteAccess);
 
   let defFont = [kDefaultFontFamily, kDefaultFontFamily + " (default)"];
   let systemFonts = $state([defFont]);
@@ -98,6 +99,7 @@
       showFoldGutter: showFoldGutter,
       showLineNumberGutter: showLineNumberGutter,
       useWideSelectors: useWideSelectors,
+      showQuickNoteAccess: showQuickNoteAccess,
       theme: theme,
     };
     saveSettings(newSettings);
@@ -206,12 +208,14 @@
         onchange={updateSettings}
       />
       <div>Use wide selectors</div>
-      <!-- <a
-        href="/help#backing-up-notes"
-        class="underline underline-offset-2 ml-2"
-        target="_blank"
-        title="info about backup">help</a
-      > -->
+    </label>
+    <label class="flex">
+      <input
+        type="checkbox"
+        bind:checked={showQuickNoteAccess}
+        onchange={updateSettings}
+      />
+      <div>Show Quick Notes Access</div>
     </label>
   </div>
 

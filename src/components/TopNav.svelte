@@ -10,8 +10,14 @@
     noteName: string,
     shortcut: string,
     selectNote: (name: string) => void,
+    showQuickNoteAccess: boolean,
   }} */
-  let { noteName = "", shortcut = "", selectNote } = $props();
+  let {
+    noteName = "",
+    shortcut = "",
+    selectNote,
+    showQuickNoteAccess,
+  } = $props();
 
   /**
    * @typedef {Object} HistoryItem
@@ -92,12 +98,12 @@
         >?</a
       >
     </div>
-    {#if false}
-      <div class="flex flex-col items-end py-[2px] text-xs my-[-2px]">
+    {#if showQuickNoteAccess}
+      <div class="flex flex-col items-end pl-[4px] pr-[2px] text-xs mt-[-3px]">
         {#each items as item (item.key)}
           <button
             onclick={() => selectItem(item.name)}
-            class="truncate text-right cursor-pointer pl-[6px] pr-[2px] py-[1px] hover:font-bold dark:hover:bg-gray-500 bg-white"
+            class="truncate max-w-[32ch] text-right cursor-pointer pl-[6px] pr-[2px] py-[1px] hover:font-bold dark:hover:bg-gray-500 bg-white"
             >{item.name}</button
           >
         {/each}
