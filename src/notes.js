@@ -47,7 +47,7 @@ import {
 } from "./history.js";
 
 import { KV } from "./dbutil";
-import { dirtyState } from "./state.svelte";
+import { appState, dirtyState } from "./state.svelte";
 import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import {
   kMetadataName,
@@ -250,7 +250,7 @@ export const blockHdrPHP = "\n∞∞∞php\n";
  */
 export async function createIfNotExists(name, content, existingNotes) {
   if (!existingNotes) {
-    existingNotes = getLatestNoteNames();
+    existingNotes = appState.noteNames;
   }
   if (existingNotes.includes(name)) {
     console.log(`note ${name} already exists`);
@@ -361,10 +361,6 @@ function loadNoteNamesLS() {
   return [allNotes, encryptedNotes];
 }
 
-// we must cache those because loadNoteNames() is async and we can't always call it
-// note: there's a potential of getting out of sync
-/** @type {string[]} */
-let latestNoteNames = [];
 /** @type {string[]} */
 let encryptedNoteNames = [];
 
@@ -402,7 +398,7 @@ export function unrememberOpenedNote(noteName) {
   openedNotes = openedNotes.filter(
     (openedNote) => openedNote.noteName !== noteName,
   );
-  latestNoteNames = latestNoteNames.filter((name) => name != noteName);
+  appState.noteNames = appState.noteNames.filter((name) => name != noteName);
 }
 
 /**
@@ -427,7 +423,7 @@ export function rememberOpenedNote(fh) {
   // ids to identify notes
   let baseNoteName = noteName;
   let n = 1;
-  while (latestNoteNames.includes(noteName)) {
+  while (appState.noteNames.includes(noteName)) {
     noteName = baseNoteName + `-${n}`;
     n++;
   }
@@ -437,7 +433,7 @@ export function rememberOpenedNote(fh) {
     noteName: noteName,
   };
   openedNotes.push(opened);
-  latestNoteNames.push(noteName);
+  appState.noteNames.push(noteName);
   return noteName;
 }
 
@@ -550,14 +546,10 @@ export async function loadNoteNames() {
   // TODO: got a case where I had both foo.edna.txt and foo.encr.edna.txt which caused
   // duplicate names which cased note selector to fail due to duplicate key
   // don't quite know how this happened but it could be done maliciously
-  latestNoteNames = removeDuplicates(res[0]);
+  appState.noteNames = removeDuplicates(res[0]);
   encryptedNoteNames = removeDuplicates(res[1]);
   // console.log("loadNoteNames() res:", res);
-  return latestNoteNames;
-}
-
-export function getLatestNoteNames() {
-  return latestNoteNames;
+  return appState.noteNames;
 }
 
 export function startsWithBlockHeader(s) {
@@ -780,7 +772,7 @@ function loadNoteLS(name) {
  * @returns {boolean}
  */
 export function noteExists(name) {
-  let notes = getLatestNoteNames();
+  let notes = appState.noteNames;
   return notes.includes(name) || isSystemNoteName(name);
 }
 
@@ -1105,6 +1097,7 @@ export async function switchToStoringNotesOnDisk(dh) {
   let diskNoteNames = res[0];
 
   // migrate notes
+  let latestNoteNames = appState.noteNames;
   for (let name of latestNoteNames) {
     if (isSystemNoteName(name)) {
       continue;
@@ -1177,7 +1170,7 @@ export function sanitizeNoteName(name) {
  * @returns {number}
  */
 export function getNotesCount() {
-  return len(latestNoteNames);
+  return len(appState.noteNames);
 }
 
 /**

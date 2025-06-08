@@ -1,4 +1,4 @@
-import { getLatestNoteNames, getNotesCount } from "./notes";
+import { getNotesCount } from "./notes";
 import { getSessionDurationInMs, getStats } from "./state";
 import { len, throwIf } from "./util";
 
@@ -38,7 +38,7 @@ export function logAppOpen() {
 export function logAppExit() {
   let e = {
     name: "appExit",
-    notesCount: len(getLatestNoteNames()),
+    notesCount: getNotesCount,
     sessionDurMs: getSessionDurationInMs(),
     stats: getStats(),
   };

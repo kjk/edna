@@ -1,9 +1,5 @@
 <script>
-  import {
-    getLatestNoteNames,
-    isSystemNoteName,
-    sanitizeNoteName,
-  } from "../notes";
+  import { isSystemNoteName, sanitizeNoteName } from "../notes";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
   import {
     findMatchingItems,
@@ -31,15 +27,15 @@
   let { onclose, openNote, createNote, deleteNote, switchToCommandPalette } =
     $props();
 
-  let noteNames = getLatestNoteNames();
-  let items = $state(buildItems(noteNames));
+  let noteNames = appState.noteNames;
+  let items = $derived(buildItems(noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
-  let altChar = $state(getAltChar());
+  let altChar = getAltChar();
 
   function reloadNotes() {
     console.log("reloadNotes");
-    let noteNames = getLatestNoteNames();
+    let noteNames = appState.noteNames;
     items = buildItems(noteNames);
   }
 

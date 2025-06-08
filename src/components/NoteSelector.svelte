@@ -85,11 +85,7 @@
 </script>
 
 <script>
-  import {
-    getLatestNoteNames,
-    isSystemNoteName,
-    sanitizeNoteName,
-  } from "../notes";
+  import { isSystemNoteName, sanitizeNoteName } from "../notes";
   import {
     getNoteMeta,
     reassignNoteShortcut,
@@ -128,16 +124,17 @@
     forMoveBlock = false,
   } = $props();
 
-  let noteNames = getLatestNoteNames();
-  let items = $state(buildItems(noteNames));
+  let items = $derived(buildItems(appState.noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = $state(getAltChar());
 
   function reloadNotes() {
     console.log("reloadNotes");
-    let noteNames = getLatestNoteNames();
-    items = buildItems(noteNames);
+    // actions like re-assigning quick access shortcut do
+    // not modify appState.noteNames so we have to force
+    // rebuilding of items
+    items = buildItems(appState.noteNames);
   }
 
   let sanitizedFilter = $derived.by(() => {

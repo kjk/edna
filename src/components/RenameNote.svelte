@@ -1,6 +1,7 @@
 <script>
-  import { getLatestNoteNames, sanitizeNoteName } from "../notes";
+  import { sanitizeNoteName } from "../notes";
   import { focus } from "../actions";
+  import { appState } from "../state.svelte";
 
   /** @type { {
     onclose: () => void,
@@ -20,7 +21,7 @@
     if (name === "" || name === oldName) {
       return false;
     }
-    let noteNames = getLatestNoteNames();
+    let noteNames = appState.noteNames;
     return !noteNames.includes(name);
   });
 
@@ -29,7 +30,7 @@
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = getLatestNoteNames();
+    let noteNames = appState.noteNames;
     if (noteNames.includes(name)) {
       return `note <span class="font-bold">${name}</span> already exists`;
     }

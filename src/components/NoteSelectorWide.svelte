@@ -1,6 +1,5 @@
 <script>
   import {
-    getLatestNoteNames,
     isSystemNoteName,
     kScratchNoteName,
     sanitizeNoteName,
@@ -18,6 +17,7 @@
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
   import { buildItems } from "./NoteSelector.svelte";
   import IconStar from "./IconStar.svelte";
+  import { appState } from "../state.svelte";
 
   /** @typedef {import("./NoteSelector.svelte").Item} Item */
 
@@ -36,8 +36,8 @@
     switchToRegularNoteSelector,
   } = $props();
 
-  let noteNames = getLatestNoteNames();
-  let items = $state(buildItems(noteNames));
+  let noteNames = appState.noteNames;
+  let items = $derived(buildItems(noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
@@ -66,7 +66,7 @@
   let showDelete = $state(false);
 
   function reloadNotes() {
-    let noteNames = getLatestNoteNames();
+    let noteNames = appState.noteNames;
     items = buildItems(noteNames);
   }
 
