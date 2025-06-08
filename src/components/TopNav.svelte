@@ -20,38 +20,26 @@
   } = $props();
 
   /**
-   * @typedef {Object} HistoryItem
-   * @property {string} name
-   * @property {string} nameLC
-   * @property {string} key
-   * @property {HTMLElement} ref
+   * @param {string[]} starred
+   * @param {string[]} history
+   * @returns {string[]}
    */
-
-  let history = appState.history;
-
-  /**
-   * @returns {HistoryItem[]}
-   */
-  function buildItems(history) {
+  function buildQuickAccessNotes(starred, history) {
+    /** @type {string[]} */
+    let res = [...starred];
     let n = len(history);
-    if (n < 2) {
-      return [];
-    }
-    /** @type {HistoryItem[]} */
-    let res = Array(n - 1);
     for (let i = 1; i < n; i++) {
-      let el = history[i];
-      res[i - 1] = {
-        key: el,
-        name: el,
-        nameLC: el.toLowerCase(),
-        ref: null,
-      };
+      let noteName = history[i];
+      if (!res.includes(noteName)) {
+        res.push(noteName);
+      }
     }
     return res;
   }
 
-  let items = $derived(buildItems(history));
+  let quickAccessNotes = $derived(
+    buildQuickAccessNotes(appState.starredNotes, appState.history),
+  );
 
   let style = $state("");
   onMount(() => {
@@ -68,7 +56,7 @@
 {#if !appState.isDirtyFast}
   <div class="fixed top-0 flex flex-col z-10 mt-[-1px]" {style}>
     <div
-      class="text-sm flex px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 dark:bg-gray-700 items-center bg-white border-b border-l rounded-bl-lg"
+      class="text-sm flex px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 dark:bg-gray-700 items-center bg-white border-b border-l rounded-bl-lg self-end"
     >
       <button
         class="cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500"
@@ -98,13 +86,13 @@
         >?</a
       >
     </div>
-    {#if showQuickNoteAccess}
+    {#if showQuickNoteAccess && len(quickAccessNotes) > 0}
       <div class="flex flex-col items-end pl-[4px] pr-[2px] text-xs mt-[-3px]">
-        {#each items as item (item.key)}
+        {#each quickAccessNotes as name (name)}
           <button
-            onclick={() => selectItem(item.name)}
+            onclick={() => selectItem(name)}
             class="truncate max-w-[32ch] text-right cursor-pointer pl-[6px] pr-[2px] py-[1px] hover:font-bold dark:hover:bg-gray-500 bg-white"
-            >{item.name}</button
+            >{name}</button
           >
         {/each}
       </div>
