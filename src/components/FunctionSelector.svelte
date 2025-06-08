@@ -190,7 +190,7 @@
   >
     {#snippet renderItem(item)}
       <button
-        class="ml-[-6px]"
+        class="ml-[-6px] cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
           toggleStarred(item);
           ev.preventDefault();

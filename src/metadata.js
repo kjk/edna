@@ -1,5 +1,6 @@
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { getStorageFS } from "./notes";
+import { updateStarred } from "./state.svelte";
 
 export const kMetadataName = "__metadata.edna.json";
 
@@ -142,6 +143,7 @@ export async function toggleNoteStarred(name) {
     },
     true,
   );
+  updateStarred();
   return isStarred;
 }
 

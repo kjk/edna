@@ -28,4 +28,8 @@ function calcStarred(noteNames) {
   return res;
 }
 
+export function updateStarred() {
+  appState.starredNotes = calcStarred(appState.noteNames);
+}
+
 export const appState = new AppState();

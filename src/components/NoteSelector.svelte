@@ -124,7 +124,7 @@
     forMoveBlock = false,
   } = $props();
 
-  let items = $derived(buildItems(appState.noteNames));
+  let items = $state(buildItems(appState.noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = $state(getAltChar());
@@ -470,7 +470,7 @@
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
       <button
-        class="ml-[-6px]"
+        class="ml-[-6px] cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
           ev.preventDefault();
           ev.stopPropagation();

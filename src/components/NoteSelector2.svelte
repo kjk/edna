@@ -264,7 +264,7 @@
         {#snippet renderItem(item)}
           {@const hili = hilightText(item.name, hiliRegExp)}
           <button
-            class="ml-[-6px]"
+            class="ml-[-6px] cursor-pointer hover:text-yellow-600"
             onclick={(ev) => {
               ev.preventDefault();
               ev.stopPropagation();
