@@ -2,6 +2,9 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.21
+- higlight matching part in Command Palette
+
 ## 1.20
 - add menu button in top nav
 - add `Show Quick Notes Access` setting to show starred notes and history in upper right corner

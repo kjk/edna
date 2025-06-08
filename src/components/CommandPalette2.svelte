@@ -1,5 +1,13 @@
 <script>
-  import { findMatchingItems, isDev, len, splitMax, trimPrefix } from "../util";
+  import {
+    findMatchingItems,
+    hilightText,
+    isDev,
+    len,
+    makeHilightRegExp,
+    splitMax,
+    trimPrefix,
+  } from "../util";
   import { focus } from "../actions";
   import ListBox from "./ListBox.svelte";
   import { extractShortcut } from "../keys";
@@ -76,6 +84,7 @@
   let items = $state(buildCommands());
   let cmdCountMsg = `${len(items)} commands`;
   let filter = $state(">");
+  let hiliRegExp = $derived(makeHilightRegExp(trimFilter(filter)));
 
   $effect(() => {
     if (filter === "") {
@@ -83,6 +92,14 @@
     }
   });
 
+  /**
+   * @param {string} f
+   * @returns {string}
+   */
+  function trimFilter(f) {
+    f = f.trim();
+    return trimPrefix(f, ">");
+  }
   let itemsFiltered = $derived.by(() => {
     let lc = filter.toLowerCase();
     lc = trimPrefix(lc, ">");
@@ -143,8 +160,9 @@
     onclick={(item) => emitExecuteCommand(item)}
   >
     {#snippet renderItem(item)}
+      {@const hili = hilightText(item.name, hiliRegExp)}
       <div class="truncate">
-        {item.name}
+        {@html hili}
       </div>
       <div class="grow"></div>
       <div class="mr-2">{item.shortcut}</div>
