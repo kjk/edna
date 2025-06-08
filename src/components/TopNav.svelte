@@ -100,7 +100,7 @@
     </div>
     {#if showQuickNoteAccess && len(quickAccessNotes) > 0}
       <div
-        class="flex flex-col self-end items-stretch pl-[4px] pr-1 text-xs text-gray-500 bg-white/5 hover:bg-white hover:border hover:rounded-bl-lg"
+        class="flex flex-col self-end items-stretch pl-[4px] pr-1 text-xs text-gray-500 bg-white/5 hover:bg-white hover:border-l hover:border-b hover:rounded-bl-lg"
       >
         {#each quickAccessNotes as name (name)}
           <button
