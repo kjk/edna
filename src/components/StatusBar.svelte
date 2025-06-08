@@ -72,25 +72,9 @@
 
 <div
   {style}
-  class="fixed bottom-0 text-sm text-[13px] flex justify-end items-center z-10 px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 border-t border-l rounded-tl-lg bg-white dark:bg-gray-700"
+  class="fixed bottom-0 text-[8pt] flex justify-end items-center z-10 px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 border-t border-l rounded-tl-lg bg-white dark:bg-gray-700"
 >
-  <!-- <div class="ml-[0px] w-[4px]">
-    {#if dirtyState.isDirty}&bull;{:else}&nbsp;{/if}
-  </div>
-  <button
-    class="clickable max-w-48 truncate"
-    onclick={openNoteSelector}
-    title="Change or create new note"
-  >
-    {noteName} ⏶
-  </button>
-  {#if shortcut}
-    <div class="text-gray-500 dark:text-gray-400 text-xs ml-1">
-      {shortcut}
-    </div>
-  {/if} -->
-
-  <div class="px-[6px] ml-1" title="Cursor: line {line} column {column}">
+  <div class="px-1" title="Cursor: line {line} column {column}">
     Ln <span class="num">{line}</span>
     &nbsp;Col <span class="num">{column}</span>
     {#if selectionSize > 0}
@@ -150,15 +134,13 @@
         </path>
       </svg>
     </button>
-  {/if}
-
-  {#if !supportsFormat}
     <div class="text-gray-400">&bull;</div>
   {/if}
+
   <button onclick={openSettings} class="clickable-icon ml-1" title="Settings">
     <IconSettings></IconSettings>
   </button>
-  <a href="/help" title="Documentation" target="_blank" class="clickable">?</a>
+  <div class="text-gray-400">&bull;</div>
   <a
     class="clickable-icon mt-[1px]"
     href="https://github.com/kjk/edna"
