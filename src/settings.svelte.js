@@ -14,7 +14,6 @@ const settingsKeys = [
   "showLineNumberGutter",
   "useWideSelectors",
   "theme",
-  "showQuickNoteAccess",
 ];
 
 export class Settings {
@@ -30,7 +29,6 @@ export class Settings {
   showLineNumberGutter = $state(true);
   useWideSelectors = $state(false);
   theme = $state("system"); // "system", "light", "dark"
-  showQuickNoteAccess = $state(false);
 
   constructor(settings) {
     if (!settings) {

@@ -1898,12 +1898,7 @@
   class="grid w-screen max-h-screen h-screen fixed grid-rows-[1fr_auto]"
   {oncontextmenu}
 >
-  <TopNav
-    {noteName}
-    shortcut={noteShortcut}
-    selectNote={onSelectHistory}
-    showQuickNoteAccess={settings.showQuickNoteAccess}
-  />
+  <TopNav {noteName} shortcut={noteShortcut} selectNote={onSelectHistory} />
   <Editor
     cursorChange={onCursorChange}
     debugSyntaxTree={false}

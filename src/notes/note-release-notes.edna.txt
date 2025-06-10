@@ -2,6 +2,9 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.22
+- remove `Show Quick Notes Access". Instewad show top navigation element only when moues is moving (for discoverability) or is over the element
+
 ## 1.21
 - higlight matching part in Command Palette
 
