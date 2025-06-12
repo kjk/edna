@@ -1,24 +1,16 @@
 class MouseMoveTracker {
-  isMoving = $state(false);
-  x;
-  y;
+  moving = $state(false);
 }
 
-export const mouseMoveTracker = new MouseMoveTracker();
-export let mouseMoveTimeout = 500;
+export const isMoving = new MouseMoveTracker();
 
 let timeoutId;
-/**
- * @param {MouseEvent} e
- */
-function onMouseMove(e) {
+function onMouseMove() {
   clearTimeout(timeoutId);
   timeoutId = setTimeout(() => {
-    mouseMoveTracker.isMoving = false;
-  }, mouseMoveTimeout);
-  mouseMoveTracker.isMoving = true;
-  mouseMoveTracker.x = e.clientX;
-  mouseMoveTracker.y = e.clientY;
+    isMoving.moving = false;
+  }, 500);
+  isMoving.moving = true;
 }
 
 document.addEventListener("mousemove", onMouseMove);

@@ -10,23 +10,7 @@
   import { fixUpShortcuts } from "../key-helper.js";
   import { onMount } from "svelte";
   import IconMenu from "./IconMenu.svelte";
-  import { mouseMoveTracker } from "../mouse-track.svelte.js";
-
-  let element;
-
-  $effect(() => {
-    if (element) {
-      // check if current mouse position is over the element
-      let bounding = element.getBoundingClientRect();
-      let isInside =
-        mouseMoveTracker.x >= bounding.left &&
-        mouseMoveTracker.x <= bounding.right &&
-        mouseMoveTracker.y >= bounding.top &&
-        mouseMoveTracker.y <= bounding.bottom;
-      let style = mouseMoveTracker.isMoving || isInside ? "visible" : "hidden";
-      element.style.visibility = style;
-    }
-  });
+  import { isMoving } from "../mouse-track.svelte.js";
 
   /** @type {{ 
     noteName: string,
@@ -69,8 +53,8 @@
 </script>
 
 <div
-  bind:this={element}
-  class="fixed top-0 flex flex-col z-10 mt-[-1px] invisible"
+  class:moving={isMoving.moving}
+  class="fixed top-0 flex flex-col z-10 mt-[-1px] invisible showOnMouseMove"
   {style}
 >
   <div
@@ -141,5 +125,10 @@
 
   .clickable-icon {
     @apply px-[4px];
+  }
+  .showOnMouseMove {
+    &:where(.moving, :hover) {
+      visibility: visible;
+    }
   }
 </style>
