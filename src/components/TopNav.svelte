@@ -61,7 +61,6 @@
   onMount(() => {
     let dx = getScrollbarWidth();
     style = `right: ${dx}px`;
-    console.log("style: ", style);
   });
 
   function selectItem(noteName) {
