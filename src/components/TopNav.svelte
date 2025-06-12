@@ -54,7 +54,7 @@
 
 <div
   class:moving={isMoving.moving}
-  class="fixed top-0 flex flex-col z-10 mt-[-1px] invisible showOnMouseMove"
+  class="fixed top-0 flex flex-col z-10 mt-[-1px] showOnMouseMove"
   {style}
 >
   <div
@@ -127,6 +127,7 @@
     @apply px-[4px];
   }
   .showOnMouseMove {
+    visibility: hidden;
     &:where(.moving, :hover) {
       visibility: visible;
     }
