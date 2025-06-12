@@ -10,18 +10,20 @@
   import { fixUpShortcuts } from "../key-helper.js";
   import { onMount } from "svelte";
   import IconMenu from "./IconMenu.svelte";
-  import { registerMuseOverElement } from "../mouse-track.svelte.js";
+  import { mouseMoveTracker } from "../mouse-track.svelte.js";
 
   let element;
-  let mouseOverElement;
 
-  onMount(() => {
-    mouseOverElement = registerMuseOverElement(element);
-  });
   $effect(() => {
-    if (mouseOverElement) {
-      let shouldShow = mouseOverElement.isMoving || mouseOverElement.isOver;
-      let style = shouldShow ? "visible" : "hidden";
+    if (element) {
+      // check if current mouse position is over the element
+      let bounding = element.getBoundingClientRect();
+      let isInside =
+        mouseMoveTracker.x >= bounding.left &&
+        mouseMoveTracker.x <= bounding.right &&
+        mouseMoveTracker.y >= bounding.top &&
+        mouseMoveTracker.y <= bounding.bottom;
+      let style = mouseMoveTracker.isMoving || isInside ? "visible" : "hidden";
       element.style.visibility = style;
     }
   });
