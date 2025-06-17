@@ -16,7 +16,7 @@
    * @param {NoteInfo} a
    * @param {NoteInfo} b
    */
-  function sortNotes(a, b) {
+  export function sortNotes(a, b) {
     // started before not starred
     if (a.isStarred && !b.isStarred) {
       return -1;

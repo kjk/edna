@@ -12,6 +12,9 @@
   import IconMenu from "./IconMenu.svelte";
   import { isMoving } from "../mouse-track.svelte.js";
   import { getNoteMeta } from "../metadata.js";
+  import { buildNoteInfos, sortNotes } from "./NoteSelector.svelte";
+
+  /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
 
   /** @type {{ 
     noteName: string,
@@ -37,23 +40,23 @@
   /**
    * @param {string[]} starred
    * @param {string[]} history
-   * @returns {string[]}
+   * @returns {NoteInfo[]}
    */
-  function buildQuickAccessNotes(starred, history) {
+  function buildQuickAccessNotes(starred, history, withShortcuts) {
     /** @type {string[]} */
-    let res = [...starred];
-    let n = len(history);
-    for (let i = 1; i < n; i++) {
-      let noteName = history[i];
-      if (!res.includes(noteName)) {
-        res.push(noteName);
-      }
-    }
+    let notes = [...starred, ...history, ...withShortcuts];
+    // remove duplicate names in notes
+    notes = [...new Set(notes)];
+    let res = buildNoteInfos(notes);
     return res;
   }
 
   let quickAccessNotes = $derived(
-    buildQuickAccessNotes(appState.starredNotes, appState.history),
+    buildQuickAccessNotes(
+      appState.starredNotes,
+      appState.history,
+      appState.withShortcuts,
+    ),
   );
 
   let style = $state("");
@@ -111,17 +114,17 @@
         class:moving={isMoving.moving}
         class="text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnMouseMove absolute right-[0px] top-full"
       >
-        <table>
+        <table class="my-1">
           <tbody>
-            {#each quickAccessNotes as name (name)}
-              {@const shortcut = getNoteShortcut(name)}
+            {#each quickAccessNotes as noteInfo (noteInfo.key)}
+              {@const shortcut = getNoteShortcut(noteInfo.name)}
               <tr
                 class=" whitespace-nowrap cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline"
-                title="open note '{name}'"
-                onclick={() => selectItem(name)}
+                title="open note '{noteInfo.name}'"
+                onclick={() => selectItem(noteInfo.name)}
               >
                 <td class="pl-2 pr-2 text-right max-w-[32ch] truncate">
-                  {name}
+                  {noteInfo.name}
                 </td>
                 <td class="text-xs px-2 text-gray-400 dark:text-gray-400">
                   {shortcut}

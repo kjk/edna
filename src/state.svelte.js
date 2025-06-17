@@ -5,6 +5,8 @@ class AppState {
   noteNames = $state([]);
   /** @type {string[]} */
   starredNotes = $derived(calcStarred(this.noteNames)); // starred notes
+  /** @type {string[]} */
+  withShortcuts = $derived(callcWithShortcuts(this.noteNames)); // notes with shortcuts
   noteSelectorInfoCollapsed = $state(false);
   isDirty = $state(false);
   isDirtyFast = $state(false);
@@ -24,12 +26,28 @@ function calcStarred(noteNames) {
       res.push(name);
     }
   }
-  res.sort((a, b) => a.localeCompare(b));
+  return res;
+}
+
+/** @returns {string[]} */
+function callcWithShortcuts(noteNames) {
+  /** @type {string[]} */
+  let res = [];
+  for (let name of noteNames) {
+    let m = getNoteMeta(name, false);
+    if (m && m.altShortcut) {
+      res.push(name);
+    }
+  }
   return res;
 }
 
 export function updateStarred() {
   appState.starredNotes = calcStarred(appState.noteNames);
+}
+
+export function updateWithShortcuts() {
+  appState.withShortcuts = callcWithShortcuts(appState.noteNames);
 }
 
 export const appState = new AppState();
