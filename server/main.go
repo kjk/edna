@@ -145,7 +145,6 @@ func Main() {
 		flgDeployHetzner  bool
 		flgSetupAndRun    bool
 		flgBuildLocalProd bool
-		flgBuildFrontend  bool
 		flgUpdateGoDeps   bool
 		flgGen            bool
 		flgAdHoc          bool
@@ -157,7 +156,6 @@ func Main() {
 		flag.BoolVar(&flgRunProdLocal, "run-local-prod", false, "run server in production but locally")
 		flag.BoolVar(&flgDeployHetzner, "deploy-hetzner", false, "deploy to hetzner")
 		flag.BoolVar(&flgBuildLocalProd, "build-local-prod", false, "build for production run locally")
-		flag.BoolVar(&flgBuildFrontend, "build-frontend", false, "build frontend code")
 		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
 		flag.BoolVar(&flgUpdateGoDeps, "update-go-deps", false, "update go dependencies")
 		flag.BoolVar(&flgGen, "gen", false, "generate code")
@@ -198,12 +196,6 @@ func Main() {
 	if flgUpdateGoDeps {
 		defer measureDuration()()
 		updateGoDeps(true)
-		return
-	}
-
-	if flgBuildFrontend {
-		defer measureDuration()()
-		rebuildFrontend()
 		return
 	}
 

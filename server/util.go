@@ -85,7 +85,7 @@ func printFS(fsys fs.FS) {
 func updateGoDeps(noProxy bool) {
 	{
 		cmd := exec.Command("go", "get", "-u", ".")
-		cmd.Dir = "server"
+		cmd.Dir = "."
 		if noProxy {
 			cmd.Env = append(os.Environ(), "GOPROXY=direct")
 		}
@@ -97,7 +97,7 @@ func updateGoDeps(noProxy bool) {
 	}
 	{
 		cmd := exec.Command("go", "mod", "tidy")
-		cmd.Dir = "server"
+		cmd.Dir = "."
 		logf("running: %s in dir '%s'\n", cmd.String(), cmd.Dir)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

@@ -252,7 +252,7 @@ func mkFsysEmbedded() fs.FS {
 }
 
 func mkFsysDirDist() fs.FS {
-	dir := "server"
+	dir := "."
 	fsys := os.DirFS(dir)
 	printFS(fsys)
 	logf("mkFsysDirDist: serving from dir '%s'\n", dir)
