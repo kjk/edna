@@ -52,13 +52,10 @@
   }
 </script>
 
-<div
-  class="fixed top-0 flex flex-col z-10 mt-[-1px] bg-amber-200showOnMouseMove"
-  {style}
->
+<div class="fixed top-0 flex flex-col z-10 mt-[-1px] bg-amber-200" {style}>
   <div
     class:moving={isMoving.moving}
-    class="text-sm flex px-1 select-none bg-white text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b border-l rounded-bl-lg self-end"
+    class="text-sm flex px-1 select-none bg-white text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b border-l rounded-bl-lg self-end showOnMouseMove"
   >
     <button
       onclick={openContextMenu}
