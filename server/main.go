@@ -316,7 +316,7 @@ func testCompress() {
 	rebuildFrontend()
 	u.RunLoggedInDirMust(".", "bun", "run", "build")
 
-	dir := filepath.Join("src", "dist", "assets")
+	dir := filepath.Join("dist", "assets")
 	files, err := os.ReadDir(dir)
 	panicIfErr(err)
 	var e fs.DirEntry

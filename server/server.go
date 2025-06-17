@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
@@ -279,7 +280,7 @@ func mkFsysEmbedded() fs.FS {
 }
 
 func mkFsysDirPublic() fs.FS {
-	dir := "public"
+	dir := filepath.Join("src", "public")
 	fsys := os.DirFS(dir)
 	printFS(fsys)
 	logf("mkFsysDirPublic: serving from dir '%s'\n", dir)
