@@ -116,11 +116,11 @@
             {#each quickAccessNotes as name (name)}
               {@const shortcut = getNoteShortcut(name)}
               <tr
-                class="text-right cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline"
+                class=" whitespace-nowrap cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline"
                 title="open note '{name}'"
                 onclick={() => selectItem(name)}
               >
-                <td class="pl-2 pr-2`">
+                <td class="pl-2 pr-2 text-right max-w-[32ch] truncate">
                   {name}
                 </td>
                 <td class="text-xs px-2 text-gray-400 dark:text-gray-400">
