@@ -52,10 +52,10 @@
   }
 </script>
 
-<div class="fixed top-0 flex flex-col z-10 mt-[-1px] bg-amber-200" {style}>
+<div class="fixed top-0 flex flex-col z-10 mt-[-1px]" {style}>
   <div
     class:moving={isMoving.moving}
-    class="text-sm flex px-1 select-none bg-white text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b border-l rounded-bl-lg self-end showOnMouseMove"
+    class="text-sm flex px-1 select-none bg-white text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b border-l rounded-bl-lg self-end showOnMouseMove relative"
   >
     <button
       onclick={openContextMenu}
@@ -91,23 +91,23 @@
     >
       <IconCommandPalette></IconCommandPalette>
     </button>
+    {#if len(quickAccessNotes) > 0}
+      <div
+        class:moving={isMoving.moving}
+        class="flex flex-col self-end items-stretch px-2 py-[4px] text-xs bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnMouseMove absolute right-0 top-full"
+      >
+        {#each quickAccessNotes as name (name)}
+          <button
+            onclick={() => selectItem(name)}
+            class="text-right cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500"
+            title="open note '{name}'"
+          >
+            {name}
+          </button>
+        {/each}
+      </div>
+    {/if}
   </div>
-  {#if len(quickAccessNotes) > 0}
-    <div
-      class:moving={isMoving.moving}
-      class="flex flex-col self-end items-stretch px-2 py-[4px] text-xs bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnMouseMove"
-    >
-      {#each quickAccessNotes as name (name)}
-        <button
-          onclick={() => selectItem(name)}
-          class="text-right cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500"
-          title="open note '{name}'"
-        >
-          {name}
-        </button>
-      {/each}
-    </div>
-  {/if}
 </div>
 
 <style>
