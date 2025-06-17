@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -140,7 +140,7 @@ func measureDuration() func() {
 	}
 }
 
-func main() {
+func Main() {
 	var (
 		flgDeployHetzner  bool
 		flgSetupAndRun    bool
@@ -354,11 +354,7 @@ func humanSize(n int) string {
 func testCompress() {
 	logf("testCompress()\n")
 	rebuildFrontend()
-	if hasBun() {
-		u.RunLoggedInDirMust(".", "bun", "run", "build")
-	} else if u.IsWindows() {
-		u.RunLoggedInDirMust(".", "npm", "build")
-	}
+	u.RunLoggedInDirMust(".", "bun", "run", "build")
 
 	dir := filepath.Join("src", "dist", "assets")
 	files, err := os.ReadDir(dir)

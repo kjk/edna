@@ -12,6 +12,7 @@ export default defineConfig({
   plugins: [svelte(), tailwindcss()],
 
   build: {
+    outDir: "../dist",
     // target: "esnext", // needed for top-level await
     // this prevents pre-laoding manual chunks
     modulePreload: {

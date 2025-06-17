@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ var (
 	projectName       = "edna"
 	domain            = "edna.arslexis.io"
 	httpPort          = 9325
-	frontEndBuildDir  = filepath.Join("server", "dist")
+	frontEndBuildDir  = "dist"
 	wantedProdSecrets = []string{"LOGTASTIC_API_KEY"}
 )
 
@@ -156,13 +156,7 @@ func rebuildFrontend() {
 	emptyFrontEndBuildDir()
 	logf("deleted frontend dist dir '%s'\n", frontEndBuildDir)
 	reinstallPackages()
-	if hasBun() {
-		u.RunLoggedInDirMust(".", "bun", "run", "build")
-	} else {
-		u.RunLoggedInDirMust(".", "npm", "run", "build")
-	}
-	// copy files from src\dist => server\dist
-	copyFilesRecurMust(filepath.Join("src", "dist"), frontEndBuildDir)
+	u.RunLoggedInDirMust(".", "bun", "run", "build")
 }
 
 // get date and hash of current git checkin
@@ -304,7 +298,7 @@ func countFilesInFS(fsys fs.ReadDirFS) int {
 }
 
 func checkHasEmbeddedFiles() {
-	nEmbedded := countFilesInFS(distFS)
+	nEmbedded := countFilesInFS(DistFS)
 	if nEmbedded < 5 {
 		logf("not enough embedded files ('%d')\n", nEmbedded)
 		os.Exit(1)

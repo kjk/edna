@@ -1,7 +1,4 @@
-node_modules
-bundle.js
-dist
-dist-electron
+node_modules/
 release
 .env
 /test-results/
@@ -13,6 +10,5 @@ bun.lockb
 package-lock.json
 secrets.env
 edna-*
-edna
-edna.exe
 data/
+dist/

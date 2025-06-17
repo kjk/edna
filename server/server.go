@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -23,8 +23,7 @@ import (
 )
 
 var (
-	//go:embed dist/*
-	distFS embed.FS
+	DistFS embed.FS
 	//go:embed secrets.env
 	secretsEnv []byte
 )
@@ -246,7 +245,7 @@ func serverListenAndWait(httpSrv *http.Server) func() {
 }
 
 func mkFsysEmbedded() fs.FS {
-	fsys := distFS
+	fsys := DistFS
 	printFS(fsys)
 	logf("mkFsysEmbedded: serving from embedded FS\n")
 	return fsys
@@ -352,7 +351,7 @@ func runServerProd() {
 
 func runServerProdLocal() {
 	var fsys fs.FS
-	if countFilesInFS(distFS) > 5 {
+	if countFilesInFS(DistFS) > 5 {
 		fsys = mkFsysEmbedded()
 	} else {
 		rebuildFrontend()
