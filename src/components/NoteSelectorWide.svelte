@@ -15,11 +15,11 @@
   import { focus } from "../actions";
   import ListBox2 from "./ListBox2.svelte";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
-  import { buildItems } from "./NoteSelector.svelte";
+  import { buildNoteInfos } from "./NoteSelector.svelte";
   import IconStar from "./IconStar.svelte";
   import { appState } from "../state.svelte";
 
-  /** @typedef {import("./NoteSelector.svelte").Item} Item */
+  /** @typedef {import("./NoteSelector.svelte").NoteInfo} Item */
 
   /** @type {{
     openNote: (name: string) => void,
@@ -37,7 +37,7 @@
   } = $props();
 
   let noteNames = appState.noteNames;
-  let items = $derived(buildItems(noteNames));
+  let items = $derived(buildNoteInfos(noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
@@ -67,7 +67,7 @@
 
   function reloadNotes() {
     let noteNames = appState.noteNames;
-    items = buildItems(noteNames);
+    items = buildNoteInfos(noteNames);
   }
 
   let itemsCountMsg = $derived.by(() => {

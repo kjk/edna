@@ -13,9 +13,9 @@
   import ListBox from "./ListBox.svelte";
   import IconStar from "./IconStar.svelte";
   import { appState } from "../state.svelte";
-  import { buildItems } from "./NoteSelector.svelte";
+  import { buildNoteInfos } from "./NoteSelector.svelte";
 
-  /** @typedef {import("./NoteSelector.svelte").Item} Item */
+  /** @typedef {import("./NoteSelector.svelte").NoteInfo} Item */
 
   /** @type {{
     onclose: () => void,
@@ -28,7 +28,7 @@
     $props();
 
   let noteNames = appState.noteNames;
-  let items = $derived(buildItems(noteNames));
+  let items = $derived(buildNoteInfos(noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
@@ -36,7 +36,7 @@
   function reloadNotes() {
     console.log("reloadNotes");
     let noteNames = appState.noteNames;
-    items = buildItems(noteNames);
+    items = buildNoteInfos(noteNames);
   }
 
   let sanitizedFilter = $derived.by(() => {

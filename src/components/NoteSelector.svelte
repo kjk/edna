@@ -6,17 +6,17 @@
     altShortcut?: number, // if present, 1 to 9 for Alt-1 to Alt-9
     isStarred: boolean,
     ref: HTMLElement,
-  }} Item
+  }} NoteInfo
 */
 
   /**
    * -1 if a < b
    * 0 if a = b
    * 1 if a > b
-   * @param {Item} a
-   * @param {Item} b
+   * @param {NoteInfo} a
+   * @param {NoteInfo} b
    */
-  function sortItem(a, b) {
+  function sortNotes(a, b) {
     // started before not starred
     if (a.isStarred && !b.isStarred) {
       return -1;
@@ -52,15 +52,15 @@
 
   /**
    * @param {string[]} noteNames
-   * @returns {Item[]}
+   * @returns {NoteInfo[]}
    */
-  export function buildItems(noteNames) {
+  export function buildNoteInfos(noteNames) {
     // console.log("buildItems, notes", noteInfos)
-    /** @type {Item[]} */
+    /** @type {NoteInfo[]} */
     let res = Array(len(noteNames));
     for (let i = 0; i < len(noteNames); i++) {
       let name = noteNames[i];
-      /** @type {Item} */
+      /** @type {NoteInfo} */
       let item = {
         key: name,
         name: name,
@@ -79,7 +79,7 @@
       }
       item.isStarred = !!m.isStarred;
     }
-    res.sort(sortItem);
+    res.sort(sortNotes);
     return res;
   }
 </script>
@@ -124,7 +124,7 @@
     forMoveBlock = false,
   } = $props();
 
-  let items = $state(buildItems(appState.noteNames));
+  let items = $state(buildNoteInfos(appState.noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = $state(getAltChar());
@@ -134,7 +134,7 @@
     // actions like re-assigning quick access shortcut do
     // not modify appState.noteNames so we have to force
     // rebuilding of items
-    items = buildItems(appState.noteNames);
+    items = buildNoteInfos(appState.noteNames);
   }
 
   let sanitizedFilter = $derived.by(() => {
@@ -153,7 +153,7 @@
     return findMatchingItems(items, sanitizedFilter, "nameLC");
   });
 
-  /** @type {Item} */
+  /** @type {NoteInfo} */
   let selectedItem = $state(null);
   let selectedName = $state("");
   let canOpenSelected = $state(false);
@@ -210,7 +210,7 @@
   }
 
   /**
-   * @param {Item} note
+   * @param {NoteInfo} note
    * @returns {string}
    */
   function sysNoteCls(note) {
@@ -226,7 +226,7 @@
   }
 
   /**
-   * @param {Item} note
+   * @param {NoteInfo} note
    * @returns {string}
    */
   function noteShortcut(note) {
@@ -285,7 +285,7 @@
   }
 
   /**
-   * @param {Item} item
+   * @param {NoteInfo} item
    */
   function emitOpenNote(item) {
     // console.log("emitOpenNote", item);
@@ -298,7 +298,7 @@
   }
 
   /**
-   * @param {Item} item
+   * @param {NoteInfo} item
    */
   async function toggleStarred(item) {
     // there's a noticeable UI lag when we do the obvious:
