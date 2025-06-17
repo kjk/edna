@@ -53,11 +53,11 @@
 </script>
 
 <div
-  class:moving={isMoving.moving}
-  class="fixed top-0 flex flex-col z-10 mt-[-1px] showOnMouseMove"
+  class="fixed top-0 flex flex-col z-10 mt-[-1px] bg-amber-200showOnMouseMove"
   {style}
 >
   <div
+    class:moving={isMoving.moving}
     class="text-sm flex px-1 select-none bg-white text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b border-l rounded-bl-lg self-end"
   >
     <button
@@ -97,7 +97,8 @@
   </div>
   {#if len(quickAccessNotes) > 0}
     <div
-      class="flex flex-col self-end items-stretch px-2 py-[4px] text-xs bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0"
+      class:moving={isMoving.moving}
+      class="flex flex-col self-end items-stretch px-2 py-[4px] text-xs bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnMouseMove"
     >
       {#each quickAccessNotes as name (name)}
         <button
