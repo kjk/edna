@@ -173,7 +173,7 @@ func getGitHashDateMust() (string, string) {
 }
 
 func buildForProd(forLinux bool) string {
-	panicIf(forLinux && u.IsWindows(), "forLinux is true but running on Windows")
+	panicIf(!forLinux && !u.IsWindows(), "building for windows but not on windows")
 
 	{
 		// delete old builds
