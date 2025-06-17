@@ -1,5 +1,5 @@
 <script>
-  import { getScrollbarWidth, len, throwIf } from "../util.js";
+  import { getAltChar, getScrollbarWidth, len, throwIf } from "../util.js";
   import { appState } from "../state.svelte.js";
   import {
     openCommandPalette,
@@ -11,13 +11,28 @@
   import { onMount } from "svelte";
   import IconMenu from "./IconMenu.svelte";
   import { isMoving } from "../mouse-track.svelte.js";
+  import { getNoteMeta } from "../metadata.js";
 
   /** @type {{ 
     noteName: string,
-    shortcut: string,
     selectNote: (name: string) => void,
   }} */
-  let { noteName = "", shortcut = "", selectNote } = $props();
+  let { noteName = "", selectNote } = $props();
+
+  /**
+   * @param {string} noteName
+   * @returns {string}
+   */
+  function getNoteShortcut(noteName) {
+    let altChar = getAltChar();
+    let m = getNoteMeta(noteName);
+    if (m && m.altShortcut) {
+      return `${altChar} + ${m.altShortcut}`;
+    }
+    return "";
+  }
+
+  let shortcut = $derived(getNoteShortcut(noteName));
 
   /**
    * @param {string[]} starred
@@ -94,17 +109,27 @@
     {#if len(quickAccessNotes) > 0}
       <div
         class:moving={isMoving.moving}
-        class="flex flex-col self-end items-stretch px-2 py-[4px] text-xs bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnMouseMove absolute right-0 top-full"
+        class="text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnMouseMove absolute right-[0px] top-full"
       >
-        {#each quickAccessNotes as name (name)}
-          <button
-            onclick={() => selectItem(name)}
-            class="text-right cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500"
-            title="open note '{name}'"
-          >
-            {name}
-          </button>
-        {/each}
+        <table>
+          <tbody>
+            {#each quickAccessNotes as name (name)}
+              {@const shortcut = getNoteShortcut(name)}
+              <tr
+                class="text-right cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline"
+                title="open note '{name}'"
+                onclick={() => selectItem(name)}
+              >
+                <td class="pl-2 pr-2`">
+                  {name}
+                </td>
+                <td class="text-xs px-2 text-gray-400 dark:text-gray-400">
+                  {shortcut}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
       </div>
     {/if}
   </div>
@@ -113,6 +138,12 @@
 <style>
   @reference "../main.css";
 
+  /* quick access notes grid */
+  .qa-grid {
+    display: grid;
+    grid-template-columns: auto auto; /* Example: 2 columns sized to content */
+    gap: 4px; /* Optional: spacing between grid items */
+  }
   .clickable-icon {
     @apply cursor-pointer px-[6px] py-[4px];
 

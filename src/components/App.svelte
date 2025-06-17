@@ -161,7 +161,6 @@
   let showingBlockSelector = $state(false);
   let showingFind = $state(false);
   let isSpellChecking = $state(false);
-  let altChar = getAltChar();
 
   let contextMenuPos = $state({ x: 0, y: 0 });
 
@@ -214,14 +213,6 @@
   };
   setGlobalFuncs(gf);
 
-  let noteShortcut = $derived.by(() => {
-    let name = noteName;
-    let m = getNoteMeta(name);
-    if (m && m.altShortcut) {
-      return `${altChar} + ${m.altShortcut}`;
-    }
-    return "";
-  });
   $effect(() => {
     getEditorComp().setSpellChecking(isSpellChecking);
   });
@@ -1898,7 +1889,7 @@
   class="grid w-screen max-h-screen h-screen fixed grid-rows-[1fr_auto]"
   {oncontextmenu}
 >
-  <TopNav {noteName} shortcut={noteShortcut} selectNote={onSelectHistory} />
+  <TopNav {noteName} selectNote={onSelectHistory} />
   <Editor
     cursorChange={onCursorChange}
     debugSyntaxTree={false}
