@@ -1062,7 +1062,7 @@
     const contextMenu = [
       ["Command Palette\tMod + Shift + P", kCmdCommandPalette],
       ["Open note\tMod + P", kCmdOpenNote],
-      ["Find\tMod + Q", kCmdOpenFind],
+      // ["Find\tMod + Q", kCmdOpenFind],
       ["This note", menuNote],
       ["Block", menuBlock],
       ["Run code", menuRun],
