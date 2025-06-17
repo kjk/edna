@@ -27,8 +27,7 @@
   let { onclose, openNote, createNote, deleteNote, switchToCommandPalette } =
     $props();
 
-  let noteNames = appState.noteNames;
-  let items = $derived(buildNoteInfos(noteNames));
+  let items = $state(buildNoteInfos(appState.noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
@@ -267,9 +266,9 @@
             tabindex="-1"
             class="ml-[-6px] cursor-pointer hover:text-yellow-600"
             onclick={(ev) => {
+              toggleStarred(item);
               ev.preventDefault();
               ev.stopPropagation();
-              toggleStarred(item);
             }}
             ><IconStar
               fill={item.isStarred ? "var(--color-yellow-300)" : "none"}

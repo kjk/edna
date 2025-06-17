@@ -127,7 +127,7 @@
   let items = $state(buildNoteInfos(appState.noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
-  let altChar = $state(getAltChar());
+  let altChar = getAltChar();
 
   function reloadNotes() {
     console.log("reloadNotes");
@@ -473,9 +473,9 @@
         tabindex="-1"
         class="ml-[-6px] cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
+          toggleStarred(item);
           ev.preventDefault();
           ev.stopPropagation();
-          toggleStarred(item);
         }}
       >
         <IconStar fill={item.isStarred ? "var(--color-yellow-300)" : "none"}

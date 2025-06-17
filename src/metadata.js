@@ -1,3 +1,4 @@
+import { tick } from "svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { getStorageFS } from "./notes";
 import { updateStarred, updateWithShortcuts } from "./state.svelte";
@@ -140,10 +141,10 @@ export async function toggleNoteStarred(name) {
     (m) => {
       m.isStarred = !m.isStarred;
       isStarred = m.isStarred;
-      updateStarred();
     },
     true,
   );
+  tick().then(updateStarred);
   return isStarred;
 }
 
@@ -207,10 +208,10 @@ export async function reassignNoteShortcut(name, altShortcut) {
     name,
     (meta) => {
       meta.altShortcut = altShortcut;
-      updateWithShortcuts();
     },
     true,
   );
+  tick().then(updateWithShortcuts);
   return res;
 }
 
