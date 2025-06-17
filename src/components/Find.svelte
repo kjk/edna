@@ -1,7 +1,6 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { focus, trapfocus } from "../actions";
-  import { getScrollbarWidth } from "../util.js";
   import {
     setSearchQuery,
     SearchQuery,
@@ -26,7 +25,6 @@
   let replaceTerm = $state("");
 
   $effect(() => {
-    // console.log("searchTerm:", searchTerm);
     let query = new SearchQuery({
       search: searchTerm,
       caseSensitive: false,
@@ -38,12 +36,10 @@
   });
 
   function next() {
-    console.log("next");
     findNext(view);
   }
 
   function prev() {
-    console.log("prev");
     findPrevious(view);
   }
 
@@ -73,11 +69,18 @@
     }
   }
 
-  onMount(() => {
-    // let query = getSearchQuery(view.state);
-    // console.log("query:", query);
+  let query = getSearchQuery(view.state);
+  searchTerm = query.search;
 
+  /** @type {HTMLElemennt} */
+  let searchInput;
+
+  onMount(() => {
+    tick().then(() => {
+      searchInput.select();
+    });
     isMoving.disableMoveTracking = true;
+
     return () => {
       isMoving.disableMoveTracking = false;
       closeSearchPanel(view);
@@ -86,12 +89,14 @@
 </script>
 
 <div
-  class="fixed top-[2px] left-1/2 -translate-x-1/2 z-20 pl-2 py-0.5 bg-white border text-xs border-gray-400 rounded-sm max-w-4/5 flex flex-col"
+  class="fixed top-[2px] left-1/2 -translate-x-1/2 z-20 pl-2 py-0.5 bg-white border text-sm border-gray-400 rounded-sm max-w-4/5 flex flex-col"
   use:trapfocus
 >
   <div class="flex">
     <input
+      bind:this={searchInput}
       type="text"
+      spellcheck="false"
       placeholder="Find"
       bind:value={searchTerm}
       class="w-[32ch]"
@@ -105,6 +110,7 @@
   <div class="flex">
     <input
       type="text"
+      spellcheck="false"
       placeholder="Replace"
       bind:value={replaceTerm}
       class="w-[32ch]"
