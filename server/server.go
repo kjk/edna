@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"embed"
+	_ "embed"
 	"fmt"
 	"io"
 	"io/fs"
@@ -10,6 +11,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"slices"
 	"strings"
@@ -211,7 +213,8 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 	return httpSrv
 }
 
-func serverListenAndWait(httpSrv *http.Server) func() {
+// returns a function that listens for SIGINT or SIGKILL and shuts down the server gracefully
+func serverListen(httpSrv *http.Server) func() {
 	chServerClosed := make(chan bool, 1)
 	go func() {
 		err := httpSrv.ListenAndServe()
@@ -244,19 +247,35 @@ func serverListenAndWait(httpSrv *http.Server) func() {
 	}
 }
 
-func mkFsysEmbedded() fs.FS {
-	fsys := DistFS
-	printFS(fsys)
-	logf("mkFsysEmbedded: serving from embedded FS\n")
-	return fsys
+func waitForServerReadyMust(uri string) {
+	logf("waitForServerReady: waiting for '%s' to be ready\n", uri)
+	for range 10 {
+		resp, err := http.Get(uri)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			logf("waitForServerReady: got response from '%s'\n", uri)
+			resp.Body.Close()
+			return
+		}
+		logf("waitForServerReady: failed to get response from '%s', error: %v\n", uri, err)
+		time.Sleep(time.Second * 1)
+	}
+	panicIf(true, "failed to get response from '%s'", uri)
 }
 
-func mkFsysDirDist() fs.FS {
-	dir := "."
-	fsys := os.DirFS(dir)
-	printFS(fsys)
-	logf("mkFsysDirDist: serving from dir '%s'\n", dir)
-	return fsys
+func openBrowserForServerMust(httpSrv *http.Server) {
+	// wait for go server
+	waitForServerReadyMust("http://" + httpSrv.Addr + "/ping.txt")
+	if flgRunDev {
+		// wait for vite dev server
+		waitForServerReadyMust(proxyURLStr + "/")
+	}
+	u.OpenBrowser("http://" + httpSrv.Addr)
+}
+
+func mkFsysEmbedded() fs.FS {
+	printFS(DistFS)
+	logf("mkFsysEmbedded: serving from embedded FS\n")
+	return DistFS
 }
 
 func mkFsysDirPublic() fs.FS {
@@ -278,27 +297,28 @@ func mkServeFileOptions(fsys fs.FS) *hutil.ServeFileOptions {
 	}
 }
 
-func waitUntilServerReady(url string) {
-	for range 10 {
-		resp, err := http.Get(url)
-		if err != nil {
-			logf("waitUntilServerReady: error '%s', retrying\n", err)
-			time.Sleep(time.Second * 1)
-			continue
-		}
-		if resp.StatusCode == http.StatusOK {
-			logf("waitUntilServerReady: server is ready\n")
-			return
-		}
-		logf("waitUntilServerReady: got status code %d, retrying\n", resp.StatusCode)
-		time.Sleep(time.Second * 1)
+func startLogtastic() {
+	if logtastic.ApiKey == "" {
+		return
 	}
-	logf("waitUntilServerReady: giving up after 10 attempts\n")
+	logtastic.BuildHash = GitCommitHash
+	logtastic.LogDir = getLogsDirMust()
+	if flgRunProd {
+		logtastic.Server = "l.arslexis.io"
+	} else {
+		logtastic.Server = "127.0.0.1:9327"
+	}
+	logf("logtatistic server: %s\n", logtastic.Server)
 }
 
+var (
+	proxyURLStr = "http://localhost:3035"
+)
+
 func runServerDev() {
+	startLogtastic()
 	// must be same as vite.config.js
-	proxyURLStr := "http://localhost:3035"
+
 	logf("runServerDev\n")
 	if hasBun() {
 		runLoggedInDir(".", "bun", "install")
@@ -325,48 +345,61 @@ func runServerDev() {
 	//defer closeHTTPLog()
 
 	logf("runServerDev(): starting on '%s', dev: %v\n", httpSrv.Addr, isDev())
+	waitFn := serverListen(httpSrv)
 	if isWinOrMac() {
-		time.Sleep(time.Second * 2)
-		u.OpenBrowser("http://" + httpSrv.Addr)
+		openBrowserForServerMust(httpSrv)
 	}
-	waitFn := serverListenAndWait(httpSrv)
 	waitFn()
 }
 
 func runServerProd() {
-	checkHasEmbeddedFiles()
+	testingProd := isWinOrMac()
 
 	fsys := mkFsysEmbedded()
+	checkHasEmbeddedFilesMust()
+
+	if !testingProd {
+		startLogtastic()
+	}
+
 	serveOpts := mkServeFileOptions(fsys)
 	httpSrv := makeHTTPServer(serveOpts, nil)
-	logf("runServerProd(): starting on 'http://%s', dev: %v, prod: %v, prod local: %v\n", httpSrv.Addr, flgRunDev, flgRunProd, flgRunProdLocal)
-	if isWinOrMac() {
-		url := fmt.Sprintf("http://%s/ping.txt", httpSrv.Addr)
-		waitUntilServerReady(url)
-		u.OpenBrowser("http://" + httpSrv.Addr)
+	if !isWinOrMac() {
+		startLogtastic()
 	}
-	waitFn := serverListenAndWait(httpSrv)
+	logf("runServerProd(): starting on 'http://%s', dev: %v, prod: %v, testingProd: %v\n", httpSrv.Addr, flgRunDev, flgRunProd, testingProd)
+
+	waitFn := serverListen(httpSrv)
+	if testingProd {
+		openBrowserForServerMust(httpSrv)
+	}
 	waitFn()
 }
 
-func runServerProdLocal() {
-	var fsys fs.FS
-	if countFilesInFS(DistFS) > 5 {
-		fsys = mkFsysEmbedded()
-	} else {
-		rebuildFrontend()
-		fsys = mkFsysDirDist()
+func testRunServerProd() {
+	if !isWinOrMac() {
+		logf("testRunServerProd: not running on Windows or Mac, skipping\n")
+		return
 	}
-	GitCommitHash, _ = getGitHashDateMust()
+	logf("testRunServerProd\n")
 
-	serveOpts := mkServeFileOptions(fsys)
-	httpSrv := makeHTTPServer(serveOpts, nil)
-	logf("runServerProdLocal(): starting on 'http://%s', dev: %v, prod: %v, prod local: %v\n", httpSrv.Addr, flgRunDev, flgRunProd, flgRunProdLocal)
-	if isWinOrMac() {
-		time.Sleep(time.Second * 2)
-		u.OpenBrowser("http://" + httpSrv.Addr)
+	exeName := buildForProd(false)
+	exeSize := u.FormatSize(u.FileSize(exeName))
+	logf("created:\n%s %s\n", exeName, exeSize)
+
+	cmd := exec.Command("./"+exeName, "-run-prod")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	must(err)
+
+	u.WaitForSigIntOrKill()
+	if cmd.ProcessState != nil && cmd.ProcessState.Exited() {
+		logf("testRunServerProd: cmd already exited\n")
+	} else {
+		logf("testRunServerProd: killing cmd\n")
+		err = cmd.Process.Kill()
+		must(err)
 	}
-	waitFn := serverListenAndWait(httpSrv)
-	waitFn()
-	emptyFrontEndBuildDir()
+	logf("testRunServerProd: cmd killed\n")
 }

@@ -173,6 +173,8 @@ func getGitHashDateMust() (string, string) {
 }
 
 func buildForProd(forLinux bool) string {
+	panicIf(forLinux && u.IsWindows(), "forLinux is true but running on Windows")
+
 	{
 		// delete old builds
 		pattern := projectName + "-*"
@@ -209,11 +211,10 @@ func buildForProd(forLinux bool) string {
 
 	// build the binary, for linux if forLinux is true, otherwise for OS arh
 	{
-		// TODO: why needs ./server and not just "server"?
-		// it works in arslexis-website
 		ldFlags := f("-X main.GitCommitHash=%s", hashShort)
-		cmd := exec.Command("go", "build", "-o", exeName, "-ldflags", ldFlags, "./server")
+		cmd := exec.Command("go", "build", "-o", exeName, "-ldflags", ldFlags, ".")
 		if forLinux {
+			logf("building for linux: %s\n", cmd.String())
 			cmd.Env = os.Environ()
 			cmd.Env = append(cmd.Env, "GOOS=linux", "GOARCH=amd64")
 		}
@@ -225,13 +226,6 @@ func buildForProd(forLinux bool) string {
 		logf("created '%s' of size %s\n", exeName, sizeStr)
 	}
 
-	return exeName
-}
-
-func buildForProdLocal() string {
-	exeName := buildForProd(false)
-	exeSize := u.FormatSize(u.FileSize(exeName))
-	logf("created:\n%s %s\n", exeName, exeSize)
 	return exeName
 }
 
@@ -297,17 +291,14 @@ func countFilesInFS(fsys fs.ReadDirFS) int {
 	return n
 }
 
-func checkHasEmbeddedFiles() {
+func checkHasEmbeddedFilesMust() {
 	nEmbedded := countFilesInFS(DistFS)
-	if nEmbedded < 5 {
-		logf("not enough embedded files ('%d')\n", nEmbedded)
-		os.Exit(1)
-	}
+	panicIf(nEmbedded < 5, "not enought (%d) embedded files found in DistFS", nEmbedded)
 }
 
 func setupAndRun() {
 	logf("setupAndRun() for %s\n", projectName)
-	checkHasEmbeddedFiles()
+	checkHasEmbeddedFilesMust()
 
 	if !u.FileExists(deployServerCaddyConfigPath) {
 		logf("%s doesn't exist.\nMust install caddy?\n", deployServerCaddyConfigPath)

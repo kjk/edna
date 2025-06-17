@@ -113,7 +113,7 @@ func loadSecrets() {
 	// }
 
 	// when running locally, don't
-	if false && flgRunDev || flgRunProdLocal {
+	if false && flgRunDev {
 		logfLocal("loadSecrets: clearing logtasticApiKey\n")
 		logtastic.ApiKey = ""
 	}
@@ -124,9 +124,6 @@ var (
 	flgRunDev bool
 	// compiled assets embedded in the binary
 	flgRunProd bool
-	// compiled assets served from server/dist directory
-	// mostly for testing that the assets are correctly built
-	flgRunProdLocal bool
 )
 
 func isDev() bool {
@@ -140,51 +137,47 @@ func measureDuration() func() {
 	}
 }
 
+func clean() {
+	emptyFrontEndBuildDir()
+	must(os.RemoveAll("node_modules"))
+	for _, f := range []string{"bun.lockb", "bun.lock", "package-lock.json", "yarn.lock"} {
+		os.Remove(f)
+	}
+}
+
 func Main() {
 	var (
-		flgDeployHetzner  bool
-		flgSetupAndRun    bool
-		flgBuildLocalProd bool
-		flgUpdateGoDeps   bool
-		flgGen            bool
-		flgAdHoc          bool
-		flgClean          bool
+		flgDeployHetzner bool
+		flgSetupAndRun   bool
+		flgUpdateGoDeps  bool
+		flgGen           bool
+		flgAdHoc         bool
 	)
 	{
 		flag.BoolVar(&flgRunDev, "run-dev", false, "run the server in dev mode")
 		flag.BoolVar(&flgRunProd, "run-prod", false, "run server in production")
-		flag.BoolVar(&flgRunProdLocal, "run-local-prod", false, "run server in production but locally")
 		flag.BoolVar(&flgDeployHetzner, "deploy-hetzner", false, "deploy to hetzner")
-		flag.BoolVar(&flgBuildLocalProd, "build-local-prod", false, "build for production run locally")
 		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
 		flag.BoolVar(&flgUpdateGoDeps, "update-go-deps", false, "update go dependencies")
 		flag.BoolVar(&flgGen, "gen", false, "generate code")
 		flag.BoolVar(&flgAdHoc, "ad-hoc", false, "run ad-hoc code")
-		flag.BoolVar(&flgClean, "clean", false, "remove all files")
 		flag.Parse()
 	}
 
 	if flgAdHoc {
-		testCompress()
-		return
-	}
-
-	if flgClean {
-		emptyFrontEndBuildDir()
-		must(os.RemoveAll("node_modules"))
-		for _, f := range []string{"bun.lockb", "bun.lock", "package-lock.json", "yarn.lock"} {
-			os.Remove(f)
+		if true {
+			testRunServerProd()
+		} else {
+			// make it reachable for compilation
+			testCompress()
+			clean()
 		}
 		return
 	}
 
 	if flgGen {
-		if hasBun() {
-			path := filepath.Join("src", "gen.mjs")
-			u.RunLoggedInDirMust(".", "bun", "run", path)
-		} else {
-			runLoggedInDir(".", "npm", "run", "gen")
-		}
+		path := filepath.Join("src", "gen.mjs")
+		u.RunLoggedInDirMust(".", "bun", "run", path)
 		return
 	}
 
@@ -196,13 +189,6 @@ func Main() {
 	if flgUpdateGoDeps {
 		defer measureDuration()()
 		updateGoDeps(true)
-		return
-	}
-
-	if flgBuildLocalProd {
-		defer measureDuration()()
-		buildForProdLocal()
-		emptyFrontEndBuildDir()
 		return
 	}
 
@@ -222,9 +208,6 @@ func Main() {
 	if flgRunDev {
 		n++
 	}
-	if flgRunProdLocal {
-		n++
-	}
 	if flgRunProd {
 		n++
 	}
@@ -235,16 +218,6 @@ func Main() {
 	panicIf(n > 1, "can only use one of: -run-dev, -run-prod, -run-local-prod")
 
 	loadSecrets()
-	if logtastic.ApiKey != "" {
-		logtastic.BuildHash = GitCommitHash
-		logtastic.LogDir = getLogsDirMust()
-		if flgRunProd {
-			logtastic.Server = "l.arslexis.io"
-		} else {
-			logtastic.Server = "127.0.0.1:9327"
-		}
-		logf("logtatistic server: %s\n", logtastic.Server)
-	}
 
 	if flgRunDev {
 		runServerDev()
@@ -253,11 +226,6 @@ func Main() {
 
 	if flgRunProd {
 		runServerProd()
-		return
-	}
-
-	if flgRunProdLocal {
-		runServerProdLocal()
 		return
 	}
 

@@ -70,7 +70,7 @@ func waitForSigIntOrKill() {
 }
 
 func printFS(fsys fs.FS) {
-	logf("printFS('%s')\n", fsys)
+	logf("printFS('%v')\n", fsys)
 	dfs := fsys.(fs.ReadDirFS)
 	nFiles := 0
 	u.IterReadDirFS(dfs, ".", func(filePath string, d fs.DirEntry) error {

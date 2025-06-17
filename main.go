@@ -11,5 +11,6 @@ var (
 )
 
 func main() {
+	server.DistFS = distFS
 	server.Main()
 }
