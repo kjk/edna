@@ -25,11 +25,33 @@ import {
   scrollPastEnd,
 } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import {
+  highlightSelectionMatches,
+  searchKeymap,
+  search,
+} from "@codemirror/search";
 
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { lintKeymap } from "@codemirror/lint";
+
+import Find from "../components/Find.svelte";
+import { mount } from "svelte";
+
+function createFnddPanel(view) {
+  const dom = document.createElement("div");
+  const args = {
+    target: dom,
+    props: {
+      view,
+    },
+  };
+  mount(Find, args);
+  return {
+    dom,
+    top: true,
+  };
+}
 
 // (The superfluous function calls around the list of extensions work
 // around current limitations in tree-shaking software.)
@@ -88,6 +110,9 @@ const customSetup = /*@__PURE__*/ (() => [
   rectangularSelection(),
   crosshairCursor(),
   highlightActiveLine(),
+  search({
+    createPanel: createFnddPanel,
+  }),
   highlightSelectionMatches(),
   EditorView.lineWrapping,
   scrollPastEnd(),

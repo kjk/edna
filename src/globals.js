@@ -4,6 +4,7 @@
   openCreateNewNote: () => void,
   openNoteSelector: () => void,
   openCommandPalette: () => void,
+  openFind: () => void,
   openContextMenu: (MouseEvent) => void,
   openHistorySelector: () => void,
   createScratchNote: () => void,
@@ -77,6 +78,10 @@ export function openBlockSelector() {
 
 export function openFunctionSelector(onSelection = false) {
   globalFunctions.openFunctionSelector(onSelection);
+}
+
+export function openFind() {
+  globalFunctions.openFind();
 }
 
 export function smartRun() {

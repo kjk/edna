@@ -1,1 +1,1 @@
-go run ./server/ %*
+go run . %*

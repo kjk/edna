@@ -13,7 +13,7 @@ RUN mkdir /app
 WORKDIR /app
 
 COPY . /app
-RUN go run ./server/ -build-frontend \
-  && go build -o edna ./server/
+RUN go run . -build-frontend \
+  && go build -o edna .
 
 ENTRYPOINT ["./edna"]

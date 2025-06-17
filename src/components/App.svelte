@@ -67,9 +67,7 @@
     toggleNoteStarred,
   } from "../metadata";
   import {
-    getAltChar,
     getClipboardText,
-    hasClipboardPermissions,
     isAltNumEvent,
     isDev,
     len,
@@ -96,7 +94,6 @@
   import { setGlobalFuncs } from "../globals";
   import CommandPalette from "./CommandPalette.svelte";
   import CommandPalette2 from "./CommandPalette2.svelte";
-  import Find from "./Find.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
   import {
     formatBlockContent,
@@ -129,8 +126,9 @@
   import { toFileName } from "../filenamify";
   import { tick } from "svelte";
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
-  import { searchPanelOpen } from "@codemirror/search";
+  import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { appState } from "../state.svelte";
+  import { isMoving } from "../mouse-track.svelte";
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
@@ -159,7 +157,6 @@
   let showingRenameNote = $state(false);
   let showingHistorySelector = $state(false);
   let showingBlockSelector = $state(false);
-  let showingFind = $state(false);
   let isSpellChecking = $state(false);
 
   let contextMenuPos = $state({ x: 0, y: 0 });
@@ -191,10 +188,17 @@
       showingDecryptPassword ||
       showingEncryptPassword ||
       showingAskFileWritePermissions ||
-      showingFind ||
       showingSettings
     );
   });
+
+  $effect(() => {
+    isMoving.disableMoveTracking = isShowingDialog;
+  });
+
+  function openFind() {
+    console.log("openFind NYI");
+  }
 
   let gf = {
     openSettings: openSettings,
@@ -203,6 +207,7 @@
     openNoteSelector: openNoteSelector,
     openCommandPalette: openCommandPalette,
     openContextMenu: openContextMenu,
+    openFind: openFind,
     openHistorySelector: openHistorySelector,
     createScratchNote: createScratchNote,
     openBlockSelector: openBlockSelector,
@@ -275,12 +280,15 @@
    */
   function onKeyDown(ev) {
     if (ev.key === "Escape") {
+      // console.log("Esc");
       if (isShowingDialog) {
         return;
       }
       // don't process if codemirror is showing search panel
       let view = getEditorView();
       if (view && searchPanelOpen(view.state)) {
+        console.log("closing search panel on ESC");
+        closeSearchPanel(view);
         return;
       }
       ev.preventDefault();
@@ -895,15 +903,6 @@
     getEditorComp().focus();
   }
 
-  function openFind() {
-    showingFind = true;
-  }
-
-  function closeFind() {
-    showingFind = false;
-    getEditorComp().focus();
-  }
-
   /**
    * @param {string} lang
    */
@@ -927,6 +926,7 @@
 
   export const kCmdCommandPalette = nmid();
   export const kCmdOpenNote = nmid();
+  export const kCmdOpenFind = nmid();
   export const kCmdCreateNewNote = nmid();
   export const kCmdRenameCurrentNote = nmid();
   export const kCmdDeleteCurrentNote = nmid();
@@ -1062,6 +1062,7 @@
     const contextMenu = [
       ["Command Palette\tMod + Shift + P", kCmdCommandPalette],
       ["Open note\tMod + P", kCmdOpenNote],
+      ["Find\tMod + Q", kCmdOpenFind],
       ["This note", menuNote],
       ["Block", menuBlock],
       ["Run code", menuRun],
@@ -1196,6 +1197,8 @@
       openCommandPalette();
     } else if (cmdId === kCmdOpenNote) {
       openNoteSelector();
+    } else if (cmdId === kCmdOpenFind) {
+      // TODO: open search panel
     } else if (cmdId === kCmdCreateNewNote) {
       openCreateNewNote();
     } else if (cmdId === kCmdRenameCurrentNote) {
@@ -2022,10 +2025,6 @@
     {executeCommand}
     {switchToNoteSelector}
   />
-{/if}
-
-{#if showingFind}
-  <Find></Find>
 {/if}
 
 {#if showingMenu}
