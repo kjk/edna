@@ -24,7 +24,7 @@ import (
 
 var (
 	//go:embed dist/*
-	wwwFS embed.FS
+	distFS embed.FS
 	//go:embed secrets.env
 	secretsEnv []byte
 )
@@ -246,7 +246,7 @@ func serverListenAndWait(httpSrv *http.Server) func() {
 }
 
 func mkFsysEmbedded() fs.FS {
-	fsys := wwwFS
+	fsys := distFS
 	printFS(fsys)
 	logf("mkFsysEmbedded: serving from embedded FS\n")
 	return fsys
@@ -277,6 +277,24 @@ func mkServeFileOptions(fsys fs.FS) *hutil.ServeFileOptions {
 		LongLivedURLPrefixes: []string{"/assets/"},
 		ServeCompressed:      false, // when served via Cloudflare, no need to compress
 	}
+}
+
+func waitUntilServerReady(url string) {
+	for range 10 {
+		resp, err := http.Get(url)
+		if err != nil {
+			logf("waitUntilServerReady: error '%s', retrying\n", err)
+			time.Sleep(time.Second * 1)
+			continue
+		}
+		if resp.StatusCode == http.StatusOK {
+			logf("waitUntilServerReady: server is ready\n")
+			return
+		}
+		logf("waitUntilServerReady: got status code %d, retrying\n", resp.StatusCode)
+		time.Sleep(time.Second * 1)
+	}
+	logf("waitUntilServerReady: giving up after 10 attempts\n")
 }
 
 func runServerDev() {
@@ -324,7 +342,8 @@ func runServerProd() {
 	httpSrv := makeHTTPServer(serveOpts, nil)
 	logf("runServerProd(): starting on 'http://%s', dev: %v, prod: %v, prod local: %v\n", httpSrv.Addr, flgRunDev, flgRunProd, flgRunProdLocal)
 	if isWinOrMac() {
-		time.Sleep(time.Second * 2)
+		url := fmt.Sprintf("http://%s/ping.txt", httpSrv.Addr)
+		waitUntilServerReady(url)
 		u.OpenBrowser("http://" + httpSrv.Addr)
 	}
 	waitFn := serverListenAndWait(httpSrv)
@@ -333,7 +352,7 @@ func runServerProd() {
 
 func runServerProdLocal() {
 	var fsys fs.FS
-	if countFilesInFS(wwwFS) > 5 {
+	if countFilesInFS(distFS) > 5 {
 		fsys = mkFsysEmbedded()
 	} else {
 		rebuildFrontend()
