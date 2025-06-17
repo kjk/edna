@@ -8,6 +8,10 @@
     findNext,
     findPrevious,
     closeSearchPanel,
+    selectMatches,
+    getSearchQuery,
+    replaceNext,
+    replaceAll,
   } from "@codemirror/search";
   import { isMoving } from "../mouse-track.svelte";
 
@@ -37,9 +41,21 @@
     console.log("next");
     findNext(view);
   }
+
   function prev() {
     console.log("prev");
     findPrevious(view);
+  }
+
+  function all() {
+    selectMatches(view);
+  }
+
+  function replace() {
+    replaceNext(view);
+  }
+  function _replaceAll() {
+    replaceAll(view);
   }
 
   /**
@@ -58,6 +74,9 @@
   }
 
   onMount(() => {
+    // let query = getSearchQuery(view.state);
+    // console.log("query:", query);
+
     isMoving.disableMoveTracking = true;
     return () => {
       isMoving.disableMoveTracking = false;
@@ -79,9 +98,9 @@
       use:focus
       onkeydown={onKeyDown}
     />
-    <button onclick={next}>next</button>
-    <button onclick={prev}>prev </button>
-    <button onclick={prev}>all </button>
+    <button onclick={next} title="find next (Enter}">next</button>
+    <button onclick={prev} title="find previous (Shift + Enter)">prev </button>
+    <button onclick={all} title="find all">all </button>
   </div>
   <div class="flex">
     <input
@@ -90,8 +109,8 @@
       bind:value={replaceTerm}
       class="w-[32ch]"
     />
-    <button>replace</button>
-    <button class="grow">all</button>
+    <button onclick={replace}>replace</button>
+    <button onclick={_replaceAll} class="grow">all</button>
   </div>
 </div>
 
