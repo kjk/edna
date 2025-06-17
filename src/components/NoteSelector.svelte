@@ -17,15 +17,7 @@
    * @param {NoteInfo} b
    */
   export function sortNotes(a, b) {
-    // started before not starred
-    if (a.isStarred && !b.isStarred) {
-      return -1;
-    }
-    if (!a.isStarred && b.isStarred) {
-      return 1;
-    }
-
-    // with shortcut are before (<) those without
+    // first those with Alt shortcut
     if (a.altShortcut && !b.altShortcut) {
       return -1;
     }
@@ -37,6 +29,14 @@
     if (a.altShortcut && b.altShortcut) {
       return a.altShortcut - b.altShortcut;
     }
+    // then starred
+    if (a.isStarred && !b.isStarred) {
+      return -1;
+    }
+    if (!a.isStarred && b.isStarred) {
+      return 1;
+    }
+
     let isSysA = isSystemNoteName(a.name);
     let isSysB = isSystemNoteName(b.name);
     // system are last
