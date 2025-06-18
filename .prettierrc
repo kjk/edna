@@ -1,9 +1,12 @@
 {
-  "plugins": ["prettier-plugin-svelte"],
+  "plugins": ["prettier-plugin-svelte", "@ianvs/prettier-plugin-sort-imports"],
   "overrides": [
     {
       "files": "*.svelte",
       "options": { "parser": "svelte" }
     }
-  ]
+  ],
+  "importOrder": ["^svelte$", "<THIRD_PARTY_MODULES>", "^@/", "^[./]"],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }
