@@ -1,8 +1,6 @@
-import { CURRENCIES_LOADED } from "../annotation";
-import { Decoration } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { ViewPlugin } from "@codemirror/view";
-import { WidgetType } from "@codemirror/view";
+import { Decoration, ViewPlugin, WidgetType } from "@codemirror/view";
+import { CURRENCIES_LOADED } from "../annotation";
 import { getNoteBlockFromPos } from "./block";
 
 class MathResult extends WidgetType {
@@ -97,7 +95,7 @@ function mathDeco(view) {
               // @ts-ignore
               window.math.format(result, {
                 notation: "fixed",
-              })
+              }),
             );
           }
           builder.add(
@@ -106,7 +104,7 @@ function mathDeco(view) {
             Decoration.widget({
               widget: resultWidget,
               side: 1,
-            })
+            }),
           );
         }
       }
@@ -119,7 +117,7 @@ function mathDeco(view) {
 // This function checks if any of the transactions has the given annotation
 const transactionsHasAnnotation = (transactions, annotation) => {
   return transactions.some((tr) =>
-    tr.annotations.some((a) => a.value === annotation)
+    tr.annotations.some((a) => a.value === annotation),
   );
 };
 
@@ -146,5 +144,5 @@ export const mathBlock = ViewPlugin.fromClass(
   },
   {
     decorations: (v) => v.decorations,
-  }
+  },
 );

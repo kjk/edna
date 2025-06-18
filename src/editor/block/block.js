@@ -1,26 +1,26 @@
-import {
-  Decoration,
-  EditorView,
-  ViewPlugin,
-  WidgetType,
-  lineNumbers,
-} from "@codemirror/view";
-import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms.js";
+import { ensureSyntaxTree } from "@codemirror/language";
 import {
   EditorState,
   RangeSet,
   RangeSetBuilder,
   StateField,
 } from "@codemirror/state";
-import { LANGUAGE_CHANGE, heynoteEvent } from "../annotation.js";
-import { RectangleMarker, layer } from "@codemirror/view";
-import { ensureSyntaxTree } from "@codemirror/language";
-
+import {
+  Decoration,
+  EditorView,
+  layer,
+  lineNumbers,
+  RectangleMarker,
+  ViewPlugin,
+  WidgetType,
+} from "@codemirror/view";
 import { IterMode } from "@lezer/common";
-import { SelectionChangeEvent } from "../event.js";
-import { emptyBlockSelected } from "./select-all.js";
-import { mathBlock } from "./math.js";
 import { len, objectEqualDeep, startTimer } from "../../util.js";
+import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation.js";
+import { SelectionChangeEvent } from "../event.js";
+import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms.js";
+import { mathBlock } from "./math.js";
+import { emptyBlockSelected } from "./select-all.js";
 
 // tracks the size of the first delimiter
 let firstBlockDelimiterSize;

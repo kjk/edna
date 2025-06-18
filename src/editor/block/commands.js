@@ -1,9 +1,10 @@
+import { EditorSelection } from "@codemirror/state";
 import {
   ADD_NEW_BLOCK,
   CURRENCIES_LOADED,
   DELETE_BLOCK,
-  LANGUAGE_CHANGE,
   heynoteEvent,
+  LANGUAGE_CHANGE,
 } from "../annotation.js";
 import {
   blockState,
@@ -13,8 +14,6 @@ import {
   getNoteBlockFromPos,
 } from "./block";
 import { moveLineDown, moveLineUp } from "./move-lines.js";
-
-import { EditorSelection } from "@codemirror/state";
 import { selectAll } from "./select-all.js";
 
 export { moveLineDown, moveLineUp, selectAll };

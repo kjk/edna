@@ -1,6 +1,6 @@
 import { EditorSelection } from "@codemirror/state";
-import { blockState } from "./block";
 import { kLanguages } from "../languages.js";
+import { blockState } from "./block";
 
 const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
 const tokenRegEx = new RegExp(`^∞∞∞(${languageTokensMatcher})(-a)?$`, "g");

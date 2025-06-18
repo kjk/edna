@@ -1,7 +1,6 @@
-import { ViewPlugin, Decoration } from "@codemirror/view";
-import { StateField, StateEffect, RangeSetBuilder } from "@codemirror/state";
 import { selectAll as defaultSelectAll } from "@codemirror/commands";
-
+import { RangeSetBuilder, StateEffect, StateField } from "@codemirror/state";
+import { Decoration, ViewPlugin } from "@codemirror/view";
 import { getActiveNoteBlock } from "./block";
 
 /**
