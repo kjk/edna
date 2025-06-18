@@ -6,7 +6,7 @@
     openContextMenu,
     openNoteSelector,
   } from "../globals.js";
-  import IconCommandPalette from "./IconCommandPalette.svelte";
+  import { IconCommandPalette } from "./Icons.svelte";
   import { fixUpShortcuts } from "../key-helper.js";
   import { onMount } from "svelte";
   import { IconMenu } from "./Icons.svelte";
@@ -107,7 +107,7 @@
       class="clickable-icon mt-[3px]"
       title={fixUpShortcuts("Command Palette (Mod + Shift + P)")}
     >
-      <IconCommandPalette></IconCommandPalette>
+      {@render IconCommandPalette()}
     </button>
     {#if len(quickAccessNotes) > 0}
       <div
