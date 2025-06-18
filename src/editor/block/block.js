@@ -1,4 +1,4 @@
-import { ensureSyntaxTree } from "@codemirror/language";
+import { ensureSyntaxTree, syntaxTreeAvailable } from "@codemirror/language";
 import {
   EditorState,
   RangeSet,
@@ -14,219 +14,44 @@ import {
   ViewPlugin,
   WidgetType,
 } from "@codemirror/view";
-import { IterMode } from "@lezer/common";
-import { len, objectEqualDeep, startTimer } from "../../util.js";
 import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation.js";
 import { SelectionChangeEvent } from "../event.js";
-import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms.js";
+import {
+  firstBlockDelimiterSize,
+  getBlocksFromString,
+  getBlocksFromSyntaxTree,
+} from "./block-parsing.js";
 import { mathBlock } from "./math.js";
 import { emptyBlockSelected } from "./select-all.js";
 
-// tracks the size of the first delimiter
-let firstBlockDelimiterSize;
-
-/** @typedef {{
-    name: string,
-    auto: boolean,
-}} BlockLanguage
-*/
-
-/** @typedef {{
-  from: number,
-  to: number,
- }} BlockRange */
-
-/** @typedef {{
-  language: BlockLanguage,
-  content: BlockRange,
-  delimiter: BlockRange,
-  range: BlockRange,
-}} Block */
-
-/** @typedef {{
-}} BlockWithNo */
-
 /**
- * Original implementation was forcing syntax tree parse on whole document to get
- * block boundaries. That is slow for large documents (e.g. >300ms for 357kb doc)
- * which causes un-styled content to flash (e.g. exposing delimiters).
- * CodeMirror parses things incrementally, so this usually doesn't happen.
- * This implementation does same doc in 2ms
- * @param {EditorState} state
- * @returns {Block[]}
+ * Get the blocks from the document state.
+ * If the syntax tree is available, we'll extract the blocks from that. Otherwise
+ * the blocks are parsed from the string contents of the document, which is much faster
+ * than waiting for the tree parsing to finish.
  */
-function getBlocks(state) {
-  firstBlockDelimiterSize = 0;
-  let res = [];
-  let doc = state.doc;
-  let n = doc.length;
-  if (n === 0) {
-    return [];
-  }
-  let s = doc.sliceString(0, n);
-  let delim = "\n∞∞∞";
-  let delimLen = len(delim);
-  for (let pos = 0; pos < doc.length; ) {
-    let blockStart = s.indexOf(delim, pos);
-    if (blockStart != pos) {
-      // shouldn't happen
-      break;
-    }
-    let langStart = blockStart + delimLen;
-    let delimiterEnd = s.indexOf("\n", langStart);
-    if (delimiterEnd < 0) {
-      // shouldn't happen
-      break;
-    }
-    let langFull = s.substring(langStart, delimiterEnd);
-    let auto = false;
-    let lang = langFull;
-    if (langFull.endsWith("-a")) {
-      auto = true;
-      lang = langFull.substring(0, len(langFull) - 2);
-    }
-    let contentFrom = delimiterEnd + 1;
-    let blockEnd = s.indexOf(delim, contentFrom);
-    if (blockEnd < 0) {
-      blockEnd = doc.length;
-    }
-    /** @type {Block} */
-    let block = {
-      language: {
-        name: lang,
-        auto: auto,
-      },
-      content: {
-        from: contentFrom,
-        to: blockEnd,
-      },
-      delimiter: {
-        from: blockStart,
-        to: delimiterEnd + 1,
-      },
-      range: {
-        from: blockStart,
-        to: blockEnd,
-      },
-    };
-    res.push(block);
-    pos = blockEnd;
-  }
-  if (len(res) > 0) {
-    firstBlockDelimiterSize = res[0].delimiter.to;
-  }
-  return res;
-}
-
-/**
- * @param {EditorState} state
- * @param {number} timeout
- * @returns {Block[]}
- */
-function getBlocksOriginal(state, timeout = 50) {
-  const tree = ensureSyntaxTree(state, state.doc.length, timeout);
-  if (!tree) {
-    return [];
-  }
-  const blocks = [];
-  tree.iterate({
-    enter: (type) => {
-      if (type.type.id == Document || type.type.id == Note) {
-        return true;
-      } else if (type.type.id === NoteDelimiter) {
-        const langNode = type.node.getChild("NoteLanguage");
-        const language = state.doc.sliceString(langNode.from, langNode.to);
-        const isAuto = !!type.node.getChild("Auto");
-        const contentNode = type.node.nextSibling;
-        blocks.push({
-          language: {
-            name: language,
-            auto: isAuto,
-          },
-          content: {
-            from: contentNode.from,
-            to: contentNode.to,
-          },
-          delimiter: {
-            from: type.from,
-            to: type.to,
-          },
-          range: {
-            from: type.node.from,
-            to: contentNode.to,
-          },
-        });
-        return false;
-      }
-      return false;
-    },
-    mode: IterMode.IgnoreMounts,
-  });
-  firstBlockDelimiterSize = blocks[0]?.delimiter.to;
-  return blocks;
-}
-
-let flagCompareGetBlocks = false;
-/**
- * @param {EditorState} state
- * @param {number} timeout
- * @returns {Block[]}
- */
-function getBlocksCompare(state, timeout = 50) {
-  if (!flagCompareGetBlocks) {
-    // let timer = startTimer();
-    let res = getBlocks(state);
-    // console.log("getBlocks2 took:", timer(), " ms");
-    return res;
-  }
-  // TODO: for now keeping the old getBlocks() implementation and this
-  // comparison code
-
-  let timer1 = startTimer();
-  let res1 = getBlocksOriginal(state, timeout);
-  console.log("getBlocks took:", timer1(), " ms");
-  let timer = startTimer();
-  let res2 = getBlocks(state);
-  console.log("getBlocks2 took:", timer(), " ms");
-  if (len(res1) == len(res2)) {
-    if (objectEqualDeep(res1, res2)) {
-      console.log("great success!!!");
-    } else {
-      for (let i = 0; i < len(res1); i++) {
-        console.log(`res1[${i}]:`, res1[i]);
-        console.log(`res2[${i}]:`, res2[i]);
-      }
-    }
+export function getBlocks(state) {
+  if (syntaxTreeAvailable(state, state.doc.length)) {
+    return getBlocksFromSyntaxTree(state);
   } else {
-    console.log("Not even lengths match!");
-    for (let i = 0; i < len(res1); i++) {
-      console.log(`res1[${i}]:`, res1[i]);
-      console.log(`res2[${i}]:`, res2[i]);
-    }
+    return getBlocksFromString(state);
   }
-  return res1;
 }
 
 export const blockState = StateField.define({
   create(state) {
-    ensureSyntaxTree(state, state.doc.length, 1000);
-    return getBlocksCompare(state, 1000);
+    return getBlocks(state);
   },
   update(blocks, transaction) {
     // if blocks are empty it likely means we didn't get a parsed syntax tree, and then we want to update
     // the blocks on all updates (and not just document changes)
     if (transaction.docChanged || blocks.length === 0) {
-      blocks = getBlocksCompare(transaction.state, 50);
+      return getBlocks(transaction.state);
     }
     return blocks;
   },
 });
 
-/**
- * @param {Block[]} blocks
- * @param {number} pos
- * @returns {Block}
- */
 function findBlockWithPos(blocks, pos) {
   for (let block of blocks) {
     let r = block.range;
