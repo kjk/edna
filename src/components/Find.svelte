@@ -72,7 +72,7 @@
   let query = getSearchQuery(view.state);
   searchTerm = query.search;
 
-  /** @type {HTMLElemennt} */
+  /** @type {HTMLInputElement} */
   let searchInput;
 
   onMount(() => {
