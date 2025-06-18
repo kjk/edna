@@ -8,6 +8,8 @@
     IconLucideReplaceAll,
     IconTablerX,
     IconLucideTextSelect,
+    IconTablerChevronDown,
+    IconTablerChevronUp,
   } from "./Icons.svelte";
   import {
     setSearchQuery,
@@ -31,6 +33,7 @@
 
   let searchTerm = $state("");
   let replaceTerm = $state("");
+  let showReplace = $state(false);
 
   $effect(() => {
     let query = new SearchQuery({
@@ -62,6 +65,10 @@
     replaceAll(view);
   }
 
+  function toggleShowReplace() {
+    showReplace = !showReplace;
+    searchInput.focus();
+  }
   /**
    * @param {KeyboardEvent} ev
    */
@@ -125,23 +132,34 @@
     <button onclick={all} title="find all"
       >{@render IconLucideTextSelect()}</button
     >
+    {#if showReplace}
+      <button onclick={toggleShowReplace} title="hide replace"
+        >{@render IconTablerChevronUp()}</button
+      >
+    {:else}
+      <button onclick={toggleShowReplace} title="show replace"
+        >{@render IconTablerChevronDown()}</button
+      >
+    {/if}
     <button onclick={close} title="close">{@render IconTablerX()}</button>
   </div>
-  <div class="flex">
-    <input
-      type="text"
-      spellcheck="false"
-      placeholder="Replace"
-      bind:value={replaceTerm}
-      class="grow"
-    />
-    <button title="replace" onclick={replace}
-      >{@render IconLucideReplace()}</button
-    >
-    <button title="replace all" onclick={_replaceAll}
-      >{@render IconLucideReplaceAll()}</button
-    >
-  </div>
+  {#if showReplace}
+    <div class="flex">
+      <input
+        type="text"
+        spellcheck="false"
+        placeholder="Replace"
+        bind:value={replaceTerm}
+        class="grow"
+      />
+      <button title="replace" onclick={replace}
+        >{@render IconLucideReplace()}</button
+      >
+      <button title="replace all" onclick={_replaceAll}
+        >{@render IconLucideReplaceAll()}</button
+      >
+    </div>
+  {/if}
 </div>
 
 <style>
