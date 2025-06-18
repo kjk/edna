@@ -11,7 +11,7 @@
   } from "../util";
   import { focus, smartfocus, trapfocus } from "../actions";
   import ListBox from "./ListBox.svelte";
-  import { IconStar } from "./Icons.svelte";
+  import { IconTablerStar } from "./Icons.svelte";
   import { appState } from "../state.svelte";
   import { buildNoteInfos } from "./NoteSelector.svelte";
 
@@ -271,7 +271,7 @@
               ev.stopPropagation();
             }}
           >
-            {@render IconStar(
+            {@render IconTablerStar(
               item.isStarred ? "var(--color-yellow-300)" : "none",
             )}
           </button>

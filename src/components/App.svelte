@@ -288,6 +288,7 @@
       let view = getEditorView();
       if (view && searchPanelOpen(view.state)) {
         console.log("closing search panel on ESC");
+        isMoving.disableMoveTracking = false;
         closeSearchPanel(view);
         return;
       }

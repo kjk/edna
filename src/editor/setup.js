@@ -46,6 +46,7 @@ function createFnddPanel(view) {
       view,
     },
   };
+  // TODO: this leak, I don't see unmounting anywhere
   mount(Find, args);
   return {
     dom,

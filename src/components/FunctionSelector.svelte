@@ -4,7 +4,7 @@
   import { findMatchingItems, getAltChar, len } from "../util";
   import { getBoopFunctions } from "../system-notes";
   import { getFunctionMeta, toggleFunctionStarred } from "../metadata";
-  import { IconStar } from "./Icons.svelte";
+  import { IconTablerStar } from "./Icons.svelte";
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
@@ -197,7 +197,9 @@
           ev.stopPropagation();
         }}
       >
-        {@render IconStar(item.isStarred ? "var(--color-yellow-300)" : "none")}
+        {@render IconTablerStar(
+          item.isStarred ? "var(--color-yellow-300)" : "none",
+        )}
       </button>
       <div class="truncate ml-2">
         {item.name}

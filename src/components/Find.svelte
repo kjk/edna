@@ -2,6 +2,14 @@
   import { onMount, tick } from "svelte";
   import { focus, trapfocus } from "../actions";
   import {
+    IconTablerArrowDown,
+    IconTablerArrowUp,
+    IconLucideReplace,
+    IconLucideReplaceAll,
+    IconTablerX,
+    IconLucideTextSelect,
+  } from "./Icons.svelte";
+  import {
     setSearchQuery,
     SearchQuery,
     findNext,
@@ -86,6 +94,11 @@
       closeSearchPanel(view);
     };
   });
+
+  function close() {
+    isMoving.disableMoveTracking = false;
+    closeSearchPanel(view);
+  }
 </script>
 
 <div
@@ -103,9 +116,16 @@
       use:focus
       onkeydown={onKeyDown}
     />
-    <button onclick={next} title="find next (Enter}">next</button>
-    <button onclick={prev} title="find previous (Shift + Enter)">prev </button>
-    <button onclick={all} title="find all">all </button>
+    <button onclick={next} title="find next (Enter}"
+      >{@render IconTablerArrowDown()}</button
+    >
+    <button onclick={prev} title="find previous (Shift + Enter)"
+      >{@render IconTablerArrowUp()}</button
+    >
+    <button onclick={all} title="find all"
+      >{@render IconLucideTextSelect()}</button
+    >
+    <button onclick={close} title="close">{@render IconTablerX()}</button>
   </div>
   <div class="flex">
     <input
@@ -113,10 +133,14 @@
       spellcheck="false"
       placeholder="Replace"
       bind:value={replaceTerm}
-      class="w-[32ch]"
+      class="grow"
     />
-    <button onclick={replace}>replace</button>
-    <button onclick={_replaceAll} class="grow">all</button>
+    <button title="replace" onclick={replace}
+      >{@render IconLucideReplace()}</button
+    >
+    <button title="replace all" onclick={_replaceAll}
+      >{@render IconLucideReplaceAll()}</button
+    >
   </div>
 </div>
 
