@@ -141,12 +141,6 @@
 <style>
   @reference "../main.css";
 
-  /* quick access notes grid */
-  .qa-grid {
-    display: grid;
-    grid-template-columns: auto auto; /* Example: 2 columns sized to content */
-    gap: 4px; /* Optional: spacing between grid items */
-  }
   .clickable-icon {
     @apply cursor-pointer px-[6px] py-[4px];
 

@@ -82,8 +82,10 @@ const darkTheme = EditorView.theme(
     ".cm-panel.cm-search [name=close]": {
       color: "rgba(255,255,255, 0.8)",
     },
-    ".cm-panels.cm-panels-top": { borderBottom: "2px solid black" },
-
+    ".cm-panels.cm-panels-top": {
+      // borderBottom: "2px solid black",
+      borderStyle: "none",
+    },
     ".cm-searchMatch": {
       backgroundColor: "transparent",
       outline: `1px solid ${base07}`,

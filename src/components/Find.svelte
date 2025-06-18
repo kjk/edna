@@ -35,6 +35,15 @@
   let replaceTerm = $state("");
   let showReplace = $state(false);
 
+  /** @type {HTMLInputElement} */
+  let searchInput;
+
+  /** @type {HTMLInputElement} */
+  let replaceInput;
+
+  let query = getSearchQuery(view.state);
+  searchTerm = query.search;
+
   $effect(() => {
     let query = new SearchQuery({
       search: searchTerm,
@@ -67,7 +76,11 @@
 
   function toggleShowReplace() {
     showReplace = !showReplace;
-    searchInput.focus();
+    if (showReplace) {
+      tick().then(() => replaceInput.focus());
+    } else {
+      tick().then(() => searchInput.focus());
+    }
   }
   /**
    * @param {KeyboardEvent} ev
@@ -83,12 +96,6 @@
       return;
     }
   }
-
-  let query = getSearchQuery(view.state);
-  searchTerm = query.search;
-
-  /** @type {HTMLInputElement} */
-  let searchInput;
 
   onMount(() => {
     tick().then(() => {
@@ -109,7 +116,7 @@
 </script>
 
 <div
-  class="fixed top-[2px] left-1/2 -translate-x-1/2 z-20 pl-2 py-0.5 bg-white border text-sm border-gray-400 rounded-sm max-w-4/5 flex flex-col"
+  class="fixed top-[2px] left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-white text-sm max-w-4/5 flex flex-col shadow-lg rounded-2xl border border-gray-300"
   use:trapfocus
 >
   <div class="flex">
@@ -123,7 +130,7 @@
       use:focus
       onkeydown={onKeyDown}
     />
-    <button onclick={next} title="find next (Enter}"
+    <button onclick={next} title="find next (Enter}" class="ml-2"
       >{@render IconTablerArrowDown()}</button
     >
     <button onclick={prev} title="find previous (Shift + Enter)"
@@ -144,8 +151,9 @@
     <button onclick={close} title="close">{@render IconTablerX()}</button>
   </div>
   {#if showReplace}
-    <div class="flex">
+    <div class="flex mt-2">
       <input
+        bind:this={replaceInput}
         type="text"
         spellcheck="false"
         placeholder="Replace"
@@ -166,7 +174,7 @@
   @reference "../main.css";
 
   input {
-    @apply border-none outline-none;
+    @apply bg-white rounded-lg px-2 py-1 border-1 border-gray-200 outline-1 outline-gray-200;
   }
   button {
     @apply px-[6px] py-[2px] hover:bg-gray-200;
