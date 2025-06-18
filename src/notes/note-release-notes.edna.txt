@@ -2,6 +2,9 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.23
+- changed search UI (For `Ctrl + F`)
+
 ## 1.22
 - remove `Show Quick Notes Access". Instead show top navigation element only when mouse is moving (for discoverability) or is over the element
 
