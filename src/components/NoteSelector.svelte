@@ -102,7 +102,7 @@
   } from "../util";
   import { focus } from "../actions";
   import ListBox from "./ListBox.svelte";
-  import IconStar from "./IconStar.svelte";
+  import { IconStar } from "./Icons.svelte";
   import { appState } from "../state.svelte";
 
   /** @type {{
@@ -478,8 +478,7 @@
           ev.stopPropagation();
         }}
       >
-        <IconStar fill={item.isStarred ? "var(--color-yellow-300)" : "none"}
-        ></IconStar>
+        {@render IconStar(item.isStarred ? "var(--color-yellow-300)" : "none")}
       </button>
       <div class="ml-2 truncate {sysNoteCls(item) ? 'italic' : ''}">
         {@html hili}

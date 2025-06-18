@@ -16,7 +16,7 @@
   import ListBox2 from "./ListBox2.svelte";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
   import { buildNoteInfos } from "./NoteSelector.svelte";
-  import IconStar from "./IconStar.svelte";
+  import { IconStar } from "./Icons.svelte";
   import { appState } from "../state.svelte";
 
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} Item */
@@ -256,8 +256,7 @@
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
       {#if item.isStarred}
-        <IconStar class="inline-block mt-[-3px]" fill="var(--color-yellow-300)"
-        ></IconStar>
+        {@render IconStar("var(--color-yellow-300)", "inline-block mt-[-3px]")}
       {/if}
       {@html hili}
       <span class="ml-0.5 text-xs text-gray-400 whitespace-nowrap"

@@ -11,7 +11,7 @@
   } from "../util";
   import { focus, smartfocus, trapfocus } from "../actions";
   import ListBox from "./ListBox.svelte";
-  import IconStar from "./IconStar.svelte";
+  import { IconStar } from "./Icons.svelte";
   import { appState } from "../state.svelte";
   import { buildNoteInfos } from "./NoteSelector.svelte";
 
@@ -270,10 +270,11 @@
               ev.preventDefault();
               ev.stopPropagation();
             }}
-            ><IconStar
-              fill={item.isStarred ? "var(--color-yellow-300)" : "none"}
-            ></IconStar></button
           >
+            {@render IconStar(
+              item.isStarred ? "var(--color-yellow-300)" : "none",
+            )}
+          </button>
           <div class="ml-2 truncate {sysNoteCls(item) ? 'italic' : ''}">
             {@html hili}
           </div>
