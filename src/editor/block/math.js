@@ -1,7 +1,10 @@
+import { ViewPlugin } from "@codemirror/view";
+import { Decoration } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { Decoration, ViewPlugin, WidgetType } from "@codemirror/view";
-import { CURRENCIES_LOADED } from "../annotation";
+import { WidgetType } from "@codemirror/view";
+
 import { getNoteBlockFromPos } from "./block";
+import { transactionsHasAnnotation, CURRENCIES_LOADED } from "../annotation";
 
 class MathResult extends WidgetType {
   constructor(displayResult, copyResult) {
@@ -53,7 +56,6 @@ function mathDeco(view) {
         // get math.js parser and cache it for this block
         let { parser, prev } = mathParsers.get(block) || {};
         if (!parser) {
-          // @ts-ignore
           parser = window.math.parser();
           mathParsers.set(block, { parser, prev });
         }
@@ -86,16 +88,14 @@ function mathDeco(view) {
           }
           if (resultWidget === undefined) {
             resultWidget = new MathResult(
-              // @ts-ignore
-              window.math.format(result, {
+              math.format(result, {
                 precision: 8,
                 upperExp: 8,
                 lowerExp: -6,
               }),
-              // @ts-ignore
-              window.math.format(result, {
+              math.format(result, {
                 notation: "fixed",
-              }),
+              })
             );
           }
           builder.add(
@@ -104,7 +104,7 @@ function mathDeco(view) {
             Decoration.widget({
               widget: resultWidget,
               side: 1,
-            }),
+            })
           );
         }
       }
@@ -113,13 +113,6 @@ function mathDeco(view) {
   }
   return builder.finish();
 }
-
-// This function checks if any of the transactions has the given annotation
-const transactionsHasAnnotation = (transactions, annotation) => {
-  return transactions.some((tr) =>
-    tr.annotations.some((a) => a.value === annotation),
-  );
-};
 
 export const mathBlock = ViewPlugin.fromClass(
   class {
@@ -144,5 +137,5 @@ export const mathBlock = ViewPlugin.fromClass(
   },
   {
     decorations: (v) => v.decorations,
-  },
+  }
 );
