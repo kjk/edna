@@ -9,7 +9,7 @@
   import IconCommandPalette from "./IconCommandPalette.svelte";
   import { fixUpShortcuts } from "../key-helper.js";
   import { onMount } from "svelte";
-  import IconMenu from "./IconMenu.svelte";
+  import { IconMenu } from "./Icons.svelte";
   import { isMoving } from "../mouse-track.svelte.js";
   import { getNoteMeta } from "../metadata.js";
   import { buildNoteInfos, sortNotes } from "./NoteSelector.svelte";
@@ -80,7 +80,7 @@
       class="clickable-icon mt-[3px]"
       title="open menu"
     >
-      <IconMenu></IconMenu>
+      {@render IconMenu()}
     </button>
     <div class="text-gray-400 px-1">&bull;</div>
 
