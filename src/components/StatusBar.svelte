@@ -7,7 +7,7 @@
   } from "../editor/languages.js";
   import { fmtSize, getScrollbarWidth } from "../util";
   import IconSettings from "./IconSettings.svelte";
-  import IconGitHub from "./IconGitHub.svelte";
+  import { IconGitHub } from "./Icons.svelte";
   import { openLanguageSelector, openSettings } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import CurrentTime from "./CurrentTime.svelte";
@@ -147,7 +147,7 @@
     target="_blank"
     title="Source code on GitHub"
   >
-    <IconGitHub></IconGitHub>
+    {@render IconGitHub()}
   </a>
   <div class="text-gray-400">&bull;</div>
   <CurrentTime class="ml-1 mr-1"></CurrentTime>
