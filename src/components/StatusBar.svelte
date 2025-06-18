@@ -6,7 +6,7 @@
     langSupportsRun,
   } from "../editor/languages.js";
   import { fmtSize, getScrollbarWidth } from "../util";
-  import IconSettings from "./IconSettings.svelte";
+  import { IconSettings } from "./Icons.svelte";
   import { IconGitHub } from "./Icons.svelte";
   import { openLanguageSelector, openSettings } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
@@ -138,7 +138,7 @@
   {/if}
 
   <button onclick={openSettings} class="clickable-icon ml-1" title="Settings">
-    <IconSettings></IconSettings>
+    {@render IconSettings()}
   </button>
   <div class="text-gray-400">&bull;</div>
   <a
