@@ -81,11 +81,11 @@
             title="open note '{noteInfo.name}'"
             onclick={() => selectItem(noteInfo.name)}
           >
-            <td class="pl-2 pr-2 text-right max-w-[32ch] truncate">
-              {noteInfo.name}
-            </td>
             <td class="text-xs px-2 text-gray-400 dark:text-gray-400">
               {shortcut}
+            </td>
+            <td class="pl-2 pr-2 text-right max-w-[32ch] truncate">
+              {noteInfo.name}
             </td>
           </tr>
         {/each}
