@@ -1,17 +1,16 @@
 <script>
-  import { getAltChar, getScrollbarWidth, len, throwIf } from "../util.js";
-  import { appState } from "../state.svelte.js";
+  import { onMount } from "svelte";
   import {
     openCommandPalette,
     openContextMenu,
     openNoteSelector,
   } from "../globals.js";
-  import { IconCommandPalette } from "./Icons.svelte";
   import { fixUpShortcuts } from "../key-helper.js";
-  import { onMount } from "svelte";
-  import { IconMenu } from "./Icons.svelte";
-  import { isMoving } from "../mouse-track.svelte.js";
   import { getNoteMeta } from "../metadata.js";
+  import { isMoving } from "../mouse-track.svelte.js";
+  import { appState } from "../state.svelte.js";
+  import { getAltChar, getScrollbarWidth, len, throwIf } from "../util.js";
+  import { IconCommandPalette, IconMenu } from "./Icons.svelte";
   import { buildNoteInfos, sortNotes } from "./NoteSelector.svelte";
 
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
@@ -109,34 +108,35 @@
     >
       {@render IconCommandPalette()}
     </button>
-    {#if len(quickAccessNotes) > 0}
-      <div
-        class:moving={isMoving.moving}
-        class="text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnMouseMove absolute right-[0px] top-full"
-      >
-        <table class="my-1">
-          <tbody>
-            {#each quickAccessNotes as noteInfo (noteInfo.key)}
-              {@const shortcut = getNoteShortcut(noteInfo.name)}
-              <tr
-                class=" whitespace-nowrap cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline"
-                title="open note '{noteInfo.name}'"
-                onclick={() => selectItem(noteInfo.name)}
-              >
-                <td class="pl-2 pr-2 text-right max-w-[32ch] truncate">
-                  {noteInfo.name}
-                </td>
-                <td class="text-xs px-2 text-gray-400 dark:text-gray-400">
-                  {shortcut}
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    {/if}
   </div>
 </div>
+
+{#if len(quickAccessNotes) > 0}
+  <div
+    class="fixed top-[28px] z-10 text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnHover"
+    {style}
+  >
+    <table class="my-1">
+      <tbody>
+        {#each quickAccessNotes as noteInfo (noteInfo.key)}
+          {@const shortcut = getNoteShortcut(noteInfo.name)}
+          <tr
+            class=" whitespace-nowrap cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline"
+            title="open note '{noteInfo.name}'"
+            onclick={() => selectItem(noteInfo.name)}
+          >
+            <td class="pl-2 pr-2 text-right max-w-[32ch] truncate">
+              {noteInfo.name}
+            </td>
+            <td class="text-xs px-2 text-gray-400 dark:text-gray-400">
+              {shortcut}
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
+{/if}
 
 <style>
   @reference "../main.css";
@@ -156,6 +156,12 @@
     visibility: hidden;
     &:where(.moving, :hover) {
       visibility: visible;
+    }
+  }
+  .showOnHover {
+    opacity: 0;
+    &:where(:hover) {
+      opacity: 1;
     }
   }
 </style>
