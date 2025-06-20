@@ -1894,7 +1894,10 @@
   {oncontextmenu}
 >
   <TopNav {noteName} />
-  <QuickAccess selectNote={onSelectHistory} />
+  {#if !showingHistorySelector}
+    <QuickAccess selectNote={onSelectHistory} forHistory={false} />
+  {/if}
+
   <Editor
     cursorChange={onCursorChange}
     debugSyntaxTree={false}
@@ -1985,15 +1988,16 @@
   />
 {/if}
 
-{#if showingLanguageSelector}
-  <Overlay onclose={closeLanguageSelector} blur={true}>
-    <LanguageSelector selectLanguage={onSelectLanguage} />
-  </Overlay>
-{/if}
-
 {#if showingHistorySelector}
   <Overlay onclose={closeHistorySelector} blur={true}>
     <History selectHistory={onSelectHistory} />
+    <!-- <QuickAccess selectNote={onSelectHistory} forHistory={true} /> -->
+  </Overlay>
+{/if}
+
+{#if showingLanguageSelector}
+  <Overlay onclose={closeLanguageSelector} blur={true}>
+    <LanguageSelector selectLanguage={onSelectLanguage} />
   </Overlay>
 {/if}
 

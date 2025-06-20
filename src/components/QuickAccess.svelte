@@ -1,18 +1,20 @@
 <script>
   import { onMount } from "svelte";
-  import { getNoteMeta } from "../metadata";
   import { appState } from "../state.svelte";
   import { getAltChar, getScrollbarWidth, len } from "../util";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
   /** @type {{ 
     selectNote: (name: string) => void,
+    forHistory: boolean,
   }} */
-  let { selectNote } = $props();
+  let { forHistory, selectNote } = $props();
 
   let altChar = getAltChar();
 
-  let fistInHistoryIdx;
+  let firstInHistoryIdx = -1;
+
+  console.log("QuickAcess, forHistory:", forHistory);
 
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
   /**
@@ -26,7 +28,7 @@
     // remove duplicate names in notes
     notes = [...new Set(notes)];
     let res = buildNoteInfos(notes);
-    fistInHistoryIdx = len(res);
+    firstInHistoryIdx = len(res);
     // history can repeat the names
     for (let noteName of history) {
       let item = buildNoteInfo(noteName);
@@ -64,18 +66,19 @@
   function selectItem(noteName) {
     selectNote(noteName);
   }
+  let cls = forHistory ? "opacity-100" : "showOnHover";
 </script>
 
 {#if len(quickAccessNotes) > 0}
   <div
-    class="fixed top-[28px] z-10 text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 showOnHover"
+    class="fixed top-[28px] z-20 text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 {cls}"
     {style}
   >
     <table class="my-1">
       <tbody>
         {#each quickAccessNotes as noteInfo, idx (noteInfo.key)}
           {@const shortcut = getNoteShortcut(noteInfo)}
-          {@const cls = fistInHistoryIdx == idx ? "border-t" : ""}
+          {@const cls = firstInHistoryIdx == idx ? "border-t" : ""}
           <tr
             class=" whitespace-nowrap cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline {cls}"
             title="open note '{noteInfo.name}'"
@@ -95,7 +98,7 @@
 {/if}
 
 <style>
-  .showOnHover {
+  :global(.showOnHover) {
     opacity: 0;
     &:where(:hover) {
       opacity: 1;

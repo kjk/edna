@@ -1,44 +1,16 @@
 <script>
+  import { focus } from "../actions";
   import { appState } from "../state.svelte";
   import { getKeyEventNumber, len } from "../util";
-  import { focus } from "../actions";
   import ListBox from "./ListBox.svelte";
+  import { buildNoteInfos } from "./NoteSelector.svelte";
 
   /** @type {{
     selectHistory: (name: string) => void,
 }}*/
   let { selectHistory } = $props();
 
-  /**
-   * @typedef {Object} HistoryItem
-   * @property {string} name
-   * @property {string} key
-   * @property {string} nameLC
-   * @property {HTMLElement} ref
-   */
-
-  let history = appState.history;
-
-  /**
-   * @returns {HistoryItem[]}
-   */
-  function buildItems() {
-    let n = len(history);
-    /** @type {HistoryItem[]} */
-    let res = Array(n);
-    for (let i = 0; i < n; i++) {
-      let el = history[i];
-      res[i] = {
-        key: el,
-        name: el,
-        nameLC: el.toLowerCase(),
-        ref: null,
-      };
-    }
-    return res;
-  }
-
-  let items = $state(buildItems());
+  let items = $state(buildNoteInfos(appState.history));
 
   /**
    * @param {KeyboardEvent} ev
