@@ -2,7 +2,12 @@
   import { onMount } from "svelte";
   import { focus } from "../actions";
   import { appState } from "../state.svelte";
-  import { getAltChar, getScrollbarWidth, len } from "../util";
+  import {
+    getAltChar,
+    getKeyEventNumber,
+    getScrollbarWidth,
+    len,
+  } from "../util";
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
@@ -85,15 +90,17 @@
    * @param {KeyboardEvent} ev
    */
   function onkeydown(ev) {
-    // // '0' ... '9' picks an item
-    // let idx = getKeyEventNumber(ev);
-    // let lastIdx = len(items) - 1;
-    // if (idx >= 0 && idx <= lastIdx) {
-    //   ev.preventDefault();
-    //   let item = items[idx];
-    //   selectItem(item.name);
-    //   return;
-    // }
+    if (forHistory) {
+      // '0' ... '9' picks an item
+      let idx = getKeyEventNumber(ev);
+      let lastIdx = len(history) - 1;
+      if (idx >= 0 && idx <= lastIdx) {
+        ev.preventDefault();
+        let item = quickAccessNotes[firstInHistoryIdx + idx];
+        selectItem(item.name);
+        return;
+      }
+    }
 
     listbox.onkeydown(ev, true);
   }
@@ -116,9 +123,16 @@
     {#snippet renderItem(noteInfo, idx)}
       {@const shortcut = getNoteShortcut(noteInfo)}
       {@const cls = firstInHistoryIdx == idx ? "border-t" : ""}
-      <div class="px-2 grow text-gray-400 dark:text-gray-400 {cls}">
-        {shortcut}&nbsp;
-      </div>
+      {@const historyTrigger = idx - firstInHistoryIdx}
+      {#if forHistory && historyTrigger >= 0}
+        <div class="px-2 grow text-gray-800 font-bold dark:text-gray-400 {cls}">
+          {"" + historyTrigger}
+        </div>
+      {:else}
+        <div class="px-2 grow text-gray-400 dark:text-gray-400 {cls}">
+          {shortcut}&nbsp;
+        </div>
+      {/if}
       <div class="px-2 grow self-end text-right max-w-[32ch] truncate {cls}">
         {noteInfo.name}
       </div>

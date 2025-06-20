@@ -112,7 +112,6 @@
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
-  import History from "./History.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
   import ModalMessage, {
     clearModalMessage,
@@ -1990,7 +1989,6 @@
 
 {#if showingHistorySelector}
   <Overlay onclose={closeHistorySelector} blur={true}>
-    <!-- <History selectHistory={onSelectHistory} /> -->
     <QuickAccess selectNote={onSelectHistory} forHistory={true} />
   </Overlay>
 {/if}
