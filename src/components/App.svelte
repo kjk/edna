@@ -324,6 +324,7 @@
           if (note.altShortcut == altN && note.name !== noteName) {
             // console.log("onKeyDown: opening note: ", o.name, " altN:", altN, " e:", e)
             openNote(note.name);
+            showingHistorySelector = false;
             ev.preventDefault();
             return;
           }
