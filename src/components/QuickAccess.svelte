@@ -1,7 +1,9 @@
 <script>
   import { onMount } from "svelte";
+  import { focus } from "../actions";
   import { appState } from "../state.svelte";
   import { getAltChar, getScrollbarWidth, len } from "../util";
+  import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
   /** @type {{ 
@@ -12,7 +14,12 @@
 
   let altChar = getAltChar();
 
+  // svelte-ignore non_reactive_update
   let firstInHistoryIdx = -1;
+  // svelte-ignore non_reactive_update
+  let initialSelection = 0;
+
+  let listbox;
 
   console.log("QuickAcess, forHistory:", forHistory);
 
@@ -29,6 +36,13 @@
     notes = [...new Set(notes)];
     let res = buildNoteInfos(notes);
     firstInHistoryIdx = len(res);
+    initialSelection = firstInHistoryIdx;
+    if (len(history) > 1) {
+      initialSelection++;
+    }
+    console.log("firstInHistoryIdx:", firstInHistoryIdx);
+    console.log("initialSelection:", initialSelection);
+
     // history can repeat the names
     for (let noteName of history) {
       let item = buildNoteInfo(noteName);
@@ -67,35 +81,50 @@
     selectNote(noteName);
   }
   let cls = forHistory ? "opacity-100" : "showOnHover";
+  /**
+   * @param {KeyboardEvent} ev
+   */
+  function onkeydown(ev) {
+    // // '0' ... '9' picks an item
+    // let idx = getKeyEventNumber(ev);
+    // let lastIdx = len(items) - 1;
+    // if (idx >= 0 && idx <= lastIdx) {
+    //   ev.preventDefault();
+    //   let item = items[idx];
+    //   selectItem(item.name);
+    //   return;
+    // }
+
+    listbox.onkeydown(ev, true);
+  }
 </script>
 
-{#if len(quickAccessNotes) > 0}
-  <div
-    class="fixed top-[28px] z-20 text-sm bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 {cls}"
-    {style}
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<form
+  {onkeydown}
+  tabindex="-1"
+  use:focus
+  class="fixed top-[28px] z-20 text-xs py-0 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 focus:outline-hidden {cls}"
+  {style}
+>
+  <ListBox
+    bind:this={listbox}
+    items={quickAccessNotes}
+    onclick={(noteInfo) => selectItem(noteInfo.name)}
+    {initialSelection}
   >
-    <table class="my-1">
-      <tbody>
-        {#each quickAccessNotes as noteInfo, idx (noteInfo.key)}
-          {@const shortcut = getNoteShortcut(noteInfo)}
-          {@const cls = firstInHistoryIdx == idx ? "border-t" : ""}
-          <tr
-            class=" whitespace-nowrap cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline {cls}"
-            title="open note '{noteInfo.name}'"
-            onclick={() => selectItem(noteInfo.name)}
-          >
-            <td class="text-xs px-2 text-gray-400 dark:text-gray-400">
-              {shortcut}
-            </td>
-            <td class="pl-2 pr-2 text-right max-w-[32ch] truncate">
-              {noteInfo.name}
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-  </div>
-{/if}
+    {#snippet renderItem(noteInfo, idx)}
+      {@const shortcut = getNoteShortcut(noteInfo)}
+      {@const cls = firstInHistoryIdx == idx ? "border-t" : ""}
+      <div class="px-2 grow text-gray-400 dark:text-gray-400 {cls}">
+        {shortcut}&nbsp;
+      </div>
+      <div class="px-2 grow self-end text-right max-w-[32ch] truncate {cls}">
+        {noteInfo.name}
+      </div>
+    {/snippet}
+  </ListBox>
+</form>
 
 <style>
   :global(.showOnHover) {

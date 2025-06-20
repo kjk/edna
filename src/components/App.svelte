@@ -1990,8 +1990,8 @@
 
 {#if showingHistorySelector}
   <Overlay onclose={closeHistorySelector} blur={true}>
-    <History selectHistory={onSelectHistory} />
-    <!-- <QuickAccess selectNote={onSelectHistory} forHistory={true} /> -->
+    <!-- <History selectHistory={onSelectHistory} /> -->
+    <QuickAccess selectNote={onSelectHistory} forHistory={true} />
   </Overlay>
 {/if}
 
