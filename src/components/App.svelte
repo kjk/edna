@@ -1,105 +1,12 @@
 <script>
-  import RenameNote from "./RenameNote.svelte";
-  import History from "./History.svelte";
-  import NoteSelector from "./NoteSelector.svelte";
-  import NoteSelector2 from "./NoteSelector2.svelte";
-  import NoteSelectorWide from "./NoteSelectorWide.svelte";
-  import LanguageSelector from "./LanguageSelector.svelte";
-  import Editor from "./Editor.svelte";
-  import ModalMessage, {
-    clearModalMessage,
-    modalMessageState,
-    showModalMessageHTML,
-  } from "./ModalMessage.svelte";
-  import StatusBar from "./StatusBar.svelte";
-  import TopNav from "./TopNav.svelte";
-  import Settings from "./Settings.svelte";
-  import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
-  import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
-  import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
-  import BlockSelector from "./BlockSelector.svelte";
-  import Menu, {
-    kMenuIdJustText,
-    kMenuSeparator,
-    kMenuStatusDisabled,
-    kMenuStatusNormal,
-    kMenuStatusRemoved,
-  } from "../Menu.svelte";
-  import Overlay from "./Overlay.svelte";
-  import CreateNewNote from "./CreateNewNote.svelte";
-
-  import { getSettings } from "../settings.svelte";
-  import { logAppExit, logAppOpen, logNoteOp } from "../log";
+  import { tick } from "svelte";
+  import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
+  import { EditorSelection, EditorState } from "@codemirror/state";
   import {
-    createNewScratchNote,
-    createNoteWithName,
-    dbDelDirHandle,
-    deleteNote,
-    getStorageFS,
-    pickAnotherDirectory,
-    switchToStoringNotesOnDisk,
-    kScratchNoteName,
-    canDeleteNote,
-    renameNote,
-    isSystemNoteName,
-    kDailyJournalNoteName,
-    kHelpSystemNoteName,
-    kReleaseNotesSystemNoteName,
-    preLoadAllNotes,
-    isUsingEncryption,
-    encryptAllNotes,
-    decryptAllNotes,
-    kWelcomeSystemNoteName,
-    kWelcomeDevSystemNoteName,
-    kBuiltInFunctionsNoteName,
-    createIfNotExists,
-    kMyFunctionsNoteName,
-    loadNoteIfExists,
-    debugRemoveLocalStorageNotes,
-    noteExists,
-    kEdnaFileExt,
-    rememberOpenedNote,
-    appendToNote,
-  } from "../notes";
-  import {
-    getNoteMeta,
-    getNotesMetadata,
-    toggleNoteStarred,
-  } from "../metadata";
-  import {
-    getClipboardText,
-    isAltNumEvent,
-    isDev,
-    len,
-    pushHistory,
-    stringSizeInUtf8Bytes,
-    throwIf,
-    trimPrefix,
-    trimSuffix,
-  } from "../util";
-  import {
-    supportsFileSystem,
-    openDirPicker,
-    fsFileHandleWriteBlob,
-    hasHandlePermission,
-  } from "../fileutil";
-  import { boot } from "../webapp-boot";
-  import {
-    extForLang,
-    getLanguage,
-    langSupportsFormat,
-    langSupportsRun,
-  } from "../editor/languages";
-  import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
-  import { setGlobalFuncs } from "../globals";
-  import CommandPalette from "./CommandPalette.svelte";
-  import CommandPalette2 from "./CommandPalette2.svelte";
-  import FunctionSelector from "./FunctionSelector.svelte";
-  import {
-    formatBlockContent,
-    insertAfterActiveBlock,
-  } from "../editor/block/format-code";
-  import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
+    getActiveNoteBlock,
+    getBlockN,
+    getBlocksInfo,
+  } from "../editor/block/block";
   import {
     addNewBlockAfterCurrent,
     addNewBlockAfterLast,
@@ -114,21 +21,114 @@
     selectAll,
   } from "../editor/block/commands";
   import {
-    getActiveNoteBlock,
-    getBlockN,
-    getBlocksInfo,
-  } from "../editor/block/block";
+    formatBlockContent,
+    insertAfterActiveBlock,
+  } from "../editor/block/format-code";
+  import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { EdnaEditor, getContent, setReadOnly } from "../editor/editor";
-  import { EditorSelection, EditorState } from "@codemirror/state";
-  import { parseUserFunctions, runBoopFunction } from "../functions";
-  import { getMyFunctionsNote } from "../system-notes";
-  import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
+  import {
+    extForLang,
+    getLanguage,
+    langSupportsFormat,
+    langSupportsRun,
+  } from "../editor/languages";
   import { toFileName } from "../filenamify";
-  import { tick } from "svelte";
-  import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
-  import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
-  import { appState } from "../state.svelte";
+  import {
+    fsFileHandleWriteBlob,
+    hasHandlePermission,
+    openDirPicker,
+    supportsFileSystem,
+  } from "../fileutil";
+  import { parseUserFunctions, runBoopFunction } from "../functions";
+  import { setGlobalFuncs } from "../globals";
+  import { logAppExit, logAppOpen, logNoteOp } from "../log";
+  import Menu, {
+    kMenuIdJustText,
+    kMenuSeparator,
+    kMenuStatusDisabled,
+    kMenuStatusNormal,
+    kMenuStatusRemoved,
+  } from "../Menu.svelte";
+  import {
+    getNoteMeta,
+    getNotesMetadata,
+    toggleNoteStarred,
+  } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
+  import {
+    appendToNote,
+    canDeleteNote,
+    createIfNotExists,
+    createNewScratchNote,
+    createNoteWithName,
+    dbDelDirHandle,
+    debugRemoveLocalStorageNotes,
+    decryptAllNotes,
+    deleteNote,
+    encryptAllNotes,
+    getStorageFS,
+    isSystemNoteName,
+    isUsingEncryption,
+    kBuiltInFunctionsNoteName,
+    kDailyJournalNoteName,
+    kEdnaFileExt,
+    kHelpSystemNoteName,
+    kMyFunctionsNoteName,
+    kReleaseNotesSystemNoteName,
+    kScratchNoteName,
+    kWelcomeDevSystemNoteName,
+    kWelcomeSystemNoteName,
+    loadNoteIfExists,
+    noteExists,
+    pickAnotherDirectory,
+    preLoadAllNotes,
+    rememberOpenedNote,
+    renameNote,
+    switchToStoringNotesOnDisk,
+  } from "../notes";
+  import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
+  import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
+  import { getSettings } from "../settings.svelte";
+  import { appState } from "../state.svelte";
+  import { getMyFunctionsNote } from "../system-notes";
+  import {
+    getClipboardText,
+    isAltNumEvent,
+    isDev,
+    len,
+    pushHistory,
+    stringSizeInUtf8Bytes,
+    throwIf,
+    trimPrefix,
+    trimSuffix,
+  } from "../util";
+  import { boot } from "../webapp-boot";
+  import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
+  import BlockSelector from "./BlockSelector.svelte";
+  import CommandPalette from "./CommandPalette.svelte";
+  import CommandPalette2 from "./CommandPalette2.svelte";
+  import CreateNewNote from "./CreateNewNote.svelte";
+  import Editor from "./Editor.svelte";
+  import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
+  import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
+  import FunctionSelector from "./FunctionSelector.svelte";
+  import History from "./History.svelte";
+  import LanguageSelector from "./LanguageSelector.svelte";
+  import ModalMessage, {
+    clearModalMessage,
+    modalMessageState,
+    showModalMessageHTML,
+  } from "./ModalMessage.svelte";
+  import NoteSelector from "./NoteSelector.svelte";
+  import NoteSelector2 from "./NoteSelector2.svelte";
+  import NoteSelectorWide from "./NoteSelectorWide.svelte";
+  import Overlay from "./Overlay.svelte";
+  import QuickAccess from "./QuickAccess.svelte";
+  import RenameNote from "./RenameNote.svelte";
+  import Settings from "./Settings.svelte";
+  import StatusBar from "./StatusBar.svelte";
+  import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
+  import TopNav from "./TopNav.svelte";
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
@@ -1893,7 +1893,8 @@
   class="grid w-screen max-h-screen h-screen fixed grid-rows-[1fr_auto]"
   {oncontextmenu}
 >
-  <TopNav {noteName} selectNote={onSelectHistory} />
+  <TopNav {noteName} />
+  <QuickAccess selectNote={onSelectHistory} />
   <Editor
     cursorChange={onCursorChange}
     debugSyntaxTree={false}

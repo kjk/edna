@@ -1,28 +1,28 @@
 <script>
   import { onMount, tick } from "svelte";
-  import { focus, trapfocus } from "../actions";
   import {
-    IconTablerArrowDown,
-    IconTablerArrowUp,
-    IconLucideReplace,
-    IconLucideReplaceAll,
-    IconTablerX,
-    IconLucideTextSelect,
-    IconTablerChevronDown,
-    IconTablerChevronUp,
-  } from "./Icons.svelte";
-  import {
-    setSearchQuery,
-    SearchQuery,
+    closeSearchPanel,
     findNext,
     findPrevious,
-    closeSearchPanel,
-    selectMatches,
     getSearchQuery,
-    replaceNext,
     replaceAll,
+    replaceNext,
+    SearchQuery,
+    selectMatches,
+    setSearchQuery,
   } from "@codemirror/search";
+  import { focus, trapfocus } from "../actions";
   import { isMoving } from "../mouse-track.svelte";
+  import {
+    IconLucideReplace,
+    IconLucideReplaceAll,
+    IconLucideTextSelect,
+    IconTablerArrowDown,
+    IconTablerArrowUp,
+    IconTablerChevronDown,
+    IconTablerChevronUp,
+    IconTablerX,
+  } from "./Icons.svelte";
 
   /** @typedef {import("@codemirror/view").EditorView} EditorView */
   /** @type {{
@@ -39,7 +39,7 @@
   let searchInput;
 
   /** @type {HTMLInputElement} */
-  let replaceInput;
+  let replaceInput = $state(undefined);
 
   let query = getSearchQuery(view.state);
   searchTerm = query.search;
