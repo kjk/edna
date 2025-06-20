@@ -8,8 +8,14 @@ class AppState {
   /** @type {string[]} */
   withShortcuts = $derived(callcWithShortcuts(this.noteNames)); // notes with shortcuts
   noteSelectorInfoCollapsed = $state(false);
+
   isDirty = $state(false);
   isDirtyFast = $state(false);
+
+  searchRegex = $state(false);
+  searchMatchCase = $state(false);
+  searchMatchWholeWord = $state(false);
+
   /** @type {string[]} */
   history = $state([]); // names of opened notes
   /** @type {import("./settings.svelte").Settings} */

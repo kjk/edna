@@ -12,12 +12,13 @@
     IconTablerSelectAll,
     IconTablerChevronDown,
     IconTablerChevronUp,
+    IconTablerChevronRight,
     IconTablerX,
-    IconTablerReplace as IconReplace,
-    IconTablerReplaceFilled as IconReplaceFilled,
-    IconFluentWholeWord as IconWholeWord,
-    IconTablerRegex as IconRegex,
-    IconLucideType as IconType,
+    IconTablerReplace,
+    IconTablerReplaceFilled,
+    IconFluentWholeWord,
+    IconTablerRegex,
+    IconLucideType,
     IconLucideReplace,
     IconLucideReplaceAll,
   };
@@ -274,6 +275,29 @@ https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-up
       stroke-linejoin="round"
       stroke-width="2"
       d="m6 15l6-6l6 6"
+    /></svg
+  >
+{/snippet}
+
+<!-- 
+Icon from Tabler Icons by Paweł Kuna
+https://github.com/tabler/tabler-icons/blob/master/LICENSE
+
+https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-right
+-->
+{#snippet IconTablerChevronRight()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    ><path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="m9 6l6 6l-6 6"
     /></svg
   >
 {/snippet}
