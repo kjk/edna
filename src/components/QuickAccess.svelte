@@ -111,7 +111,7 @@
   {onkeydown}
   tabindex="-1"
   use:focus
-  class="fixed top-[28px] z-20 text-xs py-0 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 focus:outline-hidden {cls}"
+  class="fixed top-[28px] z-20 text-sm py-1 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 focus:outline-hidden {cls}"
   {style}
 >
   <ListBox
@@ -119,21 +119,22 @@
     items={quickAccessNotes}
     onclick={(noteInfo) => selectItem(noteInfo.name)}
     {initialSelection}
+    compact={true}
   >
     {#snippet renderItem(noteInfo, idx)}
       {@const shortcut = getNoteShortcut(noteInfo)}
       {@const cls = firstInHistoryIdx == idx ? "border-t" : ""}
       {@const historyTrigger = idx - firstInHistoryIdx}
       {#if forHistory && historyTrigger >= 0}
-        <div class="px-2 grow text-gray-800 font-bold dark:text-gray-400 {cls}">
+        <div class="px-1 grow text-gray-800 font-bold dark:text-gray-400 {cls}">
           {"" + historyTrigger}
         </div>
       {:else}
-        <div class="px-2 grow text-gray-400 dark:text-gray-400 {cls}">
+        <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
           {shortcut}&nbsp;
         </div>
       {/if}
-      <div class="px-2 grow self-end text-right max-w-[32ch] truncate {cls}">
+      <div class="px-1 grow self-end text-right max-w-[32ch] truncate {cls}">
         {noteInfo.name}
       </div>
     {/snippet}

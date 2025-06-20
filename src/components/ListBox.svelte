@@ -11,6 +11,7 @@
     selectionChanged?: (any, number) => void,
     initialSelection?: number,
     selectedItem?: any,
+    compact?: boolean,
   }}*/
   let {
     items,
@@ -21,6 +22,7 @@
     },
     selectedItem = $bindable(null),
     initialSelection = 0,
+    compact = false,
   } = $props();
 
   let selectedIdx = $state(-1);
@@ -208,7 +210,9 @@
     <li
       role="option"
       aria-selected={idx === selectedIdx}
-      class="flex items-center py-0.5 px-2 leading-5 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700"
+      class="flex items-center px-2 leading-5 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700 {compact
+        ? ''
+        : 'py-0.5'}"
       bind:this={refs[idx]}
     >
       {@render renderItem(item, idx)}
