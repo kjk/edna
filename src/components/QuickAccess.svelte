@@ -3,7 +3,7 @@
   import { getNoteMeta } from "../metadata";
   import { appState } from "../state.svelte";
   import { getAltChar, getScrollbarWidth, len } from "../util";
-  import { buildNoteInfos } from "./NoteSelector.svelte";
+  import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
   /** @type {{ 
     selectNote: (name: string) => void,
@@ -12,37 +12,45 @@
 
   let altChar = getAltChar();
 
+  let fistInHistoryIdx;
+
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
   /**
    * @param {string[]} starred
    * @param {string[]} history
    * @returns {NoteInfo[]}
    */
-  function buildQuickAccessNotes(starred, history, withShortcuts) {
+  function buildQuickAccessNotes(starred, withShortcuts, history) {
     /** @type {string[]} */
-    let notes = [...starred, ...history, ...withShortcuts];
+    let notes = [...starred, ...withShortcuts];
     // remove duplicate names in notes
     notes = [...new Set(notes)];
     let res = buildNoteInfos(notes);
+    fistInHistoryIdx = len(res);
+    // history can repeat the names
+    for (let noteName of history) {
+      let item = buildNoteInfo(noteName);
+      item.altShortcut = 0;
+      res.push(item);
+    }
     return res;
   }
 
   let quickAccessNotes = $derived(
     buildQuickAccessNotes(
       appState.starredNotes,
-      appState.history,
       appState.withShortcuts,
+      appState.history,
     ),
   );
 
   /**
-   * @param {string} noteName
+   * @param {NoteInfo} note
    * @returns {string}
    */
-  function getNoteShortcut(noteName) {
-    let m = getNoteMeta(noteName);
-    if (m && m.altShortcut) {
-      return `${altChar} + ${m.altShortcut}`;
+  function getNoteShortcut(note) {
+    if (note.altShortcut) {
+      return `${altChar} + ${note.altShortcut}`;
     }
     return "";
   }
@@ -65,10 +73,11 @@
   >
     <table class="my-1">
       <tbody>
-        {#each quickAccessNotes as noteInfo (noteInfo.key)}
-          {@const shortcut = getNoteShortcut(noteInfo.name)}
+        {#each quickAccessNotes as noteInfo, idx (noteInfo.key)}
+          {@const shortcut = getNoteShortcut(noteInfo)}
+          {@const cls = fistInHistoryIdx == idx ? "border-t" : ""}
           <tr
-            class=" whitespace-nowrap cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline"
+            class=" whitespace-nowrap cursor-pointer pl-[6px] py-[1px] hover:bg-gray-100 dark:hover:bg-gray-500 align-baseline {cls}"
             title="open note '{noteInfo.name}'"
             onclick={() => selectItem(noteInfo.name)}
           >

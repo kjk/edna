@@ -1,6 +1,6 @@
 <script module>
   /** @typedef {{
-    key: string,
+    key: number,
     name: string,
     nameLC: string,
     altShortcut?: number, // if present, 1 to 9 for Alt-1 to Alt-9
@@ -50,6 +50,34 @@
     return a.name.localeCompare(b.name);
   }
 
+  let lastKey = 0;
+
+  /**
+   * @param {string} name
+   * @returns {NoteInfo}
+   */
+  export function buildNoteInfo(name) {
+    /** @type {NoteInfo} */
+    let item = {
+      key: lastKey,
+      name: name,
+      nameLC: name.toLowerCase(),
+      isStarred: false,
+      ref: null,
+    };
+    lastKey++;
+    let m = getNoteMeta(name, false);
+    if (!m) {
+      return item;
+    }
+    let n = parseInt(m.altShortcut);
+    if (n >= 1 && n <= 9) {
+      item.altShortcut = n;
+    }
+    item.isStarred = !!m.isStarred;
+    return item;
+  }
+
   /**
    * @param {string[]} noteNames
    * @returns {NoteInfo[]}
@@ -60,24 +88,8 @@
     let res = Array(len(noteNames));
     for (let i = 0; i < len(noteNames); i++) {
       let name = noteNames[i];
-      /** @type {NoteInfo} */
-      let item = {
-        key: name,
-        name: name,
-        nameLC: name.toLowerCase(),
-        isStarred: false,
-        ref: null,
-      };
+      let item = buildNoteInfo(name);
       res[i] = item;
-      let m = getNoteMeta(item.name, false);
-      if (!m) {
-        continue;
-      }
-      let n = parseInt(m.altShortcut);
-      if (n >= 1 && n <= 9) {
-        item.altShortcut = n;
-      }
-      item.isStarred = !!m.isStarred;
     }
     res.sort(sortNotes);
     return res;
@@ -85,12 +97,14 @@
 </script>
 
 <script>
-  import { isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { focus } from "../actions";
   import {
     getNoteMeta,
     reassignNoteShortcut,
     toggleNoteStarred,
   } from "../metadata";
+  import { isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { appState } from "../state.svelte";
   import {
     findMatchingItems,
     getAltChar,
@@ -100,10 +114,8 @@
     makeHilightRegExp,
     noOp,
   } from "../util";
-  import { focus } from "../actions";
-  import ListBox from "./ListBox.svelte";
   import { IconTablerStar } from "./Icons.svelte";
-  import { appState } from "../state.svelte";
+  import ListBox from "./ListBox.svelte";
 
   /** @type {{
     header?: string,
