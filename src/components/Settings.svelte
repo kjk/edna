@@ -1,15 +1,14 @@
 <script>
+  import { focus } from "../actions";
+  import { getSessionDur } from "../globals";
   import {
+    getGitHash,
+    getSettings,
+    getVersion,
     kDefaultFontFamily,
     kDefaultFontSize,
-    getVersion,
-    getSettings,
-    getGitHash,
   } from "../settings.svelte";
   import { platform } from "../util";
-  import { focus } from "../actions";
-
-  import { getSessionDur } from "../globals";
 
   let keymaps = [
     { name: "Default", value: "default" },
@@ -157,6 +156,13 @@
     <label class="flex">
       <input type="checkbox" bind:checked={settings.useWideSelectors} />
       <div>Use wide selectors</div>
+    </label>
+    <label class="flex">
+      <input
+        type="checkbox"
+        bind:checked={settings.dontShowQuickAccessOnHover}
+      />
+      <div>Don't show quick access on hover</div>
     </label>
   </div>
 

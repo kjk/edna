@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { focus } from "../actions";
   import { toggleNoteStarred } from "../metadata";
+  import { getSettings } from "../settings.svelte";
   import { appState } from "../state.svelte";
   import {
     getAltChar,
@@ -124,63 +125,84 @@
       noteInfo.isStarred = isStarred;
     });
   }
+
+  let settings = getSettings();
+  let shouldHide = $derived(settings.dontShowQuickAccessOnHover && !forHistory);
+  console.log("shouldHide:", shouldHide);
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<form
-  {onkeydown}
-  tabindex="-1"
-  use:focus
-  class="fixed top-[28px] z-20 text-sm py-1 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 focus:outline-hidden {cls}"
-  {style}
->
-  <ListBox
-    bind:this={listbox}
-    items={quickAccessNotes}
-    onclick={(noteInfo) => selectItem(noteInfo.name)}
-    {initialSelection}
-    compact={true}
+{#if !shouldHide}
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <form
+    {onkeydown}
+    tabindex="-1"
+    use:focus
+    class="fixed top-[28px] z-20 text-sm py-1 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] border-r-0 focus:outline-hidden {cls}"
+    {style}
   >
-    {#snippet renderItem(noteInfo, idx)}
-      {@const shortcut = getNoteShortcut(noteInfo)}
-      {@const cls = firstInHistoryIdx == idx ? "border-t" : ""}
-      {@const historyTrigger = idx - firstInHistoryIdx}
-      {#if forHistory && historyTrigger >= 0}
-        <div class="px-1 grow text-gray-800 font-bold dark:text-gray-400 {cls}">
-          {"" + historyTrigger}
+    <ListBox
+      bind:this={listbox}
+      items={quickAccessNotes}
+      onclick={(noteInfo) => selectItem(noteInfo.name)}
+      {initialSelection}
+      compact={true}
+    >
+      {#snippet renderItem(noteInfo, idx)}
+        {@const shortcut = getNoteShortcut(noteInfo)}
+        {@const cls = firstInHistoryIdx == idx ? "border-t" : ""}
+        {@const historyTrigger = idx - firstInHistoryIdx}
+        {#if forHistory && historyTrigger >= 0}
+          <div
+            class="px-1 grow text-gray-800 font-bold dark:text-gray-400 {cls}"
+          >
+            {"" + historyTrigger}
+          </div>
+        {:else if shortcut}
+          <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
+            {shortcut}
+          </div>
+        {:else if noteInfo.isStarred && historyTrigger < 0}
+          <button
+            tabindex="-1"
+            class="ml-[2px] cursor-pointer hover:text-yellow-600"
+            onclick={(ev) => {
+              toggleStarred(noteInfo);
+              ev.preventDefault();
+              ev.stopPropagation();
+            }}
+          >
+            {@render IconTablerStar(
+              noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
+            )}
+          </button>
+        {:else}
+          <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
+            &nbsp;
+          </div>
+        {/if}
+        <div class="px-1 grow self-end text-right max-w-[32ch] truncate {cls}">
+          {noteInfo.name}
         </div>
-      {:else if shortcut}
-        <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
-          {shortcut}
-        </div>
-      {:else if noteInfo.isStarred && historyTrigger < 0}
+      {/snippet}
+    </ListBox>
+    {#if !forHistory}
+      <div class="flex text-xs text-center text-gray-400 ml-2 mr-3 mt-1">
+        <div>tip: {modChar} + H</div>
+        <div class="grow"></div>
         <button
-          tabindex="-1"
-          class="ml-[2px] cursor-pointer hover:text-yellow-600"
           onclick={(ev) => {
-            toggleStarred(noteInfo);
             ev.preventDefault();
-            ev.stopPropagation();
+            settings.dontShowQuickAccessOnHover = true;
           }}
+          title="don't show this list on mouse hover"
+          class="underline underline-offset-2 cursor-pointer"
         >
-          {@render IconTablerStar(
-            noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
-          )}
-        </button>
-      {:else}
-        <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
-          &nbsp;
-        </div>
-      {/if}
-      <div class="px-1 grow self-end text-right max-w-[32ch] truncate {cls}">
-        {noteInfo.name}
+          hide</button
+        >
       </div>
-    {/snippet}
-  </ListBox>
-  {#if !forHistory}
-    <div class="text-xs text-center text-gray-500">tip: {modChar} + H</div>
-  {/if}
-</form>
+    {/if}
+  </form>
+{/if}
 
 <style>
   :global(.showOnHover) {
