@@ -326,7 +326,7 @@ export function langGetParser(lang) {
     return lezerLanguage.parser;
   }
   if (token === "php") {
-    return phpLanguage.parser;
+    return phpLanguage.configure({ top: "Program" }).parser;
   }
   if (token === "css") {
     return cssLanguage.parser;
