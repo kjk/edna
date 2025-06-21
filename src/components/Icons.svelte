@@ -108,7 +108,7 @@ https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:star
     height="1em"
     viewBox="0 0 24 24"
     ><path
-      fill="none"
+      {fill}
       stroke="currentColor"
       stroke-linecap="round"
       stroke-linejoin="round"
