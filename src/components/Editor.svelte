@@ -284,7 +284,12 @@
     diskContent = content;
     let newState = editor.createState();
     editor.view.setState(newState);
-    editor.setContent(content);
+    try {
+      editor.setContent(content);
+    } catch (e) {
+      alert("Error! " + e.message);
+      throw e;
+    }
   }
 
   /**

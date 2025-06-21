@@ -168,7 +168,13 @@ export class EdnaEditor {
   }
 
   setContent(content) {
-    this.note = NoteFormat.load(content);
+    try {
+      this.note = NoteFormat.load(content);
+      this.setReadOnly(false);
+    } catch (e) {
+      this.setReadOnly(true);
+      throw e;
+    }
 
     // set buffer content
     return new Promise((resolve) => {
