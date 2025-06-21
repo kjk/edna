@@ -1,24 +1,5 @@
-import {
-  addNewBlockAfterCurrent,
-  addNewBlockAfterLast,
-  addNewBlockBeforeCurrent,
-  addNewBlockBeforeFirst,
-  gotoNextBlock,
-  gotoNextParagraph,
-  gotoPreviousBlock,
-  gotoPreviousParagraph,
-  insertNewBlockAtCursor,
-  moveLineDown,
-  moveLineUp,
-  newCursorAbove,
-  newCursorBelow,
-  selectAll,
-  selectNextBlock,
-  selectNextParagraph,
-  selectPreviousBlock,
-  selectPreviousParagraph,
-} from "./block/commands.js";
-import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
+import { indentLess, indentMore, redo } from "@codemirror/commands";
+import { keymap } from "@codemirror/view";
 import {
   createScratchNote,
   openBlockSelector,
@@ -29,11 +10,31 @@ import {
   openNoteSelector,
   smartRun,
 } from "../globals.js";
-import { indentLess, indentMore, redo } from "@codemirror/commands";
-
-import { formatBlockContent } from "./block/format-code.js";
-import { keymap } from "@codemirror/view";
 import { platform } from "../util.js";
+import {
+  addNewBlockAfterCurrent,
+  addNewBlockAfterLast,
+  addNewBlockBeforeCurrent,
+  addNewBlockBeforeFirst,
+  gotoNextBlock,
+  gotoNextParagraph,
+  gotoPreviousBlock,
+  gotoPreviousParagraph,
+  insertNewBlockAtCursor,
+  moveCurrentBlockDown,
+  moveCurrentBlockUp,
+  moveLineDown,
+  moveLineUp,
+  newCursorAbove,
+  newCursorBelow,
+  selectAll,
+  selectNextBlock,
+  selectNextParagraph,
+  selectPreviousBlock,
+  selectPreviousParagraph,
+} from "./block/commands.js";
+import { formatBlockContent } from "./block/format-code.js";
+import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
 
 export function keymapFromSpec(specs) {
   return keymap.of(
@@ -97,7 +98,7 @@ export function ednaKeymap(editor) {
     ["Mod-Alt-ArrowUp", newCursorAbove],
     // https://github.com/kjk/edna/issues/87
     // this is a "open command palette" shortcut
-//    ["Mod-Shift-k", deleteLine],
+    //    ["Mod-Shift-k", deleteLine],
     {
       key: "Mod-ArrowUp",
       run: gotoPreviousBlock,
@@ -114,6 +115,8 @@ export function ednaKeymap(editor) {
       run: gotoNextParagraph,
       shift: selectNextParagraph,
     },
+    ["Mod-Shift-Alt-ArrowUp", moveCurrentBlockUp],
+    ["Mod-Shift-Alt-ArrowDown", moveCurrentBlockDown],
   ];
   // for some reason CodeMirror uses Ctrl + Y on Windows
   // and only binds Mod-Shift-z on Mac and Linux
