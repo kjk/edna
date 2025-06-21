@@ -173,7 +173,7 @@ export class EdnaEditor {
       this.setReadOnly(false);
     } catch (e) {
       this.setReadOnly(true);
-      throw e;
+      throw new Error(`Failed to load note: ${e.message}`);
     }
 
     // set buffer content
