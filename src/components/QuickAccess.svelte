@@ -1,13 +1,16 @@
 <script>
   import { onMount } from "svelte";
   import { focus } from "../actions";
+  import { toggleNoteStarred } from "../metadata";
   import { appState } from "../state.svelte";
   import {
     getAltChar,
     getKeyEventNumber,
+    getModChar,
     getScrollbarWidth,
     len,
   } from "../util";
+  import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
@@ -18,6 +21,7 @@
   let { forHistory, selectNote } = $props();
 
   let altChar = getAltChar();
+  let modChar = getModChar();
 
   // svelte-ignore non_reactive_update
   let firstInHistoryIdx = -1;
@@ -104,6 +108,22 @@
 
     listbox.onkeydown(ev, true);
   }
+
+  /**
+   * @param {NoteInfo} noteInfo
+   */
+  async function toggleStarred(noteInfo) {
+    // there's a noticeable UI lag when we do the obvious:
+    // item.isStarred = toggleNoteStarred(item.name);
+    // because we wait until metadata file is saved
+    // this version makes an optimistic change to reflect in UI
+    // and, just to be extra sure, reflects the state after saving
+    noteInfo.isStarred = !noteInfo.isStarred;
+    toggleNoteStarred(noteInfo.name).then((isStarred) => {
+      // not really necessary, should be in-sync
+      noteInfo.isStarred = isStarred;
+    });
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -129,9 +149,27 @@
         <div class="px-1 grow text-gray-800 font-bold dark:text-gray-400 {cls}">
           {"" + historyTrigger}
         </div>
+      {:else if shortcut}
+        <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
+          {shortcut}
+        </div>
+      {:else if noteInfo.isStarred && historyTrigger < 0}
+        <button
+          tabindex="-1"
+          class="ml-[2px] cursor-pointer hover:text-yellow-600"
+          onclick={(ev) => {
+            toggleStarred(noteInfo);
+            ev.preventDefault();
+            ev.stopPropagation();
+          }}
+        >
+          {@render IconTablerStar(
+            noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
+          )}
+        </button>
       {:else}
         <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
-          {shortcut}&nbsp;
+          &nbsp;
         </div>
       {/if}
       <div class="px-1 grow self-end text-right max-w-[32ch] truncate {cls}">
@@ -139,6 +177,9 @@
       </div>
     {/snippet}
   </ListBox>
+  {#if !forHistory}
+    <div class="text-xs text-center text-gray-500">tip: {modChar} + H</div>
+  {/if}
 </form>
 
 <style>

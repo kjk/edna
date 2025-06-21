@@ -136,7 +136,7 @@
     forMoveBlock = false,
   } = $props();
 
-  let items = $state(buildNoteInfos(appState.noteNames));
+  let noteInfos = $state(buildNoteInfos(appState.noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
@@ -146,7 +146,7 @@
     // actions like re-assigning quick access shortcut do
     // not modify appState.noteNames so we have to force
     // rebuilding of items
-    items = buildNoteInfos(appState.noteNames);
+    noteInfos = buildNoteInfos(appState.noteNames);
   }
 
   let sanitizedFilter = $derived.by(() => {
@@ -159,14 +159,14 @@
     }
   });
 
-  let itemsFiltered = $derived.by(() => {
+  let filteredNoteInfos = $derived.by(() => {
     // we split the search term by space, the name of the note
     // must match all parts
-    return findMatchingItems(items, sanitizedFilter, "nameLC");
+    return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
   /** @type {NoteInfo} */
-  let selectedItem = $state(null);
+  let selectedNote = $state(null);
   let selectedName = $state("");
   let canOpenSelected = $state(false);
   let canCreate = $state(false);
@@ -174,13 +174,13 @@
   let canDeleteSelected = $state(false);
   let showDelete = $state(false);
 
-  let itemsCountMsg = $derived.by(() => {
+  let notesCountMsg = $derived.by(() => {
     // $state(`${noteCount} notes`);
-    let n = len(itemsFiltered);
+    let n = len(filteredNoteInfos);
     if (n === 0) {
       return ""; // don't obscure user entering new, long note name
     }
-    let nItems = len(items);
+    let nItems = len(noteInfos);
     if (n === nItems) {
       return `${nItems} notes`;
     }
@@ -189,14 +189,14 @@
 
   function selectionChanged(item, idx) {
     // console.log("selectionChanged:", $state.snapshot(item), idx);
-    selectedItem = item;
-    selectedName = item ? selectedItem.name : "";
-    canOpenSelected = !!selectedItem;
+    selectedNote = item;
+    selectedName = item ? selectedNote.name : "";
+    canOpenSelected = !!selectedNote;
 
     // TODO: use lowerCase name?
     let name = sanitizeNoteName(filter);
     canCreate = len(name) > 0;
-    for (let i of itemsFiltered) {
+    for (let i of filteredNoteInfos) {
       if (i.name === name) {
         canCreate = false;
         break;
@@ -253,7 +253,7 @@
     let altN = isAltNumEvent(ev);
     if (altN !== null) {
       ev.preventDefault();
-      let note = selectedItem;
+      let note = selectedNote;
       if (note) {
         reassignNoteShortcut(note.name, altN).then(reloadNotes);
         return;
@@ -261,8 +261,8 @@
     }
     let key = ev.key;
 
-    if (key === "s" && ev.altKey && selectedItem) {
-      toggleStarred(selectedItem);
+    if (key === "s" && ev.altKey && selectedNote) {
+      toggleStarred(selectedNote);
       ev.preventDefault();
       return;
     }
@@ -278,17 +278,17 @@
         emitCreateNote(sanitizedFilter);
         return;
       }
-      if (selectedItem) {
-        emitOpenNote(selectedItem);
+      if (selectedNote) {
+        emitOpenNote(selectedNote);
       }
       return;
     }
 
     if (isCtrlDelete(ev)) {
       ev.preventDefault();
-      if (canDeleteSelected && selectedItem) {
+      if (canDeleteSelected && selectedNote) {
         // console.log("deleteNote", name);
-        deleteNote(selectedItem.name).then(reloadNotes);
+        deleteNote(selectedNote.name).then(reloadNotes);
       }
       return;
     }
@@ -297,31 +297,34 @@
   }
 
   /**
-   * @param {NoteInfo} item
+   * @param {NoteInfo} noteInfo
    */
-  function emitOpenNote(item) {
+  function emitOpenNote(noteInfo) {
     // console.log("emitOpenNote", item);
-    openNote(item.name);
+    openNote(noteInfo.name);
   }
 
+  /**
+   * @param {string} name
+   */
   function emitCreateNote(name) {
     // log("create note", name);
     createNote(name);
   }
 
   /**
-   * @param {NoteInfo} item
+   * @param {NoteInfo} noteInfo
    */
-  async function toggleStarred(item) {
+  async function toggleStarred(noteInfo) {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
     // because we wait until metadata file is saved
     // this version makes an optimistic change to reflect in UI
     // and, just to be extra sure, reflects the state after saving
-    item.isStarred = !item.isStarred;
-    toggleNoteStarred(item.name).then((isStarred) => {
+    noteInfo.isStarred = !noteInfo.isStarred;
+    toggleNoteStarred(noteInfo.name).then((isStarred) => {
       // not really necessary, should be in-sync
-      item.isStarred = isStarred;
+      noteInfo.isStarred = isStarred;
     });
     input.focus();
   }
@@ -470,36 +473,36 @@
       class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
     />
     <div class="absolute right-[0.5rem] top-[0.25rem] italic text-gray-400">
-      {itemsCountMsg}
+      {notesCountMsg}
     </div>
   </div>
   <ListBox
     bind:this={listbox}
-    items={itemsFiltered}
+    items={filteredNoteInfos}
     {selectionChanged}
     onclick={(item) => emitOpenNote(item)}
   >
-    {#snippet renderItem(item)}
-      {@const hili = hilightText(item.name, hiliRegExp)}
+    {#snippet renderItem(noteInfo)}
+      {@const hili = hilightText(noteInfo.name, hiliRegExp)}
       <button
         tabindex="-1"
         class="ml-[-6px] cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
-          toggleStarred(item);
+          toggleStarred(noteInfo);
           ev.preventDefault();
           ev.stopPropagation();
         }}
       >
         {@render IconTablerStar(
-          item.isStarred ? "var(--color-yellow-300)" : "none",
+          noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
         )}
       </button>
-      <div class="ml-2 truncate {sysNoteCls(item) ? 'italic' : ''}">
+      <div class="ml-2 truncate {sysNoteCls(noteInfo) ? 'italic' : ''}">
         {@html hili}
       </div>
       <div class="grow"></div>
       <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap">
-        {noteShortcut(item)}
+        {noteShortcut(noteInfo)}
       </div>
     {/snippet}
   </ListBox>
