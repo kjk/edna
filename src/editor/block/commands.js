@@ -5,6 +5,7 @@ import {
   DELETE_BLOCK,
   heynoteEvent,
   LANGUAGE_CHANGE,
+  MOVE_BLOCK,
 } from "../annotation.js";
 import {
   blockState,
@@ -444,6 +445,7 @@ function moveCurrentBlock(state, dispatch, up) {
           insert: newContent,
         },
         selection: newSelectionRange,
+        annotations: [heynoteEvent.of(MOVE_BLOCK)],
       },
       {
         scrollIntoView: true,
