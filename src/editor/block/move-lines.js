@@ -1,8 +1,8 @@
 import { EditorSelection } from "@codemirror/state";
-import { kLanguages } from "../languages.js";
+import { LANGUAGES } from "../languages.js";
 import { blockState } from "./block";
 
-const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
+const languageTokensMatcher = LANGUAGES.map((l) => l.token).join("|");
 const tokenRegEx = new RegExp(`^∞∞∞(${languageTokensMatcher})(-a)?$`, "g");
 
 function selectedLineBlocks(state) {

@@ -1215,10 +1215,10 @@
       addNewBlockBeforeCurrent(view);
       view.focus();
     } else if (cmdId === kCmdNewBlockAtEnd) {
-      addNewBlockAfterLast(view);
+      addNewBlockAfterLast(editor);
       view.focus();
     } else if (cmdId === kCmdNewBlockAtStart) {
-      addNewBlockBeforeFirst(view);
+      addNewBlockBeforeFirst(editor);
       view.focus();
     } else if (cmdId === kCmdSplitBlockAtCursor) {
       insertNewBlockAtCursor(view);

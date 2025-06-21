@@ -1,13 +1,13 @@
+import { redoDepth } from "@codemirror/commands";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { redoDepth } from "@codemirror/commands";
-import { getActiveNoteBlock, blockState } from "../block/block";
-import { levenshtein_distance } from "./levenshtein";
-import { kLanguages } from "../languages";
+import { blockState, getActiveNoteBlock } from "../block/block";
 import { changeLanguageTo } from "../block/commands";
+import { LANGUAGES } from "../languages";
+import { levenshtein_distance } from "./levenshtein";
 
 const GUESSLANG_TO_TOKEN = Object.fromEntries(
-  kLanguages.map((l) => [l.guesslang, l.token]),
+  LANGUAGES.map((l) => [l.guesslang, l.token]),
 );
 
 function requestIdleCallbackCompat(cb) {
@@ -26,7 +26,7 @@ function cancelIdleCallbackCompat(id) {
   }
 }
 
-export function languageDetection(getView) {
+export function languageDetection(getEditor) {
   const previousBlockContent = {};
   let idleCallbackId = null;
 
@@ -36,7 +36,8 @@ export function languageDetection(getView) {
     if (!event.data.guesslang.language) {
       return;
     }
-    const view = getView();
+    const editor = getEditor();
+    const view = editor.view;
     const state = view.state;
     const block = getActiveNoteBlock(state);
     const newLang = GUESSLANG_TO_TOKEN[event.data.guesslang.language];
@@ -105,11 +106,18 @@ export function languageDetection(getView) {
           block.content.to,
         );
         if (content === "" && redoDepth(update.state) === 0) {
-          // if content is cleared, set language to plaintext
-          const view = getView();
+          // if content is cleared, set language to default
+          const editor = getEditor();
+          const view = editor.view;
           const block = getActiveNoteBlock(view.state);
-          if (block.language.name !== "text") {
-            changeLanguageTo(view.state, view.dispatch, block, "text", true);
+          if (block.language.name !== editor.defaultBlockToken) {
+            changeLanguageTo(
+              view.state,
+              view.dispatch,
+              block,
+              editor.defaultBlockToken,
+              true,
+            );
           }
           delete previousBlockContent[idx];
         }

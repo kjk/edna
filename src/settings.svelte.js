@@ -12,6 +12,8 @@ const settingsKeys = [
   "showFoldGutter",
   "showLineNumberGutter",
   "useWideSelectors",
+  "defaultBlockLanguage",
+  "defaultBlockLanguageAutoDetect",
   "theme",
 ];
 
@@ -27,6 +29,8 @@ export class Settings {
   showFoldGutter = $state(true);
   showLineNumberGutter = $state(true);
   useWideSelectors = $state(false);
+  defaultBlockLanguage = $state("text");
+  defaultBlockLanguageAutoDetect = $state(true);
   theme = $state("system"); // "system", "light", "dark"
 
   constructor(settings) {

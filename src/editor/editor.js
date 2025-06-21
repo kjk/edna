@@ -1,31 +1,29 @@
+import { markdown } from "@codemirror/lang-markdown";
+import { foldGutter, indentUnit } from "@codemirror/language";
 import { Compartment, EditorState } from "@codemirror/state";
-import { EditorView, drawSelection, lineNumbers } from "@codemirror/view";
-import { SET_CONTENT, heynoteEvent } from "./annotation.js";
+import { drawSelection, EditorView, lineNumbers } from "@codemirror/view";
+import { findEditorByView } from "../state.js";
+import { heynoteEvent, SET_CONTENT } from "./annotation.js";
 import {
   blockLineNumbers,
   blockState,
   noteBlockExtension,
 } from "./block/block.js";
-import { foldGutter, indentUnit } from "@codemirror/language";
-
-import { autoSaveContent } from "./save.js";
-import { createDynamicCloseBracketsExtension } from "./extensions.js";
-import { customSetup } from "./setup.js";
-import { ednaKeymap } from "./keymap.js";
-import { emacsKeymap } from "./emacs.js";
-import { focusEditorView } from "./cmutils.js";
-import { getFontTheme } from "./theme/font-theme.js";
-import { heynoteBase } from "./theme/base.js";
+import { focusEditorView, isReadOnly } from "./cmutils.js";
 import { heynoteCopyCut } from "./copy-paste";
-import { heynoteDark } from "./theme/dark.js";
+import { emacsKeymap } from "./emacs.js";
+import { createDynamicCloseBracketsExtension } from "./extensions.js";
+import { ednaKeymap } from "./keymap.js";
 import { heynoteLang } from "./lang-heynote/heynote.js";
-import { heynoteLight } from "./theme/light.js";
 import { languageDetection } from "./language-detection/autodetect.js";
 import { links } from "./links.js";
-import { markdown } from "@codemirror/lang-markdown";
+import { autoSaveContent } from "./save.js";
+import { customSetup } from "./setup.js";
+import { heynoteBase } from "./theme/base.js";
+import { heynoteDark } from "./theme/dark.js";
+import { getFontTheme } from "./theme/font-theme.js";
+import { heynoteLight } from "./theme/light.js";
 import { todoCheckboxPlugin } from "./todo-checkbox";
-import { findEditorByView } from "../state.js";
-import { isReadOnly } from "./cmutils.js";
 
 function getKeymapExtensions(editor, keymap) {
   if (keymap === "emacs") {
@@ -50,6 +48,8 @@ export class EdnaEditor {
     spacesPerTab = 2,
     fontFamily,
     fontSize,
+    defaultBlockToken,
+    defaultBlockAutoDetect,
   }) {
     this.element = element;
     this.themeCompartment = new Compartment();
@@ -62,6 +62,8 @@ export class EdnaEditor {
     this.deselectOnCopy = keymap === "emacs";
     this.emacsMetaKey = emacsMetaKey;
     this.fontTheme = new Compartment();
+    this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
+
     this.saveFunction = saveFunction;
     this.tabsCompartment = new Compartment();
 
@@ -109,7 +111,7 @@ export class EdnaEditor {
           }),
           heynoteLang(),
           noteBlockExtension(this),
-          languageDetection(() => this.view),
+          languageDetection(() => this),
 
           // set cursor blink rate to 1 second
           drawSelection({ cursorBlinkRate: 1000 }),
@@ -191,6 +193,13 @@ export class EdnaEditor {
     return this.view.state.selection.main.head;
   }
 
+  setCursorPosition(position) {
+    this.view.dispatch({
+      selection: { anchor: position, head: position },
+      scrollIntoView: true,
+    });
+  }
+
   focus() {
     focusEditorView(this.view);
   }
@@ -254,6 +263,11 @@ export class EdnaEditor {
         value ? createDynamicCloseBracketsExtension() : [],
       ),
     });
+  }
+
+  setDefaultBlockLanguage(token, autoDetect) {
+    this.defaultBlockToken = token || "text";
+    this.defaultBlockAutoDetect = autoDetect === undefined ? true : autoDetect;
   }
 }
 

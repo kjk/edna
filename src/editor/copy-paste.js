@@ -1,10 +1,9 @@
-import { EditorState, EditorSelection } from "@codemirror/state";
+import { EditorSelection, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-
-import { kLanguages } from "./languages.js";
 import { setEmacsMarkMode } from "./emacs.js";
+import { LANGUAGES } from "./languages.js";
 
-const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
+const languageTokensMatcher = LANGUAGES.map((l) => l.token).join("|");
 const blockSeparatorRegex = new RegExp(
   `\\n∞∞∞(${languageTokensMatcher})(-a)?\\n`,
   "g",

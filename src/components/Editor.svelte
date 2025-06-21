@@ -1,6 +1,11 @@
 <script>
-  import { EdnaEditor } from "../editor/editor.js";
+  import { onMount } from "svelte";
   import { syntaxTree } from "@codemirror/language";
+  import { EditorView } from "@codemirror/view";
+  import debounce from "debounce";
+  import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
+  import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
+  import { EdnaEditor } from "../editor/editor.js";
   import {
     kScratchNoteName,
     loadCurrentNote,
@@ -8,15 +13,10 @@
     loadNote,
     saveCurrentNote as saveCurrentNoteContent,
   } from "../notes.js";
-  import { rememberEditor } from "../state.js";
   import { getSettings } from "../settings.svelte.js";
+  import { rememberEditor } from "../state.js";
   import { appState } from "../state.svelte.js";
-  import debounce from "debounce";
   import { throwIf } from "../util.js";
-  import { EditorView } from "@codemirror/view";
-  import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
-  import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
-  import { onMount } from "svelte";
 
   let enableDiskRefresh = false;
 
@@ -125,6 +125,8 @@
         fontFamily: fontFamily,
         fontSize: fontSize,
         spacesPerTab: 2, // TODO: add a setting for this
+        defaultBlockAutoDetect: true,
+        defaultBlockToken: "text",
       });
       rememberEditor(editor);
       setCurrenciesLoadedCb(() => {

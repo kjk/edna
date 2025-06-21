@@ -19,15 +19,24 @@ import { selectAll } from "./select-all.js";
 
 export { moveLineDown, moveLineUp, selectAll };
 
-export function insertNewBlockAtCursor({ state, dispatch }) {
-  if (state.readOnly) return false;
+export function getBlockDelimiter(defaultToken, autoDetect) {
+  return `\n∞∞∞${autoDetect ? defaultToken + "-a" : defaultToken}\n`;
+}
+
+export const insertNewBlockAtCursor =
+  (editor) =>
+  ({ state, dispatch }) => {
+    if (state.readOnly) return false;
 
   const currentBlock = getActiveNoteBlock(state);
   let delimText;
   if (currentBlock) {
     delimText = `\n∞∞∞${currentBlock.language.name}${currentBlock.language.auto ? "-a" : ""}\n`;
   } else {
-    delimText = "\n∞∞∞text-a\n";
+      delimText = getBlockDelimiter(
+        editor.defaultBlockToken,
+        editor.defaultBlockAutoDetect,
+      );
   }
   dispatch(state.replaceSelection(delimText), {
     scrollIntoView: true,
@@ -35,13 +44,18 @@ export function insertNewBlockAtCursor({ state, dispatch }) {
   });
 
   return true;
-}
+  };
 
-export function addNewBlockBeforeCurrent({ state, dispatch }) {
+export const addNewBlockBeforeCurrent =
+  (editor) =>
+  ({ state, dispatch }) => {
   if (state.readOnly) return false;
 
   const block = getActiveNoteBlock(state);
-  const delimText = "\n∞∞∞text-a\n";
+    const delimText = getBlockDelimiter(
+      editor.defaultBlockToken,
+      editor.defaultBlockAutoDetect,
+    );
 
   dispatch(
     state.update(
@@ -62,13 +76,18 @@ export function addNewBlockBeforeCurrent({ state, dispatch }) {
     ),
   );
   return true;
-}
+  };
 
-export function addNewBlockAfterCurrent({ state, dispatch }) {
+export const addNewBlockAfterCurrent =
+  (editor) =>
+  ({ state, dispatch }) => {
   if (state.readOnly) return false;
 
   const block = getActiveNoteBlock(state);
-  const delimText = "\n∞∞∞text-a\n";
+    const delimText = getBlockDelimiter(
+      editor.defaultBlockToken,
+      editor.defaultBlockAutoDetect,
+    );
 
   dispatch(
     state.update(
@@ -77,7 +96,10 @@ export function addNewBlockAfterCurrent({ state, dispatch }) {
           from: block.content.to,
           insert: delimText,
         },
-        selection: EditorSelection.cursor(block.content.to + delimText.length),
+          selection: EditorSelection.cursor(
+            block.content.to + delimText.length,
+          ),
+          annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
       },
       {
         scrollIntoView: true,
@@ -86,13 +108,18 @@ export function addNewBlockAfterCurrent({ state, dispatch }) {
     ),
   );
   return true;
-}
+  };
 
-export function addNewBlockBeforeFirst({ state, dispatch }) {
+export const addNewBlockBeforeFirst =
+  (editor) =>
+  ({ state, dispatch }) => {
   if (state.readOnly) return false;
 
   const block = getFirstNoteBlock(state);
-  const delimText = "\n∞∞∞text-a\n";
+    const delimText = getBlockDelimiter(
+      editor.defaultBlockToken,
+      editor.defaultBlockAutoDetect,
+    );
 
   dispatch(
     state.update(
@@ -111,12 +138,17 @@ export function addNewBlockBeforeFirst({ state, dispatch }) {
     ),
   );
   return true;
-}
+  };
 
-export function addNewBlockAfterLast({ state, dispatch }) {
+export const addNewBlockAfterLast =
+  (editor) =>
+  ({ state, dispatch }) => {
   if (state.readOnly) return false;
   const block = getLastNoteBlock(state);
-  const delimText = "\n∞∞∞text-a\n";
+    const delimText = getBlockDelimiter(
+      editor.defaultBlockToken,
+      editor.defaultBlockAutoDetect,
+    );
 
   dispatch(
     state.update(
@@ -125,7 +157,10 @@ export function addNewBlockAfterLast({ state, dispatch }) {
           from: block.content.to,
           insert: delimText,
         },
-        selection: EditorSelection.cursor(block.content.to + delimText.length),
+          selection: EditorSelection.cursor(
+            block.content.to + delimText.length,
+          ),
+          annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
       },
       {
         scrollIntoView: true,
@@ -134,9 +169,8 @@ export function addNewBlockAfterLast({ state, dispatch }) {
     ),
   );
   return true;
-}
+  };
 
-// note: using state, dispatch because note all callers have view
 export function changeLanguageTo(state, dispatch, block, language, auto) {
   if (state.readOnly) return false;
   const delimRegex = /^\n∞∞∞[a-z]+?(-a)?\n/g;
@@ -164,19 +198,21 @@ export function changeLanguageTo(state, dispatch, block, language, auto) {
   }
 }
 
-export function changeCurrentBlockLanguage(view, language, auto) {
-  const block = getActiveNoteBlock(view.state);
-  changeLanguageTo(view.state, view.dispatch, block, language, auto);
+export function changeCurrentBlockLanguage(state, dispatch, language, auto) {
+  const block = getActiveNoteBlock(state);
+  // if language is null, we only want to change the auto-detect flag
+  if (language === null) {
+    language = block.language.name;
+  }
+  changeLanguageTo(state, dispatch, block, language, auto);
 }
 
 function updateSel(sel, by) {
   return EditorSelection.create(sel.ranges.map(by), sel.mainIndex);
 }
-
 function setSel(state, selection) {
   return state.update({ selection, scrollIntoView: true, userEvent: "select" });
 }
-
 function extendSel(state, dispatch, how) {
   let selection = updateSel(state.selection, (range) => {
     let head = how(range);
@@ -191,7 +227,6 @@ function extendSel(state, dispatch, how) {
   dispatch(setSel(state, selection));
   return true;
 }
-
 function moveSel(state, dispatch, how) {
   let selection = updateSel(state.selection, how);
   if (selection.eq(state.selection)) return false;
@@ -242,15 +277,12 @@ export function gotoBlock(view, n) {
 export function gotoNextBlock({ state, dispatch }) {
   return moveSel(state, dispatch, (range) => nextBlock(state, range));
 }
-
 export function selectNextBlock({ state, dispatch }) {
   return extendSel(state, dispatch, (range) => nextBlock(state, range));
 }
-
 export function gotoPreviousBlock({ state, dispatch }) {
   return moveSel(state, dispatch, (range) => previousBlock(state, range));
 }
-
 export function selectPreviousBlock({ state, dispatch }) {
   return extendSel(state, dispatch, (range) => previousBlock(state, range));
 }

@@ -1,13 +1,13 @@
 import { ExternalTokenizer } from "@lezer/lr";
+import { LANGUAGES } from "../languages.js";
 import { NoteContent } from "./parser.terms.js";
-import { kLanguages } from "../languages.js";
 
 const EOF = -1;
 
 const FIRST_TOKEN_CHAR = "\n".charCodeAt(0);
 const SECOND_TOKEN_CHAR = "∞".charCodeAt(0);
 
-const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
+const languageTokensMatcher = LANGUAGES.map((l) => l.token).join("|");
 const tokenRegEx = new RegExp(`^\\n∞∞∞(${languageTokensMatcher})(-a)?\\n`, "g");
 
 export const noteContent = new ExternalTokenizer((input) => {
