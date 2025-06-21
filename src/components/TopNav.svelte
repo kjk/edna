@@ -54,21 +54,23 @@
     <div class="text-gray-400 px-1">&bull;</div>
 
     <button
-      class="flex cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500 items-center"
+      class="flex align-baseline cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500 items-center"
       onclick={openNoteSelector}
       title={fixUpShortcuts("Open Another Note (Mod + P)")}
     >
-      <div class="max-w-32 truncate">{noteName}</div>
+      <div class="max-w-32 truncate">
+        {noteName}
+        {#if shortcut}
+          <span
+            class="text-gray-500 dark:text-gray-400 text-xs"
+            title="This Note Quick Access Shortcut ({shortcut})"
+          >
+            {shortcut}
+          </span>
+        {/if}
+      </div>
       <div class="mt-[-2px]">&nbsp;⏷</div></button
     >
-    {#if shortcut}
-      <div
-        class="text-gray-500 dark:text-gray-400 text-xs mx-0.5"
-        title="This Note Quick Access Shortcut ({shortcut})"
-      >
-        {shortcut}
-      </div>
-    {/if}
     <div class="text-gray-400 px-1">&bull;</div>
 
     <button

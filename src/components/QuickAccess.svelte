@@ -128,7 +128,6 @@
 
   let settings = getSettings();
   let shouldHide = $derived(settings.dontShowQuickAccessOnHover && !forHistory);
-  console.log("shouldHide:", shouldHide);
 </script>
 
 {#if !shouldHide}
