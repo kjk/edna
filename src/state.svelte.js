@@ -16,6 +16,8 @@ class AppState {
   searchMatchCase = $state(false);
   searchMatchWholeWord = $state(false);
 
+  showQuickAccess = $state(0);
+
   /** @type {string[]} */
   history = $state([]); // names of opened notes
   /** @type {import("./settings.svelte").Settings} */

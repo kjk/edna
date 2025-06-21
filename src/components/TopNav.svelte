@@ -8,6 +8,7 @@
   import { fixUpShortcuts } from "../key-helper.js";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
+  import { appState } from "../state.svelte.js";
   import { getAltChar, getScrollbarWidth, len, throwIf } from "../util.js";
   import { IconCommandPalette, IconMenu } from "./Icons.svelte";
 
@@ -37,6 +38,14 @@
     let dx = getScrollbarWidth();
     style = `right: ${dx}px`;
   });
+  $effect(() => {
+    // console.log("appState.showQuickAccess", appState.showQuickAccess);
+    // TODO: this is hacky, should use standard CSS, make QuickAccess.svelte a child
+    // of TopNav and show / hide based on CSS hover
+    if (appState.showQuickAccess < 0) {
+      appState.showQuickAccess = 0;
+    }
+  });
 </script>
 
 <div class="fixed top-0 flex flex-col z-10 mt-[-1px]" {style}>
@@ -56,6 +65,8 @@
     <button
       class="flex align-baseline cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500 items-center"
       onclick={openNoteSelector}
+      onmouseenter={() => appState.showQuickAccess++}
+      onmouseleave={() => appState.showQuickAccess--}
       title={fixUpShortcuts("Open Another Note (Mod + P)")}
     >
       <div class="max-w-32 truncate">

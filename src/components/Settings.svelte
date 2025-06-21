@@ -157,13 +157,6 @@
       <input type="checkbox" bind:checked={settings.useWideSelectors} />
       <div>Use wide selectors</div>
     </label>
-    <label class="flex">
-      <input
-        type="checkbox"
-        bind:checked={settings.dontShowQuickAccessOnHover}
-      />
-      <div>Don't show quick access on hover</div>
-    </label>
   </div>
 
   <div class="mt-2 mr-0.5 flex text-xs justify-end text-gray-400">

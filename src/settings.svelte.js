@@ -12,7 +12,6 @@ const settingsKeys = [
   "showFoldGutter",
   "showLineNumberGutter",
   "useWideSelectors",
-  "dontShowQuickAccessOnHover",
   "theme",
 ];
 
@@ -28,7 +27,6 @@ export class Settings {
   showFoldGutter = $state(true);
   showLineNumberGutter = $state(true);
   useWideSelectors = $state(false);
-  dontShowQuickAccessOnHover = $state(false);
   theme = $state("system"); // "system", "light", "dark"
 
   constructor(settings) {
