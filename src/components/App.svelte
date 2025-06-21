@@ -1494,8 +1494,7 @@
     if (!editor) {
       return null;
     }
-    let view = editor.getEditorView();
-    return view;
+    return editor.getEditorView();
   }
 
   function formatCurrentBlock() {
@@ -1845,9 +1844,12 @@
   }
 
   function updateDocSize() {
+    docSize = 0;
     let view = getEditorView();
-    const c = getContent(view) || "";
-    docSize = stringSizeInUtf8Bytes(c);
+    if (view) {
+      const c = getContent(view) || "";
+      docSize = stringSizeInUtf8Bytes(c);
+    }
   }
 
   /**

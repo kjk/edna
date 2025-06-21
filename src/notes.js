@@ -1,3 +1,11 @@
+import { tick } from "svelte";
+import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
+import {
+  clearModalMessage,
+  showModalMessageHTML,
+} from "./components/ModalMessage.svelte";
+import { KV } from "./dbutil";
+import { fromFileName, isValidFileName, toFileName } from "./filenamify";
 import {
   blobFromUint8Array,
   fsDeleteFile,
@@ -11,19 +19,27 @@ import {
   openDirPicker,
   readDir,
 } from "./fileutil";
+import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import {
-  clearModalMessage,
-  showModalMessageHTML,
-} from "./components/ModalMessage.svelte";
-import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
+  historyPush,
+  removeNoteFromHistory,
+  renameInHistory,
+} from "./history.js";
 import {
-  formatDateYYYYMMDDDay,
-  len,
-  removeDuplicates,
-  throwIf,
-  trimSuffix,
-} from "./util";
-import { fromFileName, isValidFileName, toFileName } from "./filenamify";
+  kMetadataName,
+  loadNotesMetadata,
+  reassignNoteShortcut,
+  removeNoteFromMetadata,
+  renameNoteInMetadata,
+} from "./metadata";
+import { getSettings } from "./settings.svelte";
+import {
+  getStats,
+  incNoteCreateCount,
+  incNoteDeleteCount,
+  incNoteSaveCount,
+} from "./state";
+import { appState } from "./state.svelte";
 import {
   getBuiltInFunctionsNote,
   getHelp,
@@ -33,30 +49,13 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { getSettings } from "./settings.svelte";
 import {
-  getStats,
-  incNoteCreateCount,
-  incNoteDeleteCount,
-  incNoteSaveCount,
-} from "./state";
-import {
-  historyPush,
-  removeNoteFromHistory,
-  renameInHistory,
-} from "./history.js";
-
-import { KV } from "./dbutil";
-import { appState } from "./state.svelte";
-import { getPasswordFromUser, requestFileWritePermission } from "./globals";
-import {
-  kMetadataName,
-  loadNotesMetadata,
-  reassignNoteShortcut,
-  removeNoteFromMetadata,
-  renameNoteInMetadata,
-} from "./metadata";
-import { tick } from "svelte";
+  formatDateYYYYMMDDDay,
+  len,
+  removeDuplicates,
+  throwIf,
+  trimSuffix,
+} from "./util";
 
 // is set if we store notes on disk, null if in localStorage
 /** @type {FileSystemDirectoryHandle | null} */
@@ -559,14 +558,14 @@ export function startsWithBlockHeader(s) {
 // in case somehow a note doesn't start with the block header, fix it up
 export function fixUpNoteContent(s) {
   // console.log("fixUpNote:", content)
-  if (s === null) {
-    // console.log("fixUpNote: null content")
-    return blockHdrMarkdown;
-  }
-  if (!s.startsWith("\n∞∞∞")) {
-    // console.log("fixUpNote: added header to content", s.substring(0, 80));
-    s = blockHdrMarkdown + s;
-  }
+  // if (s === null) {
+  //   // console.log("fixUpNote: null content")
+  //   return blockHdrMarkdown;
+  // }
+  // if (!s.startsWith("\n∞∞∞")) {
+  //   // console.log("fixUpNote: added header to content", s.substring(0, 80));
+  //   s = blockHdrMarkdown + s;
+  // }
   return s;
 }
 

@@ -255,6 +255,9 @@
    * @returns {EditorView}
    */
   export function getEditorView() {
+    if (!editor) {
+      return null;
+    }
     return editor.view;
   }
 
@@ -279,8 +282,9 @@
 
   export function setEditorContent(content) {
     diskContent = content;
-    let newState = editor.createState(content);
+    let newState = editor.createState();
     editor.view.setState(newState);
+    editor.setContent(content);
   }
 
   /**

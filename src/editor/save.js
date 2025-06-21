@@ -2,10 +2,10 @@ import { ViewPlugin } from "@codemirror/view";
 import debounce from "debounce";
 import { appState } from "../state.svelte";
 
-export const autoSaveContent = (saveFunction, interval) => {
-  const debouncedSave = debounce((view) => {
+export const autoSaveContent = (editor, interval) => {
+  const save = debounce((view) => {
     //console.log("saving buffer")
-    saveFunction(view.state.sliceDoc());
+    editor.save();
     appState.isDirty = false;
   }, interval);
 
@@ -19,7 +19,7 @@ export const autoSaveContent = (saveFunction, interval) => {
         if (update.docChanged) {
           appState.isDirty = true;
           appState.isDirtyFast = true;
-          debouncedSave(update.view);
+          save();
           debouncedClearDirtyFast();
         }
       }
