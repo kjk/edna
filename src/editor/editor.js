@@ -1,5 +1,5 @@
 import { markdown } from "@codemirror/lang-markdown";
-import { foldGutter, indentUnit } from "@codemirror/language";
+import { ensureSyntaxTree, foldGutter, indentUnit } from "@codemirror/language";
 import { Compartment, EditorState } from "@codemirror/state";
 import { drawSelection, EditorView, lineNumbers } from "@codemirror/view";
 import { findEditorByView } from "../state.js";
@@ -140,6 +140,10 @@ export class EdnaEditor {
       state: state,
       parent: element,
     });
+
+    // Ensure we have a parsed syntax tree when buffer is loaded. This prevents errors for large buffers
+    // when moving the cursor to the end of the buffer when the program starts
+    ensureSyntaxTree(state, state.doc.length, 5000);
 
     if (focus) {
       this.view.dispatch({
