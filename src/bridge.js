@@ -1,8 +1,12 @@
-let platform;
+import { loadNote, saveNote } from "./notes";
 
 let __TESTS__ = false;
 
 const isMobileDevice = window.matchMedia("(max-width: 600px)").matches;
+
+let currencyData = null;
+
+let platform;
 
 // In the latest version of Playwright, the window.navigator.userAgentData.platform is not reported correctly on Mac,
 // wo we'll fallback to deprecated window.navigator.platform which still works
@@ -11,6 +15,7 @@ if (__TESTS__ && window.navigator.platform.indexOf("Mac") !== -1) {
     isMac: true,
     isWindows: false,
     isLinux: false,
+    isWebApp: true,
   };
 } else {
   const uaPlatform =
@@ -45,15 +50,16 @@ const Heynote = {
   buffer: {
     async load(path) {
       //console.log("loading", path)
-      // const content = localStorage.getItem(noteKey(path));
-      // return content === null
-      //   ? '{"formatVersion":"1.0.0","name":"Scratch"}\n∞∞∞text-a\n'
-      //   : content;
+      let content = await loadNote(path);
+      return content === null
+        ? '{"formatVersion":"1.0.0","name":"Scratch"}\n∞∞∞text-a\n'
+        : content;
     },
 
     async save(path, content) {
-      //console.log("saving", path, content)
-      //localStorage.setItem(noteKey(path), content);
+      await saveNote(path, content);
+      // TODO: is disabled anyway
+      // scheduleRefreshFromDisk();
     },
 
     async create(path, content) {
@@ -111,6 +117,29 @@ const Heynote = {
   _onChangeCallbacks: {},
   addOnChangeCallback(path, callback) {},
   removeOnChangeCallback(path, callback) {},
+
+  getCurrencyData: async () => {
+    if (currencyData !== null) {
+      return currencyData;
+    }
+    const response = await fetch("/api/currency_rates.json", {
+      cache: "no-cache",
+    });
+    currencyData = JSON.parse(await response.text());
+    return currencyData;
+  },
+
+  async getVersion() {
+    // __APP_VERSION__ and __GIT_HASH__ are set in vite.config.js
+    // @ts-ignore
+    return __APP_VERSION__ + " (" + __GIT_HASH__ + ")";
+  },
+
+  async getInitErrors() {},
+
+  setWindowTitle(title) {
+    document.title = title + " - Heynote";
+  },
 };
 
 let ipcRenderer = null;
