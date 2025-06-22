@@ -1,4 +1,4 @@
-import { EditorSelection } from "@codemirror/state";
+import { EditorSelection, Transaction } from "@codemirror/state";
 import {
   ADD_NEW_BLOCK,
   CURRENCIES_LOADED,
@@ -28,147 +28,147 @@ export const insertNewBlockAtCursor =
   ({ state, dispatch }) => {
     if (state.readOnly) return false;
 
-  const currentBlock = getActiveNoteBlock(state);
-  let delimText;
-  if (currentBlock) {
-    delimText = `\n∞∞∞${currentBlock.language.name}${currentBlock.language.auto ? "-a" : ""}\n`;
-  } else {
+    const currentBlock = getActiveNoteBlock(state);
+    let delimText;
+    if (currentBlock) {
+      delimText = `\n∞∞∞${currentBlock.language.name}${currentBlock.language.auto ? "-a" : ""}\n`;
+    } else {
       delimText = getBlockDelimiter(
         editor.defaultBlockToken,
         editor.defaultBlockAutoDetect,
       );
-  }
-  dispatch(state.replaceSelection(delimText), {
-    scrollIntoView: true,
-    userEvent: "input",
-  });
+    }
+    dispatch(state.replaceSelection(delimText), {
+      scrollIntoView: true,
+      userEvent: "input",
+    });
 
-  return true;
+    return true;
   };
 
 export const addNewBlockBeforeCurrent =
   (editor) =>
   ({ state, dispatch }) => {
-  if (state.readOnly) return false;
+    if (state.readOnly) return false;
 
-  const block = getActiveNoteBlock(state);
+    const block = getActiveNoteBlock(state);
     const delimText = getBlockDelimiter(
       editor.defaultBlockToken,
       editor.defaultBlockAutoDetect,
     );
 
-  dispatch(
-    state.update(
-      {
-        changes: {
-          from: block.delimiter.from,
-          insert: delimText,
+    dispatch(
+      state.update(
+        {
+          changes: {
+            from: block.delimiter.from,
+            insert: delimText,
+          },
+          selection: EditorSelection.cursor(
+            block.delimiter.from + delimText.length,
+          ),
+          annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
         },
-        selection: EditorSelection.cursor(
-          block.delimiter.from + delimText.length,
-        ),
-        annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
-      },
-      {
-        scrollIntoView: true,
-        userEvent: "input",
-      },
-    ),
-  );
-  return true;
+        {
+          scrollIntoView: true,
+          userEvent: "input",
+        },
+      ),
+    );
+    return true;
   };
 
 export const addNewBlockAfterCurrent =
   (editor) =>
   ({ state, dispatch }) => {
-  if (state.readOnly) return false;
+    if (state.readOnly) return false;
 
-  const block = getActiveNoteBlock(state);
+    const block = getActiveNoteBlock(state);
     const delimText = getBlockDelimiter(
       editor.defaultBlockToken,
       editor.defaultBlockAutoDetect,
     );
 
-  dispatch(
-    state.update(
-      {
-        changes: {
-          from: block.content.to,
-          insert: delimText,
-        },
+    dispatch(
+      state.update(
+        {
+          changes: {
+            from: block.content.to,
+            insert: delimText,
+          },
           selection: EditorSelection.cursor(
             block.content.to + delimText.length,
           ),
           annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
-      },
-      {
-        scrollIntoView: true,
-        userEvent: "input",
-      },
-    ),
-  );
-  return true;
+        },
+        {
+          scrollIntoView: true,
+          userEvent: "input",
+        },
+      ),
+    );
+    return true;
   };
 
 export const addNewBlockBeforeFirst =
   (editor) =>
   ({ state, dispatch }) => {
-  if (state.readOnly) return false;
+    if (state.readOnly) return false;
 
-  const block = getFirstNoteBlock(state);
+    const block = getFirstNoteBlock(state);
     const delimText = getBlockDelimiter(
       editor.defaultBlockToken,
       editor.defaultBlockAutoDetect,
     );
 
-  dispatch(
-    state.update(
-      {
-        changes: {
-          from: block.delimiter.from,
-          insert: delimText,
+    dispatch(
+      state.update(
+        {
+          changes: {
+            from: block.delimiter.from,
+            insert: delimText,
+          },
+          selection: EditorSelection.cursor(delimText.length),
+          annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
         },
-        selection: EditorSelection.cursor(delimText.length),
-        annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
-      },
-      {
-        scrollIntoView: true,
-        userEvent: "input",
-      },
-    ),
-  );
-  return true;
+        {
+          scrollIntoView: true,
+          userEvent: "input",
+        },
+      ),
+    );
+    return true;
   };
 
 export const addNewBlockAfterLast =
   (editor) =>
   ({ state, dispatch }) => {
-  if (state.readOnly) return false;
-  const block = getLastNoteBlock(state);
+    if (state.readOnly) return false;
+    const block = getLastNoteBlock(state);
     const delimText = getBlockDelimiter(
       editor.defaultBlockToken,
       editor.defaultBlockAutoDetect,
     );
 
-  dispatch(
-    state.update(
-      {
-        changes: {
-          from: block.content.to,
-          insert: delimText,
-        },
+    dispatch(
+      state.update(
+        {
+          changes: {
+            from: block.content.to,
+            insert: delimText,
+          },
           selection: EditorSelection.cursor(
             block.content.to + delimText.length,
           ),
           annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
-      },
-      {
-        scrollIntoView: true,
-        userEvent: "input",
-      },
-    ),
-  );
-  return true;
+        },
+        {
+          scrollIntoView: true,
+          userEvent: "input",
+        },
+      ),
+    );
+    return true;
   };
 
 export function changeLanguageTo(state, dispatch, block, language, auto) {

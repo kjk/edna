@@ -14,7 +14,7 @@ import {
   ViewPlugin,
   WidgetType,
 } from "@codemirror/view";
-import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation.js";
+import { CURSOR_CHANGE, heynoteEvent, LANGUAGE_CHANGE } from "../annotation.js";
 import { SelectionChangeEvent } from "../event.js";
 import {
   firstBlockDelimiterSize,
@@ -52,43 +52,46 @@ export const blockState = StateField.define({
   },
 });
 
-function findBlockWithPos(blocks, pos) {
-  for (let block of blocks) {
-    let r = block.range;
-    if (r.from <= pos && r.to >= pos) {
-      return block;
-    }
-  }
-  return undefined;
-}
-
-/**
- * @param {Block[]} blocks
- * @param {number} pos
- * @returns {number}
- */
-function findBlocNokWithPos(blocks, pos) {
-  let no = 0;
-  for (let block of blocks) {
-    let r = block.range;
-    if (r.from <= pos && r.to >= pos) {
-      return no;
-    }
-    no++;
-  }
-  return -1;
-}
-
-/**
- * @param {EditorState} state
- * @returns {Block}
- */
 export function getActiveNoteBlock(state) {
   // find which block the cursor is in
   const range = state.selection.asSingle().ranges[0];
-  // @ts-ignore
-  let blocks = state.facet(blockState);
-  return findBlockWithPos(blocks, range.head);
+  return state
+    .facet(blockState)
+    .find(
+      (block) => block.range.from <= range.head && block.range.to >= range.head,
+    );
+}
+
+export function getFirstNoteBlock(state) {
+  return state.facet(blockState)[0];
+}
+
+export function getLastNoteBlock(state) {
+  return state.facet(blockState)[state.facet(blockState).length - 1];
+}
+
+export function getNoteBlockFromPos(state, pos) {
+  return state
+    .facet(blockState)
+    .find((block) => block.range.from <= pos && block.range.to >= pos);
+}
+
+export function getNoteBlocksBetween(state, from, to) {
+  return state
+    .facet(blockState)
+    .filter((block) => block.range.from < to && block.range.to >= from);
+}
+
+export function getNoteBlocksFromRangeSet(state, ranges) {
+  const blocks = [];
+  const seenBlockStarts = new Set();
+  for (const range of ranges) {
+    if (!seenBlockStarts.has(range.from)) {
+      blocks.push(...getNoteBlocksBetween(state, range.from, range.to));
+      seenBlockStarts.add(range.from);
+    }
+  }
+  return blocks;
 }
 
 /** @typedef {{
@@ -116,22 +119,6 @@ export function getBlocksInfo(state) {
 }
 
 /**
- * @returns {Block}
- */
-export function getFirstNoteBlock(state) {
-  let blocks = state.facet(blockState);
-  return blocks[0];
-}
-
-/**
- * @returns {Block}
- */
-export function getLastNoteBlock(state) {
-  let blocks = state.facet(blockState);
-  return blocks[blocks.length - 1];
-}
-
-/**
  * @param {EditorState} state
  * @param {number} n
  */
@@ -139,11 +126,6 @@ export function getBlockN(state, n) {
   // @ts-ignore
   let blocks = state.facet(blockState);
   return blocks[n];
-}
-
-export function getNoteBlockFromPos(state, pos) {
-  let blocks = state.facet(blockState);
-  return findBlockWithPos(blocks, pos);
 }
 
 class NoteBlockStart extends WidgetType {
@@ -195,7 +177,6 @@ const noteBlockWidget = () => {
     update(widgets, transaction) {
       // if widgets are empty it likely means we didn't get a parsed syntax tree, and then we want to update
       // the decorations on all updates (and not just document changes)
-      // @ts-ignore
       if (transaction.docChanged || widgets.isEmpty) {
         return decorate(transaction.state);
       }
@@ -204,7 +185,6 @@ const noteBlockWidget = () => {
       return widgets;
     },
     provide(field) {
-      // @ts-ignore
       return EditorView.decorations.from(field);
     },
   });
@@ -215,7 +195,6 @@ const noteBlockWidget = () => {
 function atomicRanges(view) {
   let builder = new RangeSetBuilder();
   view.state.facet(blockState).forEach((block) => {
-    // @ts-ignore
     builder.add(block.delimiter.from, block.delimiter.to, {});
   });
   return builder.finish();
@@ -234,7 +213,6 @@ const atomicNoteBlock = ViewPlugin.fromClass(
   },
   {
     provide: (plugin) =>
-      // @ts-ignore
       EditorView.atomicRanges.of((view) => {
         return view.plugin(plugin)?.atomicRanges || [];
       }),
@@ -251,7 +229,6 @@ const blockLayer = layer({
     function rangesOverlaps(range1, range2) {
       return range1.from <= range2.to && range2.from <= range1.to;
     }
-    // @ts-ignore
     const blocks = view.state.facet(blockState);
     blocks.forEach((block) => {
       // make sure the block is visible
@@ -263,24 +240,19 @@ const blockLayer = layer({
         idx++;
         return;
       }
-      const fromCoords = view.coordsAtPos(
+      // view.coordsAtPos returns null if the editor is not visible
+      const fromCoordsTop = view.coordsAtPos(
         Math.max(block.content.from, view.visibleRanges[0].from),
-      );
-      if (!fromCoords) {
-        // this often fires during refresh in vite
-        return;
-      }
-      const fromCoordsTop = fromCoords.top;
+      )?.top;
       let toCoordsBottom = view.coordsAtPos(
         Math.min(
           block.content.to,
           view.visibleRanges[view.visibleRanges.length - 1].to,
         ),
-      ).bottom;
+      )?.bottom;
       if (idx === blocks.length - 1) {
         // Calculate how much extra height we need to add to the last block
         let extraHeight =
-          // @ts-ignore
           view.viewState.editorHeight -
           (view.defaultLineHeight + // when scrolling furthest down, one line is still shown at the top
             view.documentPadding.top +
@@ -313,7 +285,6 @@ const preventFirstBlockFromBeingDeleted = EditorState.changeFilter.of((tr) => {
   //console.log("change filter!", tr)
   const protect = [];
   if (
-    // @ts-ignore
     !tr.annotations.some((a) => a.type === heynoteEvent) &&
     firstBlockDelimiterSize
   ) {
@@ -321,12 +292,10 @@ const preventFirstBlockFromBeingDeleted = EditorState.changeFilter.of((tr) => {
   }
   // if the transaction is a search and replace, we want to protect all block delimiters
   if (
-    // @ts-ignore
     tr.annotations.some(
       (a) => a.value === "input.replace" || a.value === "input.replace.all",
     )
   ) {
-    // @ts-ignore
     const blocks = tr.startState.facet(blockState);
     blocks.forEach((block) => {
       protect.push(block.delimiter.from, block.delimiter.to);
@@ -345,7 +314,6 @@ const preventSelectionBeforeFirstBlock = EditorState.transactionFilter.of(
   (tr) => {
     if (
       !firstBlockDelimiterSize ||
-      // @ts-ignore
       tr.annotations.some((a) => a.type === heynoteEvent)
     ) {
       return tr;
@@ -353,12 +321,10 @@ const preventSelectionBeforeFirstBlock = EditorState.transactionFilter.of(
     tr?.selection?.ranges.forEach((range) => {
       // change the selection to after the first block if the transaction sets the selection before the first block
       if (range && range.from < firstBlockDelimiterSize) {
-        // @ts-ignore
         range.from = firstBlockDelimiterSize;
         //console.log("changing the from selection to", markerSize)
       }
       if (range && range.to < firstBlockDelimiterSize) {
-        // @ts-ignore
         range.to = firstBlockDelimiterSize;
         //console.log("changing the from selection to", markerSize)
       }
@@ -391,10 +357,16 @@ export const blockLineNumbers = lineNumbers({
     if (state.doc.lines >= lineNo) {
       const lineInfo = getBlockLineFromPos(state, state.doc.line(lineNo).from);
       if (lineInfo !== null) {
-        return `${lineInfo.line}`;
+        return lineInfo.line;
       }
     }
     return "";
+  },
+  domEventHandlers: {
+    click(view, line, event) {
+      // editor should not loose focus when clicking on the line numbers
+      view.docView.dom.focus();
+    },
   },
 });
 
@@ -413,16 +385,32 @@ function getSelectionSize(state, sel) {
   return count;
 }
 
+export function triggerCursorChange({ state, dispatch }) {
+  // Trigger empty change transaction that is annotated with CURRENCIES_LOADED
+  // This will make Math blocks re-render so that currency conversions are applied
+  dispatch(
+    state.update({
+      changes: { from: 0, to: 0, insert: "" },
+      annotations: [
+        heynoteEvent.of(CURSOR_CHANGE),
+        Transaction.addToHistory.of(false),
+      ],
+    }),
+  );
+}
+
 const emitCursorChange = (editor) =>
   ViewPlugin.fromClass(
     class {
       update(update) {
         // if the selection changed or the language changed (can happen without selection change),
         // emit a selection change event
-        const langChange = update.transactions.some((tr) =>
-          tr.annotations.some((a) => a.value == LANGUAGE_CHANGE),
+        const shouldUpdate = update.transactions.some((tr) =>
+          tr.annotations.some(
+            (a) => a.value == LANGUAGE_CHANGE || a.value == CURSOR_CHANGE,
+          ),
         );
-        if (update.selectionSet || langChange) {
+        if (update.selectionSet || shouldUpdate) {
           const cursorLine = getBlockLineFromPos(
             update.state,
             update.state.selection.main.head,
