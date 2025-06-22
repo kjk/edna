@@ -27,6 +27,12 @@ class HeynoteStore {
   showEditBuffer = $state(false);
   showMoveToBufferSelector = $state(false);
   showCommandPalette = $state(false);
+
+  addRecentBuffer(path) {
+    const recent = this.recentBufferPaths.filter((p) => p !== path);
+    recent.unshift(path);
+    this.recentBufferPaths = recent.slice(0, 100);
+  }
 }
 
 /*
@@ -46,11 +52,6 @@ export const useHeynoteStore = defineStore("heynote", {
       this.addRecentBuffer(path);
     },
 
-    addRecentBuffer(path) {
-      const recent = this.recentBufferPaths.filter((p) => p !== path);
-      recent.unshift(path);
-      this.recentBufferPaths = recent.slice(0, 100);
-    },
 
     openLanguageSelector() {
       this.closeDialog();

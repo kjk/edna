@@ -1,8 +1,8 @@
 import { NoteFormat } from "../common/note-format";
 import { HeynoteEditor } from "../editor/editor";
 import { useErrorStore } from "./error-store.svelte";
-import { useHeynoteStore } from "./heynote-store";
-import { useSettingsStore } from "./settings-store";
+import { useHeynoteStore } from "./heynote-store.svelte";
+import { useSettingsStore } from "./settings-store.svelte";
 
 const NUM_EDITOR_INSTANCES = 5;
 
@@ -27,6 +27,7 @@ class EditorCache {
       return new HeynoteEditor({
         element: this.containerElement,
         path: path,
+        content: "", // TODO: must remove
         theme: settingsStore.theme,
         keymap: settingsStore.settings.keymap,
         emacsMetaKey: settingsStore.settings.emacsMetaKey,
