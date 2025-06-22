@@ -1,9 +1,10 @@
-import { ensureSyntaxTree, syntaxTreeAvailable } from "@codemirror/language";
+import { syntaxTreeAvailable } from "@codemirror/language";
 import {
   EditorState,
   RangeSet,
   RangeSetBuilder,
   StateField,
+  Transaction,
 } from "@codemirror/state";
 import {
   Decoration,
@@ -14,8 +15,8 @@ import {
   ViewPlugin,
   WidgetType,
 } from "@codemirror/view";
+import { useHeynoteStore } from "../../stores/heynote-store.svelte.js";
 import { CURSOR_CHANGE, heynoteEvent, LANGUAGE_CHANGE } from "../annotation.js";
-import { SelectionChangeEvent } from "../event.js";
 import {
   firstBlockDelimiterSize,
   getBlocksFromString,
@@ -399,8 +400,9 @@ export function triggerCursorChange({ state, dispatch }) {
   );
 }
 
-const emitCursorChange = (editor) =>
-  ViewPlugin.fromClass(
+const emitCursorChange = (editor) => {
+  const heynoteStore = useHeynoteStore();
+  return ViewPlugin.fromClass(
     class {
       update(update) {
         // if the selection changed or the language changed (can happen without selection change),
@@ -422,19 +424,17 @@ const emitCursorChange = (editor) =>
 
           const block = getActiveNoteBlock(update.state);
           if (block && cursorLine) {
-            editor.element.dispatchEvent(
-              new SelectionChangeEvent({
-                cursorLine,
-                selectionSize,
-                language: block.language.name,
-                languageAuto: block.language.auto,
-              }),
-            );
+            heynoteStore.currentCursorLine = cursorLine;
+            heynoteStore.currentSelectionSize = selectionSize;
+            heynoteStore.currentLanguage = block.language.name;
+            heynoteStore.currentLanguageAuto = block.language.auto;
+            heynoteStore.currentBufferName = editor.name;
           }
         }
       }
     },
   );
+};
 
 export const noteBlockExtension = (editor) => {
   return [
