@@ -1,45 +1,15 @@
 import { redo, undo } from "@codemirror/commands";
 import { markdown, markdownKeymap } from "@codemirror/lang-markdown";
-import {
-  ensureSyntaxTree,
-  foldEffect,
-  foldGutter,
-  foldState,
-} from "@codemirror/language";
-import {
-  Annotation,
-  Compartment,
-  EditorSelection,
-  EditorState,
-  Facet,
-  Prec,
-  RangeSet,
-  Transaction,
-} from "@codemirror/state";
-import {
-  keymap as cmKeymap,
-  drawSelection,
-  EditorView,
-  lineNumbers,
-  ViewPlugin,
-} from "@codemirror/view";
+import { ensureSyntaxTree, foldEffect, foldGutter, foldState } from "@codemirror/language";
+import { Annotation, Compartment, EditorSelection, EditorState, Facet, Prec, RangeSet, Transaction } from "@codemirror/state";
+import { keymap as cmKeymap, drawSelection, EditorView, lineNumbers, ViewPlugin } from "@codemirror/view";
 import { NoteFormat } from "../common/note-format.js";
-import {
-  openCommandPalette,
-  openCreateNewNote,
-  openLanguageSelector,
-  openNoteSelector,
-} from "../globals.js";
+import { openCommandPalette, openCreateNewNote, openLanguageSelector, openNoteSelector } from "../globals.js";
 import { findEditorByView } from "../state.js";
 import { useErrorStore } from "../stores/error-store.svelte.js";
 import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
 import { heynoteEvent, SET_CONTENT } from "./annotation.js";
-import {
-  blockLineNumbers,
-  blockState,
-  noteBlockExtension,
-  triggerCursorChange,
-} from "./block/block.js";
+import { blockLineNumbers, blockState, noteBlockExtension, triggerCursorChange } from "./block/block.js";
 import { changeCurrentBlockLanguage } from "./block/commands.js";
 import { selectAll } from "./block/select-all.js";
 import { getCloseBracketsExtensions } from "./close-brackets.js";
@@ -60,6 +30,7 @@ import { getFontTheme } from "./theme/font-theme.js";
 import { heynoteLight } from "./theme/light.js";
 import { todoCheckboxPlugin } from "./todo-checkbox";
 
+
 export class HeynoteEditor {
   constructor({
     element,
@@ -76,7 +47,7 @@ export class HeynoteEditor {
     fontFamily,
     fontSize,
     indentType = "space",
-    spacesPerTab: tabSize = 2,
+    tabSize = ,
     defaultBlockToken,
     defaultBlockAutoDetect,
     keyBindings,

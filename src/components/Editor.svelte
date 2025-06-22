@@ -119,7 +119,7 @@
         bracketClosing: bracketClosing,
         fontFamily: fontFamily,
         fontSize: fontSize,
-        spacesPerTab: 2, // TODO: add a setting for this
+        tabSize: 4,
         defaultBlockAutoDetect: true,
         defaultBlockToken: "text",
         keyBindings: [],
