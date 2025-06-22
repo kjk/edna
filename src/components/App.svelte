@@ -90,6 +90,7 @@
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import { getSettings } from "../settings.svelte";
   import { appState } from "../state.svelte";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     getClipboardText,
@@ -131,13 +132,11 @@
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
+  let heynoteStore = useHeynoteStore();
   let settings = getSettings();
 
   let docSize = $state(0);
-  let language = $state("text");
-  let languageAuto = $state(true);
   let noteName = $derived(settings.currentNoteName);
-  let selectionSize = $state(0);
   let showingMenu = $state(false);
   let showingLanguageSelector = $state(false);
   let showingNoteSelector = $state(false);
@@ -979,6 +978,8 @@
 
   function buildMenuDef() {
     // let starAction = "Star";
+    let language = heynoteStore.currentLanguage;
+
     let starAction = "Add to favorites";
     let meta = getNoteMeta(noteName);
     if (meta && meta.isStarred) {
@@ -1085,6 +1086,8 @@
    * @returns {number}
    */
   function menuItemStatus(mi) {
+    let language = heynoteStore.currentLanguage;
+
     let mid = mi[1];
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
@@ -1897,8 +1900,6 @@
   />
   <StatusBar
     {docSize}
-    {language}
-    {languageAuto}
     {isSpellChecking}
     {formatCurrentBlock}
     {smartRun}

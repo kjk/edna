@@ -14,8 +14,6 @@
 
   /** @type { {
     docSize: number,
-    language: string,
-    languageAuto: boolean,
     isSpellChecking: boolean,
     toggleSpellCheck: (ev) => void,
     smartRun: (ev) => void,
@@ -23,8 +21,6 @@
   } } */
   let {
     docSize = 0,
-    language = "",
-    languageAuto = false,
     isSpellChecking = false,
     toggleSpellCheck,
     smartRun,
@@ -37,9 +33,9 @@
     style = `right: ${dx}px`;
   });
 
-  let languageName = $derived(getLanguageNameFromToken(language));
-
   let heynoteStore = useHeynoteStore();
+  let language = heynoteStore.currentLanguage;
+  let languageName = $derived(getLanguageNameFromToken(language));
 
   let lang = $derived(getLanguage(language));
   let supportsFormat = $derived(langSupportsFormat(lang));
@@ -102,8 +98,8 @@
     class="clickable"
     title={changeLanguageTitle}
   >
-    {languageName}
-    {#if languageAuto}
+    {heynoteStore.currentLanguage}
+    {#if heynoteStore.currentLanguageAuto}
       <span class="auto">(auto)</span>
     {/if}
   </button>
