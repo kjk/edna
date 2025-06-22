@@ -141,7 +141,6 @@ const minimalSetup = /*@__PURE__*/ (() => [
   history(),
   drawSelection(),
   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-  // @ts-ignore
   keymap.of([...defaultKeymap, ...historyKeymap]),
 ])();
 
