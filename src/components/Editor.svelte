@@ -314,7 +314,8 @@
     setEditorContent(content);
     let pos = 0;
     if (name === kScratchNoteName) {
-      pos = content.length;
+      // TODO: this now breaks because content contains serialized metadata
+      // pos = content.length;
     }
     editor.view.dispatch({
       selection: { anchor: pos, head: pos },
