@@ -92,6 +92,11 @@ const openCreateNewBuffer = (editor) => () => {
   editor.openCreateBuffer("new");
   return true;
 };
+const saveCurrentNote = (editor) => () => {
+  editor.save();
+  return true;
+};
+
 const nothing = (view) => {
   return true;
 };
@@ -184,6 +189,7 @@ const HEYNOTE_COMMANDS = {
     "Block",
     "Move block to another buffer…",
   ),
+  saveCurrentNote: cmd(saveCurrentNote, "Editor", "Save"),
   openCreateNewBuffer: cmd(openCreateNewBuffer, "Buffer", "Create new buffer…"),
   cut: cmd(cutCommand, "Clipboard", "Cut selection"),
   copy: cmd(copyCommand, "Clipboard", "Copy selection"),

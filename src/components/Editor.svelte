@@ -9,7 +9,6 @@
     loadCurrentNote,
     loadCurrentNoteIfOnDisk,
     loadNote,
-    saveCurrentNote as saveCurrentNoteContent,
   } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { rememberEditor } from "../state.js";
@@ -27,7 +26,6 @@
   let { debugSyntaxTree, docDidChange, didOpenNote } = $props();
 
   let syntaxTreeDebugContent = $state(null);
-  let diskContent = $state(null);
   let debouncedRefreshFunc = $state(null);
   let settings = getSettings();
   let theme = settings.theme;
@@ -103,13 +101,11 @@
       let name = settings.currentNoteName;
       throwIf(!name);
 
-      diskContent = content;
       editor = new HeynoteEditor({
         path: name,
         element: editorEl,
         content: content,
         theme: theme,
-        saveFunction: saveFunction,
         keymap: keymap,
         emacsMetaKey: emacsMetaKey,
         showLineNumberGutter: showLineNumberGutter,
@@ -122,6 +118,7 @@
         defaultBlockToken: "text",
         keyBindings: [],
       });
+      editor.contentLoaded = true; // TODO(port): hack for now, needs for saving to work
       rememberEditor(editor);
       didOpenNote(name, false);
 
@@ -185,21 +182,9 @@
     debouncedRefreshFunc();
   }
 
-  async function saveFunction(content) {
-    if (content === diskContent) {
-      console.log("saveFunction: content unchanged, skipping save");
-      return;
-    }
-    console.log("saveFunction: saving content");
-    diskContent = content;
-    await saveCurrentNoteContent(content);
-
-    scheduleRefreshFromDisk();
-  }
-
   function saveForce() {
     console.log("saveForce");
-    saveFunction(editor.getContent());
+    editor.save();
   }
 
   export function getBlocks() {
@@ -263,16 +248,8 @@
     editor.focus();
   }
 
-  // saving is debounced so ensure we save before opening a new note
-  // TODO: we'll have a spurious save if there was a debounce, because
-  // the debounce is still in progress, I think
-  export async function saveCurrentNote() {
-    let s = editor.getContent();
-    await editor.saveFunction(s);
-  }
-
   export function setEditorContent(content) {
-    diskContent = content;
+    editor.diskContent = content;
     let newState = editor.createState();
     editor.view.setState(newState);
     try {
@@ -293,8 +270,11 @@
   ) {
     console.log("openNote:", name);
     if (!skipSave) {
+      // saving is debounced so ensure we save before opening a new note
+      // TODO: we'll have a spurious save if there was a debounce, because
+      // the debounce is still in progress, I think
+      await editor.save();
       // TODO: this is async so let's hope it works
-      await saveCurrentNote();
     }
     let content = await loadNote(name);
     console.log("Editor.openNote: loaded:", name);

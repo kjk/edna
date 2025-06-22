@@ -91,7 +91,8 @@ export const DEFAULT_KEYMAP = [
   cmd("Mod-o", "openBufferSelector"),
   cmd("Mod-Shift-p", "openCommandPalette"),
   cmd("Mod-Shift-k", "openCommandPalette"),
-  cmd("Mod-s", "openMoveToBuffer"),
+  // cmd("Mod-s", "openMoveToBuffer"),
+  cmd("Mod-s", "saveCurrentNote"),
   cmd("Mod-n", "openCreateNewBuffer"),
 
   cmd("Alt-Shift-f", "formatBlockContent"),

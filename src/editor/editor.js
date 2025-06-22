@@ -30,6 +30,7 @@ import {
   openLanguageSelector,
   openNoteSelector,
 } from "../globals.js";
+import { saveCurrentNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { useErrorStore } from "../stores/error-store.svelte.js";
 import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
@@ -70,7 +71,6 @@ export class HeynoteEditor {
     content,
     focus = true,
     theme = "light",
-    saveFunction = null,
     keymap = "default",
     emacsMetaKey,
     showLineNumberGutter = true,
@@ -99,7 +99,6 @@ export class HeynoteEditor {
     this.fontTheme = new Compartment();
     this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
     this.contentLoaded = false;
-    this.saveFunction = saveFunction;
     this.notesStore = useHeynoteStore();
     this.errorStore = useErrorStore();
     this.note = null;
@@ -166,7 +165,7 @@ export class HeynoteEditor {
             };
           }),
 
-          this.saveFunction ? autoSaveContent(this, 2000) : [],
+          autoSaveContent(this, 2000),
 
           todoCheckboxPlugin,
           markdown({ addKeymap: false }),
@@ -189,8 +188,21 @@ export class HeynoteEditor {
     }
   }
 
-  save() {
-    this.saveFunction(this.getContent());
+  async save() {
+    if (!this.contentLoaded) {
+      return;
+    }
+    const content = this.getContent();
+    if (content === this.diskContent) {
+      return;
+    }
+    //console.log("saving:", this.path)
+    this.diskContent = content;
+
+    // TODO(port): use buffer.save
+    // I'm not sure if I can rely on this.path being always correct
+    await saveCurrentNote(content);
+    // await window.heynote.buffer.save(this.path, content);
   }
 
   getContent() {
@@ -212,6 +224,22 @@ export class HeynoteEditor {
       console.trace();
     }
     return this.note.serialize();
+  }
+
+  async loadContent() {
+    //console.log("loading content", this.path)
+    const content = await window.heynote.buffer.load(this.path);
+    this.diskContent = content;
+
+    // set up content change listener
+    this.onChange = (content) => {
+      this.diskContent = content;
+      this.setContent(content);
+    };
+    window.heynote.buffer.addOnChangeCallback(this.path, this.onChange);
+
+    await this.setContent(content);
+    this.contentLoaded = true;
   }
 
   setContent(content) {

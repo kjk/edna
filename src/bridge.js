@@ -49,7 +49,7 @@ const Heynote = {
 
   buffer: {
     async load(path) {
-      //console.log("loading", path)
+      console.log("Heynote.buffer.load:", path);
       let content = await loadNote(path);
       return content === null
         ? '{"formatVersion":"1.0.0","name":"Scratch"}\n∞∞∞text-a\n'
@@ -57,6 +57,7 @@ const Heynote = {
     },
 
     async save(path, content) {
+      console.log(`Heynote.buffer.save: '${path}, ${content.length} bytes`);
       await saveNote(path, content);
       // TODO: is disabled anyway
       // scheduleRefreshFromDisk();
