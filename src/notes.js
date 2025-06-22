@@ -620,6 +620,10 @@ function pickUniqueName(base, existingNames) {
 export async function saveCurrentNote(content) {
   let settings = getSettings();
   let name = settings.currentNoteName;
+  await saveNote(name, content);
+}
+
+export async function saveNote(name, content) {
   console.log("note name:", name);
   if (isSystemNoteName(name)) {
     console.log("skipped saving system note", name);
