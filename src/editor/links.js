@@ -1,9 +1,16 @@
-import { Decoration, MatchDecorator, ViewPlugin } from "@codemirror/view";
+import {
+  Decoration,
+  EditorView,
+  MatchDecorator,
+  ViewPlugin,
+  ViewUpdate,
+  WidgetType,
+} from "@codemirror/view";
 
-import { platform } from "../util";
-
-const modChar = platform.isMac ? "⌘" : "Ctrl";
-const eventKeyModAttribute = platform.isMac ? "metaKey" : "ctrlKey";
+const modChar = window.heynote.platform.isMac ? "⌘" : "Ctrl";
+const eventKeyModAttribute = window.heynote.platform.isMac
+  ? "metaKey"
+  : "ctrlKey";
 
 const linkMatcher = new MatchDecorator({
   regexp: /https?:\/\/[^\s\)]+/gi,
@@ -30,7 +37,7 @@ export const links = ViewPlugin.fromClass(
     decorations: (instance) => instance.links,
     eventHandlers: {
       click: (e, view) => {
-        let target = /** @type {HTMLElement} */ (e.target);
+        let target = e.target;
         if (
           target.closest(".heynote-link")?.classList.contains("heynote-link") &&
           e[eventKeyModAttribute]
@@ -43,5 +50,5 @@ export const links = ViewPlugin.fromClass(
         }
       },
     },
-  }
+  },
 );

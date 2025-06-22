@@ -1,6 +1,6 @@
-import { ViewPlugin } from "@codemirror/view";
-import debounce from "debounce";
-import { appState } from "../state.svelte";
+import { ViewPlugin } from "@codemirror/view"
+import debounce from "debounce"
+import { appState } from "../state.svelte"
 
 export const autoSaveContent = (editor, interval) => {
   const save = debounce((view) => {
