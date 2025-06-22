@@ -67,6 +67,7 @@ export class EdnaEditor {
     this.saveFunction = saveFunction;
     this.tabsCompartment = new Compartment();
     this.note = null;
+    this.selectionMarkMode = false;
 
     const makeTabState = (tabsAsSpaces, tabSpaces) => {
       const indentChar = tabsAsSpaces ? " ".repeat(tabSpaces) : "\t";
