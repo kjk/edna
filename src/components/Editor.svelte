@@ -20,16 +20,13 @@
 
   let enableDiskRefresh = false;
 
-  /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
-
   /** @type {{
     debugSyntaxTree: boolean,
-    cursorChange: (e: SelectionChangeEvent) => void,
     docDidChange: () => void,
     didOpenNote: (name: string, noPushHistory: boolean) => void,
    }}*/
 
-  let { debugSyntaxTree, cursorChange, docDidChange, didOpenNote } = $props();
+  let { debugSyntaxTree, docDidChange, didOpenNote } = $props();
 
   let syntaxTreeDebugContent = $state(null);
   let diskContent = $state(null);
@@ -89,13 +86,6 @@
 
     // forward events dispatched from editor.js
 
-    /**
-     * @param {SelectionChangeEvent} ev
-     */
-    function onSelChange(ev) {
-      cursorChange(ev);
-    }
-    editorEl.addEventListener("selectionChange", onSelChange);
     editorEl.addEventListener("docChanged", (e) => {
       docDidChange();
     });

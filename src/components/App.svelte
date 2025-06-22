@@ -913,7 +913,7 @@
       lang = "text";
       auto = true;
     }
-    changeCurrentBlockLanguage(view, lang, auto);
+    changeCurrentBlockLanguage(view.state, view.dispatch, lang, auto);
     view.focus();
   }
 
@@ -1832,19 +1832,6 @@
     logNoteOp("noteDelete");
   }
 
-  /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
-
-  /**
-   * @param {SelectionChangeEvent} e
-   */
-  function onCursorChange(e) {
-    line = e.cursorLine.line;
-    column = e.cursorLine.col;
-    selectionSize = e.selectionSize;
-    language = e.language;
-    languageAuto = e.languageAuto;
-  }
-
   function updateDocSize() {
     docSize = 0;
     let view = getEditorView();
@@ -1903,7 +1890,6 @@
   {/if}
 
   <Editor
-    cursorChange={onCursorChange}
     debugSyntaxTree={false}
     {didOpenNote}
     {docDidChange}
@@ -1911,7 +1897,6 @@
   />
   <StatusBar
     {docSize}
-    {selectionSize}
     {language}
     {languageAuto}
     {isSpellChecking}

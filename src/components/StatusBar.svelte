@@ -14,7 +14,6 @@
 
   /** @type { {
     docSize: number,
-    selectionSize: number,
     language: string,
     languageAuto: boolean,
     isSpellChecking: boolean,
@@ -24,7 +23,6 @@
   } } */
   let {
     docSize = 0,
-    selectionSize = 0,
     language = "",
     languageAuto = false,
     isSpellChecking = false,
@@ -52,7 +50,7 @@
   );
   let runBlockTitle = $derived.by(() => {
     let s = "Smart Run";
-    if (selectionSize > 0) {
+    if (heynoteStore.currentSelectionSize > 0) {
       s = "Run Function With Selection";
     } else if (supportsRun) {
       s = "Run Code Block";
@@ -79,8 +77,8 @@
   >
     Ln <span class="num">{heynoteStore.currentCursorLine.line}</span>
     &nbsp;Col <span class="num">{heynoteStore.currentCursorLine.col}</span>
-    {#if selectionSize > 0}
-      Sel <span class="num">{selectionSize}</span>
+    {#if heynoteStore.currentSelectionSize > 0}
+      Sel <span class="num">{heynoteStore.currentSelectionSize}</span>
     {/if}
   </div>
   <div class="text-gray-400">&bull;</div>

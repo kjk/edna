@@ -1,5 +1,6 @@
 import { SCRATCH_FILE_NAME } from "../common/constants";
 import { NoteFormat } from "../common/note-format";
+import { len } from "../util";
 
 //import { useEditorCacheStore } from "./editor-cache";
 
@@ -12,7 +13,7 @@ class HeynoteStore {
   currentBufferName = $state(null);
   currentLanguage = $state(null);
   currentLanguageAuto = $state(null);
-  currentCursorLine = $state(null);
+  currentCursorLine = $state({ line: 0, col: 0, length: 0 });
   currentSelectionSize = $state(null);
   libraryId = $state(0);
   createBufferParams = $state({
