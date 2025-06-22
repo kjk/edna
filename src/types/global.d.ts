@@ -6,8 +6,10 @@ interface Window {
       isLinux: boolean;
       isWebApp: boolean;
     }
+
     defaultFontFamily: string;
     defaultFontSize: number;
+
     buffer: {
       async load(string): Promise<void>;
       async save(string, string): Promise<void>;
@@ -15,6 +17,29 @@ interface Window {
       addOnChangeCallback(string, cb: any): void;
       removeOnChangeCallback(string, cb: any): void;
     }
+
+    mainProcess: {
+      on(event: string, cb: (...args: any[]) => void): void;
+      off(event: string, cb: (...args: any[]) => void): void;
+      invoke(event: string, ...args: any[]): Promise<any>;
+    }
+
+    // TODO: more concrete type
+    settings: any;
+    setSettings(settings: any): void;
+
+    themeMode: {
+      set(mode: string): void;
+      async get(): Promise<{ theme: string, computed: string }>;
+      onChange(cb: (theme: string, computed: string) => void): void;
+      removeListener() : void;
+      initial: string;
+    }
+
+    async getCurrencyData(): Promise<any>;
+    async getVersion(): Promise<string>;
+    async getInitErrors(): Promise<string[]>;
+    setWindowTitle(title: string): void;
   }
 }
 

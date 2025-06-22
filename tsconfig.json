@@ -23,6 +23,12 @@
 
     // https://twitter.com/housecor/status/1768283265889136835
     // "noUncheckedIndexedAccess": true
+
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
+
   },
   // "include": ["./src", "./src/components/*.svelte"],
   "include": ["./src/**/*.d.ts", "./src/**/*.js", "./src/**/*.svelte"],
