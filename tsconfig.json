@@ -1,25 +1,28 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
     "moduleResolution": "node",
-    "target": "esnext",
-    "module": "esnext",
-    "isolatedModules": true,
+    // "strict": true,
+    "jsx": "preserve",
     "resolveJsonModule": true,
-    "sourceMap": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
+    "lib": ["ESNext", "DOM"],
     "skipLibCheck": true,
+    "noEmit": true,
+    "allowJs": true,
+    "paths": {
+      "@/*": ["./*"],
+    },
+
+    "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
     "checkJs": true,
 
-    "useDefineForClassFields": true,
-    // "strict": true,
-    "jsx": "preserve",
-    "lib": ["ESNext", "DOM"],
-    "noEmit": true,
-    "allowJs": true,
-
     // https://twitter.com/housecor/status/1768283265889136835
-    "noUncheckedIndexedAccess": true
+    // "noUncheckedIndexedAccess": true
   },
   // "include": ["./src", "./src/components/*.svelte"],
   "include": ["./src/**/*.d.ts", "./src/**/*.js", "./src/**/*.svelte"],

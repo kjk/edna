@@ -1,21 +1,52 @@
-import { markdown } from "@codemirror/lang-markdown";
-import { ensureSyntaxTree, foldGutter, indentUnit } from "@codemirror/language";
-import { Compartment, EditorSelection, EditorState } from "@codemirror/state";
-import { drawSelection, EditorView, lineNumbers } from "@codemirror/view";
+import { redo, undo } from "@codemirror/commands";
+import { markdown, markdownKeymap } from "@codemirror/lang-markdown";
+import {
+  ensureSyntaxTree,
+  foldEffect,
+  foldGutter,
+  foldState,
+} from "@codemirror/language";
+import {
+  Annotation,
+  Compartment,
+  EditorSelection,
+  EditorState,
+  Facet,
+  Prec,
+  RangeSet,
+  Transaction,
+} from "@codemirror/state";
+import {
+  keymap as cmKeymap,
+  drawSelection,
+  EditorView,
+  lineNumbers,
+  ViewPlugin,
+} from "@codemirror/view";
 import { NoteFormat } from "../common/note-format.js";
+import {
+  openCommandPalette,
+  openCreateNewNote,
+  openLanguageSelector,
+  openNoteSelector,
+} from "../globals.js";
 import { findEditorByView } from "../state.js";
+import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
 import { heynoteEvent, SET_CONTENT } from "./annotation.js";
 import {
   blockLineNumbers,
   blockState,
   noteBlockExtension,
 } from "./block/block.js";
+import { changeCurrentBlockLanguage } from "./block/commands.js";
+import { selectAll } from "./block/select-all.js";
 import { getCloseBracketsExtensions } from "./close-brackets.js";
 import { focusEditorView, isReadOnly } from "./cmutils.js";
+import { HEYNOTE_COMMANDS } from "./commands.js";
 import { heynoteCopyCut } from "./copy-paste";
-import { emacsKeymap } from "./emacs.js";
-import { createDynamicCloseBracketsExtension } from "./extensions.js";
-import { ednaKeymap } from "./keymap.js";
+import { foldGutterExtension } from "./fold-gutter.js";
+import { indentation } from "./indentation.js";
+import { getKeymapExtensions } from "./keymap.js";
 import { heynoteLang } from "./lang-heynote/heynote.js";
 import { languageDetection } from "./language-detection/autodetect.js";
 import { links } from "./links.js";
@@ -26,14 +57,6 @@ import { heynoteDark } from "./theme/dark.js";
 import { getFontTheme } from "./theme/font-theme.js";
 import { heynoteLight } from "./theme/light.js";
 import { todoCheckboxPlugin } from "./todo-checkbox";
-
-function getKeymapExtensions(editor, keymap) {
-  if (keymap === "emacs") {
-    return emacsKeymap(editor);
-  } else {
-    return ednaKeymap(editor);
-  }
-}
 
 export class EdnaEditor {
   constructor({
@@ -47,11 +70,13 @@ export class EdnaEditor {
     showLineNumberGutter = true,
     showFoldGutter = true,
     bracketClosing = false,
-    spacesPerTab = 2,
     fontFamily,
     fontSize,
+    indentType = "space",
+    spacesPerTab: tabSize = 2,
     defaultBlockToken,
     defaultBlockAutoDetect,
+    keyBindings,
   }) {
     this.element = element;
     this.themeCompartment = new Compartment();
@@ -61,20 +86,16 @@ export class EdnaEditor {
     this.foldGutterCompartment = new Compartment();
     this.readOnlyCompartment = new Compartment();
     this.closeBracketsCompartment = new Compartment();
+    this.indentUnitCompartment = new Compartment();
     this.deselectOnCopy = keymap === "emacs";
     this.emacsMetaKey = emacsMetaKey;
     this.fontTheme = new Compartment();
     this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
+    this.contentLoaded = false;
     this.saveFunction = saveFunction;
-    this.tabsCompartment = new Compartment();
+    this.notesStore = useHeynoteStore();
     this.note = null;
     this.selectionMarkMode = false;
-
-    const makeTabState = (tabsAsSpaces, tabSpaces) => {
-      const indentChar = tabsAsSpaces ? " ".repeat(tabSpaces) : "\t";
-      const v = indentUnit.of(indentChar);
-      return this.tabsCompartment.of(v);
-    };
 
     let updateListenerExtension = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
@@ -86,16 +107,20 @@ export class EdnaEditor {
       const state = EditorState.create({
         doc: "",
         extensions: [
+          this.keymapCompartment.of(
+            getKeymapExtensions(this, keymap, keyBindings),
+          ),
           updateListenerExtension,
-          this.keymapCompartment.of(getKeymapExtensions(this, keymap)),
           heynoteCopyCut(this),
 
           //minimalSetup,
           this.lineNumberCompartment.of(
-            showLineNumberGutter ? [lineNumbers(), blockLineNumbers] : [],
+            showLineNumberGutter ? blockLineNumbers : [],
           ),
           customSetup,
-          this.foldGutterCompartment.of(showFoldGutter ? [foldGutter()] : []),
+          this.foldGutterCompartment.of(
+            showFoldGutter ? [foldGutterExtension()] : [],
+          ),
 
           this.closeBracketsCompartment.of(
             bracketClosing ? [getCloseBracketsExtensions()] : [],
@@ -111,7 +136,9 @@ export class EdnaEditor {
           ),
           heynoteBase,
           this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
-          makeTabState(true, spacesPerTab),
+          this.indentUnitCompartment.of(indentation(indentType, tabSize)),
+
+          //makeTabState(true, tabSize),
           EditorView.scrollMargins.of((f) => {
             return { top: 80, bottom: 80 };
           }),
@@ -134,7 +161,8 @@ export class EdnaEditor {
           this.saveFunction ? autoSaveContent(this, 2000) : [],
 
           todoCheckboxPlugin,
-          markdown(),
+          markdown({ addKeymap: false }),
+          Prec.highest(cmKeymap.of(markdownKeymap)),
           links,
         ],
       });
@@ -153,15 +181,6 @@ export class EdnaEditor {
     }
   }
 
-  setTabsState(tabsAsSpaces, tabSpaces) {
-    if (!this.view) return;
-    const indentChar = tabsAsSpaces ? " ".repeat(tabSpaces) : "\t";
-    const v = indentUnit.of(indentChar);
-    this.view.dispatch({
-      effects: this.tabsCompartment.reconfigure(v),
-    });
-  }
-
   save() {
     this.saveFunction(this.getContent());
   }
@@ -169,6 +188,21 @@ export class EdnaEditor {
   getContent() {
     this.note.content = this.view.state.sliceDoc();
     this.note.cursors = this.view.state.selection.toJSON();
+
+    // fold state
+    const foldedRanges = [];
+    this.view.state
+      .field(foldState, false)
+      ?.between(0, this.view.state.doc.length, (from, to) => {
+        foldedRanges.push({ from, to });
+      });
+    this.note.foldedRanges = foldedRanges;
+
+    const ranges = this.note.cursors.ranges;
+    if (ranges.length == 1 && ranges[0].anchor == 0 && ranges[0].head == 0) {
+      console.log("DEBUG!! Cursor is at 0,0");
+      console.trace();
+    }
     return this.note.serialize();
   }
 
@@ -215,6 +249,10 @@ export class EdnaEditor {
             scrollIntoView: true,
           });
         }
+        // set folded ranges
+        this.view.dispatch({
+          effects: this.note.foldedRanges.map((range) => foldEffect.of(range)),
+        });
         resolve();
       });
     });
@@ -277,10 +315,38 @@ export class EdnaEditor {
     });
   }
 
+  openLanguageSelector() {
+    openLanguageSelector();
+  }
+
+  openBufferSelector() {
+    openNoteSelector();
+  }
+
+  openCommandPalette() {
+    openCommandPalette();
+  }
+
+  openCreateBuffer(createMode) {
+    console.log("openCreateBuffer: createMode:", createMode);
+    // TODO: not sure if eliminate or or implement
+    // this.notesStore.openCreateBuffer(createMode);
+    openCreateNewNote();
+  }
+
+  openMoveToBufferSelector() {
+    throw new Error("NYI");
+    // this.notesStore.openMoveToBufferSelector();
+  }
+
+  setCurrentLanguage(lang, auto = false) {
+    changeCurrentBlockLanguage(this.view.state, this.view.dispatch, lang, auto);
+  }
+
   setLineNumberGutter(show) {
     this.view.dispatch({
       effects: this.lineNumberCompartment.reconfigure(
-        show ? [lineNumbers(), blockLineNumbers] : [],
+        show ? blockLineNumbers : [],
       ),
     });
   }
@@ -288,7 +354,7 @@ export class EdnaEditor {
   setFoldGutter(show) {
     this.view.dispatch({
       effects: this.foldGutterCompartment.reconfigure(
-        show ? [foldGutter()] : [],
+        show ? [foldGutterExtension()] : [],
       ),
     });
   }
@@ -312,6 +378,34 @@ export class EdnaEditor {
   setDefaultBlockLanguage(token, autoDetect) {
     this.defaultBlockToken = token || "text";
     this.defaultBlockAutoDetect = autoDetect === undefined ? true : autoDetect;
+  }
+  undo() {
+    undo(this.view);
+  }
+
+  redo() {
+    redo(this.view);
+  }
+
+  selectAll() {
+    selectAll(this.view);
+  }
+
+  setIndentSettings(indentType, tabSize) {
+    this.view.dispatch({
+      effects: this.indentUnitCompartment.reconfigure(
+        indentation(indentType, tabSize),
+      ),
+    });
+  }
+
+  executeCommand(command) {
+    const cmd = HEYNOTE_COMMANDS[command];
+    if (!cmd) {
+      console.error(`Command not found: ${command}`);
+      return;
+    }
+    cmd.run(this)(this.view);
   }
 }
 
@@ -339,6 +433,7 @@ export function setReadOnly(view, ro) {
 }
 
 /**
+ *
  * @param {EditorView} view
  * @return {string}
  */

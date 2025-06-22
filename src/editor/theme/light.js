@@ -1,9 +1,9 @@
-import { EditorView } from "@codemirror/view";
 import {
+  defaultHighlightStyle,
   HighlightStyle,
   syntaxHighlighting,
-  defaultHighlightStyle,
 } from "@codemirror/language";
+import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 
 const selection = "#77baff8c";
@@ -55,6 +55,11 @@ const lightTheme = EditorView.theme({
   },
   ".cm-activeLine": {
     backgroundColor: "rgba(0,0,0, 0.04)",
+  },
+  ".cm-foldPlaceholder": {
+    backgroundColor: "transparent",
+    border: "none",
+    color: "rgba(0,0,0, 0.5)",
   },
   ".cm-selectionBackground": {
     background: selectionBlur,

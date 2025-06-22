@@ -1,6 +1,23 @@
 import { parseMixed } from "@lezer/common";
+
+import { jsonLanguage } from "@codemirror/lang-json";
+import { pythonLanguage } from "@codemirror/lang-python";
+import { javascriptLanguage } from "@codemirror/lang-javascript";
+import { htmlLanguage } from "@codemirror/lang-html";
+import { StandardSQL } from "@codemirror/lang-sql";
+import { markdownLanguage } from "@codemirror/lang-markdown";
+import { javaLanguage } from "@codemirror/lang-java";
+import { lezerLanguage } from "@codemirror/lang-lezer";
+import { phpLanguage } from "@codemirror/lang-php";
+import { elixirLanguage } from "codemirror-lang-elixir";
+
 import { getLanguage, langGetParser } from "../languages.js";
 import { NoteContent, NoteLanguage } from "./parser.terms.js";
+import { LANGUAGES } from "../languages.js";
+
+const languageMapping = Object.fromEntries(
+  LANGUAGES.map((l) => [l.token, l.parser])
+);
 
 export function configureNesting() {
   // TODO: would have to by async to implement on-demand loading of parsers

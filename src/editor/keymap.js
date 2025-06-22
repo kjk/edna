@@ -1,128 +1,191 @@
-import { indentLess, indentMore, redo } from "@codemirror/commands";
+import { Prec } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
-import {
-  createScratchNote,
-  openBlockSelector,
-  openCommandPalette,
-  openFunctionSelector,
-  openHistorySelector,
-  openLanguageSelector,
-  openNoteSelector,
-  smartRun,
-} from "../globals.js";
-import { platform } from "../util.js";
-import {
-  addNewBlockAfterCurrent,
-  addNewBlockAfterLast,
-  addNewBlockBeforeCurrent,
-  addNewBlockBeforeFirst,
-  gotoNextBlock,
-  gotoNextParagraph,
-  gotoPreviousBlock,
-  gotoPreviousParagraph,
-  insertNewBlockAtCursor,
-  moveCurrentBlockDown,
-  moveCurrentBlockUp,
-  moveLineDown,
-  moveLineUp,
-  newCursorAbove,
-  newCursorBelow,
-  selectAll,
-  selectNextBlock,
-  selectNextParagraph,
-  selectPreviousBlock,
-  selectPreviousParagraph,
-} from "./block/commands.js";
-import { formatBlockContent } from "./block/format-code.js";
-import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
+import { HEYNOTE_COMMANDS } from "./commands.js";
 
-export function keymapFromSpec(specs) {
+const cmd = (key, command) => ({ key, command });
+const cmdShift = (key, command, shiftCommand) => {
+  return [cmd(key, command), cmd(`Shift-${key}`, shiftCommand)];
+};
+
+const isMac = window.heynote.platform.isMac;
+const isLinux = window.heynote.platform.isLinux;
+const isWindows = window.heynote.platform.isWindows;
+
+export const DEFAULT_KEYMAP = [
+  cmd("Enter", "insertNewlineAndIndent"),
+
+  cmd("Mod-a", "selectAll"),
+  cmd("Mod-Enter", "addNewBlockAfterCurrent"),
+  cmd("Mod-Shift-Enter", "addNewBlockAfterLast"),
+  cmd("Alt-Enter", "addNewBlockBeforeCurrent"),
+  cmd("Alt-Shift-Enter", "addNewBlockBeforeFirst"),
+  cmd("Mod-Alt-Enter", "insertNewBlockAtCursor"),
+  ...cmdShift("ArrowLeft", "cursorCharLeft", "selectCharLeft"),
+  ...cmdShift("ArrowRight", "cursorCharRight", "selectCharRight"),
+  ...cmdShift("ArrowUp", "cursorLineUp", "selectLineUp"),
+  ...cmdShift("ArrowDown", "cursorLineDown", "selectLineDown"),
+  ...cmdShift("Ctrl-ArrowLeft", "cursorGroupLeft", "selectGroupLeft"),
+  ...cmdShift("Ctrl-ArrowRight", "cursorGroupRight", "selectGroupRight"),
+  ...cmdShift("Alt-ArrowLeft", "cursorGroupLeft", "selectGroupLeft"),
+  ...cmdShift("Alt-ArrowRight", "cursorGroupRight", "selectGroupRight"),
+  ...cmdShift("Mod-ArrowUp", "cursorPreviousBlock", "selectPreviousBlock"),
+  ...cmdShift("Mod-ArrowDown", "cursorNextBlock", "selectNextBlock"),
+  ...cmdShift(
+    "Ctrl-ArrowUp",
+    "cursorPreviousParagraph",
+    "selectPreviousParagraph",
+  ),
+  ...cmdShift("Ctrl-ArrowDown", "cursorNextParagraph", "selectNextParagraph"),
+  ...cmdShift("PageUp", "cursorPageUp", "selectPageUp"),
+  ...cmdShift("PageDown", "cursorPageDown", "selectPageDown"),
+  ...cmdShift(
+    "Home",
+    "cursorLineBoundaryBackward",
+    "selectLineBoundaryBackward",
+  ),
+  ...cmdShift("End", "cursorLineBoundaryForward", "selectLineBoundaryForward"),
+  ...cmdShift("Ctrl-Home", "cursorDocStart", "selectDocStart"),
+  ...cmdShift("Ctrl-End", "cursorDocEnd", "selectDocEnd"),
+  cmd("Alt-Mod-Shift-ArrowUp", "moveCurrentBlockUp"),
+  cmd("Alt-Mod-Shift-ArrowDown", "moveCurrentBlockDown"),
+  cmd("Alt-Shift-d", "insertDateAndTime"),
+  cmd("Backspace", "deleteCharBackward"),
+  cmd("Delete", "deleteCharForward"),
+  cmd("Escape", "simplifySelection"),
+  cmd("Ctrl-Backspace", "deleteGroupBackward"),
+  cmd("Ctrl-Delete", "deleteGroupForward"),
+  ...(isMac
+    ? [
+        cmd("Alt-Backspace", "deleteGroupBackward"),
+        cmd("Alt-Delete", "deleteGroupForward"),
+        cmd("Mod-Backspace", "deleteLineBoundaryBackward"),
+        cmd("Mod-Delete", "deleteLineBoundaryForward"),
+      ]
+    : []),
+
+  cmd("Alt-ArrowUp", "moveLineUp"),
+  cmd("Alt-ArrowDown", "moveLineDown"),
+  // cmd("Mod-Shift-k", "deleteLine"),
+  cmd("Mod-Alt-ArrowDown", "newCursorBelow"),
+  cmd("Mod-Alt-ArrowUp", "newCursorAbove"),
+  cmd("Mod-Shift-d", "deleteBlock"),
+  cmd("Mod-d", "selectNextOccurrence"),
+  cmd(isMac ? "Cmd-Shift-[" : "Ctrl-Shift-[", "foldCode"),
+  cmd(isMac ? "Cmd-Shift-]" : "Ctrl-Shift-]", "unfoldCode"),
+
+  cmd("Mod-c", "copy"),
+  cmd("Mod-v", "paste"),
+  cmd("Mod-x", "cut"),
+  cmd("Mod-z", "undo"),
+  cmd("Mod-Shift-z", "redo"),
+  ...(isWindows || isLinux ? [cmd("Mod-y", "redo")] : []),
+
+  cmd("Tab", "indentMore"),
+  cmd("Shift-Tab", "indentLess"),
+  //cmd("Alt-ArrowLeft", "cursorSubwordBackward"),
+  //cmd("Alt-ArrowRight", "cursorSubwordForward"),
+
+  cmd("Mod-l", "openLanguageSelector"),
+  cmd("Mod-p", "openBufferSelector"),
+  cmd("Mod-k", "openBufferSelector"),
+  cmd("Mod-o", "openBufferSelector"),
+  cmd("Mod-Shift-p", "openCommandPalette"),
+  cmd("Mod-Shift-k", "openCommandPalette"),
+  cmd("Mod-s", "openMoveToBuffer"),
+  cmd("Mod-n", "openCreateNewBuffer"),
+
+  cmd("Alt-Shift-f", "formatBlockContent"),
+
+  cmd("Mod-/", "toggleComment"),
+  cmd("Alt-Shift-a", "toggleBlockComment"),
+
+  // fold blocks
+  ...(isMac
+    ? [
+        cmd("Alt-Cmd-[", "foldBlock"),
+        cmd("Alt-Cmd-]", "unfoldBlock"),
+        cmd("Alt-Cmd-.", "toggleBlockFold"),
+      ]
+    : [
+        cmd("Alt-Ctrl-[", "foldBlock"),
+        cmd("Alt-Ctrl-]", "unfoldBlock"),
+        cmd("Alt-Ctrl-.", "toggleBlockFold"),
+      ]),
+
+  // search
+  //cmd("Mod-f", "openSearchPanel"),
+  //cmd("F3", "findNext"),
+  //cmd("Mod-g", "findNext"),
+  //cmd("Shift-F3", "findPrevious"),
+  //cmd("Shift-Mod-g", "findPrevious"),
+  //cmd("Mod-Alt-g", "gotoLine"),
+  //cmd("Mod-d", "selectNextOccurrence"),
+  /*
+    - Mod-f: [`openSearchPanel`](https://codemirror.net/6/docs/ref/#search.openSearchPanel)
+    - F3, Mod-g: [`findNext`](https://codemirror.net/6/docs/ref/#search.findNext)
+    - Shift-F3, Shift-Mod-g: [`findPrevious`](https://codemirror.net/6/docs/ref/#search.findPrevious)
+    - Mod-Alt-g: [`gotoLine`](https://codemirror.net/6/docs/ref/#search.gotoLine)
+    - Mod-d: [`selectNextOccurrence`](https://codemirror.net/6/docs/ref/#search.selectNextOccurrence)
+    */
+];
+
+export const EMACS_KEYMAP = [
+  cmd("Ctrl-w", "cut"),
+  cmd("Ctrl-y", "paste"),
+  cmd("EmacsMeta-w", "copy"),
+  cmd("Ctrl-Space", "toggleSelectionMarkMode"),
+  cmd("Ctrl-g", "selectionMarkModeCancel"),
+  cmd("Escape", "selectionMarkModeCancel"),
+  cmd("Ctrl-o", "splitLine"),
+  cmd("Ctrl-d", "deleteCharForward"),
+  cmd("Ctrl-h", "deleteCharBackward"),
+  cmd("Ctrl-k", "deleteToLineEnd"),
+  cmd("Ctrl-t", "transposeChars"),
+  cmd("Ctrl-Shift--", "undo"),
+  cmd("Ctrl-.", "redo"),
+  ...cmdShift("Ctrl-v", "cursorPageDown", "selectPageDown"),
+  ...cmdShift("Ctrl-b", "cursorCharLeft", "selectCharLeft"),
+  ...cmdShift("Ctrl-f", "cursorCharRight", "selectCharRight"),
+  ...cmdShift("Ctrl-a", "cursorLineStart", "selectLineStart"),
+  ...cmdShift("Ctrl-e", "cursorLineEnd", "selectLineEnd"),
+];
+
+function keymapFromSpec(specs, editor) {
   return keymap.of(
     specs.map((spec) => {
-      if (spec.run) {
-        if ("preventDefault" in spec) {
-          return spec;
-        } else {
-          return { ...spec, preventDefault: true };
-        }
-      } else {
-        const [key, run] = spec;
-        return {
-          key,
-          run,
-          preventDefault: true,
-        };
+      let key = spec.key;
+      if (key.indexOf("EmacsMeta") != -1) {
+        key = key.replace(
+          "EmacsMeta",
+          editor.emacsMetaKey === "alt" ? "Alt" : "Meta",
+        );
       }
+      return {
+        key: key,
+        //preventDefault: true,
+        preventDefault: false,
+        run: (view) => {
+          //console.log("run()", spec.key, spec.command)
+          const command = HEYNOTE_COMMANDS[spec.command];
+          if (!command) {
+            console.error(`Command not found: ${spec.command} (${spec.key})`);
+            return false;
+          }
+          return command.run(editor)(view);
+        },
+      };
     }),
   );
 }
 
-/**
- * @param {import("./editor.js").EdnaEditor} editor
- */
-export function ednaKeymap(editor) {
-  let spec = [
-    ["Mod-c", copyCommand(editor)],
-    ["Mod-v", pasteCommand],
-    ["Mod-x", cutCommand(editor)],
-    ["Tab", indentMore],
-    ["Shift-Tab", indentLess],
-    ["Alt-n", createScratchNote],
-    ["Alt-Shift-Enter", addNewBlockBeforeFirst(editor)],
-    ["Mod-Shift-Enter", addNewBlockAfterLast(editor)],
-    ["Alt-Enter", addNewBlockBeforeCurrent(editor)],
-    ["Mod-Enter", addNewBlockAfterCurrent(editor)],
-    ["Mod-Alt-Enter", insertNewBlockAtCursor(editor)],
-    ["Mod-a", selectAll],
-    ["Alt-ArrowUp", moveLineUp],
-    ["Alt-ArrowDown", moveLineDown],
-    ["Mod-l", openLanguageSelector],
-    ["Mod-e", smartRun],
-    [
-      "Alt-Shift-r",
-      () => {
-        openFunctionSelector(false);
-      },
-    ],
-    ["Mod-b", openBlockSelector],
-    ["Mod-k", openNoteSelector],
-    ["Alt-0", openNoteSelector],
-    ["Mod-o", openNoteSelector],
-    ["Mod-p", openNoteSelector],
-    ["Mod-Shift-p", openCommandPalette],
-    ["Mod-Shift-k", openCommandPalette],
-    ["Mod-Shift-o", openCommandPalette],
-    ["Mod-h", openHistorySelector],
-    ["Alt-Shift-f", formatBlockContent],
-    ["Mod-Alt-ArrowDown", newCursorBelow],
-    ["Mod-Alt-ArrowUp", newCursorAbove],
-    // https://github.com/kjk/edna/issues/87
-    // this is a "open command palette" shortcut
-    //    ["Mod-Shift-k", deleteLine],
-    {
-      key: "Mod-ArrowUp",
-      run: gotoPreviousBlock,
-      shift: selectPreviousBlock,
-    },
-    { key: "Mod-ArrowDown", run: gotoNextBlock, shift: selectNextBlock },
-    {
-      key: "Ctrl-ArrowUp",
-      run: gotoPreviousParagraph,
-      shift: selectPreviousParagraph,
-    },
-    {
-      key: "Ctrl-ArrowDown",
-      run: gotoNextParagraph,
-      shift: selectNextParagraph,
-    },
-    ["Mod-Shift-Alt-ArrowUp", moveCurrentBlockUp],
-    ["Mod-Shift-Alt-ArrowDown", moveCurrentBlockDown],
-  ];
-  // for some reason CodeMirror uses Ctrl + Y on Windows
-  // and only binds Mod-Shift-z on Mac and Linux
-  // Windows editors also use Ctrl-Shift-z
-  if (platform.isWindows) {
-    spec.push(["Mod-Shift-z", redo]);
-  }
-  return keymapFromSpec(spec);
+export function heynoteKeymap(editor, keymap, userKeymap) {
+  return [keymapFromSpec([...userKeymap, ...keymap], editor)];
+}
+
+export function getKeymapExtensions(editor, keymap, keyBindings) {
+  return heynoteKeymap(
+    editor,
+    keymap === "emacs" ? EMACS_KEYMAP.concat(DEFAULT_KEYMAP) : DEFAULT_KEYMAP,
+    keyBindings || [],
+  );
 }

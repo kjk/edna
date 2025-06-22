@@ -12,7 +12,6 @@
     addNewBlockAfterLast,
     addNewBlockBeforeCurrent,
     addNewBlockBeforeFirst,
-    changeCurrentBlockLanguage,
     deleteBlock,
     gotoBlock,
     gotoNextBlock,
@@ -906,13 +905,8 @@
    */
   function onSelectLanguage(lang) {
     showingLanguageSelector = false;
+    getEditorComp().setLanguage(lang);
     let view = getEditorView();
-    let auto = false;
-    if (lang === "auto") {
-      lang = "text";
-      auto = true;
-    }
-    changeCurrentBlockLanguage(view.state, view.dispatch, lang, auto);
     view.focus();
   }
 

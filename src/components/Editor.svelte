@@ -117,6 +117,7 @@
         spacesPerTab: 2, // TODO: add a setting for this
         defaultBlockAutoDetect: true,
         defaultBlockToken: "text",
+        keyBindings: [],
       });
       rememberEditor(editor);
       setCurrenciesLoadedCb(() => {
@@ -256,6 +257,15 @@
    */
   export function getEditor() {
     return editor;
+  }
+
+  export function setLanguage(language) {
+    if (language === "auto") {
+      editor.setCurrentLanguage(null, true);
+    } else {
+      editor.setCurrentLanguage(language, false);
+    }
+    editor.focus();
   }
 
   export function focus() {
