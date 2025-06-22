@@ -58,7 +58,7 @@ export function keymapFromSpec(specs) {
 }
 
 /**
- * @param {import("./editor.js").EdnaEditor} editor
+ * @param {import("./editor.js").HeynoteEditor} editor
  */
 export function ednaKeymap(editor) {
   let spec = [

@@ -24,7 +24,7 @@
     insertAfterActiveBlock,
   } from "../editor/block/format-code";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
-  import { EdnaEditor, getContent, setReadOnly } from "../editor/editor";
+  import { getContent, HeynoteEditor, setReadOnly } from "../editor/editor";
   import {
     extForLang,
     getLanguage,
@@ -156,9 +156,6 @@
   let isSpellChecking = $state(false);
 
   let contextMenuPos = $state({ x: 0, y: 0 });
-
-  // /** @type {import("../editor/editor").EdnaEditor} */
-  // let ednaEditor = $state(null);
 
   /** @type {Editor} */
   let editor;
@@ -1481,7 +1478,7 @@
   }
 
   /**
-   * @returns {EdnaEditor}
+   * @returns {HeynoteEditor}
    */
   function getEditor() {
     return editor.getEditor();

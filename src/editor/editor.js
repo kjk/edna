@@ -60,7 +60,7 @@ import { getFontTheme } from "./theme/font-theme.js";
 import { heynoteLight } from "./theme/light.js";
 import { todoCheckboxPlugin } from "./todo-checkbox";
 
-export class EdnaEditor {
+export class HeynoteEditor {
   constructor({
     element,
     content,

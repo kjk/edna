@@ -5,7 +5,7 @@
   import debounce from "debounce";
   import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
   import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
-  import { EdnaEditor } from "../editor/editor.js";
+  import { HeynoteEditor } from "../editor/editor.js";
   import {
     kScratchNoteName,
     loadCurrentNote,
@@ -34,7 +34,7 @@
   let settings = getSettings();
   let theme = settings.theme;
 
-  /** @type {EdnaEditor} */
+  /** @type {HeynoteEditor} */
   let editor;
 
   /** @type {HTMLElement} */
@@ -102,7 +102,7 @@
     // load buffer content and create editor
     loadCurrentNote().then((content) => {
       diskContent = content;
-      editor = new EdnaEditor({
+      editor = new HeynoteEditor({
         element: editorEl,
         content: content,
         theme: theme,
@@ -253,7 +253,7 @@
   }
 
   /**
-   * @returns {EdnaEditor}
+   * @returns {HeynoteEditor}
    */
   export function getEditor() {
     return editor;
