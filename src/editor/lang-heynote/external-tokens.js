@@ -1,6 +1,6 @@
 import { ExternalTokenizer } from "@lezer/lr";
-import { LANGUAGES } from "../languages.js";
 import { NoteContent } from "./parser.terms.js";
+import { LANGUAGES } from "../languages.js";
 
 const EOF = -1;
 

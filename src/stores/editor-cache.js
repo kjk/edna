@@ -93,7 +93,7 @@ export const useEditorCacheStore = defineStore("editorCache", {
       this.editorCache.cache[pathToFree].destroy();
       delete this.editorCache.cache[pathToFree];
       this.editorCache.lru = this.editorCache.lru.filter(
-        (p) => p !== pathToFree
+        (p) => p !== pathToFree,
       );
     },
 
@@ -124,7 +124,7 @@ export const useEditorCacheStore = defineStore("editorCache", {
         (newSettings, oldSettings) => {
           //console.log("Settings changed (watch)", newSettings, oldSettings)
           const changedKeys = Object.keys(newSettings).filter(
-            (key) => newSettings[key] !== oldSettings[key]
+            (key) => newSettings[key] !== oldSettings[key],
           );
 
           for (const key of changedKeys) {
@@ -136,7 +136,7 @@ export const useEditorCacheStore = defineStore("editorCache", {
                   editor.setKeymap(
                     newSettings.keymap,
                     newSettings.emacsMetaKey,
-                    newSettings.keyBindings
+                    newSettings.keyBindings,
                   );
                   break;
                 case "showLineNumberGutter":
@@ -156,20 +156,20 @@ export const useEditorCacheStore = defineStore("editorCache", {
                 case "tabSize":
                   editor.setIndentSettings(
                     newSettings.indentType,
-                    newSettings.tabSize
+                    newSettings.tabSize,
                   );
                   break;
                 case "defaultBlockLanguage":
                 case "defaultBlockLanguageAutoDetect":
                   editor.setDefaultBlockLanguage(
                     newSettings.defaultBlockLanguage,
-                    newSettings.defaultBlockLanguageAutoDetect
+                    newSettings.defaultBlockLanguageAutoDetect,
                   );
                   break;
               }
             });
           }
-        }
+        },
       );
 
       this.themeWatchHandler = watch(
@@ -178,12 +178,12 @@ export const useEditorCacheStore = defineStore("editorCache", {
           this.eachEditor((editor) => {
             editor.setTheme(theme);
           });
-        }
+        },
       );
 
       window.document.addEventListener(
         "currenciesLoaded",
-        this.onCurrenciesLoaded
+        this.onCurrenciesLoaded,
       );
     },
 
@@ -197,7 +197,7 @@ export const useEditorCacheStore = defineStore("editorCache", {
 
       window.document.removeEventListener(
         "currenciesLoaded",
-        this.onCurrenciesLoaded
+        this.onCurrenciesLoaded,
       );
 
       this.editorCache.lru = [];

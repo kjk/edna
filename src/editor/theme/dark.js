@@ -165,7 +165,7 @@ const darkTheme = EditorView.theme(
       color: "rgba(220,240,230, 1.0)",
     },
   },
-  { dark: true },
+  { dark: true }
 );
 
 /**
