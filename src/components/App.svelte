@@ -135,7 +135,7 @@
 
   let column = $state(1);
   let docSize = $state(0);
-  let language = $state("plaintext");
+  let language = $state("text");
   let languageAuto = $state(true);
   let line = $state(1);
   let noteName = $derived(settings.currentNoteName);
@@ -1096,6 +1096,10 @@
     // console.log("s:", s, "mid:", mid);
     // note: this is called for each menu item so should be fast
     let lang = getLanguage(language);
+    if (!lang) {
+      debugger;
+      lang = getLanguage(language);
+    }
     let dh = getStorageFS();
     // console.log("dh:", dh);
     let hasFS = supportsFileSystem();
@@ -1245,7 +1249,7 @@
       await exportCurrentBlock();
       view.focus();
     } else if (cmdId === kCmdBlockDelete) {
-      deleteBlock(view);
+      deleteBlock(this)(view);
       view.focus();
     } else if (cmdId === kCmdOpenNoteFromDisk) {
       openNoteFromDisk();
@@ -1791,7 +1795,7 @@
     let content = state.sliceDoc(block.content.from, block.content.to);
     await appendToNote(name, delim + content);
     let view = getEditorView();
-    deleteBlock(view);
+    deleteBlock(this)(view);
     view.focus();
   }
 
