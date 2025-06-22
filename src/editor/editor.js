@@ -63,6 +63,7 @@ import { todoCheckboxPlugin } from "./todo-checkbox";
 export class HeynoteEditor {
   constructor({
     element,
+    path,
     content,
     focus = true,
     theme = "light",
@@ -80,6 +81,7 @@ export class HeynoteEditor {
     defaultBlockAutoDetect,
     keyBindings,
   }) {
+    this.path = path;
     this.element = element;
     this.themeCompartment = new Compartment();
     this.keymapCompartment = new Compartment();

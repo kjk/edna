@@ -101,8 +101,13 @@
 
     // load buffer content and create editor
     loadCurrentNote().then((content) => {
+      let settings = getSettings();
+      let name = settings.currentNoteName;
+      throwIf(!name);
+
       diskContent = content;
       editor = new HeynoteEditor({
+        path: name,
         element: editorEl,
         content: content,
         theme: theme,
@@ -125,9 +130,6 @@
       });
       // intentially we delay it until we register a callback
       startLoadCurrencies();
-      let settings = getSettings();
-      let name = settings.currentNoteName;
-      throwIf(!name);
       didOpenNote(name, false);
 
       scheduleRefreshFromDisk();
