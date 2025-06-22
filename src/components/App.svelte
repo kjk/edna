@@ -111,6 +111,7 @@
   import Editor from "./Editor.svelte";
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
+  import ErrorMessages from "./ErrorMessages.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
   import ModalMessage, {
@@ -1998,6 +1999,7 @@
   </Overlay>
 {/if}
 <Toaster></Toaster>
+<ErrorMessages />
 
 {#if showingCommandPalette}
   <Overlay onclose={closeCommandPalette} blur={true}>

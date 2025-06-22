@@ -31,12 +31,14 @@ import {
   openNoteSelector,
 } from "../globals.js";
 import { findEditorByView } from "../state.js";
+import { useErrorStore } from "../stores/error-store.svelte.js";
 import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
 import { heynoteEvent, SET_CONTENT } from "./annotation.js";
 import {
   blockLineNumbers,
   blockState,
   noteBlockExtension,
+  triggerCursorChange,
 } from "./block/block.js";
 import { changeCurrentBlockLanguage } from "./block/commands.js";
 import { selectAll } from "./block/select-all.js";
@@ -94,6 +96,7 @@ export class EdnaEditor {
     this.contentLoaded = false;
     this.saveFunction = saveFunction;
     this.notesStore = useHeynoteStore();
+    this.errorStore = useErrorStore();
     this.note = null;
     this.selectionMarkMode = false;
 
@@ -212,10 +215,10 @@ export class EdnaEditor {
       this.setReadOnly(false);
     } catch (e) {
       this.setReadOnly(true);
+      this.errorStore.addError(`Failed to load note: ${e.message}`);
       throw new Error(`Failed to load note: ${e.message}`);
     }
 
-    // set buffer content
     return new Promise((resolve) => {
       // set buffer content
       this.view.dispatch({
@@ -224,7 +227,10 @@ export class EdnaEditor {
           to: this.view.state.doc.length,
           insert: this.note.content,
         },
-        annotations: [heynoteEvent.of(SET_CONTENT)],
+        annotations: [
+          heynoteEvent.of(SET_CONTENT),
+          Transaction.addToHistory.of(false),
+        ],
       });
 
       // Ensure we have a parsed syntax tree when buffer is loaded. This prevents errors for large buffers
@@ -258,8 +264,13 @@ export class EdnaEditor {
     });
   }
 
+  setName(name) {
+    this.note.metadata.name = name;
+    this.name = name;
+    triggerCursorChange(this.view);
+  }
+
   getBlocks() {
-    // @ts-ignore
     return this.view.state.facet(blockState);
   }
 
