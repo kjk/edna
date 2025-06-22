@@ -1,5 +1,5 @@
 import { EditorSelection } from "@codemirror/state";
-import { getActiveNoteBlock } from "./block";
+import { getNoteBlockFromPos } from "./block";
 
 function updateSel(sel, by) {
   return EditorSelection.create(sel.ranges.map(by), sel.mainIndex);
@@ -30,21 +30,21 @@ export const deleteLine = (view) => {
 
   const { state } = view;
 
-  const block = getActiveNoteBlock(view.state);
   const selectedLines = selectedLineBlocks(state);
 
   const changes = state.changes(
     selectedLines.map(({ from, to }) => {
+      const block = getNoteBlockFromPos(state, from);
       if (from !== block.content.from || to !== block.content.to) {
         if (from > 0) from--;
         else if (to < state.doc.length) to++;
       }
       return { from, to };
-    }),
+    })
   );
 
   const selection = updateSel(state.selection, (range) =>
-    view.moveVertically(range, true),
+    view.moveVertically(range, true)
   ).map(changes);
   view.dispatch({
     changes,

@@ -130,7 +130,7 @@
       });
       rememberEditor(editor);
       setCurrenciesLoadedCb(() => {
-        triggerCurrenciesLoaded(editor.view);
+        triggerCurrenciesLoaded(editor.view.state, editor.view.dispatch);
       });
       // intentially we delay it until we register a callback
       startLoadCurrencies();
