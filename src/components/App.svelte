@@ -133,11 +133,9 @@
 
   let settings = getSettings();
 
-  let column = $state(1);
   let docSize = $state(0);
   let language = $state("text");
   let languageAuto = $state(true);
-  let line = $state(1);
   let noteName = $derived(settings.currentNoteName);
   let selectionSize = $state(0);
   let showingMenu = $state(false);
@@ -1912,8 +1910,6 @@
     bind:this={editor}
   />
   <StatusBar
-    {line}
-    {column}
     {docSize}
     {selectionSize}
     {language}

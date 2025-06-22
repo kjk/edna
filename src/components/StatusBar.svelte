@@ -5,16 +5,14 @@
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages.js";
-  import { fmtSize, getScrollbarWidth } from "../util";
-  import { IconSettings } from "./Icons.svelte";
-  import { IconGitHub } from "./Icons.svelte";
   import { openLanguageSelector, openSettings } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
+  import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
+  import { IconGitHub, IconSettings } from "./Icons.svelte";
 
   /** @type { {
-    line: number,
-    column: number,
     docSize: number,
     selectionSize: number,
     language: string,
@@ -25,8 +23,6 @@
     formatCurrentBlock: (ev) => void,
   } } */
   let {
-    line = 0,
-    column = 0,
     docSize = 0,
     selectionSize = 0,
     language = "",
@@ -44,6 +40,8 @@
   });
 
   let languageName = $derived(getLanguageNameFromToken(language));
+
+  let heynoteStore = useHeynoteStore();
 
   let lang = $derived(getLanguage(language));
   let supportsFormat = $derived(langSupportsFormat(lang));
@@ -74,9 +72,13 @@
   {style}
   class="fixed bottom-0 text-[9pt] flex justify-end items-center z-10 px-1 select-none dark:text-gray-300 border-gray-300 dark:border-gray-500 border-t border-l rounded-tl-lg bg-white dark:bg-gray-700"
 >
-  <div class="px-1" title="Cursor: line {line} column {column}">
-    Ln <span class="num">{line}</span>
-    &nbsp;Col <span class="num">{column}</span>
+  <div
+    class="px-1"
+    title="Cursor: line {heynoteStore.currentCursorLine
+      .line} column {heynoteStore.currentCursorLine.col}"
+  >
+    Ln <span class="num">{heynoteStore.currentCursorLine.line}</span>
+    &nbsp;Col <span class="num">{heynoteStore.currentCursorLine.col}</span>
     {#if selectionSize > 0}
       Sel <span class="num">{selectionSize}</span>
     {/if}

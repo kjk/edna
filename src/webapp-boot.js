@@ -1,5 +1,9 @@
 import "./main.css";
-
+import { mount, unmount } from "svelte";
+import App from "./components/App.svelte";
+import AskFSPermissions from "./components/AskFSPermissions.svelte";
+import { hasHandlePermission } from "./fileutil";
+import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import {
   createDefaultNotes,
   dbGetDirHandle,
@@ -10,14 +14,12 @@ import {
   preLoadAllNotes,
   setStorageFS,
 } from "./notes";
-import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import { getSettings } from "./settings.svelte";
+import {
+  initHeynoteStore,
+  useHeynoteStore,
+} from "./stores/heynote-store.svelte.js";
 import { isDev } from "./util";
-import { mount, unmount } from "svelte";
-
-import App from "./components/App.svelte";
-import AskFSPermissions from "./components/AskFSPermissions.svelte";
-import { hasHandlePermission } from "./fileutil";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
 
@@ -27,6 +29,8 @@ let appSvelte;
 
 export async function boot() {
   console.log("booting");
+
+  initHeynoteStore();
 
   // await testFuncs();
 
