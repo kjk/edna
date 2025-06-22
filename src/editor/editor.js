@@ -10,6 +10,7 @@ import {
   blockState,
   noteBlockExtension,
 } from "./block/block.js";
+import { getCloseBracketsExtensions } from "./close-brackets.js";
 import { focusEditorView, isReadOnly } from "./cmutils.js";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs.js";
@@ -97,8 +98,11 @@ export class EdnaEditor {
           this.foldGutterCompartment.of(showFoldGutter ? [foldGutter()] : []),
 
           this.closeBracketsCompartment.of(
-            bracketClosing ? createDynamicCloseBracketsExtension() : [],
+            bracketClosing ? [getCloseBracketsExtensions()] : [],
           ),
+          // this.closeBracketsCompartment.of(
+          //   bracketClosing ? createDynamicCloseBracketsExtension() : [],
+          // ),
 
           this.readOnlyCompartment.of([]),
 
@@ -289,10 +293,18 @@ export class EdnaEditor {
     });
   }
 
+  // setBracketClosing(value) {
+  //   this.view.dispatch({
+  //     effects: this.closeBracketsCompartment.reconfigure(
+  //       value ? createDynamicCloseBracketsExtension() : [],
+  //     ),
+  //   });
+  // }
+
   setBracketClosing(value) {
     this.view.dispatch({
       effects: this.closeBracketsCompartment.reconfigure(
-        value ? createDynamicCloseBracketsExtension() : [],
+        value ? [getCloseBracketsExtensions()] : [],
       ),
     });
   }

@@ -1,6 +1,6 @@
 import { EditorSelection } from "@codemirror/state";
-import { LANGUAGES } from "../languages.js";
 import { blockState } from "./block";
+import { LANGUAGES } from "../languages.js";
 
 const languageTokensMatcher = LANGUAGES.map((l) => l.token).join("|");
 const tokenRegEx = new RegExp(`^∞∞∞(${languageTokensMatcher})(-a)?$`, "g");
@@ -55,20 +55,20 @@ function moveLine(state, dispatch, forward) {
           {
             from: block.from,
             insert: state.lineBreak + nextLine.text + state.lineBreak,
-          },
+          }
         );
       } else {
         changes.push(
           { from: block.to, to: nextLine.to },
-          { from: block.from, insert: nextLine.text + state.lineBreak },
+          { from: block.from, insert: nextLine.text + state.lineBreak }
         );
       }
       for (let r of block.ranges)
         ranges.push(
           EditorSelection.range(
             Math.min(state.doc.length, r.anchor + size),
-            Math.min(state.doc.length, r.head + size),
-          ),
+            Math.min(state.doc.length, r.head + size)
+          )
         );
     } else {
       if (
@@ -81,14 +81,14 @@ function moveLine(state, dispatch, forward) {
           {
             from: block.to,
             insert: state.lineBreak + nextLine.text + state.lineBreak,
-          },
+          }
         );
         for (let r of block.ranges)
           ranges.push(EditorSelection.range(r.anchor - size, r.head - size));
       } else {
         changes.push(
           { from: nextLine.from, to: block.from },
-          { from: block.to, insert: state.lineBreak + nextLine.text },
+          { from: block.to, insert: state.lineBreak + nextLine.text }
         );
         for (let r of block.ranges)
           ranges.push(EditorSelection.range(r.anchor - size, r.head - size));
@@ -102,7 +102,7 @@ function moveLine(state, dispatch, forward) {
       scrollIntoView: true,
       selection: EditorSelection.create(ranges, state.selection.mainIndex),
       userEvent: "move.line",
-    }),
+    })
   );
   return true;
 }
