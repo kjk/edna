@@ -3,8 +3,6 @@
   import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
   import debounce from "debounce";
-  import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
-  import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
   import { HeynoteEditor } from "../editor/editor.js";
   import {
     kScratchNoteName,
@@ -125,11 +123,6 @@
         keyBindings: [],
       });
       rememberEditor(editor);
-      setCurrenciesLoadedCb(() => {
-        triggerCurrenciesLoaded(editor.view.state, editor.view.dispatch);
-      });
-      // intentially we delay it until we register a callback
-      startLoadCurrencies();
       didOpenNote(name, false);
 
       scheduleRefreshFromDisk();
@@ -153,10 +146,6 @@
         syntaxTreeDebugContent = render(syntaxTree(editor.view.state));
       }, 1000);
     }
-
-    return () => {
-      setCurrenciesLoadedCb(null);
-    };
   }
 
   function maybeRefreshFromDisk() {

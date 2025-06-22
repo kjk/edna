@@ -99,6 +99,11 @@ function updateWebsiteTheme() {
  * @returns {boolean}
  */
 function saveSettings(newSettings) {
+  // TODO: figure out why this broke during port
+  if (!newSettings) {
+    console.warn("saveSettings: no newSettings provided");
+    return false;
+  }
   throwIf(!newSettings.currentNoteName);
   let settings = newSettings.toJSON();
   let changed = [];

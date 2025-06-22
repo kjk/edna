@@ -40,7 +40,10 @@ import {
   noteBlockExtension,
   triggerCursorChange,
 } from "./block/block.js";
-import { changeCurrentBlockLanguage } from "./block/commands.js";
+import {
+  changeCurrentBlockLanguage,
+  triggerCurrenciesLoaded,
+} from "./block/commands.js";
 import { selectAll } from "./block/select-all.js";
 import { getCloseBracketsExtensions } from "./close-brackets.js";
 import { focusEditorView, isReadOnly } from "./cmutils.js";
@@ -392,6 +395,11 @@ export class HeynoteEditor {
     this.defaultBlockToken = token || "text";
     this.defaultBlockAutoDetect = autoDetect === undefined ? true : autoDetect;
   }
+
+  currenciesLoaded() {
+    triggerCurrenciesLoaded(this.view.state, this.view.dispatch);
+  }
+
   undo() {
     undo(this.view);
   }
