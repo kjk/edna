@@ -61,9 +61,11 @@
     "@replit/codemirror-lang-csharp": "^6.2.0",
     "@replit/codemirror-lang-svelte": "^6.0.0",
     "@zip.js/zip.js": "^2.7.62",
+    "codemirror-lang-elixir": "^4.0.0",
     "debounce": "^2.2.0",
     "idb": "^8.0.3",
     "kiss-crypto": "^0.3.4",
+    "lezer-elixir": "^1.1.2",
     "overlayscrollbars": "^2.11.4",
     "prettier": "^3.5.3"
   }

@@ -19,6 +19,7 @@ const GUESSLANG_LANGUAGES = [
   "toml",
   "go",
   "clj",
+  "ex",
   "erl",
   "js",
   "ts",

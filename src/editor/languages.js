@@ -33,6 +33,7 @@ import { toml } from "@codemirror/legacy-modes/mode/toml";
 import { yaml } from "@codemirror/legacy-modes/mode/yaml";
 import { csharpLanguage } from "@replit/codemirror-lang-csharp";
 import { svelteLanguage } from "@replit/codemirror-lang-svelte";
+import { elixirLanguage } from "codemirror-lang-elixir";
 
 /*
 TODO: more langs from @codemirror/legacy-modes/mode/clike
@@ -170,6 +171,11 @@ export const LANGUAGES = [
     token: "clojure",
     name: "Clojure",
     guesslang: "clj",
+  },
+  {
+    token: "elixir",
+    name: "Elixir",
+    guesslang: "ex",
   },
   {
     token: "erlang",
@@ -366,6 +372,9 @@ export function langGetParser(lang) {
   }
   if (token === "clojure") {
     return StreamLanguage.define(clojure).parser;
+  }
+  if (token == "elixir") {
+    return elixirLanguage.parser;
   }
   if (token === "erlang") {
     return StreamLanguage.define(erlang).parser;
