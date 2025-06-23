@@ -161,10 +161,6 @@
   /** @type {Editor} */
   let editor;
 
-  $effect(() => {
-    console.log("showingCreateNewNote changed to:", showingCreateNewNote);
-  });
-
   let isShowingDialog = $derived.by(() => {
     return (
       showingHistorySelector ||
@@ -177,7 +173,6 @@
       showingCreateNewNote ||
       showingCommandPalette ||
       // showingCommandPalette2 ||
-      showingCreateNewNote ||
       showingBlockSelector ||
       showingDecryptPassword ||
       showingEncryptPassword ||
@@ -665,7 +660,7 @@
 
   function switchToCommandPalette() {
     if (notesStore.showBufferSelector) {
-      notesStore.showBufferSelector = false;
+      notesStore.closeBufferSelector();
       openCommandPalette();
     } else {
       // showingNoteSelector2 = false;
@@ -673,12 +668,12 @@
     }
   }
 
-  function closeNoteSelector() {
-    notesStore.showBufferSelector = false;
+  function closeBufferSelector() {
+    notesStore.closeBufferSelector();
     getEditorComp().focus();
   }
 
-  function reOpenNoteSelector() {
+  function reOpenBufferSelector() {
     notesStore.showBufferSelector = false;
     tick().then(() => {
       notesStore.showBufferSelector = true;
@@ -694,14 +689,14 @@
   //   getEditorComp().focus();
   // }
 
-  function switchToWideNoteSelector() {
+  function switchToWideBufferSelector() {
     settings.useWideSelectors = true;
-    reOpenNoteSelector();
+    reOpenBufferSelector();
   }
 
-  async function switchToRegularNoteSelector() {
+  async function switchToNonWideBufferSelector() {
     settings.useWideSelectors = false;
-    reOpenNoteSelector();
+    reOpenBufferSelector();
   }
 
   async function openFunctionSelector(onSelection = false) {
@@ -1045,6 +1040,7 @@
     const contextMenu = [
       ["Command Palette\tMod + Shift + P", kCmdCommandPalette],
       ["Open note\tMod + P", kCmdOpenNote],
+      ["New note", kCmdCreateNewNote],
       // ["Find\tMod + Q", kCmdOpenFind],
       ["This note", menuNote],
       ["Block", menuBlock],
@@ -1926,10 +1922,10 @@
 {/if}
 
 {#if notesStore.showBufferSelector}
-  <Overlay onclose={closeNoteSelector} blur={true}>
+  <Overlay onclose={closeBufferSelector} blur={true}>
     {#if settings.useWideSelectors}
       <NoteSelectorWide
-        {switchToRegularNoteSelector}
+        switchToRegularNoteSelector={switchToNonWideBufferSelector}
         {switchToCommandPalette}
         openNote={onOpenNote}
         createNote={onCreateNote}
@@ -1937,7 +1933,7 @@
       />
     {:else}
       <NoteSelector
-        {switchToWideNoteSelector}
+        switchToWideNoteSelector={switchToWideBufferSelector}
         {switchToCommandPalette}
         openNote={onOpenNote}
         createNote={onCreateNote}

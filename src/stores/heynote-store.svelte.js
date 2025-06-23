@@ -23,7 +23,7 @@ class HeynoteStore {
   showBufferSelector = $state(false);
   showLanguageSelector = $state(false);
   showCreateBuffer = $state(false);
-  showEditBuffer = $state(false);
+  // showEditBuffer = $state(false);
   showMoveToBufferSelector = $state(false);
   showCommandPalette = $state(false);
 
@@ -61,7 +61,6 @@ class HeynoteStore {
   }
 
   openCommandPalette() {
-    debugger;
     this.closeDialog();
     this.showCommandPalette = true;
   }
@@ -73,7 +72,6 @@ class HeynoteStore {
   }
 
   openCreateBuffer(createMode, nameSuggestion) {
-    debugger;
     createMode = createMode || "new";
     this.closeDialog();
     this.createBufferParams = {
@@ -87,13 +85,12 @@ class HeynoteStore {
     this.showCreateBuffer = false;
     this.showBufferSelector = false;
     this.showLanguageSelector = false;
-    this.showEditBuffer = false;
+    // this.showEditBuffer = false;
     this.showMoveToBufferSelector = false;
     this.showCommandPalette = false;
   }
 
   closeBufferSelector() {
-    debugger;
     this.showBufferSelector = false;
     this.showCommandPalette = false;
   }
@@ -103,13 +100,13 @@ class HeynoteStore {
     this.showMoveToBufferSelector = false;
   }
 
-  editBufferMetadata(path) {
-    if (this.currentBufferPath !== path) {
-      this.openBuffer(path);
-    }
-    this.closeDialog();
-    this.showEditBuffer = true;
-  }
+  // editBufferMetadata(path) {
+  //   if (this.currentBufferPath !== path) {
+  //     this.openBuffer(path);
+  //   }
+  //   this.closeDialog();
+  //   this.showEditBuffer = true;
+  // }
 }
 
 /*
