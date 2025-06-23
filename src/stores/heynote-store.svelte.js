@@ -32,6 +32,7 @@ class HeynoteStore {
   // provided by App.svelte
   realOpenCommandPalette;
   realOpenBlockSelector;
+  realCreateScratchNote;
 
   addRecentBuffer(path) {
     debugger;
@@ -124,6 +125,9 @@ class HeynoteStore {
   //   this.closeDialog();
   //   this.showEditBuffer = true;
   // }
+
+  createScratchNote() {
+    this.realCreateScratchNote();
 }
 
 /*
