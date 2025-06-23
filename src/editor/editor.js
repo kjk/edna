@@ -24,7 +24,7 @@ import {
   ViewPlugin,
 } from "@codemirror/view";
 import { NoteFormat } from "../common/note-format.js";
-import { openCommandPalette, openCreateNewNote } from "../globals.js";
+import { openCommandPalette } from "../globals.js";
 import { saveCurrentNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { useErrorStore } from "../stores/error-store.svelte.js";
@@ -367,10 +367,7 @@ export class HeynoteEditor {
   }
 
   openCreateBuffer(createMode) {
-    console.log("openCreateBuffer: createMode:", createMode);
-    // TODO: not sure if eliminate or or implement
-    // this.notesStore.openCreateBuffer(createMode);
-    openCreateNewNote();
+    this.notesStore.openCreateBuffer(createMode);
   }
 
   openMoveToBufferSelector() {

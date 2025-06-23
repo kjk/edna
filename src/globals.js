@@ -1,6 +1,5 @@
 /** @typedef {{
   openSettings: () => void,
-  openCreateNewNote: () => void,
   openCommandPalette: () => void,
   openFind: () => void,
   openContextMenu: (MouseEvent) => void,
@@ -40,10 +39,6 @@ export function setGlobalFuncs(gf) {
 
 export function openSettings() {
   globalFunctions.openSettings();
-}
-
-export function openCreateNewNote() {
-  globalFunctions.openCreateNewNote();
 }
 
 export function openCommandPalette() {

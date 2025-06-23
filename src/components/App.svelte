@@ -145,7 +145,6 @@
   // let showingNoteSelector2 = $state(false);
   let showingCommandPalette = $state(false);
   // let showingCommandPalette2 = $state(false);
-  let showingCreateNewNote = $state(false);
   let showingFunctionSelector = $state(false);
   let functionContext = $state("");
   let runFunctionOnSelection = false;
@@ -170,7 +169,7 @@
       notesStore.showBufferSelector ||
       // showingNoteSelector2 ||
       showingBlockMoveSelector ||
-      showingCreateNewNote ||
+      notesStore.showCreateBuffer ||
       showingCommandPalette ||
       // showingCommandPalette2 ||
       showingBlockSelector ||
@@ -191,7 +190,6 @@
 
   let gf = {
     openSettings: openSettings,
-    openCreateNewNote: openCreateNewNote,
     openCommandPalette: openCommandPalette,
     openContextMenu: openContextMenu,
     openFind: openFind,
@@ -631,10 +629,6 @@
     getEditorComp().focus();
   }
 
-  function openCreateNewNote() {
-    showingCreateNewNote = true;
-  }
-
   function selectBlock(blockItem) {
     // console.log("selectBlock", $state.snapshot(blockItem));
     let n = blockItem.key;
@@ -644,7 +638,7 @@
   }
 
   function closeCreateNewNote() {
-    showingCreateNewNote = false;
+    notesStore.showCreateBuffer = false;
     getEditorComp().focus();
   }
 
@@ -1185,7 +1179,7 @@
     } else if (cmdId === kCmdOpenFind) {
       // TODO: open search panel
     } else if (cmdId === kCmdCreateNewNote) {
-      openCreateNewNote();
+      notesStore.openCreateBuffer();
     } else if (cmdId === kCmdRenameCurrentNote) {
       showingRenameNote = true;
     } else if (cmdId === kCmdDeleteCurrentNote) {
@@ -1785,7 +1779,7 @@
   async function onCreateNote(name) {
     notesStore.showBufferSelector = false;
     // showingNoteSelector2 = false;
-    showingCreateNewNote = false;
+    notesStore.showCreateBuffer = false;
     await createNoteWithName(name);
     openNote(name);
     // TODO: add a way to undo creation of the note
@@ -1886,7 +1880,7 @@
   />
 </div>
 
-{#if showingCreateNewNote}
+{#if notesStore.showCreateBuffer}
   <Overlay onclose={closeCreateNewNote} blur={true}>
     <CreateNewNote createNewNote={onCreateNote} onclose={closeCreateNewNote}
     ></CreateNewNote>
