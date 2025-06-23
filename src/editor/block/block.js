@@ -96,6 +96,41 @@ export function getNoteBlocksFromRangeSet(state, ranges) {
 }
 
 /** @typedef {{
+    name: string,
+    auto: boolean,
+}} BlockLanguage
+*/
+
+/** @typedef {{
+  from: number,
+  to: number,
+ }} BlockRange */
+
+/** @typedef {{
+  language: BlockLanguage,
+  content: BlockRange,
+  delimiter: BlockRange,
+  range: BlockRange,
+}} Block */
+
+/**
+ * @param {Block[]} blocks
+ * @param {number} pos
+ * @returns {number}
+ */
+function findBlocNokWithPos(blocks, pos) {
+  let no = 0;
+  for (let block of blocks) {
+    let r = block.range;
+    if (r.from <= pos && r.to >= pos) {
+      return no;
+    }
+    no++;
+  }
+  return -1;
+}
+
+/** @typedef {{
   blocks: Block[],
   active: number,
 }} BlocksInfo */
