@@ -16,14 +16,12 @@
     docSize: number,
     isSpellChecking: boolean,
     toggleSpellCheck: (ev) => void,
-    smartRun: (ev) => void,
     formatCurrentBlock: (ev) => void,
   } } */
   let {
     docSize = 0,
     isSpellChecking = false,
     toggleSpellCheck,
-    smartRun,
     formatCurrentBlock,
   } = $props();
 
@@ -103,7 +101,11 @@
     {/if}
   </button>
   <div class="text-gray-400">&bull;</div>
-  <button onclick={smartRun} class="clickable" title={runBlockTitle}>
+  <button
+    onclick={() => notesStore.smartRun()}
+    class="clickable"
+    title={runBlockTitle}
+  >
     Smart Run
   </button>
 

@@ -373,6 +373,13 @@ export class HeynoteEditor {
     this.notesStore.openCreateBuffer(createMode);
   }
 
+  createScratchNote() {
+    this.notesStore.createScratchNote();
+  }
+  smartRun() {
+    this.notesStore.smartRun();
+  }
+
   openMoveToBufferSelector() {
     throw new Error("NYI");
     // this.notesStore.openMoveToBufferSelector();

@@ -33,6 +33,7 @@ class HeynoteStore {
   realOpenCommandPalette;
   realOpenBlockSelector;
   realCreateScratchNote;
+  realSmartRun;
 
   addRecentBuffer(path) {
     debugger;
@@ -128,6 +129,11 @@ class HeynoteStore {
 
   createScratchNote() {
     this.realCreateScratchNote();
+  }
+
+  smartRun() {
+    this.realSmartRun();
+  }
 }
 
 /*

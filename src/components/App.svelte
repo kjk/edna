@@ -189,9 +189,7 @@
     openSettings: openSettings,
     openContextMenu: openContextMenu,
     openFind: openFind,
-    createScratchNote: createScratchNote,
     openFunctionSelector: openFunctionSelector,
-    smartRun: smartRun,
     getPassword: getPassword,
     requestFileWritePermission: requestFileWritePermission,
   };
@@ -199,6 +197,7 @@
 
   notesStore.realOpenCommandPalette = openCommandPalette;
   notesStore.realOpenBlockSelector = openBlockSelector;
+  notesStore.realCreateScratchNote = createScratchNote;
 
   $effect(() => {
     getEditorComp().setSpellChecking(isSpellChecking);
@@ -1868,7 +1867,6 @@
     {docSize}
     {isSpellChecking}
     {formatCurrentBlock}
-    {smartRun}
     {toggleSpellCheck}
   />
 </div>

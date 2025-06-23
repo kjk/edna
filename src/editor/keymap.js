@@ -12,6 +12,16 @@ const isLinux = window.heynote.platform.isLinux;
 const isWindows = window.heynote.platform.isWindows;
 
 export const DEFAULT_KEYMAP = [
+  // Edna commands
+  cmd("Mod-b", "openBlockSelector"),
+  cmd("Mod-Shift-p", "openCommandPalette"),
+  cmd("Mod-Shift-k", "openCommandPalette"),
+  cmd("Mod-h", "openHistorySelector"),
+  // cmd("Mod-s", "openMoveToBuffer"),
+  cmd("Mod-s", "saveCurrentNote"),
+  cmd("Alt-n", "createScratchNote"),
+  cmd("Mod-e", "smartRun"),
+
   cmd("Enter", "insertNewlineAndIndent"),
 
   cmd("Mod-a", "selectAll"),
@@ -89,14 +99,6 @@ export const DEFAULT_KEYMAP = [
   cmd("Mod-p", "openBufferSelector"),
   cmd("Mod-k", "openBufferSelector"),
   cmd("Mod-o", "openBufferSelector"),
-
-  // Edna commands
-  cmd("Mod-b", "openBlockSelector"),
-  cmd("Mod-Shift-p", "openCommandPalette"),
-  cmd("Mod-Shift-k", "openCommandPalette"),
-  cmd("Mod-h", "openHistorySelector"),
-  // cmd("Mod-s", "openMoveToBuffer"),
-  cmd("Mod-s", "saveCurrentNote"),
 
   // pointless, this is New Tab in browsers
   //cmd("Mod-n", "openCreateNewBuffer"),

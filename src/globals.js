@@ -2,9 +2,7 @@
   openSettings: () => void,
   openFind: () => void,
   openContextMenu: (MouseEvent) => void,
-  createScratchNote: () => void,
   openFunctionSelector: (boolean) => void,
-  smartRun: () => void,
   getPassword: (msg: string) => Promise<string>,
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>,
 }} GlobalFuncs
@@ -42,10 +40,6 @@ export function openContextMenu(ev) {
   globalFunctions.openContextMenu(ev);
 }
 
-export function createScratchNote() {
-  globalFunctions.createScratchNote();
-}
-
 export function openFunctionSelector(onSelection = false) {
   globalFunctions.openFunctionSelector(onSelection);
 }
@@ -53,11 +47,6 @@ export function openFunctionSelector(onSelection = false) {
 export function openFind() {
   globalFunctions.openFind();
 }
-
-export function smartRun() {
-  globalFunctions.smartRun();
-}
-
 /**
  * @param {string} msg
  * @returns {Promise<string>}

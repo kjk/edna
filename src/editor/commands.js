@@ -104,6 +104,14 @@ const saveCurrentNote = (editor) => () => {
   editor.save();
   return true;
 };
+const createScratchNote = (editor) => () => {
+  editor.createScratchNote();
+  return true;
+};
+const smartRun = (editor) => () => {
+  editor.smartRun();
+  return true;
+};
 
 const nothing = (view) => {
   return true;
@@ -188,11 +196,6 @@ const HEYNOTE_COMMANDS = {
   ),
   openBufferSelector: cmd(openBufferSelector, "Buffer", "Switch buffer…"),
   openBlockSelector: cmd(openBlockSelector, "Buffer", "Switch block…"),
-  openHistorySelector: cmd(
-    openHistorySelector,
-    "Buffer",
-    "Open history selector",
-  ),
   openCommandPalette: cmd(
     openCommandPalette,
     "Editor",
@@ -345,6 +348,19 @@ const HEYNOTE_COMMANDS = {
     toggleLineComment,
     "Edit",
     "Toggle line comment",
+  ),
+
+  // edna commands
+  openHistorySelector: cmd(
+    openHistorySelector,
+    "Buffer",
+    "Open history selector",
+  ),
+  createScratchNote: cmd(createScratchNote, "Editor", "Create scratch note"),
+  smartRun: cmd(
+    smartRun,
+    "Block",
+    "Execute JavaScript code using block as an argument",
   ),
 };
 

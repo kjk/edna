@@ -1,19 +1,4 @@
-export function ednaKeymap(editor) {
-  let spec = [
-    ["Mod-v", pasteCommand],
-    ["Mod-x", cutCommand(editor)],
-    ["Tab", indentMore],
-    ["Shift-Tab", indentLess],
-    ["Alt-n", createScratchNote],
-    ["Alt-Shift-Enter", addNewBlockBeforeFirst(editor)],
-    ["Mod-Shift-Enter", addNewBlockAfterLast(editor)],
-    ["Alt-Enter", addNewBlockBeforeCurrent(editor)],
-    ["Mod-Enter", addNewBlockAfterCurrent(editor)],
-    ["Mod-Alt-Enter", insertNewBlockAtCursor(editor)],
-    ["Mod-a", selectAll],
-    ["Alt-ArrowUp", moveLineUp],
-    ["Alt-ArrowDown", moveLineDown],
-    ["Mod-e", smartRun],
+let a = [
     [
       "Alt-Shift-r",
       () => {
@@ -59,5 +44,4 @@ export function ednaKeymap(editor) {
   if (platform.isWindows) {
     spec.push(["Mod-Shift-z", redo]);
   }
-  return keymapFromSpec(spec);
-}
+];
