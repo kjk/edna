@@ -40,6 +40,8 @@ class HeynoteStore {
   realCreateScratchNote;
   realSmartRun;
   realOpenContextMenu;
+  realGetPasswordFromUser;
+  realRequestFileWritePermission;
 
   addRecentBuffer(path) {
     debugger;
@@ -160,6 +162,13 @@ class HeynoteStore {
     this.closeDialog();
     this.realOpenContextMenu(ev);
   }
+  async getPasswordFromUser(msg) {
+    return this.realGetPasswordFromUser(msg);
+  }
+
+  async requestFileWritePermission(fh) {
+    return this.realRequestFileWritePermission(fh);
+  }
 }
 
 /*
@@ -253,4 +262,21 @@ export async function initHeynoteStore() {
   //   heynoteStore.reloadLibrary();
   // });
   // await heynoteStore.updateBuffers();
+}
+
+/**
+ * @param {string} msg
+ * @returns {Promise<string>}
+ */
+export async function getPasswordFromUser(msg) {
+  let pwd = await store.getPasswordFromUser(msg);
+  console.log("got password:", pwd);
+  return pwd;
+}
+
+export async function requestFileWritePermission(fh) {
+  let ok = await store.requestFileWritePermission(fh);
+  console.log("ok:", ok);
+  // TODO: check permissions
+  return ok;
 }

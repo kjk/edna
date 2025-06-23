@@ -19,7 +19,6 @@ import {
   openDirPicker,
   readDir,
 } from "./fileutil";
-import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import {
   historyPush,
   removeNoteFromHistory,
@@ -40,6 +39,10 @@ import {
   incNoteSaveCount,
 } from "./state";
 import { appState } from "./state.svelte";
+import {
+  getPasswordFromUser,
+  requestFileWritePermission,
+} from "./stores/heynote-store.svelte";
 import {
   getBuiltInFunctionsNote,
   getHelp,

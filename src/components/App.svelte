@@ -39,7 +39,6 @@
     supportsFileSystem,
   } from "../fileutil";
   import { parseUserFunctions, runBoopFunction } from "../functions";
-  import { setGlobalFuncs } from "../globals";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import Menu, {
     kMenuIdJustText,
@@ -176,16 +175,12 @@
     isMoving.disableMoveTracking = isShowingDialog;
   });
 
-  let gf = {
-    getPassword: getPassword,
-    requestFileWritePermission: requestFileWritePermission,
-  };
-  setGlobalFuncs(gf);
-
   notesStore.realOpenCommandPalette = openCommandPalette;
   notesStore.realOpenBlockSelector = openBlockSelector;
   notesStore.realCreateScratchNote = createScratchNote;
   notesStore.realOpenContextMenu = openContextMenu;
+  notesStore.getPasswordFromUser = getPassword;
+  notesStore.realRequestFileWritePermission = requestFileWritePermission;
 
   $effect(() => {
     // console.log("App.svelte did mount");
