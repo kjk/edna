@@ -33,6 +33,7 @@ class HeynoteStore {
   showFunctionSelector = $state(false);
   showContextMenu = $state(false);
   showSettings = $state(false);
+  showQuickAccess = $state(0);
 
   // provided by App.svelte
   realOpenCommandPalette;
@@ -49,6 +50,7 @@ class HeynoteStore {
     recent.unshift(path);
     this.recentBufferPaths = recent.slice(0, 100);
   }
+
   async updateBuffers() {
     debugger;
     this.setBuffers(await window.heynote.buffer.getList());

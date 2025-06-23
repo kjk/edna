@@ -37,11 +37,11 @@
     style = `right: ${dx}px`;
   });
   $effect(() => {
-    // console.log("appState.showQuickAccess", appState.showQuickAccess);
+    // console.log("notesStore.showQuickAccess", notesStore.showQuickAccess);
     // TODO: this is hacky, should use standard CSS, make QuickAccess.svelte a child
     // of TopNav and show / hide based on CSS hover
-    if (appState.showQuickAccess < 0) {
-      appState.showQuickAccess = 0;
+    if (notesStore.showQuickAccess < 0) {
+      notesStore.showQuickAccess = 0;
     }
   });
 </script>
@@ -63,8 +63,8 @@
     <button
       class="flex align-baseline cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500 items-center"
       onclick={() => notesStore.openBufferSelector()}
-      onmouseenter={() => appState.showQuickAccess++}
-      onmouseleave={() => appState.showQuickAccess--}
+      onmouseenter={() => notesStore.showQuickAccess++}
+      onmouseleave={() => notesStore.showQuickAccess--}
       title={fixUpShortcuts("Open Another Note (Mod + P)")}
     >
       <div class="max-w-32 truncate">

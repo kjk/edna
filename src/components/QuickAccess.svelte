@@ -4,6 +4,7 @@
   import { toggleNoteStarred } from "../metadata";
   import { getSettings } from "../settings.svelte";
   import { appState } from "../state.svelte";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte";
   import {
     getAltChar,
     getKeyEventNumber,
@@ -23,6 +24,8 @@
 
   let altChar = getAltChar();
   let modChar = getModChar();
+
+  let notesStore = useHeynoteStore();
 
   // svelte-ignore non_reactive_update
   let firstInHistoryIdx = -1;
@@ -90,12 +93,12 @@
   function selectItem(noteName) {
     selectNote(noteName);
     tick().then(() => {
-      appState.showQuickAccess = 0;
+      notesStore.showQuickAccess = 0;
     });
   }
 
   let cls = $derived(
-    forHistory || appState.showQuickAccess > 0 ? "block" : "hidden",
+    forHistory || notesStore.showQuickAccess > 0 ? "block" : "hidden",
   );
 
   /**
@@ -139,8 +142,8 @@
   {onkeydown}
   tabindex="-1"
   use:focus
-  onmouseenter={() => appState.showQuickAccess++}
-  onmouseleave={() => appState.showQuickAccess--}
+  onmouseenter={() => notesStore.showQuickAccess++}
+  onmouseleave={() => notesStore.showQuickAccess--}
   class="fixed top-[26px] pt-[4px] z-20 text-sm py-1 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg mt-[01px] focus:outline-hidden {cls}"
   {style}
 >
