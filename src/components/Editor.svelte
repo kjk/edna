@@ -13,6 +13,7 @@
   import { getSettings } from "../settings.svelte.js";
   import { rememberEditor } from "../state.js";
   import { appState } from "../state.svelte.js";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
   import { throwIf } from "../util.js";
 
   let enableDiskRefresh = false;
@@ -28,6 +29,7 @@
   let syntaxTreeDebugContent = $state(null);
   let debouncedRefreshFunc = $state(null);
   let settings = getSettings();
+  let notesStore = useHeynoteStore();
   let theme = settings.theme;
 
   /** @type {HeynoteEditor} */
@@ -56,6 +58,10 @@
     let fontFamily = settings.fontFamily;
     let fontSize = settings.fontSize;
     editor?.setFont(fontFamily, fontSize);
+  });
+
+  $effect(() => {
+    setSpellChecking(notesStore.isSpellChecking);
   });
 
   onMount(mounted);

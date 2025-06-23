@@ -1,7 +1,6 @@
 <script>
   import {
     getLanguage,
-    getLanguageNameFromToken,
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages.js";
@@ -13,16 +12,9 @@
 
   /** @type { {
     docSize: number,
-    isSpellChecking: boolean,
-    toggleSpellCheck: (ev) => void,
     formatCurrentBlock: (ev) => void,
   } } */
-  let {
-    docSize = 0,
-    isSpellChecking = false,
-    toggleSpellCheck,
-    formatCurrentBlock,
-  } = $props();
+  let { docSize = 0, formatCurrentBlock } = $props();
 
   let style = $state("");
   $effect(() => {
@@ -80,12 +72,12 @@
 
   <div class="text-gray-400">&bull;</div>
   <button
-    onclick={toggleSpellCheck}
+    onclick={() => notesStore.toggleSpellChecking()}
     class="clickable"
     title="Toggle spell check"
   >
     <span
-      >Spell check is {#if isSpellChecking}on{:else}off{/if}</span
+      >Spell check is {#if notesStore.isSpellChecking}on{:else}off{/if}</span
     >
   </button>
   <div class="text-gray-400">&bull;</div>

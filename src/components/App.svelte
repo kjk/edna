@@ -106,7 +106,6 @@
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
-  import CommandPalette2 from "./CommandPalette2.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
   import Editor from "./Editor.svelte";
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
@@ -120,7 +119,6 @@
     showModalMessageHTML,
   } from "./ModalMessage.svelte";
   import NoteSelector from "./NoteSelector.svelte";
-  import NoteSelector2 from "./NoteSelector2.svelte";
   import NoteSelectorWide from "./NoteSelectorWide.svelte";
   import Overlay from "./Overlay.svelte";
   import QuickAccess from "./QuickAccess.svelte";
@@ -142,7 +140,6 @@
   let functionContext = $state("");
   let runFunctionOnSelection = false;
   let userFunctions = $state([]); // note: $state() not needed
-  let isSpellChecking = $state(false);
 
   // TODO port those to use notesStore
   // let showingNoteSelector2 = $state(false);
@@ -194,10 +191,6 @@
   notesStore.realOpenCommandPalette = openCommandPalette;
   notesStore.realOpenBlockSelector = openBlockSelector;
   notesStore.realCreateScratchNote = createScratchNote;
-
-  $effect(() => {
-    getEditorComp().setSpellChecking(isSpellChecking);
-  });
 
   $effect(() => {
     // console.log("App.svelte did mount");
@@ -1217,7 +1210,7 @@
     } else if (cmdId === kCmdOpenNoteFromDisk) {
       openNoteFromDisk();
     } else if (cmdId === kCmdToggleSpellChecking) {
-      toggleSpellCheck();
+      notesStore.toggleSpellChecking();
       view.focus();
     } else if (cmdId === kCmdShowHelp) {
       showHTMLHelp();
@@ -1343,7 +1336,9 @@
 
   function commandNameOverride(id, name) {
     if (id === kCmdToggleSpellChecking) {
-      return (isSpellChecking ? "Disable" : "Enable") + " spell checking";
+      return (
+        (notesStore.isSpellChecking ? "Disable" : "Enable") + " spell checking"
+      );
     }
     let n = len(commandNameOverrides);
     for (let i = 0; i < n; i += 2) {
@@ -1656,16 +1651,6 @@
     }
   }
 
-  function toggleSpellCheck() {
-    isSpellChecking = !isSpellChecking;
-    getEditorComp().setSpellChecking(isSpellChecking);
-    // if (isSpellChecking) {
-    //   addToast(
-    //     "Press Ctrl + right mouse click for context menu when spell checking is enabled",
-    //   );
-    // }
-  }
-
   /**
    * @param {string} anchor
    */
@@ -1855,12 +1840,7 @@
     {docDidChange}
     bind:this={editor}
   />
-  <StatusBar
-    {docSize}
-    {isSpellChecking}
-    {formatCurrentBlock}
-    {toggleSpellCheck}
-  />
+  <StatusBar {docSize} {formatCurrentBlock} />
 </div>
 
 {#if notesStore.showCreateBuffer}

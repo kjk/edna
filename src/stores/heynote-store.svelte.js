@@ -20,6 +20,8 @@ class HeynoteStore {
     name: "",
   });
 
+  isSpellChecking = $state(false);
+
   showBufferSelector = $state(false);
   showLanguageSelector = $state(false);
   showCreateBuffer = $state(false);
@@ -147,6 +149,10 @@ class HeynoteStore {
 
   smartRun() {
     this.realSmartRun();
+  }
+
+  toggleSpellChecking() {
+    this.isSpellChecking = !this.isSpellChecking;
   }
 }
 
