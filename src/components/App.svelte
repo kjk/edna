@@ -150,7 +150,6 @@
   let userFunctions = $state([]); // note: $state() not needed
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
-  let showingHistorySelector = $state(false);
   let isSpellChecking = $state(false);
 
   let contextMenuPos = $state({ x: 0, y: 0 });
@@ -160,7 +159,7 @@
 
   let isShowingDialog = $derived.by(() => {
     return (
-      showingHistorySelector ||
+      notesStore.showHistorySelector ||
       notesStore.showLanguageSelector ||
       showingMenu ||
       showingRenameNote ||
@@ -190,7 +189,6 @@
     openSettings: openSettings,
     openContextMenu: openContextMenu,
     openFind: openFind,
-    openHistorySelector: openHistorySelector,
     createScratchNote: createScratchNote,
     openFunctionSelector: openFunctionSelector,
     smartRun: smartRun,
@@ -309,7 +307,7 @@
           if (note.altShortcut == altN && note.name !== noteName) {
             // console.log("onKeyDown: opening note: ", o.name, " altN:", altN, " e:", e)
             openNote(note.name);
-            showingHistorySelector = false;
+            notesStore.showHistorySelector = false;
             ev.preventDefault();
             return;
           }
@@ -1265,7 +1263,7 @@
     } else if (cmdId === kCmdEncryptionHelp) {
       showHTMLHelp("#encryption");
     } else if (cmdId === kCmdOpenRecent) {
-      openHistorySelector();
+      notesStore.openHistorySelector();
     } else if (cmdId === kCmdRunBlock) {
       runCurrentBlock();
     } else if (cmdId === kCmdRunBlockWithAnotherBlock) {
@@ -1702,13 +1700,8 @@
     // console.log("onRename: newName:", newName);
   }
 
-  function openHistorySelector() {
-    showingHistorySelector = true;
-    getEditorComp().focus();
-  }
-
   function closeHistorySelector() {
-    showingHistorySelector = false;
+    notesStore.showHistorySelector = false;
     getEditorComp().focus();
   }
 
@@ -1860,7 +1853,7 @@
   {oncontextmenu}
 >
   <TopNav {noteName} />
-  {#if !showingHistorySelector}
+  {#if !notesStore.showHistorySelector}
     <QuickAccess selectNote={onSelectHistory} forHistory={false} />
   {/if}
 
@@ -1946,7 +1939,7 @@
   />
 {/if} -->
 
-{#if showingHistorySelector}
+{#if notesStore.showHistorySelector}
   <Overlay onclose={closeHistorySelector} blur={true}>
     <QuickAccess selectNote={onSelectHistory} forHistory={true} />
   </Overlay>

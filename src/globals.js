@@ -2,7 +2,6 @@
   openSettings: () => void,
   openFind: () => void,
   openContextMenu: (MouseEvent) => void,
-  openHistorySelector: () => void,
   createScratchNote: () => void,
   openFunctionSelector: (boolean) => void,
   smartRun: () => void,
@@ -41,10 +40,6 @@ export function openSettings() {
 
 export function openContextMenu(ev) {
   globalFunctions.openContextMenu(ev);
-}
-
-export function openHistorySelector() {
-  globalFunctions.openHistorySelector();
 }
 
 export function createScratchNote() {

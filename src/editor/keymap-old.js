@@ -1,68 +1,5 @@
-import { indentLess, indentMore, redo } from "@codemirror/commands";
-import { keymap } from "@codemirror/view";
-import {
-  createScratchNote,
-  openBlockSelector,
-  openCommandPalette,
-  openFunctionSelector,
-  openHistorySelector,
-  smartRun,
-} from "../globals.js";
-import { platform } from "../util.js";
-import {
-  addNewBlockAfterCurrent,
-  addNewBlockAfterLast,
-  addNewBlockBeforeCurrent,
-  addNewBlockBeforeFirst,
-  gotoNextBlock,
-  gotoNextParagraph,
-  gotoPreviousBlock,
-  gotoPreviousParagraph,
-  insertNewBlockAtCursor,
-  moveCurrentBlockDown,
-  moveCurrentBlockUp,
-  moveLineDown,
-  moveLineUp,
-  newCursorAbove,
-  newCursorBelow,
-  selectAll,
-  selectNextBlock,
-  selectNextParagraph,
-  selectPreviousBlock,
-  selectPreviousParagraph,
-} from "./block/commands.js";
-import { formatBlockContent } from "./block/format-code.js";
-import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
-
-function openNoteSelector() {}
-
-export function keymapFromSpec(specs) {
-  return keymap.of(
-    specs.map((spec) => {
-      if (spec.run) {
-        if ("preventDefault" in spec) {
-          return spec;
-        } else {
-          return { ...spec, preventDefault: true };
-        }
-      } else {
-        const [key, run] = spec;
-        return {
-          key,
-          run,
-          preventDefault: true,
-        };
-      }
-    }),
-  );
-}
-
-/**
- * @param {import("./editor.js").HeynoteEditor} editor
- */
 export function ednaKeymap(editor) {
   let spec = [
-    ["Mod-c", copyCommand(editor)],
     ["Mod-v", pasteCommand],
     ["Mod-x", cutCommand(editor)],
     ["Tab", indentMore],
@@ -76,7 +13,6 @@ export function ednaKeymap(editor) {
     ["Mod-a", selectAll],
     ["Alt-ArrowUp", moveLineUp],
     ["Alt-ArrowDown", moveLineDown],
-    ["Mod-l", openLanguageSelector],
     ["Mod-e", smartRun],
     [
       "Alt-Shift-r",
@@ -84,7 +20,6 @@ export function ednaKeymap(editor) {
         openFunctionSelector(false);
       },
     ],
-    ["Mod-b", openBlockSelector],
     ["Mod-k", openNoteSelector],
     ["Alt-0", openNoteSelector],
     ["Mod-o", openNoteSelector],

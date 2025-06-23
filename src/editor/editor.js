@@ -365,6 +365,10 @@ export class HeynoteEditor {
     this.notesStore.openCommandPalette();
   }
 
+  openHistorySelector() {
+    this.notesStore.openHistorySelector();
+  }
+
   openCreateBuffer(createMode) {
     this.notesStore.openCreateBuffer(createMode);
   }
