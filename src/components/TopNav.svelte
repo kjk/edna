@@ -53,7 +53,7 @@
     class="text-sm flex px-1 select-none bg-white text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b border-l rounded-bl-lg self-end showOnMouseMove relative"
   >
     <button
-      onclick={openContextMenu}
+      onclick={(ev) => openContextMenu(ev)}
       class="clickable-icon mt-[3px]"
       title="open menu"
     >
@@ -63,7 +63,7 @@
 
     <button
       class="flex align-baseline cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500 items-center"
-      onclick={notesStore.openBufferSelector}
+      onclick={() => notesStore.openBufferSelector()}
       onmouseenter={() => appState.showQuickAccess++}
       onmouseleave={() => appState.showQuickAccess--}
       title={fixUpShortcuts("Open Another Note (Mod + P)")}
@@ -84,7 +84,7 @@
     <div class="text-gray-400 px-1">&bull;</div>
 
     <button
-      onclick={notesStore.openCommandPalette}
+      onclick={() => notesStore.openCommandPalette()}
       class="clickable-icon mt-[3px]"
       title={fixUpShortcuts("Command Palette (Mod + Shift + P)")}
     >

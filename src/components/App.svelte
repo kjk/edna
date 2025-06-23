@@ -1068,8 +1068,9 @@
     // note: this is called for each menu item so should be fast
     let lang = getLanguage(language);
     if (!lang) {
-      debugger;
-      lang = getLanguage(language);
+      console.warn("no lang, language:", language);
+      lang = getLanguage("text");
+      throwIf(!lang);
     }
     let dh = getStorageFS();
     // console.log("dh:", dh);

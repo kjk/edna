@@ -93,7 +93,7 @@
   </button>
   <div class="text-gray-400">&bull;</div>
   <button
-    onclick={notesStore.openLanguageSelector}
+    onclick={() => notesStore.openLanguageSelector()}
     class="clickable"
     title={changeLanguageTitle}
   >
