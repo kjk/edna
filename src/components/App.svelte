@@ -142,9 +142,9 @@
   // TODO port those to use notesStore
   let showingMenu = $state(false);
   let showingBlockMoveSelector = $state(false);
-  let showingNoteSelector2 = $state(false);
+  // let showingNoteSelector2 = $state(false);
   let showingCommandPalette = $state(false);
-  let showingCommandPalette2 = $state(false);
+  // let showingCommandPalette2 = $state(false);
   let showingCreateNewNote = $state(false);
   let showingFunctionSelector = $state(false);
   let functionContext = $state("");
@@ -172,11 +172,11 @@
       showingMenu ||
       showingRenameNote ||
       notesStore.showBufferSelector ||
-      showingNoteSelector2 ||
+      // showingNoteSelector2 ||
       showingBlockMoveSelector ||
       showingCreateNewNote ||
       showingCommandPalette ||
-      showingCommandPalette2 ||
+      // showingCommandPalette2 ||
       showingCreateNewNote ||
       showingBlockSelector ||
       showingDecryptPassword ||
@@ -287,7 +287,7 @@
       ev.preventDefault();
       ev.stopImmediatePropagation();
 
-      openNoteSelector2();
+      // openNoteSelector2();
       return;
     }
 
@@ -658,8 +658,8 @@
       showingCommandPalette = false;
       notesStore.openBufferSelector();
     } else {
-      showingCommandPalette2 = false;
-      openNoteSelector2();
+      // showingCommandPalette2 = false;
+      // openNoteSelector2();
     }
   }
 
@@ -668,8 +668,8 @@
       notesStore.showBufferSelector = false;
       openCommandPalette();
     } else {
-      showingNoteSelector2 = false;
-      openCommandPalette2();
+      // showingNoteSelector2 = false;
+      // openCommandPalette2();
     }
   }
 
@@ -685,14 +685,14 @@
     });
   }
 
-  function openNoteSelector2() {
-    showingNoteSelector2 = true;
-  }
+  // function openNoteSelector2() {
+  //   showingNoteSelector2 = true;
+  // }
 
-  function closeNoteSelector2() {
-    showingNoteSelector2 = false;
-    getEditorComp().focus();
-  }
+  // function closeNoteSelector2() {
+  //   showingNoteSelector2 = false;
+  //   getEditorComp().focus();
+  // }
 
   function switchToWideNoteSelector() {
     settings.useWideSelectors = true;
@@ -1444,20 +1444,20 @@
     getEditorComp().focus();
   }
 
-  function openCommandPalette2() {
-    buildCommandPaletteDef();
-    showingCommandPalette2 = true;
-  }
+  // function openCommandPalette2() {
+  //   buildCommandPaletteDef();
+  //   showingCommandPalette2 = true;
+  // }
 
-  function closeCommandPalette2() {
-    showingCommandPalette2 = false;
-    getEditorComp().focus();
-  }
+  // function closeCommandPalette2() {
+  //   showingCommandPalette2 = false;
+  //   getEditorComp().focus();
+  // }
 
   async function executeCommand(cmdId) {
     console.log("executeCommand:", cmdId);
     showingCommandPalette = false;
-    showingCommandPalette2 = false;
+    // showingCommandPalette2 = false;
     onmenucmd(cmdId);
   }
 
@@ -1755,7 +1755,7 @@
    */
   function onOpenNote(name) {
     notesStore.showBufferSelector = false;
-    showingNoteSelector2 = false;
+    // showingNoteSelector2 = false;
     openNote(name);
   }
 
@@ -1788,7 +1788,7 @@
    */
   async function onCreateNote(name) {
     notesStore.showBufferSelector = false;
-    showingNoteSelector2 = false;
+    // showingNoteSelector2 = false;
     showingCreateNewNote = false;
     await createNoteWithName(name);
     openNote(name);
@@ -1947,7 +1947,7 @@
   </Overlay>
 {/if}
 
-{#if showingNoteSelector2}
+<!-- {#if showingNoteSelector2}
   <NoteSelector2
     {switchToCommandPalette}
     onclose={closeNoteSelector2}
@@ -1955,7 +1955,7 @@
     createNote={onCreateNote}
     deleteNote={onDeleteNote}
   />
-{/if}
+{/if} -->
 
 {#if showingHistorySelector}
   <Overlay onclose={closeHistorySelector} blur={true}>
@@ -1993,14 +1993,14 @@
   </Overlay>
 {/if}
 
-{#if showingCommandPalette2}
+<!-- {#if showingCommandPalette2}
   <CommandPalette2
     onclose={closeCommandPalette2}
     {commandsDef}
     {executeCommand}
     {switchToNoteSelector}
   />
-{/if}
+{/if} -->
 
 {#if showingMenu}
   <Overlay onclose={closeMenu}>

@@ -2,6 +2,9 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.24
+- Removed opening note selector with `Esc`. More annoying than helpful.
+
 ## 1.23
 - improved search UI (For `Ctrl + F`)
 
