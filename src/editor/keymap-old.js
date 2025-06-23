@@ -6,7 +6,6 @@ import {
   openCommandPalette,
   openFunctionSelector,
   openHistorySelector,
-  openLanguageSelector,
   smartRun,
 } from "../globals.js";
 import { platform } from "../util.js";

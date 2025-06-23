@@ -141,7 +141,6 @@
 
   // TODO port those to use notesStore
   let showingMenu = $state(false);
-  let showingLanguageSelector = $state(false);
   let showingBlockMoveSelector = $state(false);
   let showingNoteSelector2 = $state(false);
   let showingCommandPalette = $state(false);
@@ -169,7 +168,7 @@
   let isShowingDialog = $derived.by(() => {
     return (
       showingHistorySelector ||
-      showingLanguageSelector ||
+      notesStore.showLanguageSelector ||
       showingMenu ||
       showingRenameNote ||
       notesStore.showBufferSelector ||
@@ -197,7 +196,6 @@
 
   let gf = {
     openSettings: openSettings,
-    openLanguageSelector: openLanguageSelector,
     openCreateNewNote: openCreateNewNote,
     openCommandPalette: openCommandPalette,
     openContextMenu: openContextMenu,
@@ -886,12 +884,8 @@
     view.focus();
   }
 
-  function openLanguageSelector() {
-    showingLanguageSelector = true;
-  }
-
   function closeLanguageSelector() {
-    showingLanguageSelector = false;
+    notesStore.showLanguageSelector = false;
     getEditorComp().focus();
   }
 
@@ -899,7 +893,7 @@
    * @param {string} lang
    */
   function onSelectLanguage(lang) {
-    showingLanguageSelector = false;
+    notesStore.showLanguageSelector = false;
     getEditorComp().setLanguage(lang);
     let view = getEditorView();
     view.focus();
@@ -1226,7 +1220,7 @@
       gotoPreviousBlock(view);
       view.focus();
     } else if (cmdId === kCmdChangeBlockLanguage) {
-      openLanguageSelector();
+      notesStore.openLanguageSelector();
     } else if (cmdId === kCmdBlockSelectAll) {
       selectAll(view);
       view.focus();
@@ -1932,8 +1926,8 @@
 {/if}
 
 {#if notesStore.showBufferSelector}
-  {#if settings.useWideSelectors}
-    <Overlay onclose={closeNoteSelector} blur={true}>
+  <Overlay onclose={closeNoteSelector} blur={true}>
+    {#if settings.useWideSelectors}
       <NoteSelectorWide
         {switchToRegularNoteSelector}
         {switchToCommandPalette}
@@ -1941,9 +1935,7 @@
         createNote={onCreateNote}
         deleteNote={onDeleteNote}
       />
-    </Overlay>
-  {:else}
-    <Overlay onclose={closeNoteSelector} blur={true}>
+    {:else}
       <NoteSelector
         {switchToWideNoteSelector}
         {switchToCommandPalette}
@@ -1951,8 +1943,8 @@
         createNote={onCreateNote}
         deleteNote={onDeleteNote}
       />
-    </Overlay>
-  {/if}
+    {/if}
+  </Overlay>
 {/if}
 
 {#if showingNoteSelector2}
@@ -1971,7 +1963,7 @@
   </Overlay>
 {/if}
 
-{#if showingLanguageSelector}
+{#if notesStore.showLanguageSelector}
   <Overlay onclose={closeLanguageSelector} blur={true}>
     <LanguageSelector selectLanguage={onSelectLanguage} />
   </Overlay>

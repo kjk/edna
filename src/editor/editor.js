@@ -24,11 +24,7 @@ import {
   ViewPlugin,
 } from "@codemirror/view";
 import { NoteFormat } from "../common/note-format.js";
-import {
-  openCommandPalette,
-  openCreateNewNote,
-  openLanguageSelector,
-} from "../globals.js";
+import { openCommandPalette, openCreateNewNote } from "../globals.js";
 import { saveCurrentNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { useErrorStore } from "../stores/error-store.svelte.js";
@@ -359,7 +355,7 @@ export class HeynoteEditor {
   }
 
   openLanguageSelector() {
-    openLanguageSelector();
+    this.notesStore.openLanguageSelector();
   }
 
   openBufferSelector() {

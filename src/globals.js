@@ -1,6 +1,5 @@
 /** @typedef {{
   openSettings: () => void,
-  openLanguageSelector: () => void,
   openCreateNewNote: () => void,
   openCommandPalette: () => void,
   openFind: () => void,
@@ -41,10 +40,6 @@ export function setGlobalFuncs(gf) {
 
 export function openSettings() {
   globalFunctions.openSettings();
-}
-
-export function openLanguageSelector() {
-  globalFunctions.openLanguageSelector();
 }
 
 export function openCreateNewNote() {

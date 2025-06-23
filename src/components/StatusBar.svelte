@@ -5,7 +5,7 @@
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages.js";
-  import { openLanguageSelector, openSettings } from "../globals.js";
+  import { openSettings } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
   import { fmtSize, getScrollbarWidth } from "../util";
@@ -33,9 +33,8 @@
     style = `right: ${dx}px`;
   });
 
-  let heynoteStore = useHeynoteStore();
-  let language = heynoteStore.currentLanguage;
-  let languageName = $derived(getLanguageNameFromToken(language));
+  let notesStore = useHeynoteStore();
+  let language = notesStore.currentLanguage;
 
   let lang = $derived(getLanguage(language));
   let supportsFormat = $derived(langSupportsFormat(lang));
@@ -46,7 +45,7 @@
   );
   let runBlockTitle = $derived.by(() => {
     let s = "Smart Run";
-    if (heynoteStore.currentSelectionSize > 0) {
+    if (notesStore.currentSelectionSize > 0) {
       s = "Run Function With Selection";
     } else if (supportsRun) {
       s = "Run Code Block";
@@ -68,13 +67,13 @@
 >
   <div
     class="px-1"
-    title="Cursor: line {heynoteStore.currentCursorLine
-      .line} column {heynoteStore.currentCursorLine.col}"
+    title="Cursor: line {notesStore.currentCursorLine.line} column {notesStore
+      .currentCursorLine.col}"
   >
-    Ln <span class="num">{heynoteStore.currentCursorLine.line}</span>
-    &nbsp;Col <span class="num">{heynoteStore.currentCursorLine.col}</span>
-    {#if heynoteStore.currentSelectionSize > 0}
-      Sel <span class="num">{heynoteStore.currentSelectionSize}</span>
+    Ln <span class="num">{notesStore.currentCursorLine.line}</span>
+    &nbsp;Col <span class="num">{notesStore.currentCursorLine.col}</span>
+    {#if notesStore.currentSelectionSize > 0}
+      Sel <span class="num">{notesStore.currentSelectionSize}</span>
     {/if}
   </div>
   <div class="text-gray-400">&bull;</div>
@@ -94,12 +93,12 @@
   </button>
   <div class="text-gray-400">&bull;</div>
   <button
-    onclick={openLanguageSelector}
+    onclick={notesStore.openLanguageSelector}
     class="clickable"
     title={changeLanguageTitle}
   >
-    {heynoteStore.currentLanguage}
-    {#if heynoteStore.currentLanguageAuto}
+    {notesStore.currentLanguage}
+    {#if notesStore.currentLanguageAuto}
       <span class="auto">(auto)</span>
     {/if}
   </button>

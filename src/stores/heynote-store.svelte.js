@@ -51,7 +51,6 @@ class HeynoteStore {
   }
 
   openLanguageSelector() {
-    debugger;
     this.closeDialog();
     this.showLanguageSelector = true;
   }
