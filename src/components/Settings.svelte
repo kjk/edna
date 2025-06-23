@@ -1,6 +1,5 @@
 <script>
   import { focus } from "../actions";
-  import { getSessionDur } from "../globals";
   import {
     getGitHash,
     getSettings,
@@ -8,7 +7,7 @@
     kDefaultFontFamily,
     kDefaultFontSize,
   } from "../settings.svelte";
-  import { platform } from "../util";
+  import { formatDurationShort, platform } from "../util";
 
   let keymaps = [
     { name: "Default", value: "default" },
@@ -41,6 +40,14 @@
     };
   });
 
+  let sessionStart = performance.now();
+  /**
+   * @returns {string}
+   */
+  function getSessionDur() {
+    let durMs = Math.round(performance.now() - sessionStart);
+    return formatDurationShort(durMs);
+  }
   async function updateLocalFonts() {
     // @ts-ignore
     let qlf = window.queryLocalFonts;

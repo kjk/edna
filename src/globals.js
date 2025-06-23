@@ -4,17 +4,6 @@
 }} GlobalFuncs
 */
 
-import { formatDurationShort } from "./util";
-
-let sessionStart = performance.now();
-/**
- * @returns {string}
- */
-export function getSessionDur() {
-  let durMs = Math.round(performance.now() - sessionStart);
-  return formatDurationShort(durMs);
-}
-
 // it's easier to make some functions from App.vue available this way
 // then elaborate scheme of throwing and catching events
 // could also use setContext()
