@@ -1,14 +1,11 @@
 <script>
   import { onMount } from "svelte";
-  import {
-    openCommandPalette,
-    openContextMenu,
-    openNoteSelector,
-  } from "../globals.js";
+  import { openCommandPalette, openContextMenu } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
   import { appState } from "../state.svelte.js";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
   import { getAltChar, getScrollbarWidth, len, throwIf } from "../util.js";
   import { IconCommandPalette, IconMenu } from "./Icons.svelte";
 
@@ -18,6 +15,8 @@
   let { noteName = "" } = $props();
 
   let altChar = getAltChar();
+
+  let notesStore = useHeynoteStore();
 
   /**
    * @param {string} noteName
@@ -64,7 +63,7 @@
 
     <button
       class="flex align-baseline cursor-pointer pl-[6px] pr-[2px] py-[4px] hover:bg-gray-100 dark:hover:bg-gray-500 items-center"
-      onclick={openNoteSelector}
+      onclick={notesStore.openBufferSelector}
       onmouseenter={() => appState.showQuickAccess++}
       onmouseleave={() => appState.showQuickAccess--}
       title={fixUpShortcuts("Open Another Note (Mod + P)")}

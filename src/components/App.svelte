@@ -132,14 +132,16 @@
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
-  let heynoteStore = useHeynoteStore();
+  // TODO: merge appState into this
+  let notesStore = useHeynoteStore();
   let settings = getSettings();
 
   let docSize = $state(0);
   let noteName = $derived(settings.currentNoteName);
+
+  // TODO port those to use notesStore
   let showingMenu = $state(false);
   let showingLanguageSelector = $state(false);
-  let showingNoteSelector = $state(false);
   let showingBlockMoveSelector = $state(false);
   let showingNoteSelector2 = $state(false);
   let showingCommandPalette = $state(false);
@@ -170,7 +172,7 @@
       showingLanguageSelector ||
       showingMenu ||
       showingRenameNote ||
-      showingNoteSelector ||
+      notesStore.showBufferSelector ||
       showingNoteSelector2 ||
       showingBlockMoveSelector ||
       showingCreateNewNote ||
@@ -197,7 +199,6 @@
     openSettings: openSettings,
     openLanguageSelector: openLanguageSelector,
     openCreateNewNote: openCreateNewNote,
-    openNoteSelector: openNoteSelector,
     openCommandPalette: openCommandPalette,
     openContextMenu: openContextMenu,
     openFind: openFind,
@@ -309,7 +310,7 @@
 
     // TODO: can I do this better? The same keydown event that sets the Alt-N shortcut
     // in NoteSelector also seems to propagate here and immediately opens the note.
-    if (!showingNoteSelector) {
+    if (!notesStore.showBufferSelector) {
       let altN = isAltNumEvent(ev);
       // console.log("onKeyDown: e:", e, "altN:", altN)
       if (altN) {
@@ -657,7 +658,7 @@
   function switchToNoteSelector() {
     if (showingCommandPalette) {
       showingCommandPalette = false;
-      openNoteSelector();
+      notesStore.openBufferSelector();
     } else {
       showingCommandPalette2 = false;
       openNoteSelector2();
@@ -665,8 +666,8 @@
   }
 
   function switchToCommandPalette() {
-    if (showingNoteSelector) {
-      showingNoteSelector = false;
+    if (notesStore.showBufferSelector) {
+      notesStore.showBufferSelector = false;
       openCommandPalette();
     } else {
       showingNoteSelector2 = false;
@@ -674,19 +675,15 @@
     }
   }
 
-  function openNoteSelector() {
-    showingNoteSelector = true;
-  }
-
   function closeNoteSelector() {
-    showingNoteSelector = false;
+    notesStore.showBufferSelector = false;
     getEditorComp().focus();
   }
 
   function reOpenNoteSelector() {
-    showingNoteSelector = false;
+    notesStore.showBufferSelector = false;
     tick().then(() => {
-      showingNoteSelector = true;
+      notesStore.showBufferSelector = true;
     });
   }
 
@@ -970,7 +967,7 @@
 
   function buildMenuDef() {
     // let starAction = "Star";
-    let language = heynoteStore.currentLanguage;
+    let language = notesStore.currentLanguage;
 
     let starAction = "Add to favorites";
     let meta = getNoteMeta(noteName);
@@ -1078,7 +1075,7 @@
    * @returns {number}
    */
   function menuItemStatus(mi) {
-    let language = heynoteStore.currentLanguage;
+    let language = notesStore.currentLanguage;
 
     let mid = mi[1];
     if (mid === kMenuIdJustText) {
@@ -1194,7 +1191,7 @@
     if (cmdId === kCmdCommandPalette) {
       openCommandPalette();
     } else if (cmdId === kCmdOpenNote) {
-      openNoteSelector();
+      notesStore.openBufferSelector();
     } else if (cmdId === kCmdOpenFind) {
       // TODO: open search panel
     } else if (cmdId === kCmdCreateNewNote) {
@@ -1763,7 +1760,7 @@
    * @param {string} name
    */
   function onOpenNote(name) {
-    showingNoteSelector = false;
+    notesStore.showBufferSelector = false;
     showingNoteSelector2 = false;
     openNote(name);
   }
@@ -1796,7 +1793,7 @@
    * @param {string} name
    */
   async function onCreateNote(name) {
-    showingNoteSelector = false;
+    notesStore.showBufferSelector = false;
     showingNoteSelector2 = false;
     showingCreateNewNote = false;
     await createNoteWithName(name);
@@ -1934,7 +1931,7 @@
   </Overlay>
 {/if}
 
-{#if showingNoteSelector}
+{#if notesStore.showBufferSelector}
   {#if settings.useWideSelectors}
     <Overlay onclose={closeNoteSelector} blur={true}>
       <NoteSelectorWide

@@ -7,7 +7,6 @@ import {
   openFunctionSelector,
   openHistorySelector,
   openLanguageSelector,
-  openNoteSelector,
   smartRun,
 } from "../globals.js";
 import { platform } from "../util.js";
@@ -35,6 +34,8 @@ import {
 } from "./block/commands.js";
 import { formatBlockContent } from "./block/format-code.js";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
+
+function openNoteSelector() {}
 
 export function keymapFromSpec(specs) {
   return keymap.of(

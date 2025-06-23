@@ -28,7 +28,6 @@ import {
   openCommandPalette,
   openCreateNewNote,
   openLanguageSelector,
-  openNoteSelector,
 } from "../globals.js";
 import { saveCurrentNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
@@ -364,7 +363,7 @@ export class HeynoteEditor {
   }
 
   openBufferSelector() {
-    openNoteSelector();
+    this.notesStore.openBufferSelector();
   }
 
   openCommandPalette() {

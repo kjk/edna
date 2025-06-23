@@ -80,6 +80,10 @@ const openBufferSelector = (editor) => () => {
   editor.openBufferSelector();
   return true;
 };
+const openBlockSelector = (editor) => () => {
+  editor.openBlockSelector();
+  return true;
+};
 const openCommandPalette = (editor) => () => {
   editor.openCommandPalette();
   return true;

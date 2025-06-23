@@ -16,6 +16,7 @@ interface Window {
       // TODO: the type of cb chould be (content: any) => void
       addOnChangeCallback(string, cb: any): void;
       removeOnChangeCallback(string, cb: any): void;
+      async getList(): Promise<any>; // TODO: it's a map of string to metadata
     }
 
     mainProcess: {

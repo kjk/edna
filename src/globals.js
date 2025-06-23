@@ -2,7 +2,6 @@
   openSettings: () => void,
   openLanguageSelector: () => void,
   openCreateNewNote: () => void,
-  openNoteSelector: () => void,
   openCommandPalette: () => void,
   openFind: () => void,
   openContextMenu: (MouseEvent) => void,
@@ -50,10 +49,6 @@ export function openLanguageSelector() {
 
 export function openCreateNewNote() {
   globalFunctions.openCreateNewNote();
-}
-
-export function openNoteSelector() {
-  globalFunctions.openNoteSelector();
 }
 
 export function openCommandPalette() {

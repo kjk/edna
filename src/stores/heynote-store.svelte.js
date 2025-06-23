@@ -1,6 +1,5 @@
 import { SCRATCH_FILE_NAME } from "../common/constants";
 import { NoteFormat } from "../common/note-format";
-import { len } from "../util";
 
 //import { useEditorCacheStore } from "./editor-cache";
 
@@ -18,7 +17,7 @@ class HeynoteStore {
   libraryId = $state(0);
   createBufferParams = $state({
     mode: "new",
-    nameSuggestion: "",
+    name: "",
   });
 
   showBufferSelector = $state(false);
@@ -29,80 +28,94 @@ class HeynoteStore {
   showCommandPalette = $state(false);
 
   addRecentBuffer(path) {
+    debugger;
     const recent = this.recentBufferPaths.filter((p) => p !== path);
     recent.unshift(path);
     this.recentBufferPaths = recent.slice(0, 100);
+  }
+  async updateBuffers() {
+    debugger;
+    this.setBuffers(await window.heynote.buffer.getList());
+  }
+
+  setBuffers(buffers) {
+    debugger;
+    this.buffers = buffers;
+  }
+
+  openBuffer(path) {
+    debugger;
+    this.closeDialog();
+    this.currentBufferPath = path;
+    this.addRecentBuffer(path);
+  }
+
+  openLanguageSelector() {
+    debugger;
+    this.closeDialog();
+    this.showLanguageSelector = true;
+  }
+
+  openBufferSelector() {
+    this.closeDialog();
+    this.showBufferSelector = true;
+  }
+
+  openCommandPalette() {
+    debugger;
+    this.closeDialog();
+    this.showCommandPalette = true;
+  }
+
+  openMoveToBufferSelector() {
+    debugger;
+    this.closeDialog();
+    this.showMoveToBufferSelector = true;
+  }
+
+  openCreateBuffer(createMode, nameSuggestion) {
+    debugger;
+    createMode = createMode || "new";
+    this.closeDialog();
+    this.createBufferParams = {
+      mode: createMode || "new",
+      name: nameSuggestion || "",
+    };
+    this.showCreateBuffer = true;
+  }
+
+  closeDialog() {
+    this.showCreateBuffer = false;
+    this.showBufferSelector = false;
+    this.showLanguageSelector = false;
+    this.showEditBuffer = false;
+    this.showMoveToBufferSelector = false;
+    this.showCommandPalette = false;
+  }
+
+  closeBufferSelector() {
+    debugger;
+    this.showBufferSelector = false;
+    this.showCommandPalette = false;
+  }
+
+  closeMoveToBufferSelector() {
+    debugger;
+    this.showMoveToBufferSelector = false;
+  }
+
+  editBufferMetadata(path) {
+    if (this.currentBufferPath !== path) {
+      this.openBuffer(path);
+    }
+    this.closeDialog();
+    this.showEditBuffer = true;
   }
 }
 
 /*
 export const useHeynoteStore = defineStore("heynote", {
   actions: {
-    async updateBuffers() {
-      this.setBuffers(await window.heynote.buffer.getList());
-    },
-
-    setBuffers(buffers) {
-      this.buffers = buffers;
-    },
-
-    openBuffer(path) {
-      this.closeDialog();
-      this.currentBufferPath = path;
-      this.addRecentBuffer(path);
-    },
-
-
-    openLanguageSelector() {
-      this.closeDialog();
-      this.showLanguageSelector = true;
-    },
-    openBufferSelector() {
-      this.closeDialog();
-      this.showBufferSelector = true;
-    },
-    openCommandPalette() {
-      this.closeDialog();
-      this.showCommandPalette = true;
-    },
-    openMoveToBufferSelector() {
-      this.closeDialog();
-      this.showMoveToBufferSelector = true;
-    },
-    openCreateBuffer(createMode, nameSuggestion) {
-      createMode = createMode || "new";
-      this.closeDialog();
-      this.createBufferParams = {
-        mode: createMode || "new",
-        name: nameSuggestion || "",
-      };
-      this.showCreateBuffer = true;
-    },
-    closeDialog() {
-      this.showCreateBuffer = false;
-      this.showBufferSelector = false;
-      this.showLanguageSelector = false;
-      this.showEditBuffer = false;
-      this.showMoveToBufferSelector = false;
-      this.showCommandPalette = false;
-    },
-
-    closeBufferSelector() {
-      this.showBufferSelector = false;
-      this.showCommandPalette = false;
-    },
-
-    closeMoveToBufferSelector() {
-      this.showMoveToBufferSelector = false;
-    },
-
-    editBufferMetadata(path) {
-      if (this.currentBufferPath !== path) {
-        this.openBuffer(path);
-      }
-      this.closeDialog();
-      this.showEditBuffer = true;
-    },
 
     executeCommand(command) {
       if (this.currentEditor) {
@@ -178,7 +191,6 @@ export const useHeynoteStore = defineStore("heynote", {
     },
   },
 });
-
 */
 
 let store = new HeynoteStore();
