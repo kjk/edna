@@ -136,14 +136,14 @@ func emptyFrontEndBuildDir() {
 }
 
 func reinstallPackages() {
-	must(os.RemoveAll("node_modules"))
+	err := os.RemoveAll("node_modules")
+	if err != nil {
+		logf("os.RemoveAll('node_modules') failed with '%s'\n", err)
+	}
+	os.Remove("bun.lockb")
 	os.Remove("yarn.lock")
 	os.Remove("package-lock.json")
-	if hasBun() {
-		u.RunLoggedInDirMust(".", "bun", "install")
-	} else {
-		u.RunLoggedInDirMust(".", "npm", "install")
-	}
+	u.RunLoggedInDirMust(".", "bun", "install")
 }
 
 func hasBun() bool {

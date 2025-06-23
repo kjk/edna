@@ -1,4 +1,4 @@
-import { kScratchNoteName } from "./notes";
+import { SCRATCH_FILE_NAME } from "./common/constants";
 import { appState } from "./state.svelte";
 import { copyObj, len, platform, throwIf } from "./util";
 
@@ -19,7 +19,7 @@ const settingsKeys = [
 
 export class Settings {
   bracketClosing = $state(true);
-  currentNoteName = $state(kScratchNoteName);
+  currentNoteName = $state(SCRATCH_FILE_NAME);
   emacsMetaKey = $state("alt");
   /** @type { string} */
   fontFamily = $state(undefined);
@@ -72,7 +72,7 @@ export function getSettings() {
   let settings = d === null ? {} : JSON.parse(d);
   appState.settings = new Settings(settings);
   if (!appState.settings.currentNoteName) {
-    appState.settings.currentNoteName = kScratchNoteName;
+    appState.settings.currentNoteName = SCRATCH_FILE_NAME;
   }
   lastSettings = appState.settings.toJSON();
   return appState.settings;

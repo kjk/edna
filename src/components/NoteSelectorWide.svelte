@@ -1,9 +1,9 @@
 <script>
-  import {
-    isSystemNoteName,
-    kScratchNoteName,
-    sanitizeNoteName,
-  } from "../notes";
+  import { focus } from "../actions";
+  import { SCRATCH_FILE_NAME } from "../common/constants";
+  import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
+  import { isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { appState } from "../state.svelte";
   import {
     findMatchingItems,
     getAltChar,
@@ -12,12 +12,9 @@
     len,
     makeHilightRegExp,
   } from "../util";
-  import { focus } from "../actions";
-  import ListBox2 from "./ListBox2.svelte";
-  import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
-  import { buildNoteInfos } from "./NoteSelector.svelte";
   import { IconTablerStar } from "./Icons.svelte";
-  import { appState } from "../state.svelte";
+  import ListBox2 from "./ListBox2.svelte";
+  import { buildNoteInfos } from "./NoteSelector.svelte";
 
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} Item */
 
@@ -108,7 +105,7 @@
 
     canDeleteSelected = false;
     if (item && canOpenSelected) {
-      if (item.name !== kScratchNoteName && !isSystemNoteName(item.name)) {
+      if (item.name !== SCRATCH_FILE_NAME && !isSystemNoteName(item.name)) {
         // can't delete scratch note or system notes
         canDeleteSelected = true;
       }

@@ -2,6 +2,7 @@
   import { tick } from "svelte";
   import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
+  import { SCRATCH_FILE_NAME } from "../common/constants";
   import {
     getActiveNoteBlock,
     getBlockN,
@@ -73,7 +74,6 @@
     kHelpSystemNoteName,
     kMyFunctionsNoteName,
     kReleaseNotesSystemNoteName,
-    kScratchNoteName,
     kWelcomeDevSystemNoteName,
     kWelcomeSystemNoteName,
     loadNoteIfExists,
@@ -500,7 +500,7 @@
       console.log("cannot delete note:", name);
       return;
     }
-    await openNote(kScratchNoteName, true);
+    await openNote(SCRATCH_FILE_NAME, true);
     await deleteNote(name);
     // TODO: add a way to undo deletion of the note
     showToast(`Deleted note '${name}'`);
@@ -1110,7 +1110,7 @@
     } else if (mid === kCmdDecryptNotes) {
       return isUsingEncryption() ? kMenuStatusNormal : kMenuStatusDisabled;
     } else if (mid === kCmdRenameCurrentNote) {
-      if (noteName === kScratchNoteName) {
+      if (noteName === SCRATCH_FILE_NAME) {
         return kMenuStatusDisabled;
       }
     } else if (
@@ -1755,7 +1755,7 @@
     // TODO: maybe switch to the most recently opened
     if (name === settings.currentNoteName) {
       console.log("deleted current note, opening scratch note");
-      await openNote(kScratchNoteName);
+      await openNote(SCRATCH_FILE_NAME);
     }
     // must delete after openNote() because openNote() saves
     // current note

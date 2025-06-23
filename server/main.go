@@ -166,9 +166,10 @@ func Main() {
 
 	if flgAdHoc {
 		if true {
-			testRunServerProd()
+			testCompress()
 		} else {
 			// make it reachable for compilation
+			testRunServerProd()
 			testCompress()
 			clean()
 		}

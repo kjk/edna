@@ -1,5 +1,6 @@
 import { tick } from "svelte";
 import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
+import { SCRATCH_FILE_NAME } from "./common/constants";
 import {
   clearModalMessage,
   showModalMessageHTML,
@@ -213,7 +214,6 @@ export function notePathFromName(name) {
   }
 }
 
-export const kScratchNoteName = "scratch";
 export const kDailyJournalNoteName = "daily journal";
 export const kInboxNoteName = "inbox";
 export const kMyFunctionsNoteName = "edna: my functions";
@@ -279,7 +279,7 @@ export async function createDefaultNotes(existingNotes) {
   let welcomeNote = getWelcomeNote();
 
   let nCreated = await createIfNotExists(
-    kScratchNoteName,
+    SCRATCH_FILE_NAME,
     welcomeNote,
     existingNotes,
   );
@@ -300,7 +300,7 @@ export async function createDefaultNotes(existingNotes) {
   }
   if (isFirstRun) {
     await loadNotesMetadata(); // must pre-load to make them available
-    reassignNoteShortcut(kScratchNoteName, "1");
+    reassignNoteShortcut(SCRATCH_FILE_NAME, "1");
     reassignNoteShortcut(kDailyJournalNoteName, "2");
     reassignNoteShortcut(kInboxNoteName, "3");
   }
@@ -951,7 +951,7 @@ export async function loadCurrentNoteIfOnDisk() {
  * @returns {boolean}
  */
 export function canDeleteNote(name) {
-  if (name === kScratchNoteName) {
+  if (name === SCRATCH_FILE_NAME) {
     return false;
   }
   let openedNote = getOpenedNote(name);
@@ -1139,7 +1139,7 @@ export async function switchToStoringNotesOnDisk(dh) {
   let settings = getSettings();
   let name = settings.currentNoteName;
   if (!noteNames.includes(name)) {
-    settings.currentNoteName = kScratchNoteName;
+    settings.currentNoteName = SCRATCH_FILE_NAME;
   }
   return noteNames;
 }

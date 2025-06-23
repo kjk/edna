@@ -3,9 +3,9 @@
   import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
   import debounce from "debounce";
+  import { SCRATCH_FILE_NAME } from "../common/constants.js";
   import { HeynoteEditor } from "../editor/editor.js";
   import {
-    kScratchNoteName,
     loadCurrentNote,
     loadCurrentNoteIfOnDisk,
     loadNote,
@@ -290,7 +290,7 @@
     // TODO: remember selection in memory so that we can restore during a session
     setEditorContent(content);
     let pos = 0;
-    if (name === kScratchNoteName) {
+    if (name === SCRATCH_FILE_NAME) {
       // TODO: this now breaks because content contains serialized metadata
       // pos = content.length;
     }

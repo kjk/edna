@@ -1,5 +1,6 @@
 import "./main.css";
 import { mount, unmount } from "svelte";
+import { SCRATCH_FILE_NAME } from "./common/constants";
 import App from "./components/App.svelte";
 import AskFSPermissions from "./components/AskFSPermissions.svelte";
 import { hasHandlePermission } from "./fileutil";
@@ -9,7 +10,6 @@ import {
   dbGetDirHandle,
   ensureValidNoteNamesFS,
   isSystemNoteName,
-  kScratchNoteName,
   loadNoteNames,
   preLoadAllNotes,
   setStorageFS,
@@ -70,7 +70,7 @@ export async function boot() {
   // - #${name} from the url
   // - settings.currentNoteName if it exists
   // - fallback to scratch note
-  let toOpenAtStartup = kScratchNoteName; // default if nothing else matches
+  let toOpenAtStartup = SCRATCH_FILE_NAME; // default if nothing else matches
   let nameFromURLHash = window.location.hash.slice(1);
   nameFromURLHash = decodeURIComponent(nameFromURLHash);
   let nameFromSettings = settings.currentNoteName;
@@ -104,7 +104,7 @@ export async function boot() {
     console.log("will open note from url #hash:", nameFromURLHash);
   }
   if (!isValidNote(nameFromSettings)) {
-    toOpenAtStartup = kScratchNoteName;
+    toOpenAtStartup = SCRATCH_FILE_NAME;
   }
 
   // will open this note in Editor.vue on mounted()
