@@ -176,12 +176,7 @@
     isMoving.disableMoveTracking = isShowingDialog;
   });
 
-  function openFind() {
-    console.log("openFind NYI");
-  }
-
   let gf = {
-    openFind: openFind,
     getPassword: getPassword,
     requestFileWritePermission: requestFileWritePermission,
   };

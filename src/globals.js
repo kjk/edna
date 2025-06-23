@@ -1,5 +1,4 @@
 /** @typedef {{
-  openFind: () => void,
   getPassword: (msg: string) => Promise<string>,
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>,
 }} GlobalFuncs
@@ -29,9 +28,6 @@ export function setGlobalFuncs(gf) {
   globalFunctions = gf;
 }
 
-export function openFind() {
-  globalFunctions.openFind();
-}
 /**
  * @param {string} msg
  * @returns {Promise<string>}
