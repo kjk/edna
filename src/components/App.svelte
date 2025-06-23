@@ -181,7 +181,6 @@
   }
 
   let gf = {
-    openContextMenu: openContextMenu,
     openFind: openFind,
     getPassword: getPassword,
     requestFileWritePermission: requestFileWritePermission,
@@ -191,6 +190,7 @@
   notesStore.realOpenCommandPalette = openCommandPalette;
   notesStore.realOpenBlockSelector = openBlockSelector;
   notesStore.realCreateScratchNote = createScratchNote;
+  notesStore.realOpenContextMenu = openContextMenu;
 
   $effect(() => {
     // console.log("App.svelte did mount");

@@ -1,6 +1,5 @@
 /** @typedef {{
   openFind: () => void,
-  openContextMenu: (MouseEvent) => void,
   getPassword: (msg: string) => Promise<string>,
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>,
 }} GlobalFuncs
@@ -28,10 +27,6 @@ let globalFunctions;
  */
 export function setGlobalFuncs(gf) {
   globalFunctions = gf;
-}
-
-export function openContextMenu(ev) {
-  globalFunctions.openContextMenu(ev);
 }
 
 export function openFind() {

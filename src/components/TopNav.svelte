@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte";
-  import { openContextMenu } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
@@ -53,7 +52,7 @@
     class="text-sm flex px-1 select-none bg-white text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b border-l rounded-bl-lg self-end showOnMouseMove relative"
   >
     <button
-      onclick={(ev) => openContextMenu(ev)}
+      onclick={(ev) => notesStore.openContextMenu(ev)}
       class="clickable-icon mt-[3px]"
       title="open menu"
     >

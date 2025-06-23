@@ -39,6 +39,7 @@ class HeynoteStore {
   realOpenBlockSelector;
   realCreateScratchNote;
   realSmartRun;
+  realOpenContextMenu;
 
   addRecentBuffer(path) {
     debugger;
@@ -153,6 +154,11 @@ class HeynoteStore {
 
   toggleSpellChecking() {
     this.isSpellChecking = !this.isSpellChecking;
+  }
+
+  openContextMenu(ev) {
+    this.closeDialog();
+    this.realOpenContextMenu(ev);
   }
 }
 
