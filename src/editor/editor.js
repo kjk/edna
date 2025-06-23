@@ -24,7 +24,6 @@ import {
   ViewPlugin,
 } from "@codemirror/view";
 import { NoteFormat } from "../common/note-format.js";
-import { openCommandPalette } from "../globals.js";
 import { saveCurrentNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { useErrorStore } from "../stores/error-store.svelte.js";
@@ -363,7 +362,7 @@ export class HeynoteEditor {
   }
 
   openCommandPalette() {
-    openCommandPalette();
+    this.notesStore.openCommandPalette();
   }
 
   openCreateBuffer(createMode) {
@@ -373,6 +372,10 @@ export class HeynoteEditor {
   openMoveToBufferSelector() {
     throw new Error("NYI");
     // this.notesStore.openMoveToBufferSelector();
+  }
+
+  openBlockSelector() {
+    this.notesStore.openBlockSelector();
   }
 
   setCurrentLanguage(lang, auto = false) {

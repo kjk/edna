@@ -1,11 +1,9 @@
 /** @typedef {{
   openSettings: () => void,
-  openCommandPalette: () => void,
   openFind: () => void,
   openContextMenu: (MouseEvent) => void,
   openHistorySelector: () => void,
   createScratchNote: () => void,
-  openBlockSelector: () => void,
   openFunctionSelector: (boolean) => void,
   smartRun: () => void,
   getPassword: (msg: string) => Promise<string>,
@@ -41,10 +39,6 @@ export function openSettings() {
   globalFunctions.openSettings();
 }
 
-export function openCommandPalette() {
-  globalFunctions.openCommandPalette();
-}
-
 export function openContextMenu(ev) {
   globalFunctions.openContextMenu(ev);
 }
@@ -55,10 +49,6 @@ export function openHistorySelector() {
 
 export function createScratchNote() {
   globalFunctions.createScratchNote();
-}
-
-export function openBlockSelector() {
-  globalFunctions.openBlockSelector();
 }
 
 export function openFunctionSelector(onSelection = false) {

@@ -143,7 +143,6 @@
   let showingMenu = $state(false);
   let showingBlockMoveSelector = $state(false);
   // let showingNoteSelector2 = $state(false);
-  let showingCommandPalette = $state(false);
   // let showingCommandPalette2 = $state(false);
   let showingFunctionSelector = $state(false);
   let functionContext = $state("");
@@ -152,7 +151,6 @@
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
   let showingHistorySelector = $state(false);
-  let showingBlockSelector = $state(false);
   let isSpellChecking = $state(false);
 
   let contextMenuPos = $state({ x: 0, y: 0 });
@@ -170,9 +168,9 @@
       // showingNoteSelector2 ||
       showingBlockMoveSelector ||
       notesStore.showCreateBuffer ||
-      showingCommandPalette ||
+      notesStore.showCommandPalette ||
       // showingCommandPalette2 ||
-      showingBlockSelector ||
+      notesStore.showBlockSelector ||
       showingDecryptPassword ||
       showingEncryptPassword ||
       showingAskFileWritePermissions ||
@@ -190,18 +188,19 @@
 
   let gf = {
     openSettings: openSettings,
-    openCommandPalette: openCommandPalette,
     openContextMenu: openContextMenu,
     openFind: openFind,
     openHistorySelector: openHistorySelector,
     createScratchNote: createScratchNote,
-    openBlockSelector: openBlockSelector,
     openFunctionSelector: openFunctionSelector,
     smartRun: smartRun,
     getPassword: getPassword,
     requestFileWritePermission: requestFileWritePermission,
   };
   setGlobalFuncs(gf);
+
+  notesStore.realOpenCommandPalette = openCommandPalette;
+  notesStore.realOpenBlockSelector = openBlockSelector;
 
   $effect(() => {
     getEditorComp().setSpellChecking(isSpellChecking);
@@ -596,10 +595,10 @@
   let initialBlockSelection = $state(0);
 
   function openBlockSelector(fn = selectBlock) {
-    console.log("openBlockSelector");
     fnSelectBlock = fn;
     let view = getEditorView();
     let blocks = getEditor().getBlocks();
+    console.log("openBlockSelector: blocks:", blocks);
     let activeBlock = getActiveNoteBlock(view.state);
     let content = getContent(view);
     /** @type {import("./BlockSelector.svelte").Item[]} */
@@ -621,11 +620,11 @@
     }
     blockItems = items;
     initialBlockSelection = currBlockNo;
-    showingBlockSelector = true;
+    notesStore.showBlockSelector = true;
   }
 
   function closeBlockSelector() {
-    showingBlockSelector = false;
+    notesStore.showBlockSelector = false;
     getEditorComp().focus();
   }
 
@@ -643,8 +642,8 @@
   }
 
   function switchToNoteSelector() {
-    if (showingCommandPalette) {
-      showingCommandPalette = false;
+    if (notesStore.showCommandPalette) {
+      notesStore.showCommandPalette = false;
       notesStore.openBufferSelector();
     } else {
       // showingCommandPalette2 = false;
@@ -1426,11 +1425,11 @@
 
   function openCommandPalette() {
     buildCommandPaletteDef();
-    showingCommandPalette = true;
+    notesStore.showCommandPalette = true;
   }
 
   function closeCommandPalette() {
-    showingCommandPalette = false;
+    notesStore.showCommandPalette = false;
     getEditorComp().focus();
   }
 
@@ -1446,7 +1445,7 @@
 
   async function executeCommand(cmdId) {
     console.log("executeCommand:", cmdId);
-    showingCommandPalette = false;
+    notesStore.showCommandPalette = false;
     // showingCommandPalette2 = false;
     onmenucmd(cmdId);
   }
@@ -1887,7 +1886,7 @@
   </Overlay>
 {/if}
 
-{#if showingBlockSelector}
+{#if notesStore.showBlockSelector}
   <Overlay onclose={closeBlockSelector} blur={true}>
     <BlockSelector
       blocks={blockItems}
@@ -1977,7 +1976,7 @@
 <Toaster></Toaster>
 <ErrorMessages />
 
-{#if showingCommandPalette}
+{#if notesStore.showCommandPalette}
   <Overlay onclose={closeCommandPalette} blur={true}>
     <CommandPalette {commandsDef} {executeCommand} {switchToNoteSelector} />
   </Overlay>

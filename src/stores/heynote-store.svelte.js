@@ -26,6 +26,11 @@ class HeynoteStore {
   // showEditBuffer = $state(false);
   showMoveToBufferSelector = $state(false);
   showCommandPalette = $state(false);
+  showBlockSelector = $state(false);
+
+  // provided by App.svelte
+  realOpenCommandPalette;
+  realOpenBlockSelector;
 
   addRecentBuffer(path) {
     debugger;
@@ -62,7 +67,12 @@ class HeynoteStore {
 
   openCommandPalette() {
     this.closeDialog();
-    this.showCommandPalette = true;
+    this.realOpenCommandPalette();
+  }
+
+  openBlockSelector() {
+    this.closeDialog();
+    this.realOpenBlockSelector();
   }
 
   openMoveToBufferSelector() {

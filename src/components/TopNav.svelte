@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { openCommandPalette, openContextMenu } from "../globals.js";
+  import { openContextMenu } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
@@ -84,7 +84,7 @@
     <div class="text-gray-400 px-1">&bull;</div>
 
     <button
-      onclick={openCommandPalette}
+      onclick={notesStore.openCommandPalette}
       class="clickable-icon mt-[3px]"
       title={fixUpShortcuts("Command Palette (Mod + Shift + P)")}
     >

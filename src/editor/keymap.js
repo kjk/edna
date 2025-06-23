@@ -89,7 +89,7 @@ export const DEFAULT_KEYMAP = [
   cmd("Mod-p", "openBufferSelector"),
   cmd("Mod-k", "openBufferSelector"),
   cmd("Mod-o", "openBufferSelector"),
-  cmd("Mod-b", "openBufferSelector"),
+  cmd("Mod-b", "openBlockSelector"),
   cmd("Mod-Shift-p", "openCommandPalette"),
   cmd("Mod-Shift-k", "openCommandPalette"),
   // cmd("Mod-s", "openMoveToBuffer"),

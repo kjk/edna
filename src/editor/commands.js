@@ -183,6 +183,7 @@ const HEYNOTE_COMMANDS = {
     "Select block language…",
   ),
   openBufferSelector: cmd(openBufferSelector, "Buffer", "Switch buffer…"),
+  openBlockSelector: cmd(openBlockSelector, "Buffer", "Switch block…"),
   openCommandPalette: cmd(
     openCommandPalette,
     "Editor",
