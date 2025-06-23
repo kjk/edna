@@ -140,7 +140,6 @@
   let noteName = $derived(settings.currentNoteName);
 
   // TODO port those to use notesStore
-  let showingContextMenu = $state(false);
   // let showingNoteSelector2 = $state(false);
   // let showingCommandPalette2 = $state(false);
   let functionContext = $state("");
@@ -159,7 +158,7 @@
     return (
       notesStore.showHistorySelector ||
       notesStore.showLanguageSelector ||
-      showingContextMenu ||
+      notesStore.showContextMenu ||
       showingRenameNote ||
       notesStore.showBufferSelector ||
       // showingNoteSelector2 ||
@@ -1165,7 +1164,7 @@
    */
   async function onmenucmd(cmdId) {
     // console.log("cmd:", cmdId);
-    showingContextMenu = false;
+    notesStore.showContextMenu = false;
     let view = getEditorView();
     if (cmdId === kCmdCommandPalette) {
       openCommandPalette();
@@ -1318,11 +1317,11 @@
     ev.stopImmediatePropagation();
     contextMenuDef = buildMenuDef();
     contextMenuPos = pos || { x: ev.x, y: ev.y };
-    showingContextMenu = true;
+    notesStore.showContextMenu = true;
   }
 
   function closeMenu() {
-    showingContextMenu = false;
+    notesStore.showContextMenu = false;
     getEditorComp().focus();
   }
 
@@ -1981,7 +1980,7 @@
   />
 {/if} -->
 
-{#if showingContextMenu}
+{#if notesStore.showContextMenu}
   <Overlay onclose={closeMenu}>
     <Menu
       {menuItemStatus}
