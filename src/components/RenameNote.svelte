@@ -1,7 +1,7 @@
 <script>
-  import { sanitizeNoteName } from "../notes";
   import { focus } from "../actions";
-  import { appState } from "../state.svelte";
+  import { sanitizeNoteName } from "../notes";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte";
 
   /** @type { {
     onclose: () => void,
@@ -9,6 +9,8 @@
     rename: (newName: string) => void,
 }}*/
   let { oldName, onclose, rename } = $props();
+
+  let notesStore = useHeynoteStore();
 
   let newName = $state(oldName);
 
@@ -21,7 +23,7 @@
     if (name === "" || name === oldName) {
       return false;
     }
-    let noteNames = appState.noteNames;
+    let noteNames = notesStore.noteNames;
     return !noteNames.includes(name);
   });
 
@@ -30,7 +32,7 @@
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = appState.noteNames;
+    let noteNames = notesStore.noteNames;
     if (noteNames.includes(name)) {
       return `note <span class="font-bold">${name}</span> already exists`;
     }

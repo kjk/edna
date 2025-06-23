@@ -3,7 +3,7 @@
   import { SCRATCH_FILE_NAME } from "../common/constants";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
   import { isSystemNoteName, sanitizeNoteName } from "../notes";
-  import { appState } from "../state.svelte";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte";
   import {
     findMatchingItems,
     getAltChar,
@@ -33,7 +33,8 @@
     switchToRegularNoteSelector,
   } = $props();
 
-  let noteNames = appState.noteNames;
+  let notesStore = useHeynoteStore();
+  let noteNames = notesStore.noteNames;
   let items = $derived(buildNoteInfos(noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
@@ -63,7 +64,7 @@
   let showDelete = $state(false);
 
   function reloadNotes() {
-    let noteNames = appState.noteNames;
+    let noteNames = notesStore.noteNames;
     items = buildNoteInfos(noteNames);
   }
 

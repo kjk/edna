@@ -13,7 +13,7 @@
   } from "@codemirror/search";
   import { focus, trapfocus } from "../actions";
   import { isMoving } from "../mouse-track.svelte";
-  import { appState } from "../state.svelte";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte";
   import {
     IconFluentWholeWord,
     IconLucideReplace,
@@ -35,6 +35,8 @@
    */
   let { view } = $props();
 
+  let notesStore = useHeynoteStore();
+
   let searchTerm = $state("");
   let replaceTerm = $state("");
   let showReplace = $state(false);
@@ -51,9 +53,9 @@
   $effect(() => {
     let query = new SearchQuery({
       search: searchTerm,
-      caseSensitive: appState.searchMatchCase,
-      regexp: appState.searchRegex,
-      wholeWord: appState.searchMatchWholeWord,
+      caseSensitive: notesStore.searchMatchCase,
+      regexp: notesStore.searchRegex,
+      wholeWord: notesStore.searchMatchWholeWord,
       literal: true,
     });
     view.dispatch({
@@ -120,27 +122,27 @@
     closeSearchPanel(view);
   }
   function matchCase() {
-    appState.searchMatchCase = !appState.searchMatchCase;
-    console.log("matchCase", appState.searchMatchCase);
+    notesStore.searchMatchCase = !notesStore.searchMatchCase;
+    console.log("matchCase", notesStore.searchMatchCase);
   }
   function matchWholeWOrd() {
-    appState.searchMatchWholeWord = !appState.searchMatchWholeWord;
-    console.log("matchWholeWOrd", appState.searchMatchWholeWord);
+    notesStore.searchMatchWholeWord = !notesStore.searchMatchWholeWord;
+    console.log("matchWholeWOrd", notesStore.searchMatchWholeWord);
   }
   function matchRegex() {
-    appState.searchRegex = !appState.searchRegex;
-    console.log("matchRegex", appState.searchRegex);
+    notesStore.searchRegex = !notesStore.searchRegex;
+    console.log("matchRegex", notesStore.searchRegex);
   }
   function btnPressedCls(isPressed) {
     return isPressed
       ? "bg-gray-100 border-1 border-gray-300"
       : "bg-white border-1 border-white";
   }
-  let matchCaseCls = $derived(btnPressedCls(appState.searchMatchCase));
+  let matchCaseCls = $derived(btnPressedCls(notesStore.searchMatchCase));
   let matchWholeWordCls = $derived(
-    btnPressedCls(appState.searchMatchWholeWord),
+    btnPressedCls(notesStore.searchMatchWholeWord),
   );
-  let matchRegexCls = $derived(btnPressedCls(appState.searchRegex));
+  let matchRegexCls = $derived(btnPressedCls(notesStore.searchRegex));
 </script>
 
 {#snippet InsideInput()}

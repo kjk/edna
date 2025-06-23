@@ -1,7 +1,7 @@
 <script>
-  import { sanitizeNoteName } from "../notes";
   import { focus } from "../actions";
-  import { appState } from "../state.svelte";
+  import { sanitizeNoteName } from "../notes";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte";
 
   /** @type { {
     onclose: () => void,
@@ -11,6 +11,8 @@
 
   let newName = $state("");
 
+  let notesStore = useHeynoteStore();
+
   let sanitizedNewName = $derived(sanitizeNoteName(newName));
 
   let canCreate = $derived.by(() => {
@@ -18,7 +20,7 @@
     if (name === "") {
       return false;
     }
-    let noteNames = appState.noteNames;
+    let noteNames = notesStore.noteNames;
     return !noteNames.includes(name);
   });
 
@@ -28,7 +30,7 @@
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = appState.noteNames;
+    let noteNames = notesStore.noteNames;
     if (noteNames.includes(name)) {
       console.log("already exists");
       return `note <span class="font-bold">${name}</span> already exists`;

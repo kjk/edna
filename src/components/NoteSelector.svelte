@@ -104,7 +104,7 @@
     toggleNoteStarred,
   } from "../metadata";
   import { isSystemNoteName, sanitizeNoteName } from "../notes";
-  import { appState } from "../state.svelte";
+  import { useHeynoteStore } from "../stores/heynote-store.svelte";
   import {
     findMatchingItems,
     getAltChar,
@@ -136,7 +136,8 @@
     forMoveBlock = false,
   } = $props();
 
-  let noteInfos = $state(buildNoteInfos(appState.noteNames));
+  let notesStore = useHeynoteStore();
+  let noteInfos = $state(buildNoteInfos(notesStore.noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
@@ -144,9 +145,9 @@
   function reloadNotes() {
     console.log("reloadNotes");
     // actions like re-assigning quick access shortcut do
-    // not modify appState.noteNames so we have to force
+    // not modify notesStore.noteNames so we have to force
     // rebuilding of items
-    noteInfos = buildNoteInfos(appState.noteNames);
+    noteInfos = buildNoteInfos(notesStore.noteNames);
   }
 
   let sanitizedFilter = $derived.by(() => {
@@ -330,7 +331,8 @@
   }
 
   function toggleInfoPanelCollapsed() {
-    appState.noteSelectorInfoCollapsed = !appState.noteSelectorInfoCollapsed;
+    notesStore.noteSelectorInfoCollapsed =
+      !notesStore.noteSelectorInfoCollapsed;
   }
 
   let input;
@@ -512,7 +514,7 @@
   {/if}
 
   {#if !forMoveBlock}
-    {#if appState.noteSelectorInfoCollapsed}
+    {#if notesStore.noteSelectorInfoCollapsed}
       {@render shortHelp()}
     {:else}
       {@render longHelp()}

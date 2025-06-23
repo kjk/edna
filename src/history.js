@@ -1,8 +1,10 @@
 // history of opened files
 
-const kMaxHistory = 16;
+import { useHeynoteStore } from "./stores/heynote-store.svelte";
 
-import { appState } from "./state.svelte";
+let notesStore = useHeynoteStore();
+
+const kMaxHistory = 16;
 
 /**
  * @param {string} name
@@ -10,9 +12,9 @@ import { appState } from "./state.svelte";
 export function historyPush(name) {
   console.log("historyPush:", name);
   removeNoteFromHistory(name);
-  appState.history.unshift(name); // insert at the beginning
-  if (appState.history.length > kMaxHistory) {
-    appState.history.pop();
+  notesStore.history.unshift(name); // insert at the beginning
+  if (notesStore.history.length > kMaxHistory) {
+    notesStore.history.pop();
   }
 }
 
@@ -21,9 +23,9 @@ export function historyPush(name) {
  * @param {string} newName
  */
 export function renameInHistory(oldName, newName) {
-  let i = appState.history.indexOf(oldName);
+  let i = notesStore.history.indexOf(oldName);
   if (i >= 0) {
-    appState.history[i] = newName;
+    notesStore.history[i] = newName;
   }
 }
 
@@ -31,8 +33,8 @@ export function renameInHistory(oldName, newName) {
  * @param {string} name
  */
 export function removeNoteFromHistory(name) {
-  let i = appState.history.indexOf(name);
+  let i = notesStore.history.indexOf(name);
   if (i >= 0) {
-    appState.history.splice(i, 1);
+    notesStore.history.splice(i, 1);
   }
 }

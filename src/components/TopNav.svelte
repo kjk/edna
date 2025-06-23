@@ -3,9 +3,8 @@
   import { fixUpShortcuts } from "../key-helper.js";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
-  import { appState } from "../state.svelte.js";
   import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
-  import { getAltChar, getScrollbarWidth, len, throwIf } from "../util.js";
+  import { getAltChar, getScrollbarWidth } from "../util.js";
   import { IconCommandPalette, IconMenu } from "./Icons.svelte";
 
   /** @type {{ 

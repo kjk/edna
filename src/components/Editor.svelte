@@ -12,7 +12,6 @@
   } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { rememberEditor } from "../state.js";
-  import { appState } from "../state.svelte.js";
   import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
   import { throwIf } from "../util.js";
 
@@ -80,7 +79,7 @@
       if (isCtrlS) {
         e.preventDefault();
         // TODO: track isDirty state here?
-        if (appState.isDirty) {
+        if (notesStore.isDirty) {
           saveForce();
         }
       }

@@ -1,6 +1,8 @@
 import { SCRATCH_FILE_NAME } from "./common/constants";
-import { appState } from "./state.svelte";
+import { useHeynoteStore } from "./stores/heynote-store.svelte";
 import { copyObj, len, platform, throwIf } from "./util";
+
+let notesStore = useHeynoteStore();
 
 const settingsKeys = [
   "bracketClosing",
@@ -62,26 +64,26 @@ let lastSettings;
 
 /** @returns {Settings} */
 export function getSettings() {
-  if (appState.settings) {
+  if (notesStore.settings) {
     // console.log("getSettings: already loaded");
-    // logSettings(appState.settings);
-    return appState.settings;
+    // logSettings(notesStore.settings);
+    return notesStore.settings;
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
   console.log("getSettings: loaded from localStorage:", d);
   let settings = d === null ? {} : JSON.parse(d);
-  appState.settings = new Settings(settings);
-  if (!appState.settings.currentNoteName) {
-    appState.settings.currentNoteName = SCRATCH_FILE_NAME;
+  notesStore.settings = new Settings(settings);
+  if (!notesStore.settings.currentNoteName) {
+    notesStore.settings.currentNoteName = SCRATCH_FILE_NAME;
   }
-  lastSettings = appState.settings.toJSON();
-  return appState.settings;
+  lastSettings = notesStore.settings.toJSON();
+  return notesStore.settings;
 }
 
 const mediaMatch = window.matchMedia("(prefers-color-scheme: dark)");
 function updateWebsiteTheme() {
-  // console.log("updateWebsiteTheme, settings.theme:", appState.settings.theme);
-  let theme = appState.settings.theme || "system";
+  // console.log("updateWebsiteTheme, settings.theme:", notesStore.settings.theme);
+  let theme = notesStore.settings.theme || "system";
   if (theme === "system") {
     theme = mediaMatch.matches ? "dark" : "light";
   }
@@ -133,7 +135,7 @@ function saveSettings(newSettings) {
 
 $effect.root(() => {
   $effect(() => {
-    saveSettings(appState.settings);
+    saveSettings(notesStore.settings);
   });
 });
 
@@ -158,7 +160,7 @@ export function getOverlayScrollbarOptions() {
 }
 
 mediaMatch.addEventListener("change", async () => {
-  if (appState.settings.theme === "system") {
+  if (notesStore.settings.theme === "system") {
     console.log("change event listener");
     updateWebsiteTheme();
   }

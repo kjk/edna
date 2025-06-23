@@ -87,7 +87,6 @@
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import { getSettings } from "../settings.svelte";
-  import { appState } from "../state.svelte";
   import { useHeynoteStore } from "../stores/heynote-store.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
@@ -129,7 +128,6 @@
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
-  // TODO: merge appState into this
   let notesStore = useHeynoteStore();
   let settings = getSettings();
 
@@ -193,7 +191,7 @@
         }
       */
 
-      if (appState.isDirty) {
+      if (notesStore.isDirty) {
         // show a dialog that the content might be lost
         ev.preventDefault();
         ev.returnValue = true;

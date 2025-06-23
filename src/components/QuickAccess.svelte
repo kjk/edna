@@ -2,8 +2,6 @@
   import { onMount, tick } from "svelte";
   import { focus } from "../actions";
   import { toggleNoteStarred } from "../metadata";
-  import { getSettings } from "../settings.svelte";
-  import { appState } from "../state.svelte";
   import { useHeynoteStore } from "../stores/heynote-store.svelte";
   import {
     getAltChar,
@@ -67,9 +65,9 @@
 
   let quickAccessNotes = $derived(
     buildQuickAccessNotes(
-      appState.starredNotes,
-      appState.withShortcuts,
-      appState.history,
+      notesStore.starredNotes,
+      notesStore.withShortcuts,
+      notesStore.history,
     ),
   );
 

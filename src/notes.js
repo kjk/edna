@@ -39,10 +39,10 @@ import {
   incNoteDeleteCount,
   incNoteSaveCount,
 } from "./state";
-import { appState } from "./state.svelte";
 import {
   getPasswordFromUser,
   requestFileWritePermission,
+  useHeynoteStore,
 } from "./stores/heynote-store.svelte";
 import {
   getBuiltInFunctionsNote,
@@ -60,6 +60,8 @@ import {
   throwIf,
   trimSuffix,
 } from "./util";
+
+let notesStore = useHeynoteStore();
 
 // is set if we store notes on disk, null if in localStorage
 /** @type {FileSystemDirectoryHandle | null} */
@@ -252,7 +254,7 @@ export const blockHdrPHP = "\n∞∞∞php\n";
  */
 export async function createIfNotExists(name, content, existingNotes) {
   if (!existingNotes) {
-    existingNotes = appState.noteNames;
+    existingNotes = notesStore.noteNames;
   }
   if (existingNotes.includes(name)) {
     console.log(`note ${name} already exists`);
@@ -400,7 +402,9 @@ export function unrememberOpenedNote(noteName) {
   openedNotes = openedNotes.filter(
     (openedNote) => openedNote.noteName !== noteName,
   );
-  appState.noteNames = appState.noteNames.filter((name) => name != noteName);
+  notesStore.noteNames = notesStore.noteNames.filter(
+    (name) => name != noteName,
+  );
 }
 
 /**
@@ -425,7 +429,7 @@ export function rememberOpenedNote(fh) {
   // ids to identify notes
   let baseNoteName = noteName;
   let n = 1;
-  while (appState.noteNames.includes(noteName)) {
+  while (notesStore.noteNames.includes(noteName)) {
     noteName = baseNoteName + `-${n}`;
     n++;
   }
@@ -435,7 +439,7 @@ export function rememberOpenedNote(fh) {
     noteName: noteName,
   };
   openedNotes.push(opened);
-  appState.noteNames.push(noteName);
+  notesStore.noteNames.push(noteName);
   return noteName;
 }
 
@@ -548,10 +552,10 @@ export async function loadNoteNames() {
   // TODO: got a case where I had both foo.edna.txt and foo.encr.edna.txt which caused
   // duplicate names which cased note selector to fail due to duplicate key
   // don't quite know how this happened but it could be done maliciously
-  appState.noteNames = removeDuplicates(res[0]);
+  notesStore.noteNames = removeDuplicates(res[0]);
   encryptedNoteNames = removeDuplicates(res[1]);
   // console.log("loadNoteNames() res:", res);
-  return appState.noteNames;
+  return notesStore.noteNames;
 }
 
 export function startsWithBlockHeader(s) {
@@ -641,7 +645,7 @@ export async function saveNote(name, content) {
     }
     console.log("saveCurrentNote: ok:", ok);
     await fsFileHandleWriteText(fh, content);
-    appState.isDirty = false;
+    notesStore.isDirty = false;
     incNoteSaveCount();
     return;
   }
@@ -653,7 +657,7 @@ export async function saveNote(name, content) {
   } else {
     await writeMaybeEncryptedFS(dh, name, content);
   }
-  appState.isDirty = false;
+  notesStore.isDirty = false;
   incNoteSaveCount();
 }
 
@@ -778,7 +782,7 @@ function loadNoteLS(name) {
  * @returns {boolean}
  */
 export function noteExists(name) {
-  let notes = appState.noteNames;
+  let notes = notesStore.noteNames;
   return notes.includes(name) || isSystemNoteName(name);
 }
 
@@ -1103,7 +1107,7 @@ export async function switchToStoringNotesOnDisk(dh) {
   let diskNoteNames = res[0];
 
   // migrate notes
-  let latestNoteNames = appState.noteNames;
+  let latestNoteNames = notesStore.noteNames;
   for (let name of latestNoteNames) {
     if (isSystemNoteName(name)) {
       continue;
@@ -1175,7 +1179,7 @@ export function sanitizeNoteName(name) {
  * @returns {number}
  */
 export function getNotesCount() {
-  return len(appState.noteNames);
+  return len(notesStore.noteNames);
 }
 
 /**

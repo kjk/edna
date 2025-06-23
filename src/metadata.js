@@ -1,7 +1,10 @@
 import { tick } from "svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { getStorageFS } from "./notes";
-import { updateStarred, updateWithShortcuts } from "./state.svelte";
+import {
+  updateStarred,
+  updateWithShortcuts,
+} from "./stores/heynote-store.svelte";
 
 export const kMetadataName = "__metadata.edna.json";
 

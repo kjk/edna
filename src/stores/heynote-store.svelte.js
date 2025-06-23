@@ -1,5 +1,6 @@
 import { SCRATCH_FILE_NAME } from "../common/constants";
 import { NoteFormat } from "../common/note-format";
+import { getNoteMeta } from "../metadata";
 
 //import { useEditorCacheStore } from "./editor-cache";
 
@@ -43,6 +44,26 @@ class HeynoteStore {
   realOpenContextMenu;
   realGetPasswordFromUser;
   realRequestFileWritePermission;
+
+  /** @type {string[]} */
+  noteNames = $state([]);
+  /** @type {string[]} */
+  starredNotes = $derived(calcStarred(this.noteNames)); // starred notes
+  /** @type {string[]} */
+  withShortcuts = $derived(callcWithShortcuts(this.noteNames)); // notes with shortcuts
+  noteSelectorInfoCollapsed = $state(false);
+
+  isDirty = $state(false);
+  isDirtyFast = $state(false);
+
+  searchRegex = $state(false);
+  searchMatchCase = $state(false);
+  searchMatchWholeWord = $state(false);
+
+  /** @type {string[]} */
+  history = $state([]); // names of opened notes
+  /** @type {import("../settings.svelte").Settings} */
+  settings = $state(undefined); // user settings
 
   addRecentBuffer(path) {
     debugger;
@@ -281,4 +302,38 @@ export async function requestFileWritePermission(fh) {
   console.log("ok:", ok);
   // TODO: check permissions
   return ok;
+}
+
+/** @returns {string[]} */
+function calcStarred(noteNames) {
+  /** @type {string[]} */
+  let res = [];
+  for (let name of noteNames) {
+    let m = getNoteMeta(name, false);
+    if (m && m.isStarred) {
+      res.push(name);
+    }
+  }
+  return res;
+}
+
+/** @returns {string[]} */
+function callcWithShortcuts(noteNames) {
+  /** @type {string[]} */
+  let res = [];
+  for (let name of noteNames) {
+    let m = getNoteMeta(name, false);
+    if (m && m.altShortcut) {
+      res.push(name);
+    }
+  }
+  return res;
+}
+
+export function updateStarred() {
+  store.starredNotes = calcStarred(store.noteNames);
+}
+
+export function updateWithShortcuts() {
+  store.withShortcuts = callcWithShortcuts(store.noteNames);
 }
