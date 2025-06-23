@@ -389,6 +389,10 @@ export class HeynoteEditor {
     this.notesStore.openBlockSelector();
   }
 
+  openFunctionSelector() {
+    this.notesStore.openFunctionSelector();
+  }
+
   setCurrentLanguage(lang, auto = false) {
     changeCurrentBlockLanguage(this.view.state, this.view.dispatch, lang, auto);
   }

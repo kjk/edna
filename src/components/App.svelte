@@ -140,11 +140,10 @@
   let noteName = $derived(settings.currentNoteName);
 
   // TODO port those to use notesStore
-  let showingMenu = $state(false);
+  let showingContextMenu = $state(false);
   let showingBlockMoveSelector = $state(false);
   // let showingNoteSelector2 = $state(false);
   // let showingCommandPalette2 = $state(false);
-  let showingFunctionSelector = $state(false);
   let functionContext = $state("");
   let runFunctionOnSelection = false;
   let userFunctions = $state([]); // note: $state() not needed
@@ -161,10 +160,11 @@
     return (
       notesStore.showHistorySelector ||
       notesStore.showLanguageSelector ||
-      showingMenu ||
+      showingContextMenu ||
       showingRenameNote ||
       notesStore.showBufferSelector ||
       // showingNoteSelector2 ||
+      notesStore.showFunctionSelector ||
       showingBlockMoveSelector ||
       notesStore.showCreateBuffer ||
       notesStore.showCommandPalette ||
@@ -189,7 +189,6 @@
     openSettings: openSettings,
     openContextMenu: openContextMenu,
     openFind: openFind,
-    openFunctionSelector: openFunctionSelector,
     getPassword: getPassword,
     requestFileWritePermission: requestFileWritePermission,
   };
@@ -704,11 +703,11 @@
     } else {
       userFunctions = parseUserFunctions(userFunctionsStr);
     }
-    showingFunctionSelector = true;
+    notesStore.showFunctionSelector = true;
   }
 
   function closeFunctionSelector() {
-    showingFunctionSelector = false;
+    notesStore.showFunctionSelector = false;
     getEditorComp().focus();
   }
 
@@ -849,7 +848,7 @@
    */
   async function runFunction(fdef, replace) {
     console.log("runFunction");
-    showingFunctionSelector = false;
+    notesStore.showFunctionSelector = false;
     let view = getEditorView();
     if (isReadOnly(view)) {
       view.focus();
@@ -1167,7 +1166,7 @@
    */
   async function onmenucmd(cmdId) {
     // console.log("cmd:", cmdId);
-    showingMenu = false;
+    showingContextMenu = false;
     let view = getEditorView();
     if (cmdId === kCmdCommandPalette) {
       openCommandPalette();
@@ -1320,11 +1319,11 @@
     ev.stopImmediatePropagation();
     contextMenuDef = buildMenuDef();
     contextMenuPos = pos || { x: ev.x, y: ev.y };
-    showingMenu = true;
+    showingContextMenu = true;
   }
 
   function closeMenu() {
-    showingMenu = false;
+    showingContextMenu = false;
     getEditorComp().focus();
   }
 
@@ -1888,7 +1887,7 @@
   </Overlay>
 {/if}
 
-{#if showingFunctionSelector}
+{#if notesStore.showFunctionSelector}
   <Overlay onclose={closeFunctionSelector} blur={true}>
     <FunctionSelector context={functionContext} {userFunctions} {runFunction}
     ></FunctionSelector>
@@ -1983,7 +1982,7 @@
   />
 {/if} -->
 
-{#if showingMenu}
+{#if showingContextMenu}
   <Overlay onclose={closeMenu}>
     <Menu
       {menuItemStatus}

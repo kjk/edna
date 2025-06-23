@@ -2,7 +2,6 @@
   openSettings: () => void,
   openFind: () => void,
   openContextMenu: (MouseEvent) => void,
-  openFunctionSelector: (boolean) => void,
   getPassword: (msg: string) => Promise<string>,
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>,
 }} GlobalFuncs
@@ -38,10 +37,6 @@ export function openSettings() {
 
 export function openContextMenu(ev) {
   globalFunctions.openContextMenu(ev);
-}
-
-export function openFunctionSelector(onSelection = false) {
-  globalFunctions.openFunctionSelector(onSelection);
 }
 
 export function openFind() {

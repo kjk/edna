@@ -112,6 +112,10 @@ const smartRun = (editor) => () => {
   editor.smartRun();
   return true;
 };
+const openFunctionSelector = (editor) => () => {
+  editor.openFunctionSelector();
+  return true;
+};
 
 const nothing = (view) => {
   return true;
@@ -361,6 +365,11 @@ const HEYNOTE_COMMANDS = {
     smartRun,
     "Block",
     "Execute JavaScript code using block as an argument",
+  ),
+  openFunctionSelector: cmd(
+    openFunctionSelector,
+    "Buffer",
+    "Open function selector",
   ),
 };
 

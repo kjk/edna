@@ -21,6 +21,7 @@ export const DEFAULT_KEYMAP = [
   cmd("Mod-s", "saveCurrentNote"),
   cmd("Alt-n", "createScratchNote"),
   cmd("Mod-e", "smartRun"),
+  cmd("Alt-Shift-r", "openFunctionSelector"),
 
   cmd("Enter", "insertNewlineAndIndent"),
 

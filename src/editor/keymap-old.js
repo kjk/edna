@@ -1,10 +1,5 @@
 let a = [
-    [
-      "Alt-Shift-r",
-      () => {
-        openFunctionSelector(false);
-      },
-    ],
+
     ["Mod-k", openNoteSelector],
     ["Alt-0", openNoteSelector],
     ["Mod-o", openNoteSelector],
