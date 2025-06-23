@@ -116,6 +116,10 @@ const openFunctionSelector = (editor) => () => {
   editor.openFunctionSelector();
   return true;
 };
+const openSettings = (editor) => () => {
+  editor.openSettings();
+  return true;
+};
 
 const nothing = (view) => {
   return true;
@@ -371,6 +375,7 @@ const HEYNOTE_COMMANDS = {
     "Buffer",
     "Open function selector",
   ),
+  openSettings: cmd(openSettings, "Editor", "Open settings"),
 };
 
 // selection mark-mode:ify all cursor/select commands from CodeMirror

@@ -30,6 +30,7 @@ class HeynoteStore {
   showHistorySelector = $state(false);
   showFunctionSelector = $state(false);
   showContextMenu = $state(false);
+  showSettings = $state(false);
 
   // provided by App.svelte
   realOpenCommandPalette;
@@ -105,6 +106,11 @@ class HeynoteStore {
     this.showCreateBuffer = true;
   }
 
+  openSettings() {
+    this.closeDialog();
+    this.showSettings = true;
+  }
+
   closeDialog() {
     this.showCreateBuffer = false;
     this.showBufferSelector = false;
@@ -115,6 +121,7 @@ class HeynoteStore {
     this.showHistorySelector = false;
     this.showFunctionSelector = false;
     this.showContextMenu = false;
+    this.showSettings = false;
   }
 
   closeBufferSelector() {

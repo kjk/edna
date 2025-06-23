@@ -1,5 +1,4 @@
 /** @typedef {{
-  openSettings: () => void,
   openFind: () => void,
   openContextMenu: (MouseEvent) => void,
   getPassword: (msg: string) => Promise<string>,
@@ -29,10 +28,6 @@ let globalFunctions;
  */
 export function setGlobalFuncs(gf) {
   globalFunctions = gf;
-}
-
-export function openSettings() {
-  globalFunctions.openSettings();
 }
 
 export function openContextMenu(ev) {

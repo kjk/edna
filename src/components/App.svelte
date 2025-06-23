@@ -139,15 +139,15 @@
   let docSize = $state(0);
   let noteName = $derived(settings.currentNoteName);
 
-  // TODO port those to use notesStore
-  // let showingNoteSelector2 = $state(false);
-  // let showingCommandPalette2 = $state(false);
   let functionContext = $state("");
   let runFunctionOnSelection = false;
   let userFunctions = $state([]); // note: $state() not needed
-  let showingSettings = $state(false);
-  let showingRenameNote = $state(false);
   let isSpellChecking = $state(false);
+
+  // TODO port those to use notesStore
+  // let showingNoteSelector2 = $state(false);
+  // let showingCommandPalette2 = $state(false);
+  let showingRenameNote = $state(false);
 
   let contextMenuPos = $state({ x: 0, y: 0 });
 
@@ -171,7 +171,7 @@
       showingDecryptPassword ||
       showingEncryptPassword ||
       showingAskFileWritePermissions ||
-      showingSettings
+      notesStore.showSettings
     );
   });
 
@@ -184,7 +184,6 @@
   }
 
   let gf = {
-    openSettings: openSettings,
     openContextMenu: openContextMenu,
     openFind: openFind,
     getPassword: getPassword,
@@ -505,12 +504,8 @@
     await exportBlobToFile(blob, fileName);
   }
 
-  function openSettings() {
-    showingSettings = true;
-  }
-
   function closeSettings() {
-    showingSettings = false;
+    notesStore.showSettings = false;
     getEditorView().focus();
   }
 
@@ -1252,7 +1247,7 @@
     } else if (cmdId === kCmdShowStorageHelp) {
       showHTMLHelp("#storing-notes-on-disk");
     } else if (cmdId === kCmdSettings) {
-      openSettings();
+      notesStore.openSettings();
     } else if (cmdId === kCmdEncryptNotes) {
       openEncryptPassword();
     } else if (cmdId === kCmdDecryptNotes) {
@@ -1957,7 +1952,7 @@
   </Overlay>
 {/if}
 
-{#if showingSettings}
+{#if notesStore.showSettings}
   <Overlay onclose={closeSettings} blur={true}>
     <Settings></Settings>
   </Overlay>

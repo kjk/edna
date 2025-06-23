@@ -5,7 +5,6 @@
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages.js";
-  import { openSettings } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
   import { fmtSize, getScrollbarWidth } from "../util";
@@ -134,7 +133,11 @@
     <div class="text-gray-400">&bull;</div>
   {/if}
 
-  <button onclick={openSettings} class="clickable-icon ml-1" title="Settings">
+  <button
+    onclick={() => notesStore.openSettings()}
+    class="clickable-icon ml-1"
+    title="Settings"
+  >
     {@render IconSettings()}
   </button>
   <div class="text-gray-400">&bull;</div>
