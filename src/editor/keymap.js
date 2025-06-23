@@ -16,6 +16,7 @@ export const DEFAULT_KEYMAP = [
   cmd("Mod-b", "openBlockSelector"),
   cmd("Mod-Shift-p", "openCommandPalette"),
   cmd("Mod-Shift-k", "openCommandPalette"),
+  cmd("Mod-Shift-o", "openCommandPalette"),
   cmd("Mod-h", "openHistorySelector"),
   // cmd("Mod-s", "openMoveToBuffer"),
   cmd("Mod-s", "saveCurrentNote"),
@@ -76,6 +77,8 @@ export const DEFAULT_KEYMAP = [
 
   cmd("Alt-ArrowUp", "moveLineUp"),
   cmd("Alt-ArrowDown", "moveLineDown"),
+  // https://github.com/kjk/edna/issues/87
+  // this is a "open command palette" shortcut
   // cmd("Mod-Shift-k", "deleteLine"),
   cmd("Mod-Alt-ArrowDown", "newCursorBelow"),
   cmd("Mod-Alt-ArrowUp", "newCursorAbove"),
@@ -89,6 +92,7 @@ export const DEFAULT_KEYMAP = [
   cmd("Mod-x", "cut"),
   cmd("Mod-z", "undo"),
   cmd("Mod-Shift-z", "redo"),
+  // TODO(port): only for Linux? Test Ctrl-Shift-z on Windows is redo
   ...(isWindows || isLinux ? [cmd("Mod-y", "redo")] : []),
 
   cmd("Tab", "indentMore"),
@@ -100,6 +104,7 @@ export const DEFAULT_KEYMAP = [
   cmd("Mod-p", "openBufferSelector"),
   cmd("Mod-k", "openBufferSelector"),
   cmd("Mod-o", "openBufferSelector"),
+  // cmd("Alt-0", "openNoteSelector"),
 
   // pointless, this is New Tab in browsers
   //cmd("Mod-n", "openCreateNewBuffer"),

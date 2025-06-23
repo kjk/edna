@@ -85,7 +85,6 @@ class HeynoteStore {
   }
 
   openMoveToBufferSelector() {
-    debugger;
     this.closeDialog();
     this.showMoveToBufferSelector = true;
   }
@@ -122,7 +121,6 @@ class HeynoteStore {
   }
 
   closeMoveToBufferSelector() {
-    debugger;
     this.showMoveToBufferSelector = false;
   }
 

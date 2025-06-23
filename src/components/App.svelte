@@ -141,7 +141,6 @@
 
   // TODO port those to use notesStore
   let showingContextMenu = $state(false);
-  let showingBlockMoveSelector = $state(false);
   // let showingNoteSelector2 = $state(false);
   // let showingCommandPalette2 = $state(false);
   let functionContext = $state("");
@@ -165,7 +164,7 @@
       notesStore.showBufferSelector ||
       // showingNoteSelector2 ||
       notesStore.showFunctionSelector ||
-      showingBlockMoveSelector ||
+      notesStore.showMoveToBufferSelector ||
       notesStore.showCreateBuffer ||
       notesStore.showCommandPalette ||
       // showingCommandPalette2 ||
@@ -1741,18 +1740,18 @@
   }
 
   function moveCurrentBlock() {
-    showingBlockMoveSelector = true;
+    notesStore.showMoveToBufferSelector = true;
   }
 
   function closeBlockMoveSelector() {
-    showingBlockMoveSelector = false;
+    notesStore.showMoveToBufferSelector = false;
   }
 
   /**
    * @param {string} name
    */
   async function onMoveBlockToNote(name) {
-    showingBlockMoveSelector = false;
+    notesStore.showMoveToBufferSelector = false;
     // name can be new or existing note
     let state = getEditorView().state;
     let block = getActiveNoteBlock(state);
@@ -1894,7 +1893,7 @@
   </Overlay>
 {/if}
 
-{#if showingBlockMoveSelector}
+{#if notesStore.showMoveToBufferSelector}
   <Overlay onclose={closeBlockMoveSelector} blur={true}>
     <NoteSelector
       header="Move current block to note:"

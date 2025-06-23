@@ -381,8 +381,7 @@ export class HeynoteEditor {
   }
 
   openMoveToBufferSelector() {
-    throw new Error("NYI");
-    // this.notesStore.openMoveToBufferSelector();
+    this.notesStore.openMoveToBufferSelector();
   }
 
   openBlockSelector() {
