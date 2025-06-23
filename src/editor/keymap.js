@@ -19,7 +19,7 @@ export const DEFAULT_KEYMAP = [
   cmd("Mod-Shift-o", "openCommandPalette"),
   cmd("Mod-h", "openHistorySelector"),
   // cmd("Mod-s", "openMoveToBuffer"),
-  cmd("Mod-s", "saveCurrentNote"),
+  cmd("Mod-s", "saveNote"),
   cmd("Alt-n", "createScratchNote"),
   cmd("Mod-e", "smartRun"),
   cmd("Alt-Shift-r", "openFunctionSelector"),

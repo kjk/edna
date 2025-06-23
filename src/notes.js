@@ -643,7 +643,7 @@ export async function saveNote(name, content) {
     if (!ok) {
       return;
     }
-    console.log("saveCurrentNote: ok:", ok);
+    console.log("saveNote: ok:", ok);
     await fsFileHandleWriteText(fh, content);
     notesStore.isDirty = false;
     incNoteSaveCount();
