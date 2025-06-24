@@ -276,6 +276,8 @@
     }
     let content = await loadNote(name);
     console.log("Editor.openNote: loaded:", name);
+    editor.path = name;
+    editor.setName(name);
     editor.setTheme(theme);
     // TODO: move this logic to App.onDocChanged
     // a bit magic: sometimes we open at the beginning, sometimes at the end

@@ -301,7 +301,7 @@ export class HeynoteEditor {
   }
 
   setName(name) {
-    this.note.metadata.name = name;
+    //this.note.metadata.name = name;
     this.name = name;
     triggerCursorChange(this.view);
   }
