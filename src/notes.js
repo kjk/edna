@@ -629,7 +629,7 @@ function pickUniqueName(base, existingNames) {
  */
 export async function saveCurrentNote(content) {
   let settings = getSettings();
-  let name = settings.currentNoteName;
+  let name = notesStore.currentBufferPath;
   await saveNote(name, content);
 }
 
@@ -930,7 +930,7 @@ export async function writeNoteFS(dh, name, content) {
  */
 export async function loadCurrentNote() {
   let settings = getSettings();
-  return loadNote(settings.currentNoteName);
+  return loadNote(notesStore.currentBufferPath);
 }
 
 /**
@@ -1122,11 +1122,10 @@ export async function switchToStoringNotesOnDisk(dh) {
   let noteNames = await loadNoteNames();
   openedNotesFS = []; // can't guarantee names will be unique
 
-  // migrate settings, update currentNoteName
-  let settings = getSettings();
-  let name = settings.currentNoteName;
+  // migrate settings, update currentBufferPath
+  let name = notesStore.currentBufferPath;
   if (!noteNames.includes(name)) {
-    settings.currentNoteName = SCRATCH_FILE_NAME;
+    notesStore.currentBufferPath = SCRATCH_FILE_NAME;
   }
   return noteNames;
 }

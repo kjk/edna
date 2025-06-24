@@ -132,7 +132,7 @@
   let settings = getSettings();
 
   let docSize = $state(0);
-  let noteName = $derived(settings.currentNoteName);
+  let noteName = $derived(notesStore.currentBufferPath);
 
   let functionContext = $state("");
   let runFunctionOnSelection = false;
@@ -306,7 +306,7 @@
     // TODO: await getEditor().saveCurrentNote() ?
     await switchToStoringNotesOnDisk(dh);
     let settings = getSettings();
-    await openNote(settings.currentNoteName, true);
+    await openNote(notesStore.currentBufferPath, true);
   }
 
   async function pickAnotherDirectory2() {
@@ -464,7 +464,8 @@
     let bi = getBlocksInfo(view.state);
     let block = getActiveNoteBlock(view.state);
     let ext = extForLang(block.language.name);
-    let name = toFileName(settings.currentNoteName) + `-${bi.active}.` + ext;
+    let name =
+      toFileName(notesStore.currentBufferPath) + `-${bi.active}.` + ext;
     let s = view.state.sliceDoc(block.content.from, block.content.to);
     console.log("exportCurrentBlock:", name);
     const blob = new Blob([s], { type: "text/plain" });
@@ -473,7 +474,7 @@
 
   async function exportCurrentNote() {
     let settings = getSettings();
-    let fileName = toFileName(settings.currentNoteName) + kEdnaFileExt;
+    let fileName = toFileName(notesStore.currentBufferPath) + kEdnaFileExt;
     let view = getEditorView();
     let s = getContent(view);
     console.log("exportCurrentNote:", fileName);
@@ -1715,7 +1716,7 @@
     let settings = getSettings();
     // if deleting current note, first switch to scratch note
     // TODO: maybe switch to the most recently opened
-    if (name === settings.currentNoteName) {
+    if (name === notesStore.currentBufferPath) {
       console.log("deleted current note, opening scratch note");
       await openNote(SCRATCH_FILE_NAME);
     }
@@ -1759,7 +1760,7 @@
     if (!noPushHistory) {
       pushHistory(name);
     }
-    settings.currentNoteName = name;
+    notesStore.currentBufferPath = name;
     updateDocSize();
   }
 

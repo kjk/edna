@@ -63,17 +63,17 @@ export async function boot() {
   let nCreated = await createDefaultNotes(noteNames);
   await loadNotesMetadata(); // pre-load
 
-  let settings = getSettings();
+  let notesStore = useHeynoteStore();
   // console.log("settings:", settings);
 
   // pick the note to open at startup:
   // - #${name} from the url
-  // - settings.currentNoteName if it exists
+  // - notesStore.currentBufferPath if it exists
   // - fallback to scratch note
   let toOpenAtStartup = SCRATCH_FILE_NAME; // default if nothing else matches
   let nameFromURLHash = window.location.hash.slice(1);
   nameFromURLHash = decodeURIComponent(nameFromURLHash);
-  let nameFromSettings = settings.currentNoteName;
+  let nameFromSettings = notesStore.currentBufferPath;
 
   // re-do because could have created default notes
   if (nCreated > 0) {
@@ -91,11 +91,11 @@ export async function boot() {
     return noteNames.includes(name) || isSystemNoteName(name);
   }
 
-  // need to do this twice to make sure hashName takes precedence over settings.currentNoteName
+  // need to do this twice to make sure hashName takes precedence over notesStore.currentBufferPath
   if (isValidNote(nameFromSettings)) {
     toOpenAtStartup = nameFromSettings;
     console.log(
-      "will open note from settings.currentNoteName:",
+      "will open note from notesStore.currentBufferPath:",
       nameFromSettings,
     );
   }
@@ -108,7 +108,7 @@ export async function boot() {
   }
 
   // will open this note in Editor.vue on mounted()
-  settings.currentNoteName = toOpenAtStartup;
+  notesStore.currentBufferPath = toOpenAtStartup;
   console.log("mounting App");
   if (appSvelte) {
     unmount(appSvelte);

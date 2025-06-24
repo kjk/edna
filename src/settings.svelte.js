@@ -60,7 +60,7 @@ export let kDefaultFontSize = isMobileDevice ? 16 : 12;
 
 export const kSettingsPath = "settings.json";
 
-let lastSettings;
+let lastSettingsJSON;
 
 /** @returns {Settings} */
 export function getSettings() {
@@ -72,11 +72,16 @@ export function getSettings() {
   let d = localStorage.getItem(kSettingsPath) || "{}";
   console.log("getSettings: loaded from localStorage:", d);
   let settings = d === null ? {} : JSON.parse(d);
-  notesStore.settings = new Settings(settings);
-  if (!notesStore.settings.currentNoteName) {
-    notesStore.settings.currentNoteName = SCRATCH_FILE_NAME;
+  let s = new Settings(settings);
+  if (!s.currentNoteName) {
+    s.currentNoteName = SCRATCH_FILE_NAME;
   }
-  lastSettings = notesStore.settings.toJSON();
+  notesStore.settings = s;
+  notesStore.currentBufferName = s.currentNoteName;
+  if (!notesStore.currentBufferPath) {
+    notesStore.currentBufferPath = SCRATCH_FILE_NAME;
+  }
+  lastSettingsJSON = s.toJSON();
   return notesStore.settings;
 }
 
@@ -110,7 +115,7 @@ function saveSettings(newSettings) {
   let settings = newSettings.toJSON();
   let changed = [];
   for (let key of settingsKeys) {
-    let valLast = lastSettings[key];
+    let valLast = lastSettingsJSON[key];
     let valNew = settings[key];
     if (valNew !== valLast) {
       changed.push(key);
@@ -122,18 +127,29 @@ function saveSettings(newSettings) {
   }
   for (let key of changed) {
     console.log(
-      `saveSettings: ${key} changed from ${lastSettings[key]} to ${settings[key]}`,
+      `saveSettings: ${key} changed from ${lastSettingsJSON[key]} to ${settings[key]}`,
     );
   }
 
   // console.log("saveSettings:", s);
   localStorage.setItem(kSettingsPath, JSON.stringify(settings, null, 2));
-  lastSettings = settings;
+  lastSettingsJSON = settings;
   updateWebsiteTheme();
   return true;
 }
 
 $effect.root(() => {
+  $effect(() => {
+    // for easier heynote porting we use notesStore.currentBufferPath
+    // but it's only available at runtime
+    // to persist correctly in settings, we set currentNoteName to it
+    console.warn(
+      "setting notesStore.notesStore.currentBufferPath to",
+      notesStore.currentBufferPath,
+    );
+    notesStore.currentBufferPath = notesStore.currentBufferPath;
+  });
+
   $effect(() => {
     saveSettings(notesStore.settings);
   });

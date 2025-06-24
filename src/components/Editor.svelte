@@ -93,7 +93,7 @@
     let fontFamily = settings.fontFamily;
     let fontSize = settings.fontSize;
 
-    let name = settings.currentNoteName;
+    let name = notesStore.currentBufferPath;
     // load buffer content and create editor
     editor = new HeynoteEditor({
       path: name,

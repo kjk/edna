@@ -115,68 +115,68 @@ class EditorCache {
 
   setUp(containerElement) {
     this.containerElement = containerElement;
-    const settingsStore = useSettingsStore();
-    this.watchHandler = watch(
-      () => settingsStore.settings,
-      (newSettings, oldSettings) => {
-        //console.log("Settings changed (watch)", newSettings, oldSettings)
-        const changedKeys = Object.keys(newSettings).filter(
-          (key) => newSettings[key] !== oldSettings[key],
-        );
+    // const settingsStore = useSettingsStore();
+    // this.watchHandler = watch(
+    //   () => settingsStore.settings,
+    //   (newSettings, oldSettings) => {
+    //     //console.log("Settings changed (watch)", newSettings, oldSettings)
+    //     const changedKeys = Object.keys(newSettings).filter(
+    //       (key) => newSettings[key] !== oldSettings[key],
+    //     );
 
-        for (const key of changedKeys) {
-          this.eachEditor((editor) => {
-            switch (key) {
-              case "keymap":
-              case "emacsMetaKey":
-              case "keyBindings":
-                editor.setKeymap(
-                  newSettings.keymap,
-                  newSettings.emacsMetaKey,
-                  newSettings.keyBindings,
-                );
-                break;
-              case "showLineNumberGutter":
-                editor.setLineNumberGutter(newSettings.showLineNumberGutter);
-                break;
-              case "showFoldGutter":
-                editor.setFoldGutter(newSettings.showFoldGutter);
-                break;
-              case "bracketClosing":
-                editor.setBracketClosing(newSettings.bracketClosing);
-                break;
-              case "fontFamily":
-              case "fontSize":
-                editor.setFont(newSettings.fontFamily, newSettings.fontSize);
-                break;
-              case "indentType":
-              case "tabSize":
-                editor.setIndentSettings(
-                  newSettings.indentType,
-                  newSettings.tabSize,
-                );
-                break;
-              case "defaultBlockLanguage":
-              case "defaultBlockLanguageAutoDetect":
-                editor.setDefaultBlockLanguage(
-                  newSettings.defaultBlockLanguage,
-                  newSettings.defaultBlockLanguageAutoDetect,
-                );
-                break;
-            }
-          });
-        }
-      },
-    );
+    //     for (const key of changedKeys) {
+    //       this.eachEditor((editor) => {
+    //         switch (key) {
+    //           case "keymap":
+    //           case "emacsMetaKey":
+    //           case "keyBindings":
+    //             editor.setKeymap(
+    //               newSettings.keymap,
+    //               newSettings.emacsMetaKey,
+    //               newSettings.keyBindings,
+    //             );
+    //             break;
+    //           case "showLineNumberGutter":
+    //             editor.setLineNumberGutter(newSettings.showLineNumberGutter);
+    //             break;
+    //           case "showFoldGutter":
+    //             editor.setFoldGutter(newSettings.showFoldGutter);
+    //             break;
+    //           case "bracketClosing":
+    //             editor.setBracketClosing(newSettings.bracketClosing);
+    //             break;
+    //           case "fontFamily":
+    //           case "fontSize":
+    //             editor.setFont(newSettings.fontFamily, newSettings.fontSize);
+    //             break;
+    //           case "indentType":
+    //           case "tabSize":
+    //             editor.setIndentSettings(
+    //               newSettings.indentType,
+    //               newSettings.tabSize,
+    //             );
+    //             break;
+    //           case "defaultBlockLanguage":
+    //           case "defaultBlockLanguageAutoDetect":
+    //             editor.setDefaultBlockLanguage(
+    //               newSettings.defaultBlockLanguage,
+    //               newSettings.defaultBlockLanguageAutoDetect,
+    //             );
+    //             break;
+    //         }
+    //       });
+    //     }
+    //   },
+    // );
 
-    this.themeWatchHandler = watch(
-      () => settingsStore.theme,
-      (theme) => {
-        this.eachEditor((editor) => {
-          editor.setTheme(theme);
-        });
-      },
-    );
+    // this.themeWatchHandler = watch(
+    //   () => settingsStore.theme,
+    //   (theme) => {
+    //     this.eachEditor((editor) => {
+    //       editor.setTheme(theme);
+    //     });
+    //   },
+    // );
 
     window.document.addEventListener(
       "currenciesLoaded",
@@ -185,12 +185,12 @@ class EditorCache {
   }
 
   tearDown() {
-    if (this.watchHandler) {
-      this.watchHandler();
-    }
-    if (this.themeWatchHandler) {
-      this.themeWatchHandler();
-    }
+    // if (this.watchHandler) {
+    //   this.watchHandler();
+    // }
+    // if (this.themeWatchHandler) {
+    //   this.themeWatchHandler();
+    // }
 
     window.document.removeEventListener(
       "currenciesLoaded",
