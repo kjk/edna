@@ -2,11 +2,10 @@
   import { onMount } from "svelte";
   import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
-  import { SCRATCH_FILE_NAME } from "../common/constants.js";
   import { HeynoteEditor } from "../editor/editor.js";
-  import { loadNote } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { rememberEditor } from "../state.js";
+  import { useEditorCacheStore } from "../stores/editor-cache.svelte.js";
   import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
   import { throwIf } from "../util.js";
 
@@ -19,16 +18,18 @@
   let { debugSyntaxTree, docDidChange, didOpenNote } = $props();
 
   let syntaxTreeDebugContent = $state(null);
-  let debouncedRefreshFunc = $state(null);
   let settings = getSettings();
   let notesStore = useHeynoteStore();
   let theme = settings.theme;
 
+  let editorCacheStore = useEditorCacheStore();
+
+  let didMount = false;
   /** @type {HeynoteEditor} */
   let editor;
 
   /** @type {HTMLElement} */
-  let editorEl;
+  let editorRef;
 
   $effect(() => {
     /* TODO: it's not reactive if I do:
@@ -56,11 +57,19 @@
     setSpellChecking(notesStore.isSpellChecking);
   });
 
+  $effect(() => {
+    console.log("notesStore.currentBuffer:", notesStore.currentBufferPath);
+    if (editor && editor.path != notesStore.currentBufferPath) {
+      loadBuffer(notesStore.currentBufferPath);
+    }
+  });
+
   onMount(mounted);
 
   function mounted() {
-    console.log("Editor.svelte: mounted, editorEl:", editorEl);
-    if (!editorEl) {
+    didMount = true;
+    console.log("Editor.svelte: mounted, editorRef:", editorRef);
+    if (!editorRef) {
       return;
     }
 
@@ -80,9 +89,12 @@
 
     // forward events dispatched from editor.js
 
-    editorEl.addEventListener("docChanged", (e) => {
+    editorRef.addEventListener("docChanged", (e) => {
       docDidChange();
     });
+
+    editorCacheStore.setUp(editorRef);
+    loadBuffer(notesStore.currentBufferPath);
 
     throwIf(!settings);
     let showLineNumberGutter = settings.showLineNumberGutter;
@@ -97,7 +109,7 @@
     // load buffer content and create editor
     editor = new HeynoteEditor({
       path: name,
-      element: editorEl,
+      element: editorRef,
       theme: theme,
       keymap: keymap,
       emacsMetaKey: emacsMetaKey,
@@ -132,6 +144,29 @@
         syntaxTreeDebugContent = render(syntaxTree(editor.view.state));
       }, 1000);
     }
+  }
+
+  function loadBuffer(path) {
+    console.log("loadBuffer", path);
+    if (!didMount) {
+      console.log("skipping before not mounted");
+      return;
+    }
+    editor?.hide();
+
+    let cachedEditor = editorCacheStore.getEditor(path);
+    if (cachedEditor) {
+      //console.log("show cached editor")
+      editor = cachedEditor;
+      editor.show();
+    } else {
+      //console.log("create new editor")
+      editor = editorCacheStore.createEditor(path);
+      editorCacheStore.addEditor(path, editor);
+    }
+
+    notesStore.currentEditor = editor;
+    // window._heynote_editor = editor;
   }
 
   function saveForce() {
@@ -196,64 +231,57 @@
     editor.focus();
   }
 
+  function formatCurrentBlock() {
+    // editor.formatCurrentBlock();
+    editor.focus();
+  }
+
   export function focus() {
     editor.focus();
   }
 
-  export function setEditorContent(content) {
-    editor.diskContent = content;
-    let newState = editor.createState();
-    editor.view.setState(newState);
-    try {
-      editor.setContent(content);
-    } catch (e) {
-      alert("Error! " + e.message);
-      throw e;
-    }
-  }
-
-  /**
-   * @param {string} name
-   */
-  export async function openNote(
-    name,
-    skipSave = false,
-    noPushHistory = false,
-  ) {
-    console.log("openNote:", name);
-    if (!skipSave) {
-      // saving is debounced so ensure we save before opening a new note
-      // TODO: we'll have a spurious save if there was a debounce, because
-      // the debounce is still in progress, I think
-      await editor.save();
-      // TODO: this is async so let's hope it works
-    }
-    let content = await loadNote(name);
-    console.log("Editor.openNote: loaded:", name);
-    editor.path = name;
-    editor.setName(name);
-    editor.setTheme(theme);
-    // TODO: move this logic to App.onDocChanged
-    // a bit magic: sometimes we open at the beginning, sometimes at the end
-    // TODO: remember selection in memory so that we can restore during a session
-    setEditorContent(content);
-    let pos = 0;
-    if (name === SCRATCH_FILE_NAME) {
-      // TODO: this now breaks because content contains serialized metadata
-      // pos = content.length;
-    }
-    editor.view.dispatch({
-      selection: { anchor: pos, head: pos },
-      scrollIntoView: true,
-    });
-    focus();
-    console.log("openNote: triggering docChanged event, name:", name);
-    didOpenNote(editor, name, noPushHistory);
-  }
+  // /**
+  //  * @param {string} name
+  //  */
+  // export async function openNote(
+  //   name,
+  //   skipSave = false,
+  //   noPushHistory = false,
+  // ) {
+  //   console.log("openNote:", name);
+  //   if (!skipSave) {
+  //     // saving is debounced so ensure we save before opening a new note
+  //     // TODO: we'll have a spurious save if there was a debounce, because
+  //     // the debounce is still in progress, I think
+  //     await editor.save();
+  //     // TODO: this is async so let's hope it works
+  //   }
+  //   let content = await loadNote(name);
+  //   console.log("Editor.openNote: loaded:", name);
+  //   editor.path = name;
+  //   editor.setName(name);
+  //   editor.setTheme(theme);
+  //   // TODO: move this logic to App.onDocChanged
+  //   // a bit magic: sometimes we open at the beginning, sometimes at the end
+  //   // TODO: remember selection in memory so that we can restore during a session
+  //   setEditorContent(content);
+  //   let pos = 0;
+  //   if (name === SCRATCH_FILE_NAME) {
+  //     // TODO: this now breaks because content contains serialized metadata
+  //     // pos = content.length;
+  //   }
+  //   editor.view.dispatch({
+  //     selection: { anchor: pos, head: pos },
+  //     scrollIntoView: true,
+  //   });
+  //   focus();
+  //   console.log("openNote: triggering docChanged event, name:", name);
+  //   didOpenNote(editor, name, noPushHistory);
+  // }
 </script>
 
 <div class="overflow-hidden">
-  <div class="editor" bind:this={editorEl}></div>
+  <div class="editor" bind:this={editorRef}></div>
   {#if debugSyntaxTree}
     <div class="debug-syntax-tree">
       {@html syntaxTreeDebugContent}

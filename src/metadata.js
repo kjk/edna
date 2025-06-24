@@ -1,12 +1,14 @@
 import { tick } from "svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { getStorageFS } from "./notes";
-import {
-  updateStarred,
-  updateWithShortcuts,
-} from "./stores/heynote-store.svelte";
+import { useHeynoteStore } from "./stores/heynote-store.svelte";
 
 export const kMetadataName = "__metadata.edna.json";
+
+let notesStore = useHeynoteStore();
+
+notesStore.calcStarred = calcStarred;
+notesStore.callcWithShortcuts = callcWithShortcuts;
 
 /** @typedef {{
     name: string,
@@ -312,4 +314,38 @@ export async function upgradeMetadata() {
   };
   console.log("upgradeMetadata: new meta:", newMeta);
   await saveNotesMetadata(newMeta);
+}
+
+/** @returns {string[]} */
+function calcStarred(noteNames) {
+  /** @type {string[]} */
+  let res = [];
+  for (let name of noteNames) {
+    let m = getNoteMeta(name, false);
+    if (m && m.isStarred) {
+      res.push(name);
+    }
+  }
+  return res;
+}
+
+/** @returns {string[]} */
+function callcWithShortcuts(noteNames) {
+  /** @type {string[]} */
+  let res = [];
+  for (let name of noteNames) {
+    let m = getNoteMeta(name, false);
+    if (m && m.altShortcut) {
+      res.push(name);
+    }
+  }
+  return res;
+}
+
+export function updateStarred() {
+  notesStore.starredNotes = calcStarred(notesStore.noteNames);
+}
+
+export function updateWithShortcuts() {
+  notesStore.withShortcuts = callcWithShortcuts(notesStore.noteNames);
 }

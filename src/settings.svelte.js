@@ -77,7 +77,7 @@ export function getSettings() {
     s.currentNoteName = SCRATCH_FILE_NAME;
   }
   notesStore.settings = s;
-  notesStore.currentBufferName = s.currentNoteName;
+  notesStore.currentBufferPath = s.currentNoteName;
   if (!notesStore.currentBufferPath) {
     notesStore.currentBufferPath = SCRATCH_FILE_NAME;
   }
@@ -144,10 +144,10 @@ $effect.root(() => {
     // but it's only available at runtime
     // to persist correctly in settings, we set currentNoteName to it
     console.warn(
-      "setting notesStore.notesStore.currentBufferPath to",
+      "setting notesStore.settings.currentNoteName to",
       notesStore.currentBufferPath,
     );
-    notesStore.currentBufferPath = notesStore.currentBufferPath;
+    notesStore.settings.currentNoteName = notesStore.currentBufferPath;
   });
 
   $effect(() => {

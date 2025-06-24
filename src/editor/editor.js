@@ -103,6 +103,7 @@ export class HeynoteEditor {
     this.errorStore = useErrorStore();
     this.note = {};
     this.selectionMarkMode = false;
+    this.name = path;
 
     throwIf(!this.path);
 

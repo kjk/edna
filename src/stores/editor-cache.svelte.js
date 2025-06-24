@@ -1,5 +1,5 @@
-//import { NoteFormat } from "../common/note-format";
 import { HeynoteEditor } from "../editor/editor";
+import { getSettings } from "../settings.svelte";
 import { useErrorStore } from "./error-store.svelte";
 import { useHeynoteStore } from "./heynote-store.svelte";
 import { useSettingsStore } from "./settings-store.svelte";
@@ -21,26 +21,25 @@ class EditorCache {
   themeWatchHandler = null;
 
   createEditor(path) {
-    const settingsStore = useSettingsStore();
+    let settings = getSettings();
     const errorStore = useErrorStore();
     try {
       return new HeynoteEditor({
         element: this.containerElement,
         path: path,
-        theme: settingsStore.theme,
-        keymap: settingsStore.settings.keymap,
-        emacsMetaKey: settingsStore.settings.emacsMetaKey,
-        showLineNumberGutter: settingsStore.settings.showLineNumberGutter,
-        showFoldGutter: settingsStore.settings.showFoldGutter,
-        bracketClosing: settingsStore.settings.bracketClosing,
-        fontFamily: settingsStore.settings.fontFamily,
-        fontSize: settingsStore.settings.fontSize,
-        indentType: settingsStore.settings.indentType,
-        tabSize: settingsStore.settings.tabSize,
-        defaultBlockToken: settingsStore.settings.defaultBlockLanguage,
-        defaultBlockAutoDetect:
-          settingsStore.settings.defaultBlockLanguageAutoDetect,
-        keyBindings: settingsStore.settings.keyBindings,
+        theme: settings.theme,
+        keymap: settings.keymap,
+        emacsMetaKey: settings.emacsMetaKey,
+        showLineNumberGutter: settings.showLineNumberGutter,
+        showFoldGutter: settings.showFoldGutter,
+        bracketClosing: settings.bracketClosing,
+        fontFamily: settings.fontFamily,
+        fontSize: settings.fontSize,
+        // indentType: settings.indentType,
+        // tabSize: settings.tabSize,
+        defaultBlockToken: settings.defaultBlockLanguage,
+        defaultBlockAutoDetect: settings.defaultBlockLanguageAutoDetect,
+        keyBindings: [], //settings.keyBindings,
       });
     } catch (e) {
       errorStore.addError("Error! " + e.message);

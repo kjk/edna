@@ -1,5 +1,3 @@
-import { loadNote, saveNote } from "./notes";
-
 let __TESTS__ = false;
 
 let themeCallback = null;
@@ -7,6 +5,8 @@ let themeCallback = null;
 const isMobileDevice = window.matchMedia("(max-width: 600px)").matches;
 
 let currencyData = null;
+
+console.log("bridge.js");
 
 let platform;
 
@@ -51,18 +51,11 @@ const Heynote = {
 
   buffer: {
     async load(path) {
-      console.log("Heynote.buffer.load:", path);
-      let content = await loadNote(path);
-      return content === null
-        ? '{"formatVersion":"1.0.0","name":"Scratch"}\n∞∞∞text-a\n'
-        : content;
+      debugger;
     },
 
     async save(path, content) {
-      console.log(`Heynote.buffer.save: '${path}, ${content.length} bytes`);
-      await saveNote(path, content);
-      // TODO: is disabled anyway
-      // scheduleRefreshFromDisk();
+      debugger;
     },
 
     async create(path, content) {

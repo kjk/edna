@@ -1641,7 +1641,7 @@
     // console.log("onSelectHistory:", name);
     closeHistorySelector();
     if (name != noteName) {
-      openNote(name);
+      notesStore.currentBufferPath = name;
     } else {
       // console.log("onSelectHistory: skipping opening becase same note");
     }
@@ -1760,7 +1760,7 @@
     if (!noPushHistory) {
       pushHistory(name);
     }
-    notesStore.currentBufferPath = name;
+    // notesStore.currentBufferPath = name;
     updateDocSize();
   }
 

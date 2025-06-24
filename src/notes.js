@@ -628,7 +628,6 @@ function pickUniqueName(base, existingNames) {
  * @returns {Promise<void>}
  */
 export async function saveCurrentNote(content) {
-  let settings = getSettings();
   let name = notesStore.currentBufferPath;
   await saveNote(name, content);
 }
@@ -929,7 +928,6 @@ export async function writeNoteFS(dh, name, content) {
  * @returns {Promise<string>}
  */
 export async function loadCurrentNote() {
-  let settings = getSettings();
   return loadNote(notesStore.currentBufferPath);
 }
 
