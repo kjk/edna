@@ -28,15 +28,17 @@ import { saveCurrentNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { useErrorStore } from "../stores/error-store.svelte.js";
 import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
-import { heynoteEvent, SET_CONTENT } from "./annotation.js";
+import { APPEND_BLOCK, heynoteEvent, SET_CONTENT } from "./annotation.js";
 import {
   blockLineNumbers,
   blockState,
+  getActiveNoteBlock,
   noteBlockExtension,
   triggerCursorChange,
 } from "./block/block.js";
 import {
   changeCurrentBlockLanguage,
+  deleteBlock,
   triggerCurrenciesLoaded,
 } from "./block/commands.js";
 import { selectAll } from "./block/select-all.js";
@@ -390,6 +392,29 @@ export class HeynoteEditor {
 
   openFunctionSelector() {
     this.notesStore.openFunctionSelector();
+  }
+
+  getActiveBlockContent() {
+    const block = getActiveNoteBlock(this.view.state);
+    if (!block) {
+      return;
+    }
+    return this.view.state.sliceDoc(block.range.from, block.range.to);
+  }
+
+  deleteActiveBlock() {
+    deleteBlock(this)(this.view);
+  }
+
+  appendBlockContent(content) {
+    this.view.dispatch({
+      changes: {
+        from: this.view.state.doc.length,
+        to: this.view.state.doc.length,
+        insert: content,
+      },
+      annotations: [heynoteEvent.of(APPEND_BLOCK)],
+    });
   }
 
   setCurrentLanguage(lang, auto = false) {
