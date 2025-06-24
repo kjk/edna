@@ -1,4 +1,5 @@
 import { indentLess, indentMore, redo } from "@codemirror/commands";
+import { foldAll, unfoldAll } from "@codemirror/language";
 import { keymap } from "@codemirror/view";
 import {
   createScratchNote,
@@ -121,11 +122,11 @@ export function ednaKeymap(editor) {
       ? [
           {
             key: "Mod-Alt-[",
-            run: foldBlock(editor),
+            run: foldAll,
           },
           {
             key: "Mod-Alt-]",
-            run: unfoldBlock(editor),
+            run: unfoldAll,
           },
           {
             key: "Mod-Alt-.",
@@ -135,11 +136,11 @@ export function ednaKeymap(editor) {
       : [
           {
             key: "Alt-Ctrl-[",
-            run: foldBlock(editor),
+            run: foldAll,
           },
           {
             key: "Alt-Ctrl-]",
-            run: unfoldBlock(editor),
+            run: unfoldAll,
           },
           {
             key: "Alt-Ctrl-.",

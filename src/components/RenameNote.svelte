@@ -1,6 +1,6 @@
 <script>
-  import { sanitizeNoteName } from "../notes";
   import { focus } from "../actions";
+  import { sanitizeNoteName } from "../notes";
   import { appState } from "../state.svelte";
 
   /** @type { {
@@ -79,16 +79,11 @@
     {/if}
   </div>
   <div class="flex justify-end mt-2">
-    <button
-      onclick={onclose}
-      class="mr-4 px-4 py-1 border border-black hover:bg-gray-100"
-      >Cancel</button
-    >
+    <button onclick={onclose} class="mr-4 button-outline">Cancel</button>
     <button
       onclick={() => emitRename()}
       disabled={!canRename}
-      class="px-4 py-1 border border-black hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-400 disabled:bg-white default:bg-slate-700"
-      >Rename</button
+      class="button-outline">Rename</button
     >
   </div>
 </div>

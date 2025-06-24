@@ -2,6 +2,12 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.24
+- added folding of blocks:
+  - Alt + Ctrl + [ : fold all blocks
+  - Alt + Ctrl + ] : unfold all block
+  - Alt + Ctrl + . : toggle folding
+
 ## 1.23
 - improved search UI (For `Ctrl + F`)
 
