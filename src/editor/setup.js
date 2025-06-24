@@ -1,9 +1,11 @@
+import { mount } from "svelte";
 import {
   autocompletion,
   closeBrackets,
   closeBracketsKeymap,
   completionKeymap,
 } from "@codemirror/autocomplete";
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import {
   bracketMatching,
   defaultHighlightStyle,
@@ -12,10 +14,18 @@ import {
   indentOnInput,
   syntaxHighlighting,
 } from "@codemirror/language";
+import { lintKeymap } from "@codemirror/lint";
+import {
+  highlightSelectionMatches,
+  search,
+  searchKeymap,
+} from "@codemirror/search";
+import { EditorState } from "@codemirror/state";
 import {
   crosshairCursor,
   drawSelection,
   dropCursor,
+  EditorView,
   highlightActiveLine,
   highlightActiveLineGutter,
   highlightSpecialChars,
@@ -24,19 +34,7 @@ import {
   rectangularSelection,
   scrollPastEnd,
 } from "@codemirror/view";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import {
-  highlightSelectionMatches,
-  searchKeymap,
-  search,
-} from "@codemirror/search";
-
-import { EditorState } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
-import { lintKeymap } from "@codemirror/lint";
-
 import Find from "../components/Find.svelte";
-import { mount } from "svelte";
 
 function createFnddPanel(view) {
   const dom = document.createElement("div");
@@ -123,7 +121,7 @@ const customSetup = /*@__PURE__*/ (() => [
     ...defaultKeymap,
     ...searchKeymap,
     ...historyKeymap,
-    ...foldKeymap,
+    // ...foldKeymap,
     //...completionKeymap,
     //...lintKeymap
   ]),
