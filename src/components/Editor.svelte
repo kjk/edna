@@ -2,20 +2,13 @@
   import { onMount } from "svelte";
   import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
-  import debounce from "debounce";
   import { SCRATCH_FILE_NAME } from "../common/constants.js";
   import { HeynoteEditor } from "../editor/editor.js";
-  import {
-    loadCurrentNote,
-    loadCurrentNoteIfOnDisk,
-    loadNote,
-  } from "../notes.js";
+  import { loadNote } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { rememberEditor } from "../state.js";
   import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
   import { throwIf } from "../util.js";
-
-  let enableDiskRefresh = false;
 
   /** @type {{
     debugSyntaxTree: boolean,
@@ -121,8 +114,6 @@
     rememberEditor(editor);
     didOpenNote(editor, name, false);
 
-    scheduleRefreshFromDisk();
-
     // if debugSyntaxTree prop is set, display syntax tree for debugging
     if (debugSyntaxTree) {
       setInterval(() => {
@@ -141,43 +132,6 @@
         syntaxTreeDebugContent = render(syntaxTree(editor.view.state));
       }, 1000);
     }
-  }
-
-  function maybeRefreshFromDisk() {
-    loadCurrentNoteIfOnDisk().then((latestContentOnDisk) => {
-      if (!latestContentOnDisk) {
-        scheduleRefreshFromDisk();
-        return;
-      }
-      let currContent = editor.getContent();
-      if (latestContentOnDisk != currContent) {
-        console.log("the content was modified on disk");
-        // TODO: maybe restore cursor position
-        setEditorContent(latestContentOnDisk);
-        docDidChange();
-      }
-      scheduleRefreshFromDisk();
-    });
-  }
-
-  function clearScheduledRefreshFromDisk() {
-    if (debouncedRefreshFunc) {
-      debouncedRefreshFunc.clear();
-      debouncedRefreshFunc = null;
-    }
-  }
-
-  function scheduleRefreshFromDisk() {
-    if (!enableDiskRefresh) {
-      return;
-    }
-    clearScheduledRefreshFromDisk();
-    console.log("creating debounce for maybeRefreshFromDisk");
-    debouncedRefreshFunc = debounce(() => {
-      console.log("about to run maybeRefreshFromDisk");
-      maybeRefreshFromDisk();
-    }, 5000);
-    debouncedRefreshFunc();
   }
 
   function saveForce() {
