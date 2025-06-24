@@ -1,5 +1,5 @@
 import { SCRATCH_FILE_NAME } from "../common/constants";
-import { NoteFormat } from "../common/note-format";
+//import { NoteFormat } from "../common/note-format";
 import { getNoteMeta } from "../metadata";
 
 //import { useEditorCacheStore } from "./editor-cache";

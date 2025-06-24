@@ -12,6 +12,8 @@ export const kMetadataName = "__metadata.edna.json";
     name: string,
     altShortcut?: string,
     isStarred?: boolean,
+    cursors?: { start: number, end: number }[],
+    foldedRanges?: { start: number, end: number }[],
 }} NoteMetadata */
 
 /** @typedef {{
@@ -123,7 +125,7 @@ export function getNoteMeta(name, createIfNotExists = false) {
  * @param {boolean} save
  * @returns {Promise<Metadata>}
  */
-export async function updateNoteMeta(name, updateMetaFn, save = false) {
+async function updateNoteMeta(name, updateMetaFn, save = false) {
   let meta = getNoteMeta(name, true);
   updateMetaFn(meta);
   let res = metadata;
@@ -149,6 +151,26 @@ export async function toggleNoteStarred(name) {
   );
   tick().then(updateStarred);
   return isStarred;
+}
+
+export async function setNoteCursors(name, cursors) {
+  await updateNoteMeta(
+    name,
+    (m) => {
+      m.cursors = cursors;
+    },
+    true,
+  );
+}
+
+export async function setNoteFoldedRanges(name, foldedRanges) {
+  await updateNoteMeta(
+    name,
+    (m) => {
+      m.foldedRanges = foldedRanges;
+    },
+    true,
+  );
 }
 
 /**

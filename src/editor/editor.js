@@ -23,11 +23,16 @@ import {
   lineNumbers,
   ViewPlugin,
 } from "@codemirror/view";
-import { NoteFormat } from "../common/note-format.js";
-import { saveCurrentNote } from "../notes.js";
+import {
+  getNoteMeta,
+  setNoteCursors,
+  setNoteFoldedRanges,
+} from "../metadata.js";
+import { loadNote, saveCurrentNote, saveNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { useErrorStore } from "../stores/error-store.svelte.js";
 import { useHeynoteStore } from "../stores/heynote-store.svelte.js";
+import { throwIf } from "../util.js";
 import { APPEND_BLOCK, heynoteEvent, SET_CONTENT } from "./annotation.js";
 import {
   blockLineNumbers,
@@ -64,7 +69,6 @@ export class HeynoteEditor {
   constructor({
     element,
     path,
-    content,
     focus = true,
     theme = "light",
     keymap = "default",
@@ -97,8 +101,10 @@ export class HeynoteEditor {
     this.contentLoaded = false;
     this.notesStore = useHeynoteStore();
     this.errorStore = useErrorStore();
-    this.note = null;
+    this.note = {};
     this.selectionMarkMode = false;
+
+    throwIf(!this.path);
 
     let updateListenerExtension = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
@@ -177,7 +183,12 @@ export class HeynoteEditor {
       parent: element,
     });
 
-    this.setContent(content);
+    //this.setContent(content)
+    this.setReadOnly(true);
+    this.contentLoadedPromise = this.loadContent();
+    this.contentLoadedPromise.then(() => {
+      this.setReadOnly(false);
+    });
 
     if (focus) {
       this.view.focus();
@@ -195,15 +206,14 @@ export class HeynoteEditor {
     //console.log("saving:", this.path)
     this.diskContent = content;
 
-    // TODO(port): use buffer.save
-    // I'm not sure if I can rely on this.path being always correct
-    await saveCurrentNote(content);
+    await saveNote(this.path, content);
     // await window.heynote.buffer.save(this.path, content);
   }
 
   getContent() {
     this.note.content = this.view.state.sliceDoc();
     this.note.cursors = this.view.state.selection.toJSON();
+    setNoteCursors(this.path, this.note.cursors);
 
     // fold state
     const foldedRanges = [];
@@ -213,18 +223,24 @@ export class HeynoteEditor {
         foldedRanges.push({ from, to });
       });
     this.note.foldedRanges = foldedRanges;
+    setNoteFoldedRanges(this.path, foldedRanges);
 
     const ranges = this.note.cursors.ranges;
     if (ranges.length == 1 && ranges[0].anchor == 0 && ranges[0].head == 0) {
       console.log("DEBUG!! Cursor is at 0,0");
       console.trace();
     }
-    return this.note.serialize();
+    return this.note.content;
   }
 
   async loadContent() {
-    //console.log("loading content", this.path)
-    const content = await window.heynote.buffer.load(this.path);
+    console.log("loading content", this.path);
+    //const content = await window.heynote.buffer.load(this.path);
+    const content = await loadNote(this.path);
+    let meta = getNoteMeta(this.path);
+    this.note.cursors = meta?.cursors || null;
+    this.note.foldedRanges = meta?.foldedRanges || [];
+
     this.diskContent = content;
 
     // set up content change listener
@@ -239,22 +255,13 @@ export class HeynoteEditor {
   }
 
   setContent(content) {
-    try {
-      this.note = NoteFormat.load(content);
-      this.setReadOnly(false);
-    } catch (e) {
-      this.setReadOnly(true);
-      this.errorStore.addError(`Failed to load note: ${e.message}`);
-      throw new Error(`Failed to load note: ${e.message}`);
-    }
-
     return new Promise((resolve) => {
       // set buffer content
       this.view.dispatch({
         changes: {
           from: 0,
           to: this.view.state.doc.length,
-          insert: this.note.content,
+          insert: content,
         },
         annotations: [
           heynoteEvent.of(SET_CONTENT),
@@ -460,6 +467,27 @@ export class HeynoteEditor {
 
   currenciesLoaded() {
     triggerCurrenciesLoaded(this.view.state, this.view.dispatch);
+  }
+
+  destroy(save = true) {
+    if (this.onChange) {
+      window.heynote.buffer.removeOnChangeCallback(this.path, this.onChange);
+    }
+    if (save) {
+      this.save();
+    }
+    this.view.destroy();
+    // window.heynote.buffer.close(this.path);
+  }
+
+  hide() {
+    //console.log("hiding element", this.view.dom)
+    this.view.dom.style.setProperty("display", "none", "important");
+  }
+  show() {
+    //console.log("showing element", this.view.dom)
+    this.view.dom.style.setProperty("display", "");
+    triggerCursorChange(this.view);
   }
 
   undo() {

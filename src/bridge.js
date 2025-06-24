@@ -2,6 +2,8 @@ import { loadNote, saveNote } from "./notes";
 
 let __TESTS__ = false;
 
+let themeCallback = null;
+
 const isMobileDevice = window.matchMedia("(max-width: 600px)").matches;
 
 let currencyData = null;
@@ -82,42 +84,77 @@ const Heynote = {
     async exists(path) {
       // return localStorage.getItem(noteKey(path)) !== null;
     },
+
+    async getList() {
+      //return {"scratch.txt": {name:"Scratch"}}
+      const notes = {};
+      // for (let [key, content] of Object.entries(localStorage)) {
+      //   if (key.startsWith(NOTE_KEY_PREFIX)) {
+      //     const path = key.slice(NOTE_KEY_PREFIX.length);
+      //     notes[path] = getNoteMetadata(content);
+      //   }
+      // }
+      return notes;
+    },
+
+    async getDirectoryList() {
+      const directories = new Set();
+      // for (let key in localStorage) {
+      //   if (key.startsWith(NOTE_KEY_PREFIX)) {
+      //     const path = key.slice(NOTE_KEY_PREFIX.length);
+      //     const parts = path.split("/");
+      //     if (parts.length > 1) {
+      //       for (let i = 1; i < parts.length; i++) {
+      //         directories.add(parts.slice(0, i).join("/"));
+      //       }
+      //     }
+      //   }
+      // }
+      //console.log("directories", directories)
+      return [...directories];
+    },
+
+    async close(path) {},
+
+    _onChangeCallbacks: {},
+    addOnChangeCallback(path, callback) {},
+    removeOnChangeCallback(path, callback) {},
   },
 
-  async getList() {
-    //return {"scratch.txt": {name:"Scratch"}}
-    const notes = {};
-    // for (let [key, content] of Object.entries(localStorage)) {
-    //   if (key.startsWith(NOTE_KEY_PREFIX)) {
-    //     const path = key.slice(NOTE_KEY_PREFIX.length);
-    //     notes[path] = getNoteMetadata(content);
-    //   }
-    // }
-    return notes;
+  mainProcess: {
+    on(event, callback) {
+      ipcRenderer.on(event, callback);
+    },
+
+    off(event, callback) {
+      ipcRenderer.off(event, callback);
+    },
+
+    invoke(event, ...args) {},
   },
 
-  async getDirectoryList() {
-    const directories = new Set();
-    // for (let key in localStorage) {
-    //   if (key.startsWith(NOTE_KEY_PREFIX)) {
-    //     const path = key.slice(NOTE_KEY_PREFIX.length);
-    //     const parts = path.split("/");
-    //     if (parts.length > 1) {
-    //       for (let i = 1; i < parts.length; i++) {
-    //         directories.add(parts.slice(0, i).join("/"));
-    //       }
-    //     }
-    //   }
-    // }
-    //console.log("directories", directories)
-    return [...directories];
+  themeMode: {
+    set: (mode) => {
+      localStorage.setItem("theme", mode);
+      themeCallback(mode);
+      //console.log("set theme to", mode)
+    },
+    get: async () => {
+      const theme = localStorage.getItem("theme") || "system";
+      const systemTheme = mediaMatch.matches ? "dark" : "light";
+      return {
+        theme: theme,
+        computed: theme === "system" ? systemTheme : theme,
+      };
+    },
+    onChange: (callback) => {
+      themeCallback = callback;
+    },
+    removeListener() {
+      themeCallback = null;
+    },
+    initial: localStorage.getItem("theme") || "system",
   },
-
-  async close(path) {},
-
-  _onChangeCallbacks: {},
-  addOnChangeCallback(path, callback) {},
-  removeOnChangeCallback(path, callback) {},
 
   getCurrencyData: async () => {
     if (currencyData !== null) {

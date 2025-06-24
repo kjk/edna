@@ -20,7 +20,7 @@
   /** @type {{
     debugSyntaxTree: boolean,
     docDidChange: () => void,
-    didOpenNote: (name: string, noPushHistory: boolean) => void,
+    didOpenNote: (editor: HeynoteEditor, name: string, noPushHistory: boolean) => void,
    }}*/
 
   let { debugSyntaxTree, docDidChange, didOpenNote } = $props();
@@ -100,35 +100,28 @@
     let fontFamily = settings.fontFamily;
     let fontSize = settings.fontSize;
 
+    let name = settings.currentNoteName;
     // load buffer content and create editor
-    loadCurrentNote().then((content) => {
-      let settings = getSettings();
-      let name = settings.currentNoteName;
-      throwIf(!name);
-
-      editor = new HeynoteEditor({
-        path: name,
-        element: editorEl,
-        content: content,
-        theme: theme,
-        keymap: keymap,
-        emacsMetaKey: emacsMetaKey,
-        showLineNumberGutter: showLineNumberGutter,
-        showFoldGutter: showFoldGutter,
-        bracketClosing: bracketClosing,
-        fontFamily: fontFamily,
-        fontSize: fontSize,
-        tabSize: 4,
-        defaultBlockAutoDetect: true,
-        defaultBlockToken: "text",
-        keyBindings: [],
-      });
-      editor.contentLoaded = true; // TODO(port): hack for now, needs for saving to work
-      rememberEditor(editor);
-      didOpenNote(name, false);
-
-      scheduleRefreshFromDisk();
+    editor = new HeynoteEditor({
+      path: name,
+      element: editorEl,
+      theme: theme,
+      keymap: keymap,
+      emacsMetaKey: emacsMetaKey,
+      showLineNumberGutter: showLineNumberGutter,
+      showFoldGutter: showFoldGutter,
+      bracketClosing: bracketClosing,
+      fontFamily: fontFamily,
+      fontSize: fontSize,
+      tabSize: 4,
+      defaultBlockAutoDetect: true,
+      defaultBlockToken: "text",
+      keyBindings: [],
     });
+    rememberEditor(editor);
+    didOpenNote(editor, name, false);
+
+    scheduleRefreshFromDisk();
 
     // if debugSyntaxTree prop is set, display syntax tree for debugging
     if (debugSyntaxTree) {
@@ -299,7 +292,7 @@
     });
     focus();
     console.log("openNote: triggering docChanged event, name:", name);
-    didOpenNote(name, noPushHistory);
+    didOpenNote(editor, name, noPushHistory);
   }
 </script>
 

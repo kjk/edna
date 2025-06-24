@@ -80,7 +80,7 @@
     noteExists,
     pickAnotherDirectory,
     preLoadAllNotes,
-    rememberOpenedNote,
+    rememberOpenedNoteFS,
     renameNote,
     switchToStoringNotesOnDisk,
   } from "../notes";
@@ -144,7 +144,7 @@
   let contextMenuPos = $state({ x: 0, y: 0 });
 
   /** @type {Editor} */
-  let editor;
+  let editorRef;
 
   let isShowingDialog = $derived.by(() => {
     return (
@@ -421,7 +421,7 @@
     let noteToOpen = null;
     for (let fh of fileHandles) {
       console.log("fh:", fh);
-      let noteName = rememberOpenedNote(fh);
+      let noteName = rememberOpenedNoteFS(fh);
       if (noteName === null || noteName === "") {
         continue;
       }
@@ -1140,10 +1140,10 @@
       addNewBlockBeforeCurrent(view);
       view.focus();
     } else if (cmdId === kCmdNewBlockAtEnd) {
-      addNewBlockAfterLast(editor);
+      addNewBlockAfterLast(editorRef);
       view.focus();
     } else if (cmdId === kCmdNewBlockAtStart) {
-      addNewBlockBeforeFirst(editor);
+      addNewBlockBeforeFirst(editorRef);
       view.focus();
     } else if (cmdId === kCmdSplitBlockAtCursor) {
       insertNewBlockAtCursor(view);
@@ -1393,24 +1393,24 @@
    * @returns {Editor}
    */
   function getEditorComp() {
-    return editor;
+    return editorRef;
   }
 
   /**
    * @returns {HeynoteEditor}
    */
   function getEditor() {
-    return editor.getEditor();
+    return editorRef.getEditor();
   }
 
   /**
    * @returns {import("@codemirror/view").EditorView}
    */
   function getEditorView() {
-    if (!editor) {
+    if (!editorRef) {
       return null;
     }
-    return editor.getEditorView();
+    return editorRef.getEditorView();
   }
 
   function formatCurrentBlock() {
@@ -1739,10 +1739,11 @@
   }
 
   /**
+   * @param {HeynoteEditor} editor
    * @param {string} name
    * @param {boolean} noPushHistory
    */
-  function didOpenNote(name, noPushHistory = false) {
+  function didOpenNote(editor, name, noPushHistory = false) {
     console.log("didOpenNote:", name);
     throwIf(!name);
     noteName = name;
@@ -1790,7 +1791,7 @@
     debugSyntaxTree={false}
     {didOpenNote}
     {docDidChange}
-    bind:this={editor}
+    bind:this={editorRef}
   />
   <StatusBar {docSize} {formatCurrentBlock} />
 </div>

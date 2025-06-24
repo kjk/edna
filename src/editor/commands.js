@@ -80,16 +80,8 @@ const openBufferSelector = (editor) => () => {
   editor.openBufferSelector();
   return true;
 };
-const openBlockSelector = (editor) => () => {
-  editor.openBlockSelector();
-  return true;
-};
 const openCommandPalette = (editor) => () => {
   editor.openCommandPalette();
-  return true;
-};
-const openHistorySelector = (editor) => () => {
-  editor.openHistorySelector();
   return true;
 };
 const openMoveToBuffer = (editor) => () => {
@@ -98,6 +90,19 @@ const openMoveToBuffer = (editor) => () => {
 };
 const openCreateNewBuffer = (editor) => () => {
   editor.openCreateBuffer("new");
+  return true;
+};
+const nothing = (view) => {
+  return true;
+};
+
+// edna commands
+const openBlockSelector = (editor) => () => {
+  editor.openBlockSelector();
+  return true;
+};
+const openHistorySelector = (editor) => () => {
+  editor.openHistorySelector();
   return true;
 };
 const saveNote = (editor) => () => {
@@ -118,10 +123,6 @@ const openFunctionSelector = (editor) => () => {
 };
 const openSettings = (editor) => () => {
   editor.openSettings();
-  return true;
-};
-
-const nothing = (view) => {
   return true;
 };
 
@@ -203,7 +204,6 @@ const HEYNOTE_COMMANDS = {
     "Select block language…",
   ),
   openBufferSelector: cmd(openBufferSelector, "Buffer", "Switch buffer…"),
-  openBlockSelector: cmd(openBlockSelector, "Buffer", "Switch block…"),
   openCommandPalette: cmd(
     openCommandPalette,
     "Editor",
@@ -214,7 +214,6 @@ const HEYNOTE_COMMANDS = {
     "Block",
     "Move block to another buffer…",
   ),
-  saveNote: cmd(saveNote, "Editor", "Save"),
   openCreateNewBuffer: cmd(openCreateNewBuffer, "Buffer", "Create new buffer…"),
   cut: cmd(cutCommand, "Clipboard", "Cut selection"),
   copy: cmd(copyCommand, "Clipboard", "Copy selection"),
@@ -359,6 +358,8 @@ const HEYNOTE_COMMANDS = {
   ),
 
   // edna commands
+  openBlockSelector: cmd(openBlockSelector, "Buffer", "Switch block…"),
+  saveNote: cmd(saveNote, "Editor", "Save"),
   openHistorySelector: cmd(
     openHistorySelector,
     "Buffer",

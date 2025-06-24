@@ -372,22 +372,21 @@ let encryptedNoteNames = [];
   handle: FileSystemFileHandle,
   fileName: string,
   noteName: string,
-}} OpenedNote */
+}} OpenedNotesFS */
 
 // list of notes opened from disk. They are not part of the workspace, will be forgotten
 // on app reload. Their names are their full fileNames which helps to ensure that
 // their names don't conflict with notes in the workspace
-// TODO: maybe add some unique prefix to the name (like `system:` for system notes?)
-/** @type {OpenedNote[]} */
-let openedNotes = [];
+/** @type {OpenedNotesFS[]} */
+let openedNotesFS = [];
 
 /**
  *
  * @param {string} noteName
- * @returns {OpenedNote}
+ * @returns {OpenedNotesFS}
  */
-function getOpenedNote(noteName) {
-  for (let i of openedNotes) {
+function getOpenedNoteFS(noteName) {
+  for (let i of openedNotesFS) {
     if (i.noteName === noteName) {
       return i;
     }
@@ -398,8 +397,8 @@ function getOpenedNote(noteName) {
 /**
  * @param {string} noteName
  */
-export function unrememberOpenedNote(noteName) {
-  openedNotes = openedNotes.filter(
+export function unrememberOpenedNoteFS(noteName) {
+  openedNotesFS = openedNotesFS.filter(
     (openedNote) => openedNote.noteName !== noteName,
   );
   notesStore.noteNames = notesStore.noteNames.filter(
@@ -411,7 +410,7 @@ export function unrememberOpenedNote(noteName) {
  * @param {FileSystemFileHandle} fh
  * @returns string
  */
-export function rememberOpenedNote(fh) {
+export function rememberOpenedNoteFS(fh) {
   if (fh.name.endsWith(kEdnaEncrFileExt)) {
     // we don't support encrypted notes
     return null;
@@ -438,7 +437,7 @@ export function rememberOpenedNote(fh) {
     fileName: fh.name,
     noteName: noteName,
   };
-  openedNotes.push(opened);
+  openedNotesFS.push(opened);
   notesStore.noteNames.push(noteName);
   return noteName;
 }
@@ -562,17 +561,21 @@ export function startsWithBlockHeader(s) {
   return s.startsWith("\n∞∞∞");
 }
 
-// in case somehow a note doesn't start with the block header, fix it up
+/**
+ * in case somehow a note doesn't start with the block header, fix it up
+ * @param {string} s
+ * @returns {string}
+ */
 export function fixUpNoteContent(s) {
-  // console.log("fixUpNote:", content)
-  // if (s === null) {
-  //   // console.log("fixUpNote: null content")
-  //   return blockHdrMarkdown;
-  // }
-  // if (!s.startsWith("\n∞∞∞")) {
-  //   // console.log("fixUpNote: added header to content", s.substring(0, 80));
-  //   s = blockHdrMarkdown + s;
-  // }
+  // console.log("fixUpNoteContent:", s);
+  if (s === null) {
+    // console.log("fixUpNoteContent: null content")
+    return blockHdrMarkdown;
+  }
+  if (!s.startsWith("\n∞∞∞")) {
+    // console.log("fixUpNoteContent: added header to content", s.substring(0, 80));
+    s = blockHdrMarkdown + s;
+  }
   return s;
 }
 
@@ -636,7 +639,7 @@ export async function saveNote(name, content) {
     console.log("skipped saving system note", name);
     return;
   }
-  let openedNote = getOpenedNote(name);
+  let openedNote = getOpenedNoteFS(name);
   if (openedNote) {
     let fh = openedNote.handle;
     let ok = await requestFileWritePermission(fh);
@@ -808,7 +811,7 @@ export async function loadNote(name) {
   if (isSystemNoteName(name)) {
     res = getSystemNoteContent(name);
   } else {
-    let openedNote = getOpenedNote(name);
+    let openedNote = getOpenedNoteFS(name);
     if (openedNote) {
       res = await fsFileHandleReadTextFile(openedNote.handle);
     } else {
@@ -939,7 +942,7 @@ export async function loadCurrentNoteIfOnDisk() {
   if (isSystemNoteName(name)) {
     return null;
   }
-  let openedNote = getOpenedNote(name);
+  let openedNote = getOpenedNoteFS(name);
   if (openedNote) {
     return null;
   }
@@ -958,7 +961,7 @@ export function canDeleteNote(name) {
   if (name === SCRATCH_FILE_NAME) {
     return false;
   }
-  let openedNote = getOpenedNote(name);
+  let openedNote = getOpenedNoteFS(name);
   if (openedNote) {
     return false;
   }
@@ -1112,7 +1115,7 @@ export async function switchToStoringNotesOnDisk(dh) {
     if (isSystemNoteName(name)) {
       continue;
     }
-    let openedNote = getOpenedNote(name);
+    let openedNote = getOpenedNoteFS(name);
     if (openedNote) {
       continue;
     }
@@ -1123,7 +1126,7 @@ export async function switchToStoringNotesOnDisk(dh) {
     if (isSystemNoteName(name)) {
       continue;
     }
-    let openedNote = getOpenedNote(name);
+    let openedNote = getOpenedNoteFS(name);
     if (openedNote) {
       continue;
     }
@@ -1137,7 +1140,7 @@ export async function switchToStoringNotesOnDisk(dh) {
   // save in indexedDb so that it persists across sessions
   await dbSetDirHandle(dh);
   let noteNames = await loadNoteNames();
-  openedNotes = []; // can't guarantee names will be unique
+  openedNotesFS = []; // can't guarantee names will be unique
 
   // migrate settings, update currentNoteName
   let settings = getSettings();
@@ -1158,7 +1161,7 @@ export async function pickAnotherDirectory() {
       return false;
     }
     await dbSetDirHandle(newDh);
-    openedNotes = []; // can't guarantee names will be unique
+    openedNotesFS = []; // can't guarantee names will be unique
     return true;
   } catch (e) {
     console.error("pickAnotherDirectory", e);
