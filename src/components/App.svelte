@@ -1638,13 +1638,7 @@
   }
 
   function onSelectHistory(name) {
-    // console.log("onSelectHistory:", name);
-    closeHistorySelector();
-    if (name != noteName) {
-      notesStore.currentBufferPath = name;
-    } else {
-      // console.log("onSelectHistory: skipping opening becase same note");
-    }
+    notesStore.openBuffer(name);
   }
 
   /**
@@ -1668,8 +1662,7 @@
    * @param {string} name
    */
   function onOpenNote(name) {
-    notesStore.showBufferSelector = false;
-    openNote(name);
+    notesStore.openBuffer(name);
   }
 
   function moveCurrentBlock() {

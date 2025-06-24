@@ -78,7 +78,6 @@ class HeynoteStore {
   settings = $state(undefined); // user settings
 
   addRecentBuffer(path) {
-    debugger;
     const recent = this.recentBufferPaths.filter((p) => p !== path);
     recent.unshift(path);
     this.recentBufferPaths = recent.slice(0, 100);
@@ -95,7 +94,6 @@ class HeynoteStore {
   }
 
   openBuffer(path) {
-    debugger;
     this.closeDialog();
     this.currentBufferPath = path;
     this.addRecentBuffer(path);
