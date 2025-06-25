@@ -10,6 +10,8 @@ import { EditorView } from "@codemirror/view";
 // import { FOLD_LABEL_LENGTH } from "@/src/common/constants.js";
 import {
   ADD_NEW_BLOCK,
+  heynoteEvent,
+  SET_FOLD_STATE,
   transactionsHasAnnotation,
   transactionsHasHistoryEvent,
 } from "./annotation.js";
@@ -84,6 +86,7 @@ export function foldGutterExtension() {
         click(view, line, event) {
           // editor should not loose focus when clicking on the fold gutter
           view.docView.dom.focus();
+          return false;
         },
       },
     }),
@@ -165,6 +168,7 @@ export const toggleBlockFold = (editor) => (view) => {
     // we'll fold all blocks if more blocks are unfolded than folded, and unfold all blocks otherwise
     view.dispatch({
       effects: [...(numUnfolded >= numFolded ? foldEffects : unfoldEffects)],
+      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
@@ -189,6 +193,7 @@ export const foldBlock = (editor) => (view) => {
   if (blockRanges.length > 0) {
     view.dispatch({
       effects: blockRanges.map((range) => foldEffect.of(range)),
+      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
@@ -210,6 +215,7 @@ export const foldAllBlocks = (editor) => (view) => {
   if (blockRanges.length > 0) {
     view.dispatch({
       effects: blockRanges.map((range) => foldEffect.of(range)),
+      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
@@ -234,6 +240,7 @@ export const unfoldBlock = (editor) => (view) => {
   if (blockFolds.length > 0) {
     view.dispatch({
       effects: blockFolds.map((range) => unfoldEffect.of(range)),
+      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
@@ -255,6 +262,7 @@ export const unfoldAlBlocks = (editor) => (view) => {
   if (blockFolds.length > 0) {
     view.dispatch({
       effects: blockFolds.map((range) => unfoldEffect.of(range)),
+      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
