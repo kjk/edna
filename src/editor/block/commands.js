@@ -1,4 +1,4 @@
-import { EditorSelection } from "@codemirror/state";
+import { EditorSelection, Transaction } from "@codemirror/state";
 import {
   ADD_NEW_BLOCK,
   CURRENCIES_LOADED,
@@ -373,7 +373,10 @@ export function triggerCurrenciesLoaded({ state, dispatch }) {
   dispatch(
     state.update({
       changes: { from: 0, to: 0, insert: "" },
-      annotations: [heynoteEvent.of(CURRENCIES_LOADED)],
+      annotations: [
+        heynoteEvent.of(CURRENCIES_LOADED),
+        Transaction.addToHistory.of(false),
+      ],
     }),
   );
 }

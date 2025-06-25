@@ -1,9 +1,9 @@
 import { markdown } from "@codemirror/lang-markdown";
 import { indentUnit } from "@codemirror/language";
-import { Compartment, EditorState } from "@codemirror/state";
+import { Compartment, EditorState, Transaction } from "@codemirror/state";
 import { drawSelection, EditorView, lineNumbers } from "@codemirror/view";
 import { findEditorByView } from "../state.js";
-import { heynoteEvent, SET_CONTENT } from "./annotation.js";
+import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation.js";
 import {
   blockLineNumbers,
   blockState,
@@ -172,7 +172,10 @@ export class EdnaEditor {
         to: this.view.state.doc.length,
         insert: content,
       },
-      annotations: [heynoteEvent.of(SET_CONTENT)],
+      annotations: [
+        heynoteEvent.of(SET_CONTENT),
+        Transaction.addToHistory.of(false),
+      ],
     });
     this.view.dispatch({
       selection: {
@@ -212,6 +215,10 @@ export class EdnaEditor {
     let ff = getFontTheme(fontFamily, fontSize);
     this.view.dispatch({
       effects: this.fontTheme.reconfigure(ff),
+      annotations: [
+        heynoteEvent.of(SET_FONT),
+        Transaction.addToHistory.of(false),
+      ],
     });
   }
 
