@@ -1,6 +1,6 @@
 <script>
   import { tick } from "svelte";
-  import { foldCode, unfoldCode } from "@codemirror/language";
+  import { foldCode, foldEffect, unfoldCode } from "@codemirror/language";
   import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import {
@@ -1891,6 +1891,14 @@
     if (name === kDailyJournalNoteName) {
       console.log("journal, so going to next block");
       // editor.gotoNextBlock();
+    }
+
+    let noteMeta = getNoteMeta(name, false);
+    let ranges = noteMeta?.foldedRanges || [];
+    if (len(ranges) > 0) {
+      editor.getEditorView().dispatch({
+        effects: ranges.map((range) => foldEffect.of(range)),
+      });
     }
 
     window.document.title = name;

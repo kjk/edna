@@ -134,13 +134,6 @@
       let name = settings.currentNoteName;
       throwIf(!name);
 
-      let noteMeta = getNoteMeta(name, false);
-      let ranges = noteMeta?.foldedRanges || [];
-      if (len(ranges) > 0) {
-        editor.view.dispatch({
-          effects: ranges.map((range) => foldEffect.of(range)),
-        });
-      }
       didOpenNote(name, false);
     });
 
