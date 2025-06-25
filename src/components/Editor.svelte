@@ -19,8 +19,6 @@
   import { appState } from "../state.svelte.js";
   import { len, throwIf } from "../util.js";
 
-  let enableDiskRefresh = false;
-
   /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
 
   /** @type {{
@@ -34,7 +32,6 @@
 
   let syntaxTreeDebugContent = $state(null);
   let diskContent = $state(null);
-  let debouncedRefreshFunc = $state(null);
   let settings = getSettings();
   let theme = settings.theme;
 
@@ -145,8 +142,6 @@
         });
       }
       didOpenNote(name, false);
-
-      scheduleRefreshFromDisk();
     });
 
     // if debugSyntaxTree prop is set, display syntax tree for debugging
@@ -173,43 +168,6 @@
     };
   }
 
-  function maybeRefreshFromDisk() {
-    loadCurrentNoteIfOnDisk().then((latestContentOnDisk) => {
-      if (!latestContentOnDisk) {
-        scheduleRefreshFromDisk();
-        return;
-      }
-      let currContent = editor.getContent();
-      if (latestContentOnDisk != currContent) {
-        console.log("the content was modified on disk");
-        // TODO: maybe restore cursor position
-        setEditorContent(latestContentOnDisk);
-        docDidChange();
-      }
-      scheduleRefreshFromDisk();
-    });
-  }
-
-  function clearScheduledRefreshFromDisk() {
-    if (debouncedRefreshFunc) {
-      debouncedRefreshFunc.clear();
-      debouncedRefreshFunc = null;
-    }
-  }
-
-  function scheduleRefreshFromDisk() {
-    if (!enableDiskRefresh) {
-      return;
-    }
-    clearScheduledRefreshFromDisk();
-    console.log("creating debounce for maybeRefreshFromDisk");
-    debouncedRefreshFunc = debounce(() => {
-      console.log("about to run maybeRefreshFromDisk");
-      maybeRefreshFromDisk();
-    }, 5000);
-    debouncedRefreshFunc();
-  }
-
   async function saveFunction(content) {
     if (content === diskContent) {
       console.log("saveFunction: content unchanged, skipping save");
@@ -218,8 +176,6 @@
     console.log("saveFunction: saving content");
     diskContent = content;
     await saveCurrentNoteContent(content);
-
-    scheduleRefreshFromDisk();
   }
 
   function saveForce() {
