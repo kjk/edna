@@ -4,9 +4,10 @@
 
 ## 1.24
 - added folding of blocks:
-  - Alt + Ctrl + [ : fold all blocks
-  - Alt + Ctrl + ] : unfold all block
+  - Alt + Ctrl + [ : fold current block
+  - Alt + Ctrl + ] : unfold current block
   - Alt + Ctrl + . : toggle folding
+- and `Fold all blocks` and `Unfold all blocks` commands (available via command palette)
 
 ## 1.23
 - improved search UI (For `Ctrl + F`)
