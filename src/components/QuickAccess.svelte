@@ -50,8 +50,8 @@
     if (len(history) > 1) {
       initialSelection++;
     }
-    console.log("firstInHistoryIdx:", firstInHistoryIdx);
-    console.log("initialSelection:", initialSelection);
+    // console.log("firstInHistoryIdx:", firstInHistoryIdx);
+    // console.log("initialSelection:", initialSelection);
 
     // history can repeat the names
     for (let noteName of history) {

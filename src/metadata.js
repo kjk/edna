@@ -9,6 +9,7 @@ export const kMetadataName = "__metadata.edna.json";
     name: string,
     altShortcut?: string,
     isStarred?: boolean,
+    foldedRanges?: { from: number, to: number }[],
 }} NoteMetadata */
 
 /** @typedef {{
@@ -112,47 +113,22 @@ export function getNoteMeta(name, createIfNotExists = false) {
   return m;
 }
 
-/** @typedef {(meta: NoteMetadata) => void} UpdateNoteMetadataFn */
-
-/**
- * @param {string} name
- * @param {UpdateNoteMetadataFn} updateMetaFn
- * @param {boolean} save
- * @returns {Promise<Metadata>}
- */
-export async function updateNoteMeta(name, updateMetaFn, save = false) {
-  let meta = getNoteMeta(name, true);
-  updateMetaFn(meta);
-  let res = metadata;
-  if (save) {
-    res = await saveNotesMetadata(metadata);
-  }
-  return res;
-}
-
 /**
  * @param {string} name
  * @returns {Promise<boolean>}
  */
 export async function toggleNoteStarred(name) {
-  let isStarred = false;
-  await updateNoteMeta(
-    name,
-    (m) => {
-      m.isStarred = !m.isStarred;
-      isStarred = m.isStarred;
-    },
-    true,
-  );
+  let meta = getNoteMeta(name, true);
+  meta.isStarred = !meta.isStarred;
+  await saveNotesMetadata(metadata);
   tick().then(updateStarred);
-  return isStarred;
+  return meta.isStarred;
 }
 
 /**
  * @param {string} name
  */
 export async function removeNoteFromMetadata(name) {
-  console.log("deleteMetadataForNote:", name);
   let notes = getNotesMetadata();
   let newNotes = [];
   for (let m of notes) {
@@ -167,7 +143,6 @@ export async function removeNoteFromMetadata(name) {
 /**
  * @param {string} oldName
  * @param {string} newName
- * @returns {Promise<Metadata>}
  */
 export async function renameNoteInMetadata(oldName, newName) {
   let notes = getNotesMetadata();
@@ -177,14 +152,12 @@ export async function renameNoteInMetadata(oldName, newName) {
       break;
     }
   }
-  let res = await saveNotesMetadata(metadata);
-  return res;
+  await saveNotesMetadata(metadata);
 }
 
 /**
  * @param {string} name
  * @param {string} altShortcut - "0" ... "9"
- * @returns {Promise<Metadata>}
  */
 export async function reassignNoteShortcut(name, altShortcut) {
   console.log("reassignNoteShortcut:", name, altShortcut);
@@ -204,15 +177,19 @@ export async function reassignNoteShortcut(name, altShortcut) {
     }
   }
 
-  let res = await updateNoteMeta(
-    name,
-    (meta) => {
-      meta.altShortcut = altShortcut;
-    },
-    true,
-  );
-  tick().then(updateWithShortcuts);
-  return res;
+  let meta = getNoteMeta(name, true);
+  meta.altShortcut = altShortcut;
+  await saveNotesMetadata(metadata);
+}
+
+/**
+ * @param {string} name
+ * @param {{from, to}[]} foldedRanges
+ */
+export async function setNoteMetaFoldedRanges(name, foldedRanges) {
+  let meta = getNoteMeta(name, true);
+  meta.foldedRanges = foldedRanges;
+  await saveNotesMetadata(metadata);
 }
 
 /**
@@ -238,39 +215,15 @@ export function getFunctionMeta(name, createIfNotExists = false) {
   return m;
 }
 
-/** @typedef {(meta: FunctionMetadata) => void} UpdateFunctionMetadataFn */
-
-/**
- * @param {string} name
- * @param {UpdateFunctionMetadataFn} updateFn
- * @param {boolean} save
- * @returns {Promise<Metadata>}
- */
-export async function updateFunctionMeta(name, updateFn, save = false) {
-  let meta = getFunctionMeta(name, true);
-  updateFn(meta);
-  let res = metadata;
-  if (save) {
-    res = await saveNotesMetadata(metadata);
-  }
-  return res;
-}
-
 /**
  * @param {string} name
  * @returns {Promise<boolean>}
  */
 export async function toggleFunctionStarred(name) {
-  let isStarred = false;
-  await updateFunctionMeta(
-    name,
-    (m) => {
-      m.isStarred = !m.isStarred;
-      isStarred = m.isStarred;
-    },
-    true,
-  );
-  return isStarred;
+  let m = getFunctionMeta(name, true);
+  m.isStarred = !m.isStarred;
+  await saveNotesMetadata(metadata);
+  return m.isStarred;
 }
 
 // TODO: temporary

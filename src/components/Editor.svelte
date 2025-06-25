@@ -1,6 +1,12 @@
 <script>
+  import { onMount } from "svelte";
+  import { foldEffect, syntaxTree } from "@codemirror/language";
+  import { EditorView } from "@codemirror/view";
+  import debounce from "debounce";
+  import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
+  import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
   import { EdnaEditor } from "../editor/editor.js";
-  import { syntaxTree } from "@codemirror/language";
+  import { getNoteMeta, getNotesMetadata } from "../metadata.js";
   import {
     kScratchNoteName,
     loadCurrentNote,
@@ -8,15 +14,10 @@
     loadNote,
     saveCurrentNote as saveCurrentNoteContent,
   } from "../notes.js";
-  import { rememberEditor } from "../state.js";
   import { getSettings } from "../settings.svelte.js";
+  import { rememberEditor } from "../state.js";
   import { appState } from "../state.svelte.js";
-  import debounce from "debounce";
-  import { throwIf } from "../util.js";
-  import { EditorView } from "@codemirror/view";
-  import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
-  import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
-  import { onMount } from "svelte";
+  import { len, throwIf } from "../util.js";
 
   let enableDiskRefresh = false;
 
@@ -135,6 +136,14 @@
       let settings = getSettings();
       let name = settings.currentNoteName;
       throwIf(!name);
+
+      let noteMeta = getNoteMeta(name, false);
+      let ranges = noteMeta?.foldedRanges || [];
+      if (len(ranges) > 0) {
+        editor.view.dispatch({
+          effects: ranges.map((range) => foldEffect.of(range)),
+        });
+      }
       didOpenNote(name, false);
 
       scheduleRefreshFromDisk();

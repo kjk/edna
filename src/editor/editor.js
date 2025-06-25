@@ -1,9 +1,22 @@
+import { tick } from "svelte";
 import { markdown } from "@codemirror/lang-markdown";
-import { indentUnit } from "@codemirror/language";
+import { foldState, indentUnit } from "@codemirror/language";
 import { Compartment, EditorState, Transaction } from "@codemirror/state";
-import { drawSelection, EditorView, lineNumbers } from "@codemirror/view";
+import {
+  drawSelection,
+  EditorView,
+  lineNumbers,
+  ViewPlugin,
+} from "@codemirror/view";
+import { setNoteMetaFoldedRanges } from "../metadata.js";
+import { getSettings } from "../settings.svelte.js";
 import { findEditorByView } from "../state.js";
-import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation.js";
+import {
+  heynoteEvent,
+  SET_CONTENT,
+  SET_FOLD_STATE,
+  SET_FONT,
+} from "./annotation.js";
 import {
   blockLineNumbers,
   blockState,
@@ -33,6 +46,21 @@ function getKeymapExtensions(editor, keymap) {
     return ednaKeymap(editor);
   }
 }
+
+const foldNotifications = (editor) =>
+  ViewPlugin.fromClass(
+    class {
+      update(update) {
+        if (
+          update.transactions.some(
+            (tr) => tr.annotation(heynoteEvent) === SET_FOLD_STATE,
+          )
+        ) {
+          editor.didChangeFoldState();
+        }
+      }
+    },
+  );
 
 export class EdnaEditor {
   constructor({
@@ -127,6 +155,7 @@ export class EdnaEditor {
           saveFunction ? autoSaveContent(saveFunction, 2000) : [],
 
           todoCheckboxPlugin,
+          foldNotifications(this),
           markdown(),
           links,
         ],
@@ -261,6 +290,26 @@ export class EdnaEditor {
       effects: this.closeBracketsCompartment.reconfigure(
         value ? createDynamicCloseBracketsExtension() : [],
       ),
+    });
+  }
+
+  didChangeFoldStateDelayed() {
+    const foldedRanges = [];
+    this.view.state
+      .field(foldState, false)
+      ?.between(0, this.view.state.doc.length, (from, to) => {
+        foldedRanges.push({ from, to });
+      });
+    console.log("Fold state changed:", foldedRanges);
+    // TODO: should maintain noteName on editor object
+    let settings = getSettings();
+    setNoteMetaFoldedRanges(settings.currentNoteName, foldedRanges);
+  }
+
+  didChangeFoldState() {
+    // TODO: not sure if I have to delay this
+    tick().then(() => {
+      this.didChangeFoldStateDelayed();
     });
   }
 }
