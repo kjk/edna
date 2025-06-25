@@ -1,5 +1,6 @@
 <script>
   import { tick } from "svelte";
+  import { foldCode, unfoldCode } from "@codemirror/language";
   import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import {
@@ -26,6 +27,11 @@
   } from "../editor/block/format-code";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { EdnaEditor, getContent, setReadOnly } from "../editor/editor";
+  import {
+    foldBlock,
+    toggleBlockFold,
+    unfoldBlock,
+  } from "../editor/fold-gutter";
   import {
     extForLang,
     getLanguage,
@@ -96,6 +102,7 @@
     isAltNumEvent,
     isDev,
     len,
+    platform,
     pushHistory,
     stringSizeInUtf8Bytes,
     throwIf,
@@ -130,6 +137,8 @@
   import TopNav from "./TopNav.svelte";
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
+
+  const isMac = platform.isMac;
 
   let settings = getSettings();
 
@@ -946,6 +955,11 @@
   export const kCmdChangeBlockLanguage = nmid();
   export const kCmdBlockSelectAll = nmid();
   export const kCmdMoveBlock = nmid();
+  export const kCmdToggleBlockFold = nmid();
+  export const kCmdFoldBlock = nmid();
+  export const kCmdUnfoldBlock = nmid();
+  export const kCmdFoldCode = nmid();
+  export const kCmdUnfoldColde = nmid();
   export const kCmdFormatBlock = nmid();
   const kCmdBlockLast = kCmdFormatBlock;
 
@@ -1010,6 +1024,17 @@
       ["Export to file", kCmdExportCurrentBlock],
       ["Delete", kCmdBlockDelete],
       ["Move to another note", kCmdMoveBlock],
+      isMac
+        ? [
+            ["Toggle block fold\Mod + Alt + .", kCmdToggleBlockFold],
+            ["Fold block\Mod + Alt + [", kCmdFoldBlock],
+            ["Unfold block\Mod + Alt + ]", kCmdUnfoldBlock],
+          ]
+        : [
+            ["Toggle block fold\tCtrl + Alt + .", kCmdToggleBlockFold],
+            ["Fold block\tCtrl + Alt + [", kCmdFoldBlock],
+            ["Unfold block\tCtrl + Alt + ]", kCmdUnfoldBlock],
+          ],
     ];
 
     const menuRun = [
@@ -1087,7 +1112,7 @@
    * @returns {number}
    */
   function menuItemStatus(mi) {
-    let mid = mi[1];
+    let mid = /** @type {number} */ (mi[1]);
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
     }
@@ -1102,24 +1127,49 @@
     let view = getEditorView();
     let readOnly = isReadOnly(view);
 
+    let removeIfReadOnly = [
+      kCmdFormatBlock,
+      kCmdToggleBlockFold,
+      kCmdFoldBlock,
+      kCmdUnfoldBlock,
+      kCmdFoldCode,
+      kCmdUnfoldColde,
+      kCmdMoveBlock, // disable?
+      kCmdRunBlock, // disable?
+      kCmdRunBlockWithAnotherBlock, // disable?
+      kCmdRunBlockWithClipboard, // disable?
+      kCmdSmartRun, // disable?
+      kCmdRunFunctionWithBlockContent, // disable?
+      kCmdRunFunctionWithSelection, // disable?
+    ];
+    let removedfNeedsFS = [
+      kCmdOpenNoteFromDisk,
+      kCmdMoveNotesToDirectory,
+      kCmdSwitchToLocalStorage,
+      kCmdSwitchToNotesInDir,
+    ];
+
+    if (readOnly && removeIfReadOnly.includes(mid)) {
+      return kMenuStatusRemoved;
+    }
+    if (!hasFS && removedfNeedsFS.includes(mid)) {
+      return kMenuStatusRemoved;
+    }
+
     if (mid === kCmdFormatBlock) {
-      if (readOnly || !langSupportsFormat(lang)) {
+      if (!langSupportsFormat(lang)) {
         return kMenuStatusRemoved;
       }
-    } else if (mid === kCmdMoveBlock) {
-      if (readOnly) {
-        return kMenuStatusDisabled;
-      }
     } else if (mid === kCmdRunBlock) {
-      if (readOnly || !langSupportsRun(lang)) {
+      if (!langSupportsRun(lang)) {
         return kMenuStatusDisabled;
       }
     } else if (mid === kCmdRunBlockWithAnotherBlock) {
-      if (readOnly || lang.token !== "javascript") {
+      if (lang.token !== "javascript") {
         return kMenuStatusDisabled;
       }
     } else if (mid === kCmdRunBlockWithClipboard) {
-      if (readOnly || lang.token !== "javascript") {
+      if (lang.token !== "javascript") {
         return kMenuStatusDisabled;
       }
       // it would be nice to check clipboard for empty text but that triggers clipboard
@@ -1127,32 +1177,14 @@
       // if (!mostRecentHasClipboardText) {
       //   return kMenuStatusDisabled;
       // }
-    } else if (mid === kCmdSmartRun) {
-      if (readOnly) {
-        return kMenuStatusDisabled;
-      }
-    } else if (mid === kCmdOpenNoteFromDisk) {
-      if (!hasFS) {
-        return kMenuStatusRemoved;
-      }
     } else if (mid === kCmdMoveNotesToDirectory) {
-      if (!hasFS) {
-        return kMenuStatusRemoved;
-      }
       if (dh) {
         // currently using directory
         return kMenuStatusRemoved;
       }
     } else if (mid == kCmdSwitchToLocalStorage) {
-      if (!hasFS) {
-        return kMenuStatusRemoved;
-      }
       if (dh === null) {
         // currently using local storage
-        return kMenuStatusRemoved;
-      }
-    } else if (mid == kCmdSwitchToNotesInDir) {
-      if (!hasFS) {
         return kMenuStatusRemoved;
       }
     } else if (mid === kCmdEncryptNotes) {
@@ -1167,9 +1199,6 @@
       mid === kCmdRunFunctionWithBlockContent ||
       mid === kCmdRunFunctionWithSelection
     ) {
-      if (readOnly) {
-        return kMenuStatusDisabled;
-      }
       if (mid === kCmdRunFunctionWithSelection && !hasSelection()) {
         return kMenuStatusDisabled;
       }
@@ -1194,6 +1223,8 @@
     // console.log("cmd:", cmdId);
     showingMenu = false;
     let view = getEditorView();
+    let ednaEditor = getEditor();
+
     if (cmdId === kCmdCommandPalette) {
       openCommandPalette();
     } else if (cmdId === kCmdOpenNote) {
@@ -1241,6 +1272,21 @@
       view.focus();
     } else if (cmdId === kCmdMoveBlock) {
       moveCurrentBlock();
+    } else if (cmdId === kCmdFoldCode) {
+      foldCode(view);
+      view.focus();
+    } else if (cmdId === kCmdUnfoldColde) {
+      unfoldCode(view);
+      view.focus();
+    } else if (cmdId === kCmdFoldBlock) {
+      foldBlock(view);
+      view.focus();
+    } else if (cmdId === kCmdUnfoldBlock) {
+      unfoldBlock(view);
+      view.focus();
+    } else if (cmdId === kCmdToggleBlockFold) {
+      toggleBlockFold(ednaEditor)(view);
+      view.focus();
     } else if (cmdId === kCmdExportCurrentBlock) {
       await exportCurrentBlock();
       view.focus();
@@ -1437,6 +1483,15 @@
     ["Open recent note", kCmdOpenRecent],
     ["Open note from disk", kCmdOpenNoteFromDisk],
     // ["Export current note", kCmdExportCurrentNote],
+    ...(isMac
+      ? [
+          ["Edit: Fold code\Mod-Shift-[", kCmdFoldCode],
+          ["Edit: Unfold code\Mod-Shift-]"],
+        ]
+      : [
+          ["Edit: Fold code\tCtrl-Shift-[", kCmdFoldCode],
+          ["Edit: Unfold code\tCtrl-Shift-]"],
+        ]),
   ];
 
   function buildCommandPaletteDef() {
@@ -1616,7 +1671,6 @@
   function runCurrentBlock() {
     let view = getEditorView();
     runBlockContent(view);
-    view = getEditorView();
     view.focus();
     logNoteOp("runBlock");
   }
