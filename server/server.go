@@ -116,7 +116,7 @@ func serveChromeDevToolsJSON(w http.ResponseWriter, r *http.Request) {
 
 	s = strings.ReplaceAll(s, "{{root}}", srcDir)
 	s = strings.ReplaceAll(s, "{{uuid}}", uuid)
-	logf("serveChromeDevToolsJSON:\n\n%s\n\n", s)
+	// logf("serveChromeDevToolsJSON:\n\n%s\n\n", s)
 	serveJSON(w, []byte(s))
 }
 
