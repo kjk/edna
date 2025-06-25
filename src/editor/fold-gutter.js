@@ -13,7 +13,7 @@ import {
   transactionsHasAnnotation,
   transactionsHasHistoryEvent,
 } from "./annotation.js";
-import { getNoteBlocksFromRangeSet } from "./block/block.js";
+import { getBlocks, getNoteBlocksFromRangeSet } from "./block/block.js";
 
 export const FOLD_LABEL_LENGTH = 50;
 
@@ -193,6 +193,27 @@ export const foldBlock = (editor) => (view) => {
   }
 };
 
+export const foldAllBlocks = (editor) => (view) => {
+  const state = view.state;
+  const blockRanges = [];
+
+  for (const block of getBlocks(state)) {
+    const line = state.doc.lineAt(block.content.from);
+    // fold the block content, but only the first line
+    const from = Math.min(line.to, block.content.from + FOLD_LABEL_LENGTH);
+    const to = block.content.to;
+    if (from < to) {
+      // skip empty ranges
+      blockRanges.push({ from, to });
+    }
+  }
+  if (blockRanges.length > 0) {
+    view.dispatch({
+      effects: blockRanges.map((range) => foldEffect.of(range)),
+    });
+  }
+};
+
 export const unfoldBlock = (editor) => (view) => {
   const state = view.state;
   const folds = state.field(foldState, false) || RangeSet.empty;
@@ -202,6 +223,27 @@ export const unfoldBlock = (editor) => (view) => {
     state,
     state.selection.ranges,
   )) {
+    const firstLine = state.doc.lineAt(block.content.from);
+    folds.between(block.content.from, block.content.to, (from, to) => {
+      if (from <= firstLine.to && to === block.content.to) {
+        blockFolds.push({ from, to });
+      }
+    });
+  }
+
+  if (blockFolds.length > 0) {
+    view.dispatch({
+      effects: blockFolds.map((range) => unfoldEffect.of(range)),
+    });
+  }
+};
+
+export const unfoldAlBlocks = (editor) => (view) => {
+  const state = view.state;
+  const folds = state.field(foldState, false) || RangeSet.empty;
+  const blockFolds = [];
+
+  for (const block of getBlocks(state)) {
     const firstLine = state.doc.lineAt(block.content.from);
     folds.between(block.content.from, block.content.to, (from, to) => {
       if (from <= firstLine.to && to === block.content.to) {

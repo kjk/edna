@@ -28,8 +28,10 @@
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { EdnaEditor, getContent, setReadOnly } from "../editor/editor";
   import {
+    foldAllBlocks,
     foldBlock,
     toggleBlockFold,
+    unfoldAlBlocks,
     unfoldBlock,
   } from "../editor/fold-gutter";
   import {
@@ -958,6 +960,8 @@
   export const kCmdToggleBlockFold = nmid();
   export const kCmdFoldBlock = nmid();
   export const kCmdUnfoldBlock = nmid();
+  export const kCmdFoldAllBlocks = nmid();
+  export const kCmdUnfoldAllBlocks = nmid();
   export const kCmdFoldCode = nmid();
   export const kCmdUnfoldColde = nmid();
   export const kCmdFormatBlock = nmid();
@@ -1024,17 +1028,17 @@
       ["Export to file", kCmdExportCurrentBlock],
       ["Delete", kCmdBlockDelete],
       ["Move to another note", kCmdMoveBlock],
-      isMac
+      ...(isMac
         ? [
-            ["Toggle block fold\Mod + Alt + .", kCmdToggleBlockFold],
-            ["Fold block\Mod + Alt + [", kCmdFoldBlock],
-            ["Unfold block\Mod + Alt + ]", kCmdUnfoldBlock],
+            ["Toggle block fold\tMod + Alt + .", kCmdToggleBlockFold],
+            ["Fold block\tMod + Alt + [", kCmdFoldBlock],
+            ["Unfold block\tMod + Alt + ]", kCmdUnfoldBlock],
           ]
         : [
             ["Toggle block fold\tCtrl + Alt + .", kCmdToggleBlockFold],
             ["Fold block\tCtrl + Alt + [", kCmdFoldBlock],
             ["Unfold block\tCtrl + Alt + ]", kCmdUnfoldBlock],
-          ],
+          ]),
     ];
 
     const menuRun = [
@@ -1132,6 +1136,8 @@
       kCmdToggleBlockFold,
       kCmdFoldBlock,
       kCmdUnfoldBlock,
+      kCmdFoldAllBlocks,
+      kCmdUnfoldAllBlocks,
       kCmdFoldCode,
       kCmdUnfoldColde,
       kCmdMoveBlock, // disable?
@@ -1279,10 +1285,16 @@
       unfoldCode(view);
       view.focus();
     } else if (cmdId === kCmdFoldBlock) {
-      foldBlock(view);
+      foldBlock(ednaEditor)(view);
       view.focus();
     } else if (cmdId === kCmdUnfoldBlock) {
-      unfoldBlock(view);
+      unfoldBlock(ednaEditor)(view);
+      view.focus();
+    } else if (cmdId === kCmdFoldAllBlocks) {
+      foldAllBlocks(ednaEditor)(view);
+      view.focus();
+    } else if (cmdId === kCmdUnfoldAllBlocks) {
+      unfoldAlBlocks(ednaEditor)(view);
       view.focus();
     } else if (cmdId === kCmdToggleBlockFold) {
       toggleBlockFold(ednaEditor)(view);
@@ -1482,21 +1494,24 @@
   const commandPaletteAdditions = [
     ["Open recent note", kCmdOpenRecent],
     ["Open note from disk", kCmdOpenNoteFromDisk],
+    ["Block: Fold all blocks", kCmdFoldAllBlocks],
+    ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
     // ["Export current note", kCmdExportCurrentNote],
     ...(isMac
       ? [
-          ["Edit: Fold code\Mod-Shift-[", kCmdFoldCode],
-          ["Edit: Unfold code\Mod-Shift-]"],
+          ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
+          ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
         ]
       : [
           ["Edit: Fold code\tCtrl-Shift-[", kCmdFoldCode],
-          ["Edit: Unfold code\tCtrl-Shift-]"],
+          ["Edit: Unfold code\tCtrl-Shift-]", kCmdUnfoldColde],
         ]),
   ];
 
   function buildCommandPaletteDef() {
     commandsDef = buildCommandsDef();
     commandsDef.push(...commandPaletteAdditions);
+    console.log("commandPaletteAdditions:", commandPaletteAdditions);
     let name = commandNameOverride(kCmdToggleSpellChecking);
     commandsDef.push([name, kCmdToggleSpellChecking]);
   }
