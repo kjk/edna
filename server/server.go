@@ -100,8 +100,26 @@ func isMacBasedOnUserAgent(r *http.Request) bool {
 	return strings.Contains(ua, "mac")
 }
 
-// in dev, proxyHandler redirects assets to vite web server
-// in prod, assets must be pre-built in frontend/dist directory
+func serveChromeDevToolsJSON(w http.ResponseWriter, r *http.Request) {
+	srcDir, err := filepath.Abs("src")
+	must(err)
+	// stupid Chrome doesn't accept windows-style paths
+	srcDir = filepath.ToSlash(srcDir)
+	// uuid should be unique for each workspace
+	uuid := "8f6e3d9a-4b7c-4c1e-a2d5-7f9b0e3c1284"
+	s := `{
+  "workspace": {
+    "root": "{{root}}",
+    "uuid": "{{uuid}}"
+  }
+}`
+
+	s = strings.ReplaceAll(s, "{{root}}", srcDir)
+	s = strings.ReplaceAll(s, "{{uuid}}", uuid)
+	logf("serveChromeDevToolsJSON:\n\n%s\n\n", s)
+	serveJSON(w, []byte(s))
+}
+
 func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.ReverseProxy) *http.Server {
 	panicIf(serveOpts == nil, "must provide serveOpts")
 
@@ -119,6 +137,9 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			return
 		case "/api/currency_rates.json":
 			serverApiCurrencyRates(w, r)
+			return
+		case "/.well-known/appspecific/com.chrome.devtools.json":
+			serveChromeDevToolsJSON(w, r)
 			return
 			// case "/auth/ghlogin":
 			// 	handleLoginGitHub(w, r)
