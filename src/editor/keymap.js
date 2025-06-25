@@ -88,7 +88,6 @@ export function ednaKeymap(editor) {
     ],
     ["Mod-b", openBlockSelector],
     ["Mod-k", openNoteSelector],
-    ["Alt-0", openNoteSelector],
     ["Mod-o", openNoteSelector],
     ["Mod-p", openNoteSelector],
     ["Mod-Shift-p", openCommandPalette],

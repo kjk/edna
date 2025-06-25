@@ -115,7 +115,6 @@
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
-  import CommandPalette2 from "./CommandPalette2.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
   import Editor from "./Editor.svelte";
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
@@ -128,7 +127,6 @@
     showModalMessageHTML,
   } from "./ModalMessage.svelte";
   import NoteSelector from "./NoteSelector.svelte";
-  import NoteSelector2 from "./NoteSelector2.svelte";
   import NoteSelectorWide from "./NoteSelectorWide.svelte";
   import Overlay from "./Overlay.svelte";
   import QuickAccess from "./QuickAccess.svelte";
@@ -151,24 +149,22 @@
   let line = $state(1);
   let noteName = $derived(settings.currentNoteName);
   let selectionSize = $state(0);
-  let showingMenu = $state(false);
+  let showingContextMenu = $state(false);
   let showingLanguageSelector = $state(false);
   let showingNoteSelector = $state(false);
   let showingBlockMoveSelector = $state(false);
-  let showingNoteSelector2 = $state(false);
   let showingCommandPalette = $state(false);
-  let showingCommandPalette2 = $state(false);
   let showingCreateNewNote = $state(false);
   let showingFunctionSelector = $state(false);
-  let functionContext = $state("");
-  let runFunctionOnSelection = false;
-  let userFunctions = $state([]); // note: $state() not needed
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
   let showingHistorySelector = $state(false);
   let showingBlockSelector = $state(false);
   let isSpellChecking = $state(false);
 
+  let functionContext = $state("");
+  let runFunctionOnSelection = false;
+  let userFunctions = $state([]); // note: $state() not needed
   let contextMenuPos = $state({ x: 0, y: 0 });
 
   // /** @type {import("../editor/editor").EdnaEditor} */
@@ -185,14 +181,12 @@
     return (
       showingHistorySelector ||
       showingLanguageSelector ||
-      showingMenu ||
+      showingContextMenu ||
       showingRenameNote ||
       showingNoteSelector ||
-      showingNoteSelector2 ||
       showingBlockMoveSelector ||
       showingCreateNewNote ||
       showingCommandPalette ||
-      showingCommandPalette2 ||
       showingCreateNewNote ||
       showingBlockSelector ||
       showingDecryptPassword ||
@@ -302,10 +296,6 @@
         closeSearchPanel(view);
         return;
       }
-      ev.preventDefault();
-      ev.stopImmediatePropagation();
-
-      openNoteSelector2();
       return;
     }
 
@@ -344,7 +334,7 @@
     }
 
     // hack: stop Ctrl + O unless it originates from code mirror (because then it
-    // triggers NoteSelector.vue)
+    // triggers NoteSelector.svelte)
     if (ev.key == "o" && ev.ctrlKey && !ev.altKey && !ev.shiftKey) {
       let target = /** @type {HTMLElement} */ (ev.target);
       let fromCodeMirror = target && target.className.includes("cm-content");
@@ -672,23 +662,13 @@
   }
 
   function switchToNoteSelector() {
-    if (showingCommandPalette) {
-      showingCommandPalette = false;
-      openNoteSelector();
-    } else {
-      showingCommandPalette2 = false;
-      openNoteSelector2();
-    }
+    showingCommandPalette = false;
+    openNoteSelector();
   }
 
   function switchToCommandPalette() {
-    if (showingNoteSelector) {
-      showingNoteSelector = false;
-      openCommandPalette();
-    } else {
-      showingNoteSelector2 = false;
-      openCommandPalette2();
-    }
+    showingNoteSelector = false;
+    openCommandPalette();
   }
 
   function openNoteSelector() {
@@ -705,15 +685,6 @@
     tick().then(() => {
       showingNoteSelector = true;
     });
-  }
-
-  function openNoteSelector2() {
-    showingNoteSelector2 = true;
-  }
-
-  function closeNoteSelector2() {
-    showingNoteSelector2 = false;
-    getEditorComp().focus();
   }
 
   function switchToWideNoteSelector() {
@@ -1227,7 +1198,7 @@
    */
   async function onmenucmd(cmdId) {
     // console.log("cmd:", cmdId);
-    showingMenu = false;
+    showingContextMenu = false;
     let view = getEditorView();
     let ednaEditor = getEditor();
 
@@ -1403,11 +1374,11 @@
     ev.stopImmediatePropagation();
     contextMenuDef = buildMenuDef();
     contextMenuPos = pos || { x: ev.x, y: ev.y };
-    showingMenu = true;
+    showingContextMenu = true;
   }
 
   function closeMenu() {
-    showingMenu = false;
+    showingContextMenu = false;
     getEditorComp().focus();
   }
 
@@ -1526,20 +1497,9 @@
     getEditorComp().focus();
   }
 
-  function openCommandPalette2() {
-    buildCommandPaletteDef();
-    showingCommandPalette2 = true;
-  }
-
-  function closeCommandPalette2() {
-    showingCommandPalette2 = false;
-    getEditorComp().focus();
-  }
-
   async function executeCommand(cmdId) {
     console.log("executeCommand:", cmdId);
     showingCommandPalette = false;
-    showingCommandPalette2 = false;
     onmenucmd(cmdId);
   }
 
@@ -1837,7 +1797,6 @@
    */
   function onOpenNote(name) {
     showingNoteSelector = false;
-    showingNoteSelector2 = false;
     openNote(name);
   }
 
@@ -1870,7 +1829,6 @@
    */
   async function onCreateNote(name) {
     showingNoteSelector = false;
-    showingNoteSelector2 = false;
     showingCreateNewNote = false;
     await createNoteWithName(name);
     openNote(name);
@@ -2047,16 +2005,6 @@
   {/if}
 {/if}
 
-{#if showingNoteSelector2}
-  <NoteSelector2
-    {switchToCommandPalette}
-    onclose={closeNoteSelector2}
-    openNote={onOpenNote}
-    createNote={onCreateNote}
-    deleteNote={onDeleteNote}
-  />
-{/if}
-
 {#if showingHistorySelector}
   <Overlay onclose={closeHistorySelector} blur={true}>
     <QuickAccess selectNote={onSelectHistory} forHistory={true} />
@@ -2092,16 +2040,7 @@
   </Overlay>
 {/if}
 
-{#if showingCommandPalette2}
-  <CommandPalette2
-    onclose={closeCommandPalette2}
-    {commandsDef}
-    {executeCommand}
-    {switchToNoteSelector}
-  />
-{/if}
-
-{#if showingMenu}
+{#if showingContextMenu}
   <Overlay onclose={closeMenu}>
     <Menu
       {menuItemStatus}

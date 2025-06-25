@@ -1,8 +1,8 @@
 import fs from "node:fs";
-import { keyHelpStr } from "./key-helper.js";
+import path from "node:path";
 import markdownIt from "markdown-it";
 import markdownItAnchor from "markdown-it-anchor";
-import path from "node:path";
+import { keyHelpStr } from "./key-helper.js";
 
 console.log(
   "Generating html-win.html and html-mac.html from note-help.edna.txt",
@@ -236,7 +236,7 @@ function genHTMLFromMarkdown() {
     let mdText = cleanMd(getHelp("windows"));
     let htmlText = md.render(mdText);
     htmlText = htmlStart + htmlText + htmlEnd;
-    let fpath = path.join("public", "help-win.html");
+    let fpath = path.join("src", "public", "help-win.html");
     fs.writeFileSync(fpath, htmlText);
     console.log("wrote", fpath);
   }
@@ -244,7 +244,7 @@ function genHTMLFromMarkdown() {
     let mdText = cleanMd(getHelp("darwin"));
     let htmlText = md.render(mdText);
     htmlText = htmlStart + htmlText + htmlEnd;
-    let fpath = path.join("public", "help-mac.html");
+    let fpath = path.join("src", "public", "help-mac.html");
     fs.writeFileSync(fpath, htmlText);
     console.log("wrote", fpath);
   }

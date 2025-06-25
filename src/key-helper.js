@@ -12,11 +12,9 @@ function getKeyHelp(platform = platformName) {
   const modChar = getModChar(platform);
   const altChar = getAltChar(platform);
   let res = [
-    [`Esc`, "Toggle note selector"],
     [`Mod + P`, "Open, create or delete a note"],
     [`Mod + K`, ``],
     [`Mod + O`, ``],
-    [`Alt + 0`, ``],
     [``, ``],
     [`Mod + Shift + P`, "Command Palette"],
     [`Mod + Shift + K`, ``],
