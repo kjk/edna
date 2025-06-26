@@ -20,11 +20,7 @@ import {
   readDir,
 } from "./fileutil";
 import { getPasswordFromUser, requestFileWritePermission } from "./globals";
-import {
-  historyPush,
-  removeNoteFromHistory,
-  renameInHistory,
-} from "./history.js";
+import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import {
   kMetadataName,
   loadNotesMetadata,
@@ -786,7 +782,7 @@ export async function loadNoteIfExists(name) {
  * @returns {Promise<string>}
  */
 export async function loadNote(name) {
-  console.log("loadNote:", name);
+  // console.log("loadNote:", name);
   let res;
   if (isSystemNoteName(name)) {
     res = getSystemNoteContent(name);
@@ -806,7 +802,6 @@ export async function loadNote(name) {
   if (res === null) {
     return null;
   }
-  historyPush(name);
   // TODO: this should happen in App.vue:onDocChange(); this was easier to write
   res = autoCreateDayInJournal(name, res);
   return fixUpNoteContent(res);
@@ -967,7 +962,7 @@ export async function renameNote(oldName, newName, content) {
   // update metadata and history before deleteNote() because it'll
   // remove from history and metadata
   await renameNoteInMetadata(oldName, newName);
-  renameInHistory(oldName, newName);
+  renameNoteInHistory(oldName, newName);
   await deleteNote(oldName);
 }
 

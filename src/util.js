@@ -232,7 +232,7 @@ export function isAltNumEvent(e) {
 /**
  * @param {string} noteName
  */
-export function pushHistory(noteName) {
+export function addNoteToBrowserHistory(noteName) {
   // @ts-ignore
   let url = new URL(window.location);
   url.hash = encodeURIComponent(noteName);

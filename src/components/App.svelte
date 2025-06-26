@@ -49,6 +49,7 @@
   } from "../fileutil";
   import { parseUserFunctions, runBoopFunction } from "../functions";
   import { setGlobalFuncs } from "../globals";
+  import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import Menu, {
     kMenuIdJustText,
@@ -100,12 +101,12 @@
   import { appState } from "../state.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
+    addNoteToBrowserHistory,
     getClipboardText,
     isAltNumEvent,
     isDev,
     len,
     platform,
-    pushHistory,
     stringSizeInUtf8Bytes,
     throwIf,
     trimPrefix,
@@ -1760,7 +1761,12 @@
    * @param {string} name
    */
   function onOpenNote(name) {
-    showingNoteSelector = false;
+    closeDialogs();
+    openNote(name);
+  }
+
+  function openNoteFind(name, pos) {
+    closeDialogs();
     openNote(name);
   }
 
@@ -1855,7 +1861,8 @@
 
     window.document.title = name;
     if (!noPushHistory) {
-      pushHistory(name);
+      addNoteToBrowserHistory(name);
+      addNoteToHistory(name);
     }
     settings.currentNoteName = name;
     updateDocSize();
@@ -2013,7 +2020,7 @@
 
 {#if showingFindInNotes}
   <Overlay blur={true} onclose={closeDialogs}>
-    <FindNotes></FindNotes>
+    <FindNotes openNote={openNoteFind}></FindNotes>
   </Overlay>
 {/if}
 
