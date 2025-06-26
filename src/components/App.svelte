@@ -149,6 +149,7 @@
   let line = $state(1);
   let noteName = $derived(settings.currentNoteName);
   let selectionSize = $state(0);
+
   let showingContextMenu = $state(false);
   let showingLanguageSelector = $state(false);
   let showingNoteSelector = $state(false);
@@ -160,6 +161,29 @@
   let showingRenameNote = $state(false);
   let showingHistorySelector = $state(false);
   let showingBlockSelector = $state(false);
+  let showingDecryptPassword = $state(false);
+  let showingDecryptMessage = $state("");
+  let showingAskFileWritePermissions = $state(false);
+
+  let isShowingDialog = $derived.by(() => {
+    return (
+      showingContextMenu ||
+      showingLanguageSelector ||
+      showingNoteSelector ||
+      showingBlockMoveSelector ||
+      showingCommandPalette ||
+      showingCreateNewNote ||
+      showingFunctionSelector ||
+      showingSettings ||
+      showingRenameNote ||
+      showingHistorySelector ||
+      showingBlockSelector ||
+      showingDecryptPassword ||
+      showingEncryptPassword ||
+      showingAskFileWritePermissions
+    );
+  });
+
   let isSpellChecking = $state(false);
 
   let functionContext = $state("");
@@ -175,25 +199,6 @@
 
   $effect(() => {
     console.log("showingCreateNewNote changed to:", showingCreateNewNote);
-  });
-
-  let isShowingDialog = $derived.by(() => {
-    return (
-      showingHistorySelector ||
-      showingLanguageSelector ||
-      showingContextMenu ||
-      showingRenameNote ||
-      showingNoteSelector ||
-      showingBlockMoveSelector ||
-      showingCreateNewNote ||
-      showingCommandPalette ||
-      showingCreateNewNote ||
-      showingBlockSelector ||
-      showingDecryptPassword ||
-      showingEncryptPassword ||
-      showingAskFileWritePermissions ||
-      showingSettings
-    );
   });
 
   $effect(() => {
@@ -309,7 +314,7 @@
     // in NoteSelector also seems to propagate here and immediately opens the note.
     if (!showingNoteSelector) {
       let altN = isAltNumEvent(ev);
-      // console.log("onKeyDown: e:", e, "altN:", altN)
+      // console.log("onKeyDown: ev:", ev, "altN:", altN);
       if (altN) {
         let notes = getNotesMetadata();
         for (let note of notes) {
@@ -325,7 +330,7 @@
     }
 
     // hack: stop Ctrl + O unless it originates from code mirror (because then it
-    // triggers NoteSelector.svelte)
+    // triggers NoteSelector)
     if (ev.key == "o" && ev.ctrlKey && !ev.altKey && !ev.shiftKey) {
       let target = /** @type {HTMLElement} */ (ev.target);
       let fromCodeMirror = target && target.className.includes("cm-content");
@@ -355,8 +360,6 @@
     await preLoadAllNotes();
   }
 
-  let showingDecryptPassword = $state(false);
-  let showingDecryptMessage = $state("");
   let closeDecryptPassword = $state(null);
   let onDecryptPassword = $state(null);
 
@@ -382,7 +385,6 @@
 
   /** @type {FileSystemFileHandle} */
   let fileWritePermissionsFileHandle = $state(null);
-  let showingAskFileWritePermissions = $state(false);
   /** @type {(boolean) => void} */
   let askFileWritePermissionsClose = $state(null);
 
@@ -1455,6 +1457,7 @@
   }
 
   const commandPaletteAdditions = [
+    ["Create New Scratch Note", kCmdCreateScratchNote],
     ["Open recent note", kCmdOpenRecent],
     ["Open note from disk", kCmdOpenNoteFromDisk],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],

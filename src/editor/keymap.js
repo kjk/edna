@@ -69,7 +69,6 @@ export function ednaKeymap(editor) {
     ["Mod-x", cutCommand(editor)],
     ["Tab", indentMore],
     ["Shift-Tab", indentLess],
-    ["Alt-n", createScratchNote],
     ["Alt-Shift-Enter", addNewBlockBeforeFirst],
     ["Mod-Shift-Enter", addNewBlockAfterLast],
     ["Alt-Enter", addNewBlockBeforeCurrent],
@@ -152,15 +151,15 @@ export function ednaKeymap(editor) {
           },
 
           {
-            key: "Alt-Ctrl-[",
+            key: "Ctrl-Alt-[",
             run: foldBlock(editor),
           },
           {
-            key: "Alt-Ctrl-]",
+            key: "Ctrl-Alt-]",
             run: unfoldBlock(editor),
           },
           {
-            key: "Alt-Ctrl-.",
+            key: "Ctrl-Alt-.",
             run: toggleBlockFold(editor),
           },
         ]),
@@ -171,5 +170,10 @@ export function ednaKeymap(editor) {
   if (platform.isWindows) {
     spec.push(["Mod-Shift-z", redo]);
   }
+  if (platform.isMac) {
+    // I don't have a good Mac keybinding for this
+    spec.push(["Alt-n", createScratchNote]);
+  }
+
   return keymapFromSpec(spec);
 }
