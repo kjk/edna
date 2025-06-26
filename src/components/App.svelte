@@ -1,6 +1,6 @@
 <script>
   import { tick } from "svelte";
-  import { foldCode, foldEffect, unfoldCode } from "@codemirror/language";
+  import { foldCode, unfoldCode } from "@codemirror/language";
   import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import {
@@ -26,7 +26,7 @@
     insertAfterActiveBlock,
   } from "../editor/block/format-code";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
-  import { EdnaEditor, getContent, setReadOnly } from "../editor/editor";
+  import { EdnaEditor, setReadOnly } from "../editor/editor";
   import {
     foldAllBlocks,
     foldBlock,
@@ -171,7 +171,7 @@
   // let ednaEditor = $state(null);
 
   /** @type {Editor} */
-  let editor;
+  let editorRef;
 
   $effect(() => {
     console.log("showingCreateNewNote changed to:", showingCreateNewNote);
@@ -232,15 +232,6 @@
     window.addEventListener("keydown", onKeyDown, { capture: true });
 
     window.addEventListener("beforeunload", async (ev) => {
-      // I would prevent to just save the content but
-      // async write to disk doesn't seem to get executed
-      /*
-        let e = getEditor();
-        if (e) {
-          await e.saveCurrentNote();
-        }
-      */
-
       if (appState.isDirty) {
         // show a dialog that the content might be lost
         ev.preventDefault();
@@ -506,12 +497,13 @@
 
   async function exportCurrentBlock() {
     let settings = getSettings();
-    let view = getEditorView();
-    let bi = getBlocksInfo(view.state);
-    let block = getActiveNoteBlock(view.state);
+    let editor = getEditor();
+    let bi = getBlocksInfo(editor.view.state);
+    let block = getActiveNoteBlock(editor.view.state);
     let ext = extForLang(block.language.name);
     let name = toFileName(settings.currentNoteName) + `-${bi.active}.` + ext;
-    let s = view.state.sliceDoc(block.content.from, block.content.to);
+    let { from, to } = block.content;
+    let s = editor.view.state.sliceDoc(from, to);
     console.log("exportCurrentBlock:", name);
     const blob = new Blob([s], { type: "text/plain" });
     await exportBlobToFile(blob, name);
@@ -520,8 +512,8 @@
   async function exportCurrentNote() {
     let settings = getSettings();
     let fileName = toFileName(settings.currentNoteName) + kEdnaFileExt;
-    let view = getEditorView();
-    let s = getContent(view);
+    let editor = getEditor();
+    let s = editor.getContent();
     console.log("exportCurrentNote:", fileName);
     const blob = new Blob([s], { type: "text/plain" });
     await exportBlobToFile(blob, fileName);
@@ -613,10 +605,10 @@
   function openBlockSelector(fn = selectBlock) {
     console.log("openBlockSelector");
     fnSelectBlock = fn;
-    let view = getEditorView();
-    let blocks = getEditor().getBlocks();
-    let activeBlock = getActiveNoteBlock(view.state);
-    let content = getContent(view);
+    let editor = getEditor();
+    let blocks = editor.getBlocks();
+    let activeBlock = getActiveNoteBlock(editor.view.state);
+    let content = editor.getContent();
     /** @type {import("./BlockSelector.svelte").Item[]} */
     let items = [];
     let blockNo = 0;
@@ -1507,24 +1499,24 @@
    * @returns {Editor}
    */
   function getEditorComp() {
-    return editor;
+    return editorRef;
   }
 
   /**
    * @returns {EdnaEditor}
    */
   function getEditor() {
-    return editor.getEditor();
+    return editorRef.getEditor();
   }
 
   /**
    * @returns {import("@codemirror/view").EditorView}
    */
   function getEditorView() {
-    if (!editor) {
+    if (!editorRef) {
       return null;
     }
-    let view = editor.getEditorView();
+    let view = editorRef.getEditorView();
     return view;
   }
 
@@ -1606,7 +1598,8 @@
       return false;
     }
 
-    const content = state.sliceDoc(block.content.from, block.content.to);
+    let { from, to } = block.content;
+    const content = state.sliceDoc(from, to);
 
     showModalMessageHTML("running code", 300);
     setReadOnly(view, true);
@@ -1748,8 +1741,8 @@
 
   async function onRename(newName) {
     showingRenameNote = false;
-    let view = getEditorView();
-    let s = getContent(view) || "";
+    let editor = getEditor();
+    let s = editor.getContent() || "";
     await renameNote(noteName, newName, s);
     await openNote(newName, true);
     // console.log("onRename: newName:", newName);
@@ -1782,10 +1775,9 @@
    */
   async function openNote(name, skipSave = false, noPushHistory = false) {
     console.log("App.openNote:", name);
+    // let msg = `Loading <span class="font-bold">${name}</span>...`;
+    // showModalMessageHTML(msg, 300);
     let editor = getEditorComp();
-    editor.setReadOnly(true);
-    let msg = `Loading <span class="font-bold">${name}</span>...`;
-    showModalMessageHTML(msg, 300);
     await editor.openNote(name, skipSave, noPushHistory);
     // await sleep(400);
     clearModalMessage();
@@ -1872,8 +1864,8 @@
   }
 
   function updateDocSize() {
-    let view = getEditorView();
-    const c = getContent(view) || "";
+    let editor = getEditor();
+    const c = editor.getContent() || "";
     docSize = stringSizeInUtf8Bytes(c);
   }
 
@@ -1881,24 +1873,17 @@
    * @param {string} name
    * @param {boolean} noPushHistory
    */
-  function didOpenNote(name, noPushHistory = false) {
-    console.log("didOpenNote:", name);
+  function didLoadNote(name, noPushHistory = false) {
+    console.log("didLoadNote:", name);
     throwIf(!name);
     noteName = name;
     console.log("onDocChanged: just opened");
     let readOnly = isSystemNoteName(name);
+    let editor = editorRef.getEditor();
     editor.setReadOnly(readOnly);
     if (name === kDailyJournalNoteName) {
       console.log("journal, so going to next block");
       // editor.gotoNextBlock();
-    }
-
-    let noteMeta = getNoteMeta(name, false);
-    let ranges = noteMeta?.foldedRanges || [];
-    if (len(ranges) > 0) {
-      editor.getEditorView().dispatch({
-        effects: ranges.map((range) => foldEffect.of(range)),
-      });
     }
 
     window.document.title = name;
@@ -1936,9 +1921,9 @@
   <Editor
     cursorChange={onCursorChange}
     debugSyntaxTree={false}
-    {didOpenNote}
+    {didLoadNote}
     {docDidChange}
-    bind:this={editor}
+    bind:this={editorRef}
   />
   <StatusBar
     {line}

@@ -1,3 +1,11 @@
+import { tick } from "svelte";
+import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
+import {
+  clearModalMessage,
+  showModalMessageHTML,
+} from "./components/ModalMessage.svelte";
+import { KV } from "./dbutil";
+import { fromFileName, isValidFileName, toFileName } from "./filenamify";
 import {
   blobFromUint8Array,
   fsDeleteFile,
@@ -11,19 +19,27 @@ import {
   openDirPicker,
   readDir,
 } from "./fileutil";
+import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import {
-  clearModalMessage,
-  showModalMessageHTML,
-} from "./components/ModalMessage.svelte";
-import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
+  historyPush,
+  removeNoteFromHistory,
+  renameInHistory,
+} from "./history.js";
 import {
-  formatDateYYYYMMDDDay,
-  len,
-  removeDuplicates,
-  throwIf,
-  trimSuffix,
-} from "./util";
-import { fromFileName, isValidFileName, toFileName } from "./filenamify";
+  kMetadataName,
+  loadNotesMetadata,
+  reassignNoteShortcut,
+  removeNoteFromMetadata,
+  renameNoteInMetadata,
+} from "./metadata";
+import { getSettings } from "./settings.svelte";
+import {
+  getStats,
+  incNoteCreateCount,
+  incNoteDeleteCount,
+  incNoteSaveCount,
+} from "./state";
+import { appState } from "./state.svelte";
 import {
   getBuiltInFunctionsNote,
   getHelp,
@@ -33,30 +49,13 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { getSettings } from "./settings.svelte";
 import {
-  getStats,
-  incNoteCreateCount,
-  incNoteDeleteCount,
-  incNoteSaveCount,
-} from "./state";
-import {
-  historyPush,
-  removeNoteFromHistory,
-  renameInHistory,
-} from "./history.js";
-
-import { KV } from "./dbutil";
-import { appState } from "./state.svelte";
-import { getPasswordFromUser, requestFileWritePermission } from "./globals";
-import {
-  kMetadataName,
-  loadNotesMetadata,
-  reassignNoteShortcut,
-  removeNoteFromMetadata,
-  renameNoteInMetadata,
-} from "./metadata";
-import { tick } from "svelte";
+  formatDateYYYYMMDDDay,
+  len,
+  removeDuplicates,
+  throwIf,
+  trimSuffix,
+} from "./util";
 
 // is set if we store notes on disk, null if in localStorage
 /** @type {FileSystemDirectoryHandle | null} */
@@ -614,13 +613,7 @@ function pickUniqueName(base, existingNames) {
   return name;
 }
 
-/**
- * @param {string} content
- * @returns {Promise<void>}
- */
-export async function saveCurrentNote(content) {
-  let settings = getSettings();
-  let name = settings.currentNoteName;
+export async function saveNote(name, content) {
   console.log("note name:", name);
   if (isSystemNoteName(name)) {
     console.log("skipped saving system note", name);
@@ -633,7 +626,7 @@ export async function saveCurrentNote(content) {
     if (!ok) {
       return;
     }
-    console.log("saveCurrentNote: ok:", ok);
+    console.log("saveNote: ok:", ok);
     await fsFileHandleWriteText(fh, content);
     appState.isDirty = false;
     incNoteSaveCount();
@@ -910,34 +903,6 @@ export async function writeNoteFS(dh, name, content) {
   }
   let pwdHash = await getPasswordHashMust("");
   await writeEncryptedFS(dh, pwdHash, path, content);
-}
-
-/**
- * @returns {Promise<string>}
- */
-export async function loadCurrentNote() {
-  let settings = getSettings();
-  return loadNote(settings.currentNoteName);
-}
-
-/**
- * @returns {Promise<string>}
- */
-export async function loadCurrentNoteIfOnDisk() {
-  let settings = getSettings();
-  let name = settings.currentNoteName;
-  if (isSystemNoteName(name)) {
-    return null;
-  }
-  let openedNote = getOpenedNote(name);
-  if (openedNote) {
-    return null;
-  }
-  let dh = getStorageFS();
-  if (!dh) {
-    return null;
-  }
-  return await readMaybeEncryptedNoteFS(dh, name);
 }
 
 /**

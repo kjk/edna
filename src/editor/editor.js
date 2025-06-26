@@ -1,16 +1,28 @@
 import { tick } from "svelte";
 import { markdown } from "@codemirror/lang-markdown";
-import { foldState, indentUnit } from "@codemirror/language";
-import { Compartment, EditorState, Transaction } from "@codemirror/state";
+import {
+  ensureSyntaxTree,
+  foldEffect,
+  foldState,
+  indentUnit,
+} from "@codemirror/language";
+import {
+  Compartment,
+  EditorSelection,
+  EditorState,
+  Transaction,
+} from "@codemirror/state";
 import {
   drawSelection,
   EditorView,
   lineNumbers,
   ViewPlugin,
 } from "@codemirror/view";
-import { setNoteMetaFoldedRanges } from "../metadata.js";
+import { getNoteMeta, setNoteMetaFoldedRanges } from "../metadata.js";
+import { loadNote, saveNote } from "../notes.js";
 import { getSettings } from "../settings.svelte.js";
 import { findEditorByView } from "../state.js";
+import { len } from "../util.js";
 import {
   heynoteEvent,
   SET_CONTENT,
@@ -65,10 +77,9 @@ const foldNotifications = (editor) =>
 export class EdnaEditor {
   constructor({
     element,
-    content,
+    noteName,
     focus = true,
     theme = "light",
-    saveFunction = null,
     keymap = "default",
     emacsMetaKey,
     showLineNumberGutter = true,
@@ -89,8 +100,9 @@ export class EdnaEditor {
     this.deselectOnCopy = keymap === "emacs";
     this.emacsMetaKey = emacsMetaKey;
     this.fontTheme = new Compartment();
-    this.saveFunction = saveFunction;
     this.tabsCompartment = new Compartment();
+    this.noteName = noteName;
+    this.contentLoaded = false;
 
     const makeTabState = (tabsAsSpaces, tabSpaces) => {
       const indentChar = tabsAsSpaces ? " ".repeat(tabSpaces) : "\t";
@@ -104,114 +116,154 @@ export class EdnaEditor {
         this.element.dispatchEvent(new Event("docChanged"));
       }
     });
-    this.createState = (content) => {
-      const state = EditorState.create({
-        doc: content || "",
-        extensions: [
-          updateListenerExtension,
-          this.keymapCompartment.of(getKeymapExtensions(this, keymap)),
-          heynoteCopyCut(this),
 
-          //minimalSetup,
-          this.lineNumberCompartment.of(
-            showLineNumberGutter ? [lineNumbers(), blockLineNumbers] : [],
-          ),
-          customSetup,
-          this.foldGutterCompartment.of(
-            showFoldGutter ? [foldGutterExtension()] : [],
-          ),
+    const state = EditorState.create({
+      doc: "",
+      extensions: [
+        updateListenerExtension,
+        this.keymapCompartment.of(getKeymapExtensions(this, keymap)),
+        heynoteCopyCut(this),
 
-          this.closeBracketsCompartment.of(
-            bracketClosing ? createDynamicCloseBracketsExtension() : [],
-          ),
+        //minimalSetup,
+        this.lineNumberCompartment.of(
+          showLineNumberGutter ? [lineNumbers(), blockLineNumbers] : [],
+        ),
+        customSetup,
+        this.foldGutterCompartment.of(
+          showFoldGutter ? [foldGutterExtension()] : [],
+        ),
 
-          this.readOnlyCompartment.of([]),
+        this.closeBracketsCompartment.of(
+          bracketClosing ? createDynamicCloseBracketsExtension() : [],
+        ),
 
-          this.themeCompartment.of(
-            theme === "dark" ? heynoteDark : heynoteLight,
-          ),
-          heynoteBase,
-          this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
-          makeTabState(true, spacesPerTab),
-          EditorView.scrollMargins.of((f) => {
-            return { top: 80, bottom: 80 };
-          }),
-          heynoteLang(),
-          noteBlockExtension(this),
-          languageDetection(() => this.view),
+        this.readOnlyCompartment.of([]),
 
-          // set cursor blink rate to 1 second
-          drawSelection({ cursorBlinkRate: 1000 }),
+        this.themeCompartment.of(theme === "dark" ? heynoteDark : heynoteLight),
+        heynoteBase,
+        this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
+        makeTabState(true, spacesPerTab),
+        EditorView.scrollMargins.of((f) => {
+          return { top: 80, bottom: 80 };
+        }),
+        heynoteLang(),
+        noteBlockExtension(this),
+        languageDetection(() => this.view),
 
-          // add CSS class depending on dark/light theme
-          EditorView.editorAttributes.of((view) => {
-            return {
-              class: view.state.facet(EditorView.darkTheme)
-                ? "dark-theme"
-                : "light-theme",
-            };
-          }),
+        // set cursor blink rate to 1 second
+        drawSelection({ cursorBlinkRate: 1000 }),
 
-          saveFunction ? autoSaveContent(saveFunction, 2000) : [],
+        // add CSS class depending on dark/light theme
+        EditorView.editorAttributes.of((view) => {
+          return {
+            class: view.state.facet(EditorView.darkTheme)
+              ? "dark-theme"
+              : "light-theme",
+          };
+        }),
 
-          todoCheckboxPlugin,
-          foldNotifications(this),
-          markdown(),
-          links,
-        ],
-      });
-      return state;
-    };
-    const state = this.createState(content);
+        autoSaveContent(this, 2000),
+
+        todoCheckboxPlugin,
+        foldNotifications(this),
+        markdown(),
+        links,
+      ],
+    });
 
     this.view = new EditorView({
       state: state,
       parent: element,
     });
 
+    // this is async so runs in background
+    this.loadNotePromise = this.loadNote(this.noteName);
+
+    // TODO: move into loadNote?
     if (focus) {
-      this.view.dispatch({
-        selection: {
-          anchor: this.view.state.doc.length,
-          head: this.view.state.doc.length,
-        },
-        scrollIntoView: true,
-      });
       this.view.focus();
     }
   }
 
-  setTabsState(tabsAsSpaces, tabSpaces) {
-    if (!this.view) return;
-    const indentChar = tabsAsSpaces ? " ".repeat(tabSpaces) : "\t";
-    const v = indentUnit.of(indentChar);
-    this.view.dispatch({
-      effects: this.tabsCompartment.reconfigure(v),
-    });
+  async save() {
+    if (!this.contentLoaded) {
+      return;
+    }
+    const content = this.getContent();
+    if (content === this.diskContent) {
+      return;
+    }
+    //console.log("saving:", this.path)
+    this.diskContent = content;
+    await saveNote(this.noteName, content);
   }
 
   getContent() {
-    return getContent(this.view);
+    return this.view.state.sliceDoc();
+  }
+
+  async loadNote(noteName) {
+    //console.log("loadNote:", noteName)
+    this.noteName = noteName;
+    this.setReadOnly(true);
+    // TODO: show a message
+    const content = await loadNote(noteName);
+    this.diskContent = content;
+    await this.setContent(content);
+    this.contentLoaded = true;
+    this.setReadOnly(false);
   }
 
   setContent(content) {
-    this.view.dispatch({
-      changes: {
-        from: 0,
-        to: this.view.state.doc.length,
-        insert: content,
-      },
-      annotations: [
-        heynoteEvent.of(SET_CONTENT),
-        Transaction.addToHistory.of(false),
-      ],
-    });
-    this.view.dispatch({
-      selection: {
-        anchor: this.view.state.doc.length,
-        head: this.view.state.doc.length,
-      },
-      scrollIntoView: true,
+    return new Promise((resolve) => {
+      // set buffer content
+      this.view.dispatch({
+        changes: {
+          from: 0,
+          to: this.view.state.doc.length,
+          insert: content,
+        },
+        annotations: [
+          heynoteEvent.of(SET_CONTENT),
+          Transaction.addToHistory.of(false),
+        ],
+      });
+
+      // Ensure we have a parsed syntax tree when buffer is loaded. This prevents errors for large buffers
+      // when moving the cursor to the end of the buffer when the program starts
+      ensureSyntaxTree(this.view.state, this.view.state.doc.length, 5000);
+
+      // TODO: get from metadata
+      let cursors = null;
+
+      // Set cursor positions
+      // We use requestAnimationFrame to avoid a race condition causing the scrollIntoView to sometimes not work
+      requestAnimationFrame(() => {
+        if (cursors) {
+          this.view.dispatch({
+            selection: EditorSelection.fromJSON(cursors),
+            scrollIntoView: true,
+          });
+        } else {
+          // if metadata doesn't contain cursor position, we set the cursor to the end of the buffer
+          this.view.dispatch({
+            selection: {
+              anchor: this.view.state.doc.length,
+              head: this.view.state.doc.length,
+            },
+            scrollIntoView: true,
+          });
+        }
+
+        let noteMeta = getNoteMeta(this.noteName, false);
+        let ranges = noteMeta?.foldedRanges || [];
+        if (len(ranges) > 0) {
+          this.view.dispatch({
+            effects: ranges.map((range) => foldEffect.of(range)),
+          });
+        }
+        resolve();
+      });
     });
   }
 
@@ -293,6 +345,15 @@ export class EdnaEditor {
     });
   }
 
+  setTabsState(tabsAsSpaces, tabSpaces) {
+    if (!this.view) return;
+    const indentChar = tabsAsSpaces ? " ".repeat(tabSpaces) : "\t";
+    const v = indentUnit.of(indentChar);
+    this.view.dispatch({
+      effects: this.tabsCompartment.reconfigure(v),
+    });
+  }
+
   didChangeFoldStateDelayed() {
     const foldedRanges = [];
     this.view.state
@@ -335,12 +396,4 @@ export function setReadOnly(view, ro) {
   if (editor) {
     editor.setReadOnly(ro);
   }
-}
-
-/**
- * @param {EditorView} view
- * @return {string}
- */
-export function getContent(view) {
-  return view.state.sliceDoc();
 }

@@ -10,7 +10,6 @@ class AppState {
   noteSelectorInfoCollapsed = $state(false);
 
   isDirty = $state(false);
-  isDirtyFast = $state(false);
 
   searchRegex = $state(false);
   searchMatchCase = $state(false);

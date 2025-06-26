@@ -69,10 +69,10 @@
       }
     }
 
-    listbox.onkeydown(ev, filter === "");
+    listboxRef.onkeydown(ev, filter === "");
   }
 
-  let listbox;
+  let listboxRef;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -94,7 +94,7 @@
     </div>
   </div>
   <ListBox
-    bind:this={listbox}
+    bind:this={listboxRef}
     items={itemsFiltered}
     onclick={(item) => selectBlock(item.item)}
     {initialSelection}

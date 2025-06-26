@@ -1,23 +1,14 @@
 <script>
   import { onMount } from "svelte";
-  import { foldEffect, syntaxTree } from "@codemirror/language";
+  import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
-  import debounce from "debounce";
   import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
   import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
   import { EdnaEditor } from "../editor/editor.js";
-  import { getNoteMeta, getNotesMetadata } from "../metadata.js";
-  import {
-    kScratchNoteName,
-    loadCurrentNote,
-    loadCurrentNoteIfOnDisk,
-    loadNote,
-    saveCurrentNote as saveCurrentNoteContent,
-  } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { rememberEditor } from "../state.js";
   import { appState } from "../state.svelte.js";
-  import { len, throwIf } from "../util.js";
+  import { throwIf } from "../util.js";
 
   /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
 
@@ -25,13 +16,12 @@
     debugSyntaxTree: boolean,
     cursorChange: (e: SelectionChangeEvent) => void,
     docDidChange: () => void,
-    didOpenNote: (name: string, noPushHistory: boolean) => void,
+    didLoadNote: (name: string, noPushHistory: boolean) => void,
    }}*/
 
-  let { debugSyntaxTree, cursorChange, docDidChange, didOpenNote } = $props();
+  let { debugSyntaxTree, cursorChange, docDidChange, didLoadNote } = $props();
 
   let syntaxTreeDebugContent = $state(null);
-  let diskContent = $state(null);
   let settings = getSettings();
   let theme = settings.theme;
 
@@ -39,7 +29,7 @@
   let editor;
 
   /** @type {HTMLElement} */
-  let editorEl;
+  let editorRef;
 
   $effect(() => {
     /* TODO: it's not reactive if I do:
@@ -66,8 +56,8 @@
   onMount(mounted);
 
   function mounted() {
-    console.log("Editor.svelte: mounted, editorEl:", editorEl);
-    if (!editorEl) {
+    console.log("Editor.svelte: mounted, editorEl:", editorRef);
+    if (!editorRef) {
       return;
     }
 
@@ -80,7 +70,7 @@
         e.preventDefault();
         // TODO: track isDirty state here?
         if (appState.isDirty) {
-          saveForce();
+          editor.save();
         }
       }
     });
@@ -93,8 +83,8 @@
     function onSelChange(ev) {
       cursorChange(ev);
     }
-    editorEl.addEventListener("selectionChange", onSelChange);
-    editorEl.addEventListener("docChanged", (e) => {
+    editorRef.addEventListener("selectionChange", onSelChange);
+    editorRef.addEventListener("docChanged", (e) => {
       docDidChange();
     });
 
@@ -107,35 +97,30 @@
     let fontFamily = settings.fontFamily;
     let fontSize = settings.fontSize;
 
-    // load buffer content and create editor
-    loadCurrentNote().then((content) => {
-      diskContent = content;
-      editor = new EdnaEditor({
-        element: editorEl,
-        content: content,
-        theme: theme,
-        saveFunction: saveFunction,
-        keymap: keymap,
-        emacsMetaKey: emacsMetaKey,
-        showLineNumberGutter: showLineNumberGutter,
-        showFoldGutter: showFoldGutter,
-        bracketClosing: bracketClosing,
-        fontFamily: fontFamily,
-        fontSize: fontSize,
-        spacesPerTab: 2, // TODO: add a setting for this
-      });
-      rememberEditor(editor);
-      setCurrenciesLoadedCb(() => {
-        triggerCurrenciesLoaded(editor.view);
-      });
-      // intentially we delay it until we register a callback
-      startLoadCurrencies();
-      let settings = getSettings();
-      let name = settings.currentNoteName;
-      throwIf(!name);
+    let noteName = settings.currentNoteName;
 
-      didOpenNote(name, false);
+    editor = new EdnaEditor({
+      element: editorRef,
+      noteName: noteName,
+      theme: theme,
+      keymap: keymap,
+      emacsMetaKey: emacsMetaKey,
+      showLineNumberGutter: showLineNumberGutter,
+      showFoldGutter: showFoldGutter,
+      bracketClosing: bracketClosing,
+      fontFamily: fontFamily,
+      fontSize: fontSize,
+      spacesPerTab: 2, // TODO: add a setting for this
     });
+    editor.loadNotePromise.then(() => {
+      didLoadNote(noteName, false);
+    });
+    rememberEditor(editor);
+    setCurrenciesLoadedCb(() => {
+      triggerCurrenciesLoaded(editor.view);
+    });
+    // intentially we delay it until we register a callback
+    startLoadCurrencies();
 
     // if debugSyntaxTree prop is set, display syntax tree for debugging
     if (debugSyntaxTree) {
@@ -161,27 +146,8 @@
     };
   }
 
-  async function saveFunction(content) {
-    if (content === diskContent) {
-      console.log("saveFunction: content unchanged, skipping save");
-      return;
-    }
-    console.log("saveFunction: saving content");
-    diskContent = content;
-    await saveCurrentNoteContent(content);
-  }
-
-  function saveForce() {
-    console.log("saveForce");
-    saveFunction(editor.getContent());
-  }
-
   export function getBlocks() {
     return editor.getBlocks();
-  }
-
-  export function setReadOnly(value) {
-    editor.setReadOnly(value);
   }
 
   export function setSpellChecking(value) {
@@ -225,20 +191,6 @@
     editor.focus();
   }
 
-  // saving is debounced so ensure we save before opening a new note
-  // TODO: we'll have a spurious save if there was a debounce, because
-  // the debounce is still in progress, I think
-  export async function saveCurrentNote() {
-    let s = editor.getContent();
-    await editor.saveFunction(s);
-  }
-
-  export function setEditorContent(content) {
-    diskContent = content;
-    let newState = editor.createState(content);
-    editor.view.setState(newState);
-  }
-
   /**
    * @param {string} name
    */
@@ -250,31 +202,19 @@
     console.log("openNote:", name);
     if (!skipSave) {
       // TODO: this is async so let's hope it works
-      await saveCurrentNote();
+      await editor.save();
     }
-    let content = await loadNote(name);
-    console.log("Editor.openNote: loaded:", name);
-    editor.setTheme(theme);
+    editor.loadNote(name);
+    //    editor.setTheme(theme);
     // TODO: move this logic to App.onDocChanged
     // a bit magic: sometimes we open at the beginning, sometimes at the end
     // TODO: remember selection in memory so that we can restore during a session
-    setEditorContent(content);
-    let pos = 0;
-    if (name === kScratchNoteName) {
-      pos = content.length;
-    }
-    editor.view.dispatch({
-      selection: { anchor: pos, head: pos },
-      scrollIntoView: true,
-    });
-    focus();
-    console.log("openNote: triggering docChanged event, name:", name);
-    didOpenNote(name, noPushHistory);
+    didLoadNote(name, noPushHistory);
   }
 </script>
 
 <div class="overflow-hidden">
-  <div class="editor" bind:this={editorEl}></div>
+  <div class="editor" bind:this={editorRef}></div>
   {#if debugSyntaxTree}
     <div class="debug-syntax-tree">
       {@html syntaxTreeDebugContent}
