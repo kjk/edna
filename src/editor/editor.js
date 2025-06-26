@@ -246,10 +246,13 @@ export class EdnaEditor {
           });
         } else {
           // if metadata doesn't contain cursor position, we set the cursor to the end of the buffer
+          let pos = 0;
+          // pos = this.view.state.doc.length;
+          console.warn("setContent: setting pos:", pos);
           this.view.dispatch({
             selection: {
-              anchor: this.view.state.doc.length,
-              head: this.view.state.doc.length,
+              anchor: pos,
+              head: pos,
             },
             scrollIntoView: true,
           });

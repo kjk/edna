@@ -120,7 +120,7 @@
   import Editor from "./Editor.svelte";
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
-  import FindNotes from "./FindInNotes.svelte";
+  import FindInNotes from "./FindInNotes.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
   import ModalMessage, {
@@ -1748,8 +1748,8 @@
    */
   async function openNote(name, skipSave = false, noPushHistory = false) {
     console.log("App.openNote:", name);
-    // let msg = `Loading <span class="font-bold">${name}</span>...`;
-    // showModalMessageHTML(msg, 300);
+    let msg = `Loading <span class="font-bold">${name}</span>...`;
+    showModalMessageHTML(msg, 300);
     let editor = getEditorComp();
     await editor.openNote(name, skipSave, noPushHistory);
     // await sleep(400);
@@ -1767,7 +1767,20 @@
 
   function openNoteFind(name, pos) {
     closeDialogs();
-    openNote(name);
+    openNote(name).then(() => {
+      // TODO: this is not reliable, must pass pos down via openNote()
+      setTimeout(() => {
+        console.warn("openNoteFind: setting pos:", pos);
+        let view = getEditorView();
+        view.dispatch({
+          selection: {
+            anchor: pos,
+            head: pos,
+          },
+          scrollIntoView: true,
+        });
+      }, 200);
+    });
   }
 
   function moveCurrentBlock() {
@@ -2020,7 +2033,7 @@
 
 {#if showingFindInNotes}
   <Overlay blur={true} onclose={closeDialogs}>
-    <FindNotes openNote={openNoteFind}></FindNotes>
+    <FindInNotes openNote={openNoteFind}></FindInNotes>
   </Overlay>
 {/if}
 

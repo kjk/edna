@@ -92,6 +92,16 @@ export function getActiveNoteBlock(state) {
 }
 
 /** @typedef {{
+ range: {from: number, to: number},
+ content: {from: number, to: number},
+ delimiter: {from: number, to: number},
+ language: {
+  name: string,
+  auto: boolean,
+},
+}} Block */
+
+/** @typedef {{
   blocks: Block[],
   active: number,
 }} BlocksInfo */

@@ -12,7 +12,6 @@
     IconTablerChevronDown,
     IconTablerChevronRight,
     IconTablerLetterCase,
-    IconTablerX,
   } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
