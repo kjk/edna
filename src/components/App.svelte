@@ -119,6 +119,7 @@
   import Editor from "./Editor.svelte";
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
+  import FindNotes from "./FindInNotes.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
   import ModalMessage, {
@@ -161,6 +162,7 @@
   let showingRenameNote = $state(false);
   let showingHistorySelector = $state(false);
   let showingBlockSelector = $state(false);
+  let showingFindInNotes = $state(false);
   let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
   let showingAskFileWritePermissions = $state(false);
@@ -178,11 +180,28 @@
       showingRenameNote ||
       showingHistorySelector ||
       showingBlockSelector ||
+      showingFindInNotes ||
       showingDecryptPassword ||
       showingEncryptPassword ||
       showingAskFileWritePermissions
     );
   });
+
+  function closeDialogs() {
+    showingContextMenu = false;
+    showingLanguageSelector = false;
+    showingNoteSelector = false;
+    showingBlockMoveSelector = false;
+    showingCommandPalette = false;
+    showingCreateNewNote = false;
+    showingFunctionSelector = false;
+    showingSettings = false;
+    showingRenameNote = false;
+    showingHistorySelector = false;
+    showingBlockSelector = false;
+    showingFindInNotes = false;
+    getEditorComp().focus();
+  }
 
   let isSpellChecking = $state(false);
 
@@ -205,8 +224,8 @@
     isMoving.disableMoveTracking = isShowingDialog;
   });
 
-  function openFind() {
-    console.log("openFind NYI");
+  function openFindInNotes() {
+    showingFindInNotes = true;
   }
 
   let gf = {
@@ -216,7 +235,7 @@
     openNoteSelector: openNoteSelector,
     openCommandPalette: openCommandPalette,
     openContextMenu: openContextMenu,
-    openFind: openFind,
+    openFindInNotes: openFindInNotes,
     openHistorySelector: openHistorySelector,
     createScratchNote: createScratchNote,
     openBlockSelector: openBlockSelector,
@@ -525,11 +544,6 @@
     showingSettings = true;
   }
 
-  function closeSettings() {
-    showingSettings = false;
-    getEditorView().focus();
-  }
-
   async function deleteCurrentNote() {
     let name = noteName;
     console.log("deleteNote:", name);
@@ -633,11 +647,6 @@
     showingBlockSelector = true;
   }
 
-  function closeBlockSelector() {
-    showingBlockSelector = false;
-    getEditorComp().focus();
-  }
-
   function openCreateNewNote() {
     showingCreateNewNote = true;
   }
@@ -647,12 +656,7 @@
     let n = blockItem.key;
     let view = getEditorView();
     gotoBlock(view, n);
-    closeBlockSelector();
-  }
-
-  function closeCreateNewNote() {
-    showingCreateNewNote = false;
-    getEditorComp().focus();
+    closeDialogs();
   }
 
   function switchToNoteSelector() {
@@ -667,11 +671,6 @@
 
   function openNoteSelector() {
     showingNoteSelector = true;
-  }
-
-  function closeNoteSelector() {
-    showingNoteSelector = false;
-    getEditorComp().focus();
   }
 
   function reOpenNoteSelector() {
@@ -707,11 +706,6 @@
       userFunctions = parseUserFunctions(userFunctionsStr);
     }
     showingFunctionSelector = true;
-  }
-
-  function closeFunctionSelector() {
-    showingFunctionSelector = false;
-    getEditorComp().focus();
   }
 
   /** @typedef {import("../functions").BoopFunctionArg} BoopFunctionArg*/
@@ -873,11 +867,6 @@
 
   function openLanguageSelector() {
     showingLanguageSelector = true;
-  }
-
-  function closeLanguageSelector() {
-    showingLanguageSelector = false;
-    getEditorComp().focus();
   }
 
   /**
@@ -1371,11 +1360,6 @@
     showingContextMenu = true;
   }
 
-  function closeMenu() {
-    showingContextMenu = false;
-    getEditorComp().focus();
-  }
-
   let commandsDef = $state(null);
 
   const commandNameOverrides = [
@@ -1485,11 +1469,6 @@
   function openCommandPalette() {
     buildCommandPaletteDef();
     showingCommandPalette = true;
-  }
-
-  function closeCommandPalette() {
-    showingCommandPalette = false;
-    getEditorComp().focus();
   }
 
   async function executeCommand(cmdId) {
@@ -1650,7 +1629,7 @@
 
   function runBlockWithAnotherBlock(argBlockItem) {
     console.log(argBlockItem);
-    closeBlockSelector();
+    closeDialogs();
     let n = argBlockItem.key;
     let view = getEditorView();
     let state = view.state;
@@ -1737,11 +1716,6 @@
     window.open(uri, "_blank");
   }
 
-  function closeRename() {
-    showingRenameNote = false;
-    getEditorComp().focus();
-  }
-
   async function onRename(newName) {
     showingRenameNote = false;
     let editor = getEditor();
@@ -1756,14 +1730,9 @@
     getEditorComp().focus();
   }
 
-  function closeHistorySelector() {
-    showingHistorySelector = false;
-    getEditorComp().focus();
-  }
-
   function onSelectHistory(name) {
     // console.log("onSelectHistory:", name);
-    closeHistorySelector();
+    closeDialogs();
     if (name != noteName) {
       openNote(name);
     } else {
@@ -1799,10 +1768,6 @@
     showingBlockMoveSelector = true;
   }
 
-  function closeBlockMoveSelector() {
-    showingBlockMoveSelector = false;
-  }
-
   /**
    * @param {string} name
    */
@@ -1823,8 +1788,7 @@
    * @param {string} name
    */
   async function onCreateNote(name) {
-    showingNoteSelector = false;
-    showingCreateNewNote = false;
+    closeDialogs();
     await createNoteWithName(name);
     openNote(name);
     // TODO: add a way to undo creation of the note
@@ -1943,14 +1907,14 @@
 </div>
 
 {#if showingCreateNewNote}
-  <Overlay onclose={closeCreateNewNote} blur={true}>
-    <CreateNewNote createNewNote={onCreateNote} onclose={closeCreateNewNote}
+  <Overlay onclose={closeDialogs} blur={true}>
+    <CreateNewNote createNewNote={onCreateNote} onclose={closeDialogs}
     ></CreateNewNote>
   </Overlay>
 {/if}
 
 {#if showingBlockSelector}
-  <Overlay onclose={closeBlockSelector} blur={true}>
+  <Overlay onclose={closeDialogs} blur={true}>
     <BlockSelector
       blocks={blockItems}
       selectBlock={fnSelectBlock}
@@ -1960,14 +1924,14 @@
 {/if}
 
 {#if showingFunctionSelector}
-  <Overlay onclose={closeFunctionSelector} blur={true}>
+  <Overlay onclose={closeDialogs} blur={true}>
     <FunctionSelector context={functionContext} {userFunctions} {runFunction}
     ></FunctionSelector>
   </Overlay>
 {/if}
 
 {#if showingBlockMoveSelector}
-  <Overlay onclose={closeBlockMoveSelector} blur={true}>
+  <Overlay onclose={closeDialogs} blur={true}>
     <NoteSelector
       header="Move current block to note:"
       forMoveBlock={true}
@@ -1979,7 +1943,7 @@
 
 {#if showingNoteSelector}
   {#if settings.useWideSelectors}
-    <Overlay onclose={closeNoteSelector} blur={true}>
+    <Overlay onclose={closeDialogs} blur={true}>
       <NoteSelectorWide
         {switchToRegularNoteSelector}
         {switchToCommandPalette}
@@ -1989,7 +1953,7 @@
       />
     </Overlay>
   {:else}
-    <Overlay onclose={closeNoteSelector} blur={true}>
+    <Overlay onclose={closeDialogs} blur={true}>
       <NoteSelector
         {switchToWideNoteSelector}
         {switchToCommandPalette}
@@ -2002,13 +1966,13 @@
 {/if}
 
 {#if showingHistorySelector}
-  <Overlay onclose={closeHistorySelector} blur={true}>
+  <Overlay onclose={closeDialogs} blur={true}>
     <QuickAccess selectNote={onSelectHistory} forHistory={true} />
   </Overlay>
 {/if}
 
 {#if showingLanguageSelector}
-  <Overlay onclose={closeLanguageSelector} blur={true}>
+  <Overlay onclose={closeDialogs} blur={true}>
     <LanguageSelector selectLanguage={onSelectLanguage} />
   </Overlay>
 {/if}
@@ -2018,32 +1982,38 @@
 {/if}
 
 {#if showingRenameNote}
-  <Overlay onclose={closeRename} blur={true}>
-    <RenameNote onclose={closeRename} rename={onRename} oldName={noteName} />
+  <Overlay onclose={closeDialogs} blur={true}>
+    <RenameNote onclose={closeDialogs} rename={onRename} oldName={noteName} />
   </Overlay>
 {/if}
 
 {#if showingSettings}
-  <Overlay onclose={closeSettings} blur={true}>
+  <Overlay onclose={closeDialogs} blur={true}>
     <Settings></Settings>
   </Overlay>
 {/if}
 <Toaster></Toaster>
 
 {#if showingCommandPalette}
-  <Overlay onclose={closeCommandPalette} blur={true}>
+  <Overlay onclose={closeDialogs} blur={true}>
     <CommandPalette {commandsDef} {executeCommand} {switchToNoteSelector} />
   </Overlay>
 {/if}
 
 {#if showingContextMenu}
-  <Overlay onclose={closeMenu}>
+  <Overlay onclose={closeDialogs}>
     <Menu
       {menuItemStatus}
       {onmenucmd}
       menuDef={contextMenuDef}
       pos={contextMenuPos}
     />
+  </Overlay>
+{/if}
+
+{#if showingFindInNotes}
+  <Overlay blur={true} onclose={closeDialogs}>
+    <FindNotes></FindNotes>
   </Overlay>
 {/if}
 

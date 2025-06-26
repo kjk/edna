@@ -1,10 +1,11 @@
 import { indentLess, indentMore, redo } from "@codemirror/commands";
-import { foldAll, foldCode, unfoldAll, unfoldCode } from "@codemirror/language";
+import { foldCode, unfoldCode } from "@codemirror/language";
 import { keymap } from "@codemirror/view";
 import {
   createScratchNote,
   openBlockSelector,
   openCommandPalette,
+  openFindInNotes,
   openFunctionSelector,
   openHistorySelector,
   openLanguageSelector,
@@ -93,6 +94,7 @@ export function ednaKeymap(editor) {
     ["Mod-Shift-k", openCommandPalette],
     ["Mod-Shift-o", openCommandPalette],
     ["Mod-h", openHistorySelector],
+    ["Mod-Shift-f", openFindInNotes],
     ["Alt-Shift-f", formatBlockContent],
     ["Mod-Alt-ArrowDown", newCursorBelow],
     ["Mod-Alt-ArrowUp", newCursorAbove],
