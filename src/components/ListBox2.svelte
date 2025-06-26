@@ -1,8 +1,8 @@
 <script>
   import { len } from "../util";
   import "overlayscrollbars/overlayscrollbars.css";
-  import { getOverlayScrollbarOptions } from "../settings.svelte";
   import { OverlayScrollbars } from "overlayscrollbars";
+  import { getOverlayScrollbarOptions } from "../settings.svelte";
 
   /** @type {{ 
     items: any[],
@@ -144,11 +144,11 @@
     select(selectedIdx + 1);
   }
 
-  let listbox;
+  let listboxRef;
   $effect(() => {
     $effect(() => {
       let opts = getOverlayScrollbarOptions();
-      OverlayScrollbars(listbox, opts);
+      OverlayScrollbars(listboxRef, opts);
     });
   });
 
@@ -179,7 +179,7 @@
   class="overflow-y-auto cursor-pointer flex flex-wrap gap-y-[2px]"
   tabindex="-1"
   role="listbox"
-  bind:this={listbox}
+  bind:this={listboxRef}
   onclick={listboxclick}
 >
   {#each items as item, idx (item.key)}

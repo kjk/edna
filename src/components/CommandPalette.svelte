@@ -1,4 +1,6 @@
 <script>
+  import { focus } from "../actions";
+  import { extractShortcut } from "../keys";
   import {
     findMatchingItems,
     hilightText,
@@ -8,9 +10,7 @@
     splitMax,
     trimPrefix,
   } from "../util";
-  import { focus } from "../actions";
   import ListBox from "./ListBox.svelte";
-  import { extractShortcut } from "../keys";
 
   /** @typedef {[string, number]} CmdDef */
 
@@ -114,14 +114,14 @@
     executeCommand(item.key);
   }
 
-  let listbox;
+  let listboxRef;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
   onkeydown={(ev) => {
     let allowLeftRight = filter === "";
-    listbox.onkeydown(ev, allowLeftRight);
+    listboxRef.onkeydown(ev, allowLeftRight);
   }}
   tabindex="-1"
   class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[90vh] w-[32em] p-2"
@@ -138,7 +138,7 @@
     </div>
   </div>
   <ListBox
-    bind:this={listbox}
+    bind:this={listboxRef}
     items={itemsFiltered}
     onclick={(item) => emitExecuteCommand(item)}
   >

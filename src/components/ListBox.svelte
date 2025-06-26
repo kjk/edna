@@ -146,10 +146,10 @@
     return res;
   }
 
-  let listbox;
+  let listboxRef;
   $effect(() => {
     let opts = getOverlayScrollbarOptions();
-    OverlayScrollbars(listbox, opts);
+    OverlayScrollbars(listboxRef, opts);
   });
 
   /**
@@ -201,7 +201,7 @@
 <ul
   class="overflow-y-auto cursor-pointer select-none"
   role="listbox"
-  bind:this={listbox}
+  bind:this={listboxRef}
   data-overlayscrollbars-initialize
   onclick={click}
   onmousemove={mousemove}

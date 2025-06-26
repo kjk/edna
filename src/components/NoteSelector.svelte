@@ -293,7 +293,7 @@
       return;
     }
 
-    listbox.onkeydown(ev, filter === "");
+    listboxRef.onkeydown(ev, filter === "");
   }
 
   /**
@@ -326,15 +326,15 @@
       // not really necessary, should be in-sync
       noteInfo.isStarred = isStarred;
     });
-    input.focus();
+    inputRef.focus();
   }
 
   function toggleInfoPanelCollapsed() {
     appState.noteSelectorInfoCollapsed = !appState.noteSelectorInfoCollapsed;
   }
 
-  let input;
-  let listbox;
+  let inputRef;
+  let listboxRef;
 </script>
 
 {#snippet shortHelp()}
@@ -468,7 +468,7 @@
     <input
       type="text"
       use:focus
-      bind:this={input}
+      bind:this={inputRef}
       bind:value={filter}
       class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
     />
@@ -477,7 +477,7 @@
     </div>
   </div>
   <ListBox
-    bind:this={listbox}
+    bind:this={listboxRef}
     items={filteredNoteInfos}
     {selectionChanged}
     onclick={(item) => emitOpenNote(item)}

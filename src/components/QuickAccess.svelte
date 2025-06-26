@@ -29,7 +29,7 @@
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
 
-  let listbox;
+  let listboxRef;
 
   console.log("QuickAcess, forHistory:", forHistory);
 
@@ -114,7 +114,7 @@
       }
     }
 
-    listbox.onkeydown(ev, true);
+    listboxRef.onkeydown(ev, true);
   }
 
   /**
@@ -145,7 +145,7 @@
   {style}
 >
   <ListBox
-    bind:this={listbox}
+    bind:this={listboxRef}
     items={quickAccessNotes}
     onclick={(noteInfo) => selectItem(noteInfo.name)}
     {initialSelection}

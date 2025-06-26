@@ -40,15 +40,15 @@
   let hidePassword = $state(true);
 
   /** @type {HTMLElement} */
-  let input;
+  let inputRef;
   function onchange(ev) {
-    input.focus();
+    inputRef.focus();
   }
 
   $effect(() => {
-    console.log("EnterDecryptPassword did mount, input:", input);
-    if (input) {
-      input.focus();
+    console.log("EnterDecryptPassword did mount, input:", inputRef);
+    if (inputRef) {
+      inputRef.focus();
     }
   });
 </script>
@@ -65,7 +65,7 @@
     <div class="text-red-500 text-sm my-2">{msg}</div>
   {/if}
   <input
-    bind:this={input}
+    bind:this={inputRef}
     bind:value={password}
     type={hidePassword ? "password" : "text"}
     class="py-1 px-2 bg-white mt-2 rounded-xs w-[80ch]"

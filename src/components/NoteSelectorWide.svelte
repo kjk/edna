@@ -1,9 +1,12 @@
 <script>
+  import { focus } from "../actions";
+  import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
   import {
     isSystemNoteName,
     kScratchNoteName,
     sanitizeNoteName,
   } from "../notes";
+  import { appState } from "../state.svelte";
   import {
     findMatchingItems,
     getAltChar,
@@ -12,12 +15,9 @@
     len,
     makeHilightRegExp,
   } from "../util";
-  import { focus } from "../actions";
-  import ListBox2 from "./ListBox2.svelte";
-  import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
-  import { buildNoteInfos } from "./NoteSelector.svelte";
   import { IconTablerStar } from "./Icons.svelte";
-  import { appState } from "../state.svelte";
+  import ListBox2 from "./ListBox2.svelte";
+  import { buildNoteInfos } from "./NoteSelector.svelte";
 
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} Item */
 
@@ -185,8 +185,8 @@
     }
 
     // console.log("listbox:", listbox);
-    let allowLeftRight = filter === "" || isCursorAtEnd(input);
-    listbox.onkeydown(ev, allowLeftRight);
+    let allowLeftRight = filter === "" || isCursorAtEnd(inputRef);
+    listboxRef.onkeydown(ev, allowLeftRight);
   }
 
   function isCursorAtEnd(input) {
@@ -222,11 +222,11 @@
       // not really necessary, should be in-sync
       item.isStarred = isStarred;
     });
-    input.focus();
+    inputRef.focus();
   }
 
-  let input;
-  let listbox;
+  let inputRef;
+  let listboxRef;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -237,7 +237,7 @@
 >
   <div>
     <input
-      bind:this={input}
+      bind:this={inputRef}
       bind:value={filter}
       use:focus
       type="text"
@@ -248,7 +248,7 @@
     </div>
   </div>
   <ListBox2
-    bind:this={listbox}
+    bind:this={listboxRef}
     items={itemsFiltered}
     {selectionChanged}
     onclick={(item) => emitOpenNote(item)}

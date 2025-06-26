@@ -40,10 +40,10 @@
   let showReplace = $state(false);
 
   /** @type {HTMLInputElement} */
-  let searchInput;
+  let searchInputREf;
 
   /** @type {HTMLInputElement} */
-  let replaceInput = $state(undefined);
+  let replaceInputRef = $state(undefined);
 
   let query = getSearchQuery(view.state);
   searchTerm = query.search;
@@ -83,9 +83,9 @@
   function toggleShowReplace() {
     showReplace = !showReplace;
     if (showReplace) {
-      tick().then(() => replaceInput.focus());
+      tick().then(() => replaceInputRef.focus());
     } else {
-      tick().then(() => searchInput.focus());
+      tick().then(() => searchInputREf.focus());
     }
   }
   /**
@@ -105,7 +105,7 @@
 
   onMount(() => {
     tick().then(() => {
-      searchInput.select();
+      searchInputREf.select();
     });
     isMoving.disableMoveTracking = true;
 
@@ -176,7 +176,7 @@
 
 {#snippet InputTop()}
   <input
-    bind:this={searchInput}
+    bind:this={searchInputREf}
     type="text"
     spellcheck="false"
     placeholder="Find"
@@ -189,7 +189,7 @@
 
 {#snippet InputBottom()}
   <input
-    bind:this={replaceInput}
+    bind:this={replaceInputRef}
     type="text"
     spellcheck="false"
     placeholder="Replace"

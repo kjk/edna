@@ -98,9 +98,9 @@
 </script>
 
 <script>
+  import { ensurevisible, focus } from "./actions.js";
   import { extractShortcut } from "./keys.js";
   import { len, splitMax } from "./util.js";
-  import { ensurevisible, focus } from "./actions.js";
 
   /** @type {{
    menuDef: MenuDef,
@@ -402,14 +402,6 @@
     return st;
   }
 
-  function logNodePos(node) {
-    /**
-     * @type {DOMRect}
-     */
-    const r = node.getBoundingClientRect();
-    console.log(`rect x: ${r.x}, y: ${r.y}, dx: ${r.width}, dy: ${r.height}`);
-  }
-
   // TODO: don't understand why this fires frequently
   let didSelectFirst = false;
   $effect(() => {
@@ -419,7 +411,7 @@
     didSelectFirst = true;
     selectFirst(rootMenu);
   });
-  let menuEl;
+  let menuRef;
 </script>
 
 {#snippet separator(mi)}
@@ -522,7 +514,7 @@
   onclick={handleClicked}
   onmouseover={handleMouseOver}
   onkeydown={handleKeydown}
-  bind:this={menuEl}
+  bind:this={menuRef}
 >
   {@render menuItems(rootMenu)}
 </div>

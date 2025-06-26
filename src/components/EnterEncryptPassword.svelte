@@ -41,9 +41,9 @@
   let hidePassword = $state(true);
 
   /** @type {HTMLElement} */
-  let input;
+  let inputRef;
   function onchange(ev) {
-    input.focus();
+    inputRef.focus();
   }
 </script>
 
@@ -56,7 +56,7 @@
 >
   <div class="text-lg">Enter password to encrypt files:</div>
   <input
-    bind:this={input}
+    bind:this={inputRef}
     bind:value={password}
     type={hidePassword ? "password" : "text"}
     use:focus

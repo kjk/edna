@@ -1,10 +1,10 @@
 <script>
-  import ListBox from "./ListBox.svelte";
   import { focus } from "../actions";
-  import { findMatchingItems, getAltChar, len } from "../util";
-  import { getBoopFunctions } from "../system-notes";
   import { getFunctionMeta, toggleFunctionStarred } from "../metadata";
+  import { getBoopFunctions } from "../system-notes";
+  import { findMatchingItems, getAltChar, len } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
+  import ListBox from "./ListBox.svelte";
 
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
@@ -127,7 +127,7 @@
       }
       return;
     }
-    listbox.onkeydown(ev, filter === "");
+    listboxRef.onkeydown(ev, filter === "");
   }
 
   let itemsCountMsg = $derived.by(() => {
@@ -145,11 +145,11 @@
   async function toggleStarred(item) {
     item.isStarred = await toggleFunctionStarred(item.name);
     console.log("toggleStarred:", item, "isStarred:", item.isStarred);
-    input.focus();
+    inputRef.focus();
   }
 
-  let listbox;
-  let input;
+  let listboxRef;
+  let inputRef;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -173,7 +173,7 @@
       <input
         type="text"
         use:focus
-        bind:this={input}
+        bind:this={inputRef}
         bind:value={filter}
         class="py-1 px-2 bg-white w-full mb-2 rounded-xs relative"
       />
@@ -183,7 +183,7 @@
     </div>
   </div>
   <ListBox
-    bind:this={listbox}
+    bind:this={listboxRef}
     bind:selectedItem
     items={itemsFiltered}
     onclick={(item) => emitRunFunction(item, false)}

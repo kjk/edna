@@ -1,8 +1,8 @@
 <script>
-  import { kLanguages } from "../editor/languages.js";
   import { focus } from "../actions.js";
-  import ListBox from "./ListBox.svelte";
+  import { kLanguages } from "../editor/languages.js";
   import { findMatchingItems, len } from "../util.js";
+  import ListBox from "./ListBox.svelte";
 
   /** @type {{
     selectLanguage: (name: string) => void,
@@ -39,13 +39,13 @@
   }
   const items = buildItems();
   let itemsFiltered = $derived(findMatchingItems(items, filter, "nameLC"));
-  let listbox;
+  let listboxRef;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
   onkeydown={(ev) => {
-    listbox.onkeydown(ev, filter === "");
+    listboxRef.onkeydown(ev, filter === "");
   }}
   tabindex="-1"
   class="selector z-20 absolute center-x-with-translate top-[2rem] max-h-[94vh] flex flex-col p-2"
@@ -57,7 +57,7 @@
     class="py-1 px-2 bg-white w-full min-w-[400px] mb-2 rounded-xs"
   />
   <ListBox
-    bind:this={listbox}
+    bind:this={listboxRef}
     items={itemsFiltered}
     onclick={(item) => selectLanguage(item.token)}
   >
