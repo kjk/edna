@@ -11,7 +11,6 @@ import { EditorView } from "@codemirror/view";
 import {
   ADD_NEW_BLOCK,
   heynoteEvent,
-  SET_FOLD_STATE,
   transactionsHasAnnotation,
   transactionsHasHistoryEvent,
 } from "./annotation.js";
@@ -168,7 +167,6 @@ export const toggleBlockFold = (editor) => (view) => {
     // we'll fold all blocks if more blocks are unfolded than folded, and unfold all blocks otherwise
     view.dispatch({
       effects: [...(numUnfolded >= numFolded ? foldEffects : unfoldEffects)],
-      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
@@ -193,7 +191,6 @@ export const foldBlock = (editor) => (view) => {
   if (blockRanges.length > 0) {
     view.dispatch({
       effects: blockRanges.map((range) => foldEffect.of(range)),
-      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
@@ -215,7 +212,6 @@ export const foldAllBlocks = (editor) => (view) => {
   if (blockRanges.length > 0) {
     view.dispatch({
       effects: blockRanges.map((range) => foldEffect.of(range)),
-      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
@@ -240,7 +236,6 @@ export const unfoldBlock = (editor) => (view) => {
   if (blockFolds.length > 0) {
     view.dispatch({
       effects: blockFolds.map((range) => unfoldEffect.of(range)),
-      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
 };
@@ -262,7 +257,28 @@ export const unfoldAlBlocks = (editor) => (view) => {
   if (blockFolds.length > 0) {
     view.dispatch({
       effects: blockFolds.map((range) => unfoldEffect.of(range)),
-      annotations: [heynoteEvent.of(SET_FOLD_STATE)],
     });
   }
+};
+
+// unlike unfoldAll() from @codemirror/language, this will unfold all folded regions
+// not just those related to code folding
+// this is emergency command, if folding gets screwed up
+export const unfoldEverything = (editor) => (view) => {
+  const state = view.state;
+  const foldRanges = state.field(foldState, false);
+  // console.log("unfoldEverything: foldRanges:", foldRanges);
+  if (!foldRanges) {
+    // console.log("unfoldEverything: no foldRanges found");
+    return;
+  }
+  let effects = [];
+  foldRanges.between(0, state.doc.length, (from, to) => {
+    let effect = unfoldEffect.of({ from, to });
+    effects.push(effect);
+  });
+  // console.log("unfoldEverything: effects:", effects);
+  view.dispatch({
+    effects: effects,
+  });
 };

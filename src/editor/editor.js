@@ -17,12 +17,7 @@ import { getNoteMeta, saveNotesMetadata } from "../metadata.js";
 import { loadNote, saveNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { len, objectEqualDeep } from "../util.js";
-import {
-  heynoteEvent,
-  SET_CONTENT,
-  SET_FOLD_STATE,
-  SET_FONT,
-} from "./annotation.js";
+import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation.js";
 import {
   blockLineNumbers,
   blockState,
@@ -32,7 +27,7 @@ import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils.js";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs.js";
 import { createDynamicCloseBracketsExtension } from "./extensions.js";
-import { foldGutterExtension } from "./fold-gutter.js";
+import { foldGutterExtension, unfoldEverything } from "./fold-gutter.js";
 import { ednaKeymap } from "./keymap.js";
 import { heynoteLang } from "./lang-heynote/heynote.js";
 import { languageDetection } from "./language-detection/autodetect.js";
@@ -52,21 +47,6 @@ function getKeymapExtensions(editor, keymap) {
     return ednaKeymap(editor);
   }
 }
-
-const foldNotifications = (editor) =>
-  ViewPlugin.fromClass(
-    class {
-      update(update) {
-        if (
-          update.transactions.some(
-            (tr) => tr.annotation(heynoteEvent) === SET_FOLD_STATE,
-          )
-        ) {
-          // editor.didChangeFoldState();
-        }
-      }
-    },
-  );
 
 export class EdnaEditor {
   constructor({
@@ -276,9 +256,7 @@ export class EdnaEditor {
           } catch (e) {
             console.error("setContent: error restoring folded ranges:", e);
             // if we fail to restore folded ranges, just clear them
-            this.view.dispatch({
-              effects: foldEffect.of([]),
-            });
+            unfoldEverything(this)(this.view);
           }
         }
         resolve();

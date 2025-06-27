@@ -1,6 +1,6 @@
 <script>
   import { tick } from "svelte";
-  import { foldCode, unfoldCode } from "@codemirror/language";
+  import { foldCode, unfoldAll, unfoldCode } from "@codemirror/language";
   import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import {
@@ -33,6 +33,7 @@
     toggleBlockFold,
     unfoldAlBlocks,
     unfoldBlock,
+    unfoldEverything,
   } from "../editor/fold-gutter";
   import {
     extForLang,
@@ -919,6 +920,7 @@
   export const kCmdUnfoldAllBlocks = nmid();
   export const kCmdFoldCode = nmid();
   export const kCmdUnfoldColde = nmid();
+  export const kCmdUnfoldEverything = nmid();
   export const kCmdFormatBlock = nmid();
   const kCmdBlockLast = kCmdFormatBlock;
 
@@ -1093,6 +1095,7 @@
       kCmdUnfoldBlock,
       kCmdFoldAllBlocks,
       kCmdUnfoldAllBlocks,
+      kCmdUnfoldEverything,
       kCmdFoldCode,
       kCmdUnfoldColde,
       kCmdMoveBlock, // disable?
@@ -1250,6 +1253,9 @@
       view.focus();
     } else if (cmdId === kCmdUnfoldAllBlocks) {
       unfoldAlBlocks(ednaEditor)(view);
+      view.focus();
+    } else if (cmdId === kCmdUnfoldEverything) {
+      unfoldEverything(ednaEditor)(view);
       view.focus();
     } else if (cmdId === kCmdToggleBlockFold) {
       toggleBlockFold(ednaEditor)(view);
@@ -1447,6 +1453,7 @@
     ["Open note from disk", kCmdOpenNoteFromDisk],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
+    ["Edit: Unfold everything", kCmdUnfoldEverything],
     // ["Export current note", kCmdExportCurrentNote],
     ...(isMac
       ? [
