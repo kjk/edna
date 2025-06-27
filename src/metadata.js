@@ -10,6 +10,7 @@ export const kMetadataName = "__metadata.edna.json";
     altShortcut?: string,
     isStarred?: boolean,
     foldedRanges?: { from: number, to: number }[],
+    selection? : any,
 }} NoteMetadata */
 
 /** @typedef {{
@@ -73,7 +74,7 @@ export async function loadNotesMetadata() {
 /**
  * @param {Metadata} m
  */
-async function saveNotesMetadata(m) {
+export async function saveNotesMetadata(m = metadata) {
   let s = JSON.stringify(m, null, 2);
   let dh = getStorageFS();
   if (dh) {
@@ -120,7 +121,7 @@ export function getNoteMeta(name, createIfNotExists = false) {
 export async function toggleNoteStarred(name) {
   let meta = getNoteMeta(name, true);
   meta.isStarred = !meta.isStarred;
-  await saveNotesMetadata(metadata);
+  await saveNotesMetadata();
   tick().then(updateStarred);
   return meta.isStarred;
 }
@@ -137,7 +138,7 @@ export async function removeNoteFromMetadata(name) {
     }
   }
   metadata.notes = newNotes;
-  await saveNotesMetadata(metadata);
+  await saveNotesMetadata();
 }
 
 /**
@@ -152,7 +153,7 @@ export async function renameNoteInMetadata(oldName, newName) {
       break;
     }
   }
-  await saveNotesMetadata(metadata);
+  await saveNotesMetadata();
 }
 
 /**
@@ -169,7 +170,7 @@ export async function reassignNoteShortcut(name, altShortcut) {
     if (o.name === name) {
       // same note: just remove shortcut
       delete o.altShortcut;
-      let res = await saveNotesMetadata(metadata);
+      let res = await saveNotesMetadata();
       return res;
     } else {
       // a different note: remove shortcut and then assign to the new note
@@ -179,17 +180,7 @@ export async function reassignNoteShortcut(name, altShortcut) {
 
   let meta = getNoteMeta(name, true);
   meta.altShortcut = altShortcut;
-  await saveNotesMetadata(metadata);
-}
-
-/**
- * @param {string} name
- * @param {{from, to}[]} foldedRanges
- */
-export async function setNoteMetaFoldedRanges(name, foldedRanges) {
-  let meta = getNoteMeta(name, true);
-  meta.foldedRanges = foldedRanges;
-  await saveNotesMetadata(metadata);
+  await saveNotesMetadata();
 }
 
 /**
@@ -222,7 +213,7 @@ export function getFunctionMeta(name, createIfNotExists = false) {
 export async function toggleFunctionStarred(name) {
   let m = getFunctionMeta(name, true);
   m.isStarred = !m.isStarred;
-  await saveNotesMetadata(metadata);
+  await saveNotesMetadata();
   return m.isStarred;
 }
 

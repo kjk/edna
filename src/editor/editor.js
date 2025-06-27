@@ -1,11 +1,6 @@
 import { tick } from "svelte";
 import { markdown } from "@codemirror/lang-markdown";
-import {
-  ensureSyntaxTree,
-  foldEffect,
-  foldState,
-  indentUnit,
-} from "@codemirror/language";
+import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
 import {
   Compartment,
   EditorSelection,
@@ -18,11 +13,10 @@ import {
   lineNumbers,
   ViewPlugin,
 } from "@codemirror/view";
-import { getNoteMeta, setNoteMetaFoldedRanges } from "../metadata.js";
+import { getNoteMeta, saveNotesMetadata } from "../metadata.js";
 import { loadNote, saveNote } from "../notes.js";
-import { getSettings } from "../settings.svelte.js";
 import { findEditorByView } from "../state.js";
-import { len } from "../util.js";
+import { len, objectEqualDeep } from "../util.js";
 import {
   heynoteEvent,
   SET_CONTENT,
@@ -34,7 +28,7 @@ import {
   blockState,
   noteBlockExtension,
 } from "./block/block.js";
-import { focusEditorView, isReadOnly } from "./cmutils.js";
+import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils.js";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs.js";
 import { createDynamicCloseBracketsExtension } from "./extensions.js";
@@ -68,7 +62,7 @@ const foldNotifications = (editor) =>
             (tr) => tr.annotation(heynoteEvent) === SET_FOLD_STATE,
           )
         ) {
-          editor.didChangeFoldState();
+          // editor.didChangeFoldState();
         }
       }
     },
@@ -165,7 +159,7 @@ export class EdnaEditor {
         autoSaveContent(this, 2000),
 
         todoCheckboxPlugin,
-        foldNotifications(this),
+        // foldNotifications(this),
         markdown(),
         links,
       ],
@@ -191,11 +185,13 @@ export class EdnaEditor {
     }
     const content = this.getContent();
     if (content === this.diskContent) {
+      await this.saveFoldedState();
       return;
     }
     //console.log("saving:", this.path)
     this.diskContent = content;
     await saveNote(this.noteName, content);
+    await this.saveFoldedState();
   }
 
   getContent() {
@@ -233,41 +229,87 @@ export class EdnaEditor {
       // when moving the cursor to the end of the buffer when the program starts
       ensureSyntaxTree(this.view.state, this.view.state.doc.length, 5000);
 
-      // TODO: get from metadata
-      let cursors = null;
-
       // Set cursor positions
       // We use requestAnimationFrame to avoid a race condition causing the scrollIntoView to sometimes not work
       requestAnimationFrame(() => {
-        if (cursors) {
-          this.view.dispatch({
-            selection: EditorSelection.fromJSON(cursors),
-            scrollIntoView: true,
-          });
+        let noteMeta = getNoteMeta(this.noteName, false);
+        let savedSelection = noteMeta?.selection;
+        // TODO: validate selection?
+        if (savedSelection) {
+          // console.warn("setContent: restoring selection:", savedSelection);
+          try {
+            this.view.dispatch({
+              selection: EditorSelection.fromJSON(savedSelection),
+              scrollIntoView: true,
+            });
+          } catch (e) {
+            // console.error("setContent: error restoring selection:", e);
+            // if we fail to restore selection, just put cursor at the beginning
+            this.view.dispatch({
+              selection: EditorSelection.single(0),
+              scrollIntoView: true,
+            });
+          }
         } else {
-          // if metadata doesn't contain cursor position, we set the cursor to the end of the buffer
           let pos = 0;
-          // pos = this.view.state.doc.length;
-          console.warn("setContent: setting pos:", pos);
+          // not sure if this magic is a good idea: for all notes we
+          // put initial cursor at the beginning except for scratch notes
+          // where we put it at the end
+          // this could be confusing for users
+          if (this.noteName.startsWith("scratch")) {
+            pos = this.view.state.doc.length;
+          }
+          // console.warn("setContent: setting pos:", pos);
           this.view.dispatch({
-            selection: {
-              anchor: pos,
-              head: pos,
-            },
+            selection: EditorSelection.single(pos),
             scrollIntoView: true,
           });
         }
 
-        let noteMeta = getNoteMeta(this.noteName, false);
         let ranges = noteMeta?.foldedRanges || [];
         if (len(ranges) > 0) {
-          this.view.dispatch({
-            effects: ranges.map((range) => foldEffect.of(range)),
-          });
+          // console.warn("setContent: restoring folded ranges:", ranges);
+          try {
+            this.view.dispatch({
+              effects: ranges.map((range) => foldEffect.of(range)),
+            });
+          } catch (e) {
+            console.error("setContent: error restoring folded ranges:", e);
+            // if we fail to restore folded ranges, just clear them
+            this.view.dispatch({
+              effects: foldEffect.of([]),
+            });
+          }
         }
         resolve();
       });
     });
+  }
+
+  async saveFoldedState() {
+    let meta = getNoteMeta(this.noteName, true);
+    let didChange = false;
+    let foldedRanges = getFoldedRanges(this.view);
+    if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
+      didChange = true;
+      meta.foldedRanges = foldedRanges;
+    }
+    let selection = this.view.state.selection.toJSON();
+    if (!objectEqualDeep(meta.selection, selection)) {
+      didChange = true;
+      meta.selection = selection;
+    }
+    if (!didChange) {
+      // console.warn("saveFoldedState: skipping save, no changes");
+      return;
+    }
+    // console.log(
+    //   "saveFoldedState: saving selection:",
+    //   meta.selection,
+    //   "folededState:",
+    //   foldedRanges,
+    // );
+    await saveNotesMetadata();
   }
 
   getBlocks() {
@@ -354,26 +396,6 @@ export class EdnaEditor {
     const v = indentUnit.of(indentChar);
     this.view.dispatch({
       effects: this.tabsCompartment.reconfigure(v),
-    });
-  }
-
-  didChangeFoldStateDelayed() {
-    const foldedRanges = [];
-    this.view.state
-      .field(foldState, false)
-      ?.between(0, this.view.state.doc.length, (from, to) => {
-        foldedRanges.push({ from, to });
-      });
-    console.log("Fold state changed:", foldedRanges);
-    // TODO: should maintain noteName on editor object
-    let settings = getSettings();
-    setNoteMetaFoldedRanges(settings.currentNoteName, foldedRanges);
-  }
-
-  didChangeFoldState() {
-    // TODO: not sure if I have to delay this
-    tick().then(() => {
-      this.didChangeFoldStateDelayed();
     });
   }
 }

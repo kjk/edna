@@ -1,5 +1,6 @@
 // codemirror utilities
 
+import { foldState } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
@@ -53,4 +54,13 @@ export function focusEditorView(view) {
       clearInterval(timer);
     }
   }, 100);
+}
+
+export function getFoldedRanges(view) {
+  const foldedRanges = [];
+  let state = view.state;
+  state.field(foldState, false)?.between(0, state.doc.length, (from, to) => {
+    foldedRanges.push({ from, to });
+  });
+  return foldedRanges;
 }
