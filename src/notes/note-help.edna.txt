@@ -4,7 +4,7 @@
 
 [Edna](https://edna.arslexis.io) is a note taking app for developers and power users. A cross between Obsidian and Notational Velocity.
 
-This is a help note. To switch to a different note, press `Mod + P`.
+This is a help note. To switch to a different note, press `Mod + K`.
 
 To see help in HTML, press `Help` at the bottom right or visit https://edna.arslexis.io/help
 ∞∞∞markdown

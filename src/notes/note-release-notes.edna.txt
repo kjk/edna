@@ -87,7 +87,7 @@
 
 ## 1.8
 
-- added Command Palette (`Mod + Shift + P`)
+- added Command Palette (`Mod + Shift + K`)
 
 ## 1.7
 

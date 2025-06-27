@@ -16,6 +16,6 @@ The format of the block is: `# YYYY-MM-DD DayOfWeek`
 If you don't care about daily journal note, delete it with:
 
 * right-click for context menu, `Note / Delete current note`
-* `Mod + P` for note selector, position on daily journal and `Mod + Delete`
+* `Mod + K` for note selector, position on daily journal and `Mod + Delete`
 
 You can re-create `daily journal` note in the future.

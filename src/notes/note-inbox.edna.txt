@@ -15,7 +15,7 @@ You put stuff into Inbox when you encounter it and periodically review the Inbox
 If you don't care about inbox note, delete it with:
 
 * right-click for context menu, `Note / Delete current note`
-* `Mod + P` for note selector, position on inbox and `Mod + Delete`
+* `Mod + K` for note selector, position on inbox and `Mod + Delete`
 
 You can re-create inbox note in the future.
 
