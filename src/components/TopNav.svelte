@@ -32,6 +32,10 @@
 
   let shortcut = $derived(getNoteShortcut(noteName));
 
+  // hack: ListBox is a child of the button shown when on hover
+  // click in ListBox (selection of the note) propagates to parent
+  // button and triggers opening command palette
+  // so we ignore click after mySelectNote is called
   let eatNextClick = false;
   function mySelectNote(item) {
     eatNextClick = true;
