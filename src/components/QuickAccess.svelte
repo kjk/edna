@@ -114,7 +114,7 @@
   // otherwise is absolute child of relative parent
   let cls = $derived.by(() => {
     if (forHistory) {
-      return "z-20 top-[2rem]";
+      return "z-20 top-[2rem] center-x-with-translate";
     }
     if (settings.alwaysShowTopNav) {
       return "top-full border border-gray-400 center-x-with-translate";
