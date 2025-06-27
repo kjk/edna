@@ -1,5 +1,5 @@
 <script>
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import {
     closeSearchPanel,
     findNext,
@@ -48,8 +48,39 @@
   let query = getSearchQuery(view.state);
   searchTerm = query.search;
 
+  const kMaxCountOfMatches = 1000; // 9999 in extended-find-replace
+
+  // stores [from, to] positions for all matches as flattened array
+  /** @type {number[]} */
+  let matchBuffer = [];
+  /**
+   * @param {number} from
+   * @param {number} to
+   */
+  function matcHBufferAdd(from, to) {
+    matchBuffer.push(from, to);
+  }
+  /**
+   * @param {number} idx
+   * @returns {{from: number, to:number}}
+   */
+  function matchBufferGet(idx) {
+    idx = idx * 2;
+    if (idx >= matchBuffer.length) {
+      return null;
+    }
+    return {
+      from: matchBuffer[idx],
+      to: matchBuffer[idx + 1],
+    };
+  }
+  function matchBufferReset() {
+    matchBuffer.length = 0;
+  }
+
   $effect(() => {
-    let query = new SearchQuery({
+    console.log("new search query:", searchTerm);
+    query = new SearchQuery({
       search: searchTerm,
       caseSensitive: appState.searchMatchCase,
       regexp: appState.searchRegex,
@@ -59,14 +90,122 @@
     view.dispatch({
       effects: setSearchQuery.of(query),
     });
+    setTimeout(() => {
+      calcTotalCountOfMatches();
+      updateCurrentMatchCount();
+    }, 500);
   });
+
+  let counter = $state({
+    current: 1, // 1-based
+    total: 0,
+    exceed: false,
+  });
+
+  /**
+   * Compare equality of this query with the another one.
+   */
+  function _compare(other) {
+    let res = untrack(() => query.eq(other) && query.literal == other.literal);
+    return res;
+  }
+
+  function _setQuery(q, internal) {
+    console.log("_setQuery:", q);
+  }
+
+  export function update(update) {
+    // console.log("find update", update);
+    // let resetCounter = false;
+    // // Search any effect that brings query update.
+    // for (let tr of update.transactions)
+    //   for (let effect of tr.effects) {
+    //     if (effect.is(setSearchQuery) && !_compare(effect.value)) {
+    //       _setQuery(effect.value, false);
+    //       resetCounter = true;
+    //     }
+    //   }
+    // if (update.docChanged) {
+    //   resetCounter = true;
+    // }
+    // if (resetCounter) {
+    //   calcTotalCountOfMatches();
+    //   updateCurrentMatchCount();
+    // }
+    // // Listen for the user action/command that toggles this panel.
+    // if (
+    //   update.transactions.some((tr) => {
+    //     let config = tr.annotation(searchPanelChange);
+    //     if (config) {
+    //       this.searchField.inputEl.select();
+    //       if (config.showReplace == this.showReplace) return false;
+    //       this.showReplace = config.showReplace;
+    //       return true;
+    //     }
+    //     return false;
+    //   })
+    // ) {
+    //   this._toggleReplaceEl();
+    // }
+  }
+
+  function updateCurrentMatchCount() {
+    let lastSelection = view.state.selection.ranges.at(-1),
+      index = counter.current, // 1-based
+      prevIndex = index,
+      max = counter.total;
+
+    if (!max) return;
+
+    // Efficiently trace next current match from previous current match
+    // position.
+    let curMatch = matchBufferGet(index - 1);
+    while (!curMatch || (curMatch.to <= lastSelection.from && index < max)) {
+      counter.current = ++index;
+      curMatch = matchBufferGet(index - 1);
+    }
+
+    if (prevIndex === counter.current) {
+      while (curMatch && curMatch.from >= lastSelection.to) {
+        counter.current = --index;
+        curMatch = matchBufferGet(index - 1);
+      }
+    }
+  }
+
+  function calcTotalCountOfMatches() {
+    matchBufferReset();
+    counter = { total: 0, current: 1, exceed: false };
+    if (!query.search || !query.valid) {
+      return;
+    }
+
+    let cursor = query.getCursor(view.state);
+
+    // Stopped when the cursor reached the end, or the total reached its
+    // allowed amount.
+    while (!cursor.next().done && counter.total < kMaxCountOfMatches) {
+      counter.total++;
+      // @ts-ignore
+      let { from, to } = cursor.value;
+      matcHBufferAdd(from, to);
+    }
+
+    // @ts-ignore
+    if (!cursor.done) {
+      counter.exceed = true;
+    }
+    // console.warn("calcTotalCountOfMatches: counter:", $state.snapshot(counter));
+  }
 
   function next() {
     findNext(view);
+    updateCurrentMatchCount();
   }
 
   function prev() {
     findPrevious(view);
+    updateCurrentMatchCount();
   }
 
   function all() {
@@ -145,6 +284,11 @@
 
 {#snippet InsideInput()}
   <div class="absolute right-[0.25rem] top-[6px] flex">
+    {#if counter.total}
+      <div class="flex text-gray-300 ml-4 self-center whitespace-nowrap">
+        {counter.current} of {counter.total}
+      </div>
+    {/if}
     <button class={matchCaseCls} onclick={matchCase} title="Match Case"
       >{@render IconTablerLetterCase()}</button
     >
@@ -181,7 +325,7 @@
     spellcheck="false"
     placeholder="Find"
     bind:value={searchTerm}
-    class="w-[36ch]"
+    class="w-[42ch]"
     use:focus
     onkeydown={onKeyDown}
   />
@@ -194,7 +338,7 @@
     spellcheck="false"
     placeholder="Replace"
     bind:value={replaceTerm}
-    class="w-[36ch]"
+    class="w-[42ch]"
   />
 {/snippet}
 

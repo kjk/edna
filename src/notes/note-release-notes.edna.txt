@@ -6,6 +6,7 @@
 - remember folding state
 - remember selection / cursor position
 - implement "Edit: unfold everything" that unfolds code and blocks
+- show number of matches in `Ctrl + F` find
 
 ## 1.25
 - implement search across all notes (`Ctrl + Shift + F`)

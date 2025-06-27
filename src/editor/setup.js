@@ -1,20 +1,12 @@
 import { mount } from "svelte";
-import {
-  autocompletion,
-  closeBrackets,
-  closeBracketsKeymap,
-  completionKeymap,
-} from "@codemirror/autocomplete";
+import { closeBracketsKeymap } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import {
   bracketMatching,
   defaultHighlightStyle,
-  foldGutter,
-  foldKeymap,
   indentOnInput,
   syntaxHighlighting,
 } from "@codemirror/language";
-import { lintKeymap } from "@codemirror/lint";
 import {
   highlightSelectionMatches,
   search,
@@ -30,7 +22,6 @@ import {
   highlightActiveLineGutter,
   highlightSpecialChars,
   keymap,
-  lineNumbers,
   rectangularSelection,
   scrollPastEnd,
 } from "@codemirror/view";
@@ -45,10 +36,14 @@ function createFnddPanel(view) {
     },
   };
   // TODO: this leak, I don't see unmounting anywhere
-  mount(Find, args);
+  let comp = mount(Find, args);
+  const update = (update) => {
+    comp.update(update);
+  };
   return {
     dom,
     top: true,
+    update,
   };
 }
 
