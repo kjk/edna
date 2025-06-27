@@ -28,7 +28,6 @@ function selectedLineBlocks(state) {
 export const deleteLine = (view) => {
   if (view.state.readOnly) return false;
 
-  debugger;
   console.warn("deleteLine: started");
   const { state } = view;
 
