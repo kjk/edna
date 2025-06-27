@@ -1,11 +1,21 @@
 <script>
-  import { openCommandPalette, openContextMenu } from "../globals.js";
+  import {
+    openCommandPalette,
+    openContextMenu,
+    openNoteSelector,
+  } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
   import { getSettings } from "../settings.svelte.js";
   import { getAltChar } from "../util.js";
-  import { IconCommandPalette, IconMenu } from "./Icons.svelte";
+  import {
+    IconCommandPalette,
+    IconMdiArrowCollapseLeft,
+    IconMdiArrowCollapseRight,
+    IconMenu,
+    IconTablerPlus,
+  } from "./Icons.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
   /** @type {{ 
@@ -105,13 +115,37 @@
       <QuickAccess selectNote={mySelectNote} forHistory={false} />
     {/if}
   </button>
+
+  <!-- <button
+    onclick={openNoteSelector}
+    class="clickable-icon ml-1 px-1!"
+    title={"Open note in a new tab"}
+  >
+    {@render IconTablerPlus()}
+  </button> -->
+
   {#if settings.alwaysShowTopNav}
     <div class="grow"></div>
     <a
-      class="mr-2 font-bold text-blue-600 hover:text-blue-800"
+      class="mr-2 font-bold text-slate-600 hover:text-slate-800"
       href="/help"
       target="_blank">Edna</a
     >
+    <button
+      onclick={() => (settings.alwaysShowTopNav = false)}
+      class="clickable-icon"
+      title={"minimize"}
+    >
+      {@render IconMdiArrowCollapseRight()}
+    </button>
+  {:else}
+    <button
+      onclick={() => (settings.alwaysShowTopNav = true)}
+      class="clickable-icon"
+      title={"maximize"}
+    >
+      {@render IconMdiArrowCollapseLeft()}
+    </button>
   {/if}
 </div>
 

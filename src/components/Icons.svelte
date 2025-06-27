@@ -21,8 +21,49 @@
     IconLucideType,
     IconLucideReplace,
     IconLucideReplaceAll,
+    IconTablerLayoutSidebarLeftExpand,
+    IconTablerLayoutSidebarLeftCollapse,
+    IconTablerPlus,
+    IconMdiArrowCollapseLeft,
+    IconMdiArrowCollapseRight,
   };
 </script>
+
+<!-- 
+Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
+
+https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-right
+-->
+{#snippet IconMdiArrowCollapseRight()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    ><path
+      fill="currentColor"
+      d="M12.08 4.08L20 12l-7.92 7.92l-1.41-1.42l5.5-5.5H2v-2h14.17l-5.5-5.5zM20 12v10h2V2h-2z"
+    /></svg
+  >
+{/snippet}
+
+<!-- 
+Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
+
+https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-left
+-->
+{#snippet IconMdiArrowCollapseLeft()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    ><path
+      fill="currentColor"
+      d="M11.92 19.92L4 12l7.92-7.92l1.41 1.42l-5.5 5.5H22v2H7.83l5.51 5.5zM4 12V2H2v20h2z"
+    /></svg
+  >
+{/snippet}
 
 {#snippet IconMenu()}
   <svg
@@ -95,6 +136,75 @@
   </svg>
 {/snippet}
 
+<!-- 
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE 
+
+https://icones.js.org/collection/tabler?s=plus&icon=tabler:plus
+-->
+
+{#snippet IconTablerPlus()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    ><path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M12 5v14m-7-7h14"
+    /></svg
+  >
+{/snippet}
+<!--
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
+
+https://icones.js.org/collection/tabler?s=left&icon=tabler:layout-sidebar-left-expand
+-->
+{#snippet IconTablerLayoutSidebarLeftExpand()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    ><g
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      ><path
+        d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16"
+      /><path d="m14 10l2 2l-2 2" /></g
+    ></svg
+  >
+{/snippet}
+
+<!-- 
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE 
+
+https://icones.js.org/collection/tabler?s=left&icon=tabler:layout-sidebar-left-collapse
+-->
+{#snippet IconTablerLayoutSidebarLeftCollapse()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    ><g
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      ><path
+        d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16"
+      /><path d="m15 10l-2 2l2 2" /></g
+    ></svg
+  >
+{/snippet}
 <!-- 
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
