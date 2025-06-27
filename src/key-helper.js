@@ -33,11 +33,11 @@ function getKeyHelp(platform = platformName) {
     [`Mod + Down`, "Goto next block"],
     [`Mod + Up`, "Goto previous block"],
 
-    ["Ctrl-Shift-[", "Fold code"],
-    ["Ctrl-Shift-]", "Unfold code"],
-    ["Ctrl-Alt-[", "Fold block"],
-    ["Ctrl-Alt-]", "Unfold block"],
-    ["Ctrl-Alt-.", "Toggle block fold"],
+    ["Ctrl + Shift + [", "Fold code"],
+    ["Ctrl + Shift + ]", "Unfold code"],
+    ["Ctrl + Alt + [", "Fold block"],
+    ["Ctrl + Alt + ]", "Unfold block"],
+    ["Ctrl + Alt + .", "Toggle block fold"],
 
     [`Mod + A`, "Select all text in a note block"],
     [``, "Press again to select the whole buffer"],
@@ -48,6 +48,7 @@ function getKeyHelp(platform = platformName) {
     [`Alt + Shift + R`, "Run function with block content"],
     [``, "Supports Go"],
     [`Mod + F`, "Search / replace within a note"],
+    [`Mod + Shift + F`, "Search in all notes"],
   ];
   // remove Alt + N for mac
   if (isMac) {
@@ -65,11 +66,11 @@ function getKeyHelp(platform = platformName) {
     function updateMacKeyBindings() {
       // replace Ctrl with Mod
       let changes = [
-        "Ctrl-Shift-[",
-        "Ctrl-Shift-]",
-        "Ctrl-Alt-[",
-        "Ctrl-Alt-]",
-        "Ctrl-Alt-.",
+        "Ctrl + Shift + [",
+        "Ctrl + Shift + ]",
+        "Ctrl + Alt + [",
+        "Ctrl + Alt + ]",
+        "Ctrl + Alt + .",
       ];
       for (let i = 0; i < res.length; i++) {
         let key = res[i][0];
