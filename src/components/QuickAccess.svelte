@@ -146,7 +146,9 @@
           {"" + historyTrigger}
         </div>
       {:else if shortcut}
-        <div class="px-1 text-left grow text-gray-400 dark:text-gray-400 {cls}">
+        <div
+          class="px-1 whitespace-nowrap text-left grow text-gray-400 dark:text-gray-400 {cls}"
+        >
           {shortcut}
         </div>
       {:else if noteInfo.isStarred && historyTrigger < 0}
