@@ -38,10 +38,11 @@ UI is optimized for writing. Editor uses most of the space.
 
 To acess more functionality:
 
-- `Mod + Shift + P` for command pallete
+- `Mod + Shift + K` for command palette
 - use [keyboard shortcuts](#keyboard-shortcuts))
 - context menu (right-click)
-- top bar and status bar
+- top navigation bar
+- status bar
 
 ## Speed
 
@@ -49,7 +50,7 @@ To acess more functionality:
 
 Like in Notational Velocity, you can switch between notes, create and delete notes in the same note switcher UI.
 
-Press `Mod + P` for note switcher and:
+Press `Mod + K` for note switcher and:
 
 - switch between notes
 - create new note
@@ -74,7 +75,7 @@ To switch to previous note: press `Mod + E` and `Enter`.
 
 You can assign `Alt + 1` to `Alt + 9` for quickly accessing notes:
 
-- `Mod + P` for note selector dialog
+- `Mod + K` for note selector dialog
 - select a note in the list
 - press `Alt + 1` to `Alt + 9` to assign it as quick access shortcut
 
@@ -84,7 +85,7 @@ Default shortcuts are:
 - `Alt + 2` : daily journal
 - `Alt + 3` : inbox
 
-Notes with quick access shortcut are shown at the top of note selector (`Mod + P`).
+Notes with quick access shortcut are shown at the top of note selector (`Mod + K`).
 
 ## Syntax highlighting of blocks
 
@@ -104,7 +105,7 @@ We support formatting of Go, JSON, JavaScript, HTML, CSS and Markdown blocks.
 
 ## Open another note
 
-- `Mod + P` for note switcher
+- `Mod + K` for note switcher
 - click on note to open
 
 or:
@@ -115,7 +116,7 @@ or:
 
 ## Create a new note
 
-- `Mod + P` to open note switcher
+- `Mod + K` to open note switcher
 - type name of the note to create
 - `Enter` to create if the name doesn't match any existing note
 - `Mod + Enter` to create if the name partially matches an existing note
@@ -130,7 +131,7 @@ Or: context menu: `Create New note`.
 
 Context menu: `This Note / Delete` or:
 
-- `Mod + P` for note switcher
+- `Mod + K` for note switcher
 - select a note with arrow key or by typing a partial name match
 - `Mod + Delete` or `Mod + Backspace` to delete selected note
 
@@ -144,7 +145,7 @@ context menu: `This Note / Rename`
 
 You can assign `Alt + 1` to `Alt + 9` keyboard shortcuts for quickly opening up to 10 notes.
 
-- `Mod + P`
+- `Mod + K`
 - select a note
 - press `Alt + <n>` shortcut to re-assign it to selected note
 
@@ -517,7 +518,7 @@ time \* 2
 // Edna is great for storing code snippets
 // this is a javascript block
 // change type of block with `Mod + L`
-// or `Block: Change Language` command in command palette (`Mod + P`)
+// or `Block: Change Language` command in command palette (`Mod + K`)
 // you can format it with `Alt + Shift + F`
 let x = 5
 console.log("x is", x)

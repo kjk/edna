@@ -152,9 +152,11 @@ func Main() {
 		flgUpdateGoDeps  bool
 		flgGen           bool
 		flgAdHoc         bool
+		flgBuildFrontend bool
 	)
 	{
 		flag.BoolVar(&flgRunDev, "run-dev", false, "run the server in dev mode")
+		flag.BoolVar(&flgBuildFrontend, "build-frontend", false, "build frontend assets")
 		flag.BoolVar(&flgRunProd, "run-prod", false, "run server in production")
 		flag.BoolVar(&flgDeployHetzner, "deploy-hetzner", false, "deploy to hetzner")
 		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
@@ -201,6 +203,12 @@ func Main() {
 	if flgSetupAndRun {
 		defer measureDuration()()
 		setupAndRun()
+		return
+	}
+
+	if flgBuildFrontend {
+		defer measureDuration()()
+		rebuildFrontend()
 		return
 	}
 

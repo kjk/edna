@@ -1,30 +1,31 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <base href="/help">
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
-    <meta name="color-scheme" content="light dark">
-    <title>Edna Help</title>
-    <link rel="stylesheet" href="help.css">
-  </head>
-  <body>
-    <div class="content">
-  <h1 id="welcome-to-edna" tabindex="-1"><a class="header-anchor" href="#welcome-to-edna">Welcome to Edna</a></h1>
-<p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is a note taking app for developers and power users. A cross between Obsidian and Notational Velocity.</p>
-<h1 id="keyboard-shortcuts" tabindex="-1"><a class="header-anchor" href="#keyboard-shortcuts">Keyboard shortcuts</a></h1>
-<pre><code>Ctrl + P               Open, create or delete a note
+
+<head>
+  <base href="/help">
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
+  <meta name="color-scheme" content="light dark">
+  <title>Edna Help</title>
+  <link rel="stylesheet" href="help.css">
+</head>
+
+<body>
+  <div class="content">
+    <h1 id="welcome-to-edna" tabindex="-1"><a class="header-anchor" href="#welcome-to-edna">Welcome to Edna</a></h1>
+    <p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is a note taking app for developers and power users.
+      A cross between Obsidian and Notational Velocity.</p>
+    <h1 id="keyboard-shortcuts" tabindex="-1"><a class="header-anchor" href="#keyboard-shortcuts">Keyboard shortcuts</a>
+    </h1>
+    <pre><code>Ctrl + P               Open, create or delete a note
 Ctrl + K               
 Ctrl + O               
-                       
 Ctrl + H               Open recent note (from history)
 Ctrl + Shift + P       Command Palette
 Ctrl + Shift + K       
 Ctrl + Shift + O       
-                       
 Ctrl + L               Change block language
 Ctrl + B               Navigate to a block
 Alt + N                Create a new scratch note
@@ -51,182 +52,215 @@ Alt + Shift + R        Run function with block content
 Ctrl + F               Search / replace within a note
 Ctrl + Shift + F       Search in all notes
 </code></pre>
-<h1 id="why-edna%3F" tabindex="-1"><a class="header-anchor" href="#why-edna%3F">Why Edna?</a></h1>
-<h2 id="notes-and-blocks" tabindex="-1"><a class="header-anchor" href="#notes-and-blocks">Notes and blocks</a></h2>
-<p>In Edna a note is divided into blocks. Each block has a type: markdown, plain text, math block, JavaScript code, Go code etc.</p>
-<p>Use:</p>
-<ul>
-<li><code>Ctrl + L</code> to assign a type for current block</li>
-<li><code>Ctrl + B</code> to navigate between blocks</li>
-<li><code>Ctrl + A</code> and <code>Delete</code> to delete block (select block text and delete)</li>
-</ul>
-<p>Use <a href="#keyboard-shortcuts">keyboard shortcuts</a> to create blocks, move between blocks.</p>
-<h2 id="no-installation-required" tabindex="-1"><a class="header-anchor" href="#no-installation-required">No installation required</a></h2>
-<p>Edna is a web-based application but can store notes on disk, like a desktop app (when using Chrome or Edge).</p>
-<p>You can use it offline (without network connection) and for desktop-like experince you can install a desktop shortcut.</p>
-<h2 id="miminalist-ui%2C-lots-of-functionality" tabindex="-1"><a class="header-anchor" href="#miminalist-ui%2C-lots-of-functionality">Miminalist UI, lots of functionality</a></h2>
-<p>UI is optimized for writing. Editor uses most of the space.</p>
-<p>To acess more functionality:</p>
-<ul>
-<li><code>Ctrl + Shift + P</code> for command pallete</li>
-<li>use <a href="#keyboard-shortcuts">keyboard shortcuts</a>)</li>
-<li>context menu (right-click)</li>
-<li>top bar and status bar</li>
-</ul>
-<h2 id="speed" tabindex="-1"><a class="header-anchor" href="#speed">Speed</a></h2>
-<p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is optimized for speed of writing, creating new notes, switching between notes.</p>
-<p>Like in Notational Velocity, you can switch between notes, create and delete notes in the same note switcher UI.</p>
-<p>Press <code>Ctrl + P</code> for note switcher and:</p>
-<ul>
-<li>switch between notes</li>
-<li>create new note</li>
-<li>delete a note</li>
-<li>assign a quick access <code>Alt + &lt;n&gt;</code> shortcut</li>
-</ul>
-<h2 id="context-menu" tabindex="-1"><a class="header-anchor" href="#context-menu">Context menu</a></h2>
-<p>Right-click for context menu.</p>
-<p>For native context menu do <code>Ctrl + right-click</code>. This is useful when spell checking to correct mis-spellings.</p>
-<h2 id="switch-to-recently-opened-note" tabindex="-1"><a class="header-anchor" href="#switch-to-recently-opened-note">Switch to recently opened note</a></h2>
-<p>Press <code>Ctrl + E</code> to switch to a note from list of recently opened notes.</p>
-<p>Last 9 recently opened notes can be opened with <code>0</code> ... <code>9</code> shortcut.</p>
-<p>To switch to previous note: press <code>Ctrl + E</code> and <code>Enter</code>.</p>
-<h2 id="quick-access-shortcut" tabindex="-1"><a class="header-anchor" href="#quick-access-shortcut">Quick access shortcut</a></h2>
-<p>You can assign <code>Alt + 1</code> to <code>Alt + 9</code> for quickly accessing notes:</p>
-<ul>
-<li><code>Ctrl + P</code> for note selector dialog</li>
-<li>select a note in the list</li>
-<li>press <code>Alt + 1</code> to <code>Alt + 9</code> to assign it as quick access shortcut</li>
-</ul>
-<p>Default shortcuts are:</p>
-<ul>
-<li><code>Alt + 1</code> : scratch note</li>
-<li><code>Alt + 2</code> : daily journal</li>
-<li><code>Alt + 3</code> : inbox</li>
-</ul>
-<p>Notes with quick access shortcut are shown at the top of note selector (<code>Ctrl + P</code>).</p>
-<h2 id="syntax-highlighting-of-blocks" tabindex="-1"><a class="header-anchor" href="#syntax-highlighting-of-blocks">Syntax highlighting of blocks</a></h2>
-<p>Blocks are syntax highlighted based on their type.</p>
-<h2 id="formatting-of-blocks" tabindex="-1"><a class="header-anchor" href="#formatting-of-blocks">Formatting of blocks</a></h2>
-<p>You can format current block using:</p>
-<ul>
-<li><code>Alt + Shift + F</code> keyboard shortcut</li>
-<li>right-click and use context menu <code>Block / Format as ${type}</code></li>
-<li>press format icon in status bar (bottom right)</li>
-</ul>
-<p>We support formatting of Go, JSON, JavaScript, HTML, CSS and Markdown blocks.</p>
-<h1 id="multiple-notes" tabindex="-1"><a class="header-anchor" href="#multiple-notes">Multiple notes</a></h1>
-<h2 id="open-another-note" tabindex="-1"><a class="header-anchor" href="#open-another-note">Open another note</a></h2>
-<ul>
-<li><code>Ctrl + P</code> for note switcher</li>
-<li>click on note to open</li>
-</ul>
-<p>or:</p>
-<ul>
-<li>enter text to narrow down list of notes</li>
-<li><code>up</code> / <code>down</code> arrow keys to select a note</li>
-<li><code>Enter</code> to open selected note</li>
-</ul>
-<h2 id="create-a-new-note" tabindex="-1"><a class="header-anchor" href="#create-a-new-note">Create a new note</a></h2>
-<ul>
-<li><code>Ctrl + P</code> to open note switcher</li>
-<li>type name of the note to create</li>
-<li><code>Enter</code> to create if the name doesn't match any existing note</li>
-<li><code>Ctrl + Enter</code> to create if the name partially matches an existing note</li>
-</ul>
-<p>Or: context menu: <code>Create New note</code>.</p>
-<h2 id="create-a-new-scratch-note" tabindex="-1"><a class="header-anchor" href="#create-a-new-scratch-note">Create a new scratch note</a></h2>
-<p><code>Alt + N</code> to create temporary scratch note. We'll pick a unique name <code>scratch-&lt;n&gt;</code></p>
-<h2 id="delete-a-note" tabindex="-1"><a class="header-anchor" href="#delete-a-note">Delete a note</a></h2>
-<p>Context menu: <code>This Note / Delete</code> or:</p>
-<ul>
-<li><code>Ctrl + P</code> for note switcher</li>
-<li>select a note with arrow key or by typing a partial name match</li>
-<li><code>Ctrl + Delete</code> or <code>Ctrl + Backspace</code> to delete selected note</li>
-</ul>
-<p>A <code>scratch</code> note cannot be deleted.</p>
-<h2 id="rename-a-note" tabindex="-1"><a class="header-anchor" href="#rename-a-note">Rename a note</a></h2>
-<p>context menu: <code>This Note / Rename</code></p>
-<h2 id="quick-access-shortcut-1" tabindex="-1"><a class="header-anchor" href="#quick-access-shortcut-1">Quick access shortcut</a></h2>
-<p>You can assign <code>Alt + 1</code> to <code>Alt + 9</code> keyboard shortcuts for quickly opening up to 10 notes.</p>
-<ul>
-<li><code>Ctrl + P</code></li>
-<li>select a note</li>
-<li>press <code>Alt + &lt;n&gt;</code> shortcut to re-assign it to selected note</li>
-</ul>
-<p>Notes with assigned shortcut show up at the top of note switcher.</p>
-<h2 id="open-recent-note" tabindex="-1"><a class="header-anchor" href="#open-recent-note">Open recent note</a></h2>
-<p>Press <code>Ctrl + E</code> to open a note from history. You can press <code>0</code> to <code>9</code> to open one of the last 10 notes.</p>
-<h1 id="default-notes" tabindex="-1"><a class="header-anchor" href="#default-notes">Default notes</a></h1>
-<p>At first run we create 3 default notes:</p>
-<ul>
-<li><code>scratch</code>, <code>Alt + 1</code></li>
-<li><code>daily journal</code>, <code>Alt + 2</code></li>
-<li><code>inbox</code>, <code>Alt + 3</code></li>
-</ul>
-<p>You can delete them (except the <code>scratch</code> note).</p>
-<p><code>scratch</code> note is meant for temporary notes.</p>
-<p><code>inbox</code> for storing things to process later e.g. links to YouTube videos to watch later or web pages to read later.</p>
-<p><code>daily journal</code> is for daily notes. We auto-create a block for each day.</p>
-<h1 id="storing-notes-on-disk" tabindex="-1"><a class="header-anchor" href="#storing-notes-on-disk">Storing notes on disk</a></h1>
-<p>By default notes are stored in the browser (localStorage).</p>
-<p>If your browser supports file system access (currently Chrome and Edge) you can store notes on disk.</p>
-<p>You can do one time export from localStorage to a directory on disk:</p>
-<ul>
-<li>context menu: <code>Notes storage / Move notes from browser to directory</code></li>
-<li>pick a directory on disk</li>
-<li>we save notes on disk as <code>${name}.edna.txt</code> files in chosen directory and delete notes in localStorage</li>
-</ul>
-<p>You can have multiple directories with notes. Think of each directory with notes as a separate Workspace.</p>
-<p>Use context menu <code>Notes storage / Switch to notes in directory</code> to switch to notes in a different directory. If it's an empty directory, without existing notes, we'll create default <code>scratch</code> note.</p>
-<p>You can go back to storing notes in the browser with context menu <code>Notes storage / Switch to browser (localStorage)</code>. Unlike going from browser =&gt; directory, it doesn't import the notes from directory.</p>
-<h1 id="accessing-notes-on-multiple-computers" tabindex="-1"><a class="header-anchor" href="#accessing-notes-on-multiple-computers">Accessing notes on multiple computers</a></h1>
-<p>If you pick a directory managed by Dropbox or One Drive or Google Drive etc. then you'll be able to access notes on multiple computers.</p>
-<p>On the first computer export notes from browser to disk:</p>
-<ul>
-<li>context menu: <code>Notes storage / Move notes from browser to directory</code></li>
-<li>pick a directory shared by Dropbox / One Drive / Google Drive etc.</li>
-</ul>
-<p>On other computers:</p>
-<ul>
-<li>context menu: <code>Notes storage / Switch to notes in directory</code></li>
-<li>pick the same directory</li>
-</ul>
-<p>Please note that that the last written version wins. If you switch really quickly between computers, before the directory with notes has been replicated, you might over-write previous content.</p>
-<h1 id="encryption" tabindex="-1"><a class="header-anchor" href="#encryption">Encryption</a></h1>
-<p>When storing notes on disk, you can encrypt them with a password.</p>
-<p>The password is only stored in your browser (in local storage). It never leaves your computer.</p>
-<p>Encryption and decryption takes place on your computer.</p>
-<p>If you lose the password, you'll lose access to your notes.</p>
-<p><strong>Don't lose the password</strong>.</p>
-<p>Notes are encrypted with <a href="https://en.wikipedia.org/wiki/ChaCha20-Poly1305" target="_blank">ChaCha20-Poly1305</a> algorithm via <a href="https://github.com/team-reflect/kiss-crypto" target="_blank">kiss-crypto</a> library.</p>
-<h2 id="picking-good-password" tabindex="-1"><a class="header-anchor" href="#picking-good-password">Picking good password</a></h2>
-<p>Good password is:</p>
-<ul>
-<li>long (short passwords can be cracked via brute force; long passwords cannot)</li>
-<li>easy to type</li>
-<li>easy to remember</li>
-</ul>
-<p>We recommend passwords that are long, memorable phrases.</p>
-<p>Example: <code>Blue bear attacked a tiny dog</code>.</p>
-<p>Such passwords are easier to type and remember than typical &quot;8a$7y!glo&quot; passwords.</p>
-<h1 id="running-code" tabindex="-1"><a class="header-anchor" href="#running-code">Running code</a></h1>
-<h2 id="run-code-blocks" tabindex="-1"><a class="header-anchor" href="#run-code-blocks">Run code blocks</a></h2>
-<p>If current block is Go or JavaScript block, you can run it:</p>
-<ul>
-<li><code>Ctrl + E</code> keyboard shortcut (<code>Smart Run</code>)</li>
-<li>context menu: <code>Run</code> / <code>Run &lt;language&gt; block</code> or <a href="#smart-run"><code>Smart Run</code></a></li>
-<li>command palette: <code>Block: Run &lt;language&gt; block</code></li>
-<li><code>Run</code> button in status bar (bottom right)</li>
-</ul>
-<p>The output of execution will be shown in a new block created below the executed block.</p>
-<p>For Go:</p>
-<ul>
-<li>code block must be a valid, complete Go program with <code>main</code> function</li>
-<li>we capture and show stdout and sterr output</li>
-<li>we have the same execution capability as <a href="https://tools.arslexis.io/goplayground/" target="_blank">https://tools.arslexis.io/goplayground/</a></li>
-</ul>
-<p>A starting point:</p>
-<pre><code class="language-go">package main
+    <h1 id="why-edna%3F" tabindex="-1"><a class="header-anchor" href="#why-edna%3F">Why Edna?</a></h1>
+    <h2 id="notes-and-blocks" tabindex="-1"><a class="header-anchor" href="#notes-and-blocks">Notes and blocks</a></h2>
+    <p>In Edna a note is divided into blocks. Each block has a type: markdown, plain text, math block, JavaScript code,
+      Go code etc.</p>
+    <p>Use:</p>
+    <ul>
+      <li><code>Ctrl + L</code> to assign a type for current block</li>
+      <li><code>Ctrl + B</code> to navigate between blocks</li>
+      <li><code>Ctrl + A</code> and <code>Delete</code> to delete block (select block text and delete)</li>
+    </ul>
+    <p>Use <a href="#keyboard-shortcuts">keyboard shortcuts</a> to create blocks, move between blocks.</p>
+    <h2 id="no-installation-required" tabindex="-1"><a class="header-anchor" href="#no-installation-required">No
+        installation required</a></h2>
+    <p>Edna is a web-based application but can store notes on disk, like a desktop app (when using Chrome or Edge).</p>
+    <p>You can use it offline (without network connection) and for desktop-like experince you can install a desktop
+      shortcut.</p>
+    <h2 id="miminalist-ui%2C-lots-of-functionality" tabindex="-1"><a class="header-anchor"
+        href="#miminalist-ui%2C-lots-of-functionality">Miminalist UI, lots of functionality</a></h2>
+    <p>UI is optimized for writing. Editor uses most of the space.</p>
+    <p>To acess more functionality:</p>
+    <ul>
+      <li><code>Ctrl + Shift + K</code> for command pallete</li>
+      <li>use <a href="#keyboard-shortcuts">keyboard shortcuts</a>)</li>
+      <li>context menu (right-click)</li>
+      <li>top bar and status bar</li>
+    </ul>
+    <h2 id="speed" tabindex="-1"><a class="header-anchor" href="#speed">Speed</a></h2>
+    <p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is optimized for speed of writing, creating new
+      notes, switching between notes.</p>
+    <p>Like in Notational Velocity, you can switch between notes, create and delete notes in the same note switcher UI.
+    </p>
+    <p>Press <code>Ctrl + P</code> for note switcher and:</p>
+    <ul>
+      <li>switch between notes</li>
+      <li>create new note</li>
+      <li>delete a note</li>
+      <li>assign a quick access <code>Alt + &lt;n&gt;</code> shortcut</li>
+    </ul>
+    <h2 id="context-menu" tabindex="-1"><a class="header-anchor" href="#context-menu">Context menu</a></h2>
+    <p>Right-click for context menu.</p>
+    <p>For native context menu do <code>Ctrl + right-click</code>. This is useful when spell checking to correct
+      mis-spellings.</p>
+    <h2 id="switch-to-recently-opened-note" tabindex="-1"><a class="header-anchor"
+        href="#switch-to-recently-opened-note">Switch to recently opened note</a></h2>
+    <p>Press <code>Ctrl + E</code> to switch to a note from list of recently opened notes.</p>
+    <p>Last 9 recently opened notes can be opened with <code>0</code> ... <code>9</code> shortcut.</p>
+    <p>To switch to previous note: press <code>Ctrl + E</code> and <code>Enter</code>.</p>
+    <h2 id="quick-access-shortcut" tabindex="-1"><a class="header-anchor" href="#quick-access-shortcut">Quick access
+        shortcut</a></h2>
+    <p>You can assign <code>Alt + 1</code> to <code>Alt + 9</code> for quickly accessing notes:</p>
+    <ul>
+      <li><code>Ctrl + P</code> for note selector dialog</li>
+      <li>select a note in the list</li>
+      <li>press <code>Alt + 1</code> to <code>Alt + 9</code> to assign it as quick access shortcut</li>
+    </ul>
+    <p>Default shortcuts are:</p>
+    <ul>
+      <li><code>Alt + 1</code> : scratch note</li>
+      <li><code>Alt + 2</code> : daily journal</li>
+      <li><code>Alt + 3</code> : inbox</li>
+    </ul>
+    <p>Notes with quick access shortcut are shown at the top of note selector (<code>Ctrl + P</code>).</p>
+    <h2 id="syntax-highlighting-of-blocks" tabindex="-1"><a class="header-anchor"
+        href="#syntax-highlighting-of-blocks">Syntax highlighting of blocks</a></h2>
+    <p>Blocks are syntax highlighted based on their type.</p>
+    <h2 id="formatting-of-blocks" tabindex="-1"><a class="header-anchor" href="#formatting-of-blocks">Formatting of
+        blocks</a></h2>
+    <p>You can format current block using:</p>
+    <ul>
+      <li><code>Alt + Shift + F</code> keyboard shortcut</li>
+      <li>right-click and use context menu <code>Block / Format as ${type}</code></li>
+      <li>press format icon in status bar (bottom right)</li>
+    </ul>
+    <p>We support formatting of Go, JSON, JavaScript, HTML, CSS and Markdown blocks.</p>
+    <h1 id="multiple-notes" tabindex="-1"><a class="header-anchor" href="#multiple-notes">Multiple notes</a></h1>
+    <h2 id="open-another-note" tabindex="-1"><a class="header-anchor" href="#open-another-note">Open another note</a>
+    </h2>
+    <ul>
+      <li><code>Ctrl + P</code> for note switcher</li>
+      <li>click on note to open</li>
+    </ul>
+    <p>or:</p>
+    <ul>
+      <li>enter text to narrow down list of notes</li>
+      <li><code>up</code> / <code>down</code> arrow keys to select a note</li>
+      <li><code>Enter</code> to open selected note</li>
+    </ul>
+    <h2 id="create-a-new-note" tabindex="-1"><a class="header-anchor" href="#create-a-new-note">Create a new note</a>
+    </h2>
+    <ul>
+      <li><code>Ctrl + P</code> to open note switcher</li>
+      <li>type name of the note to create</li>
+      <li><code>Enter</code> to create if the name doesn't match any existing note</li>
+      <li><code>Ctrl + Enter</code> to create if the name partially matches an existing note</li>
+    </ul>
+    <p>Or: context menu: <code>Create New note</code>.</p>
+    <h2 id="create-a-new-scratch-note" tabindex="-1"><a class="header-anchor" href="#create-a-new-scratch-note">Create a
+        new scratch note</a></h2>
+    <p><code>Alt + N</code> to create temporary scratch note. We'll pick a unique name <code>scratch-&lt;n&gt;</code>
+    </p>
+    <h2 id="delete-a-note" tabindex="-1"><a class="header-anchor" href="#delete-a-note">Delete a note</a></h2>
+    <p>Context menu: <code>This Note / Delete</code> or:</p>
+    <ul>
+      <li><code>Ctrl + P</code> for note switcher</li>
+      <li>select a note with arrow key or by typing a partial name match</li>
+      <li><code>Ctrl + Delete</code> or <code>Ctrl + Backspace</code> to delete selected note</li>
+    </ul>
+    <p>A <code>scratch</code> note cannot be deleted.</p>
+    <h2 id="rename-a-note" tabindex="-1"><a class="header-anchor" href="#rename-a-note">Rename a note</a></h2>
+    <p>context menu: <code>This Note / Rename</code></p>
+    <h2 id="quick-access-shortcut-1" tabindex="-1"><a class="header-anchor" href="#quick-access-shortcut-1">Quick access
+        shortcut</a></h2>
+    <p>You can assign <code>Alt + 1</code> to <code>Alt + 9</code> keyboard shortcuts for quickly opening up to 10
+      notes.</p>
+    <ul>
+      <li><code>Ctrl + P</code></li>
+      <li>select a note</li>
+      <li>press <code>Alt + &lt;n&gt;</code> shortcut to re-assign it to selected note</li>
+    </ul>
+    <p>Notes with assigned shortcut show up at the top of note switcher.</p>
+    <h2 id="open-recent-note" tabindex="-1"><a class="header-anchor" href="#open-recent-note">Open recent note</a></h2>
+    <p>Press <code>Ctrl + E</code> to open a note from history. You can press <code>0</code> to <code>9</code> to open
+      one of the last 10 notes.</p>
+    <h1 id="default-notes" tabindex="-1"><a class="header-anchor" href="#default-notes">Default notes</a></h1>
+    <p>At first run we create 3 default notes:</p>
+    <ul>
+      <li><code>scratch</code>, <code>Alt + 1</code></li>
+      <li><code>daily journal</code>, <code>Alt + 2</code></li>
+      <li><code>inbox</code>, <code>Alt + 3</code></li>
+    </ul>
+    <p>You can delete them (except the <code>scratch</code> note).</p>
+    <p><code>scratch</code> note is meant for temporary notes.</p>
+    <p><code>inbox</code> for storing things to process later e.g. links to YouTube videos to watch later or web pages
+      to read later.</p>
+    <p><code>daily journal</code> is for daily notes. We auto-create a block for each day.</p>
+    <h1 id="storing-notes-on-disk" tabindex="-1"><a class="header-anchor" href="#storing-notes-on-disk">Storing notes on
+        disk</a></h1>
+    <p>By default notes are stored in the browser (localStorage).</p>
+    <p>If your browser supports file system access (currently Chrome and Edge) you can store notes on disk.</p>
+    <p>You can do one time export from localStorage to a directory on disk:</p>
+    <ul>
+      <li>context menu: <code>Notes storage / Move notes from browser to directory</code></li>
+      <li>pick a directory on disk</li>
+      <li>we save notes on disk as <code>${name}.edna.txt</code> files in chosen directory and delete notes in
+        localStorage</li>
+    </ul>
+    <p>You can have multiple directories with notes. Think of each directory with notes as a separate Workspace.</p>
+    <p>Use context menu <code>Notes storage / Switch to notes in directory</code> to switch to notes in a different
+      directory. If it's an empty directory, without existing notes, we'll create default <code>scratch</code> note.</p>
+    <p>You can go back to storing notes in the browser with context menu
+      <code>Notes storage / Switch to browser (localStorage)</code>. Unlike going from browser =&gt; directory, it
+      doesn't import the notes from directory.
+    </p>
+    <h1 id="accessing-notes-on-multiple-computers" tabindex="-1"><a class="header-anchor"
+        href="#accessing-notes-on-multiple-computers">Accessing notes on multiple computers</a></h1>
+    <p>If you pick a directory managed by Dropbox or One Drive or Google Drive etc. then you'll be able to access notes
+      on multiple computers.</p>
+    <p>On the first computer export notes from browser to disk:</p>
+    <ul>
+      <li>context menu: <code>Notes storage / Move notes from browser to directory</code></li>
+      <li>pick a directory shared by Dropbox / One Drive / Google Drive etc.</li>
+    </ul>
+    <p>On other computers:</p>
+    <ul>
+      <li>context menu: <code>Notes storage / Switch to notes in directory</code></li>
+      <li>pick the same directory</li>
+    </ul>
+    <p>Please note that that the last written version wins. If you switch really quickly between computers, before the
+      directory with notes has been replicated, you might over-write previous content.</p>
+    <h1 id="encryption" tabindex="-1"><a class="header-anchor" href="#encryption">Encryption</a></h1>
+    <p>When storing notes on disk, you can encrypt them with a password.</p>
+    <p>The password is only stored in your browser (in local storage). It never leaves your computer.</p>
+    <p>Encryption and decryption takes place on your computer.</p>
+    <p>If you lose the password, you'll lose access to your notes.</p>
+    <p><strong>Don't lose the password</strong>.</p>
+    <p>Notes are encrypted with <a href="https://en.wikipedia.org/wiki/ChaCha20-Poly1305"
+        target="_blank">ChaCha20-Poly1305</a> algorithm via <a href="https://github.com/team-reflect/kiss-crypto"
+        target="_blank">kiss-crypto</a> library.</p>
+    <h2 id="picking-good-password" tabindex="-1"><a class="header-anchor" href="#picking-good-password">Picking good
+        password</a></h2>
+    <p>Good password is:</p>
+    <ul>
+      <li>long (short passwords can be cracked via brute force; long passwords cannot)</li>
+      <li>easy to type</li>
+      <li>easy to remember</li>
+    </ul>
+    <p>We recommend passwords that are long, memorable phrases.</p>
+    <p>Example: <code>Blue bear attacked a tiny dog</code>.</p>
+    <p>Such passwords are easier to type and remember than typical &quot;8a$7y!glo&quot; passwords.</p>
+    <h1 id="running-code" tabindex="-1"><a class="header-anchor" href="#running-code">Running code</a></h1>
+    <h2 id="run-code-blocks" tabindex="-1"><a class="header-anchor" href="#run-code-blocks">Run code blocks</a></h2>
+    <p>If current block is Go or JavaScript block, you can run it:</p>
+    <ul>
+      <li><code>Ctrl + E</code> keyboard shortcut (<code>Smart Run</code>)</li>
+      <li>context menu: <code>Run</code> / <code>Run &lt;language&gt; block</code> or <a
+          href="#smart-run"><code>Smart Run</code></a></li>
+      <li>command palette: <code>Block: Run &lt;language&gt; block</code></li>
+      <li><code>Run</code> button in status bar (bottom right)</li>
+    </ul>
+    <p>The output of execution will be shown in a new block created below the executed block.</p>
+    <p>For Go:</p>
+    <ul>
+      <li>code block must be a valid, complete Go program with <code>main</code> function</li>
+      <li>we capture and show stdout and sterr output</li>
+      <li>we have the same execution capability as <a href="https://tools.arslexis.io/goplayground/"
+          target="_blank">https://tools.arslexis.io/goplayground/</a></li>
+    </ul>
+    <p>A starting point:</p>
+    <pre><code class="language-go">package main
 
 import &quot;fmt&quot;
 
@@ -234,100 +268,111 @@ func main() {
 	fmt.Println(&quot;Hello, 世界&quot;)
 }
 </code></pre>
-<p>For JavaScript:</p>
-<ul>
-<li>code is executed in the browser with <code>eval()</code></li>
-<li>the output is the value of last expression</li>
-<li>don't run untrusted code</li>
-</ul>
-<p>Examples of JavaScript code and its output.</p>
-<pre><code class="language-javascript">&quot;foo&quot;;
+    <p>For JavaScript:</p>
+    <ul>
+      <li>code is executed in the browser with <code>eval()</code></li>
+      <li>the output is the value of last expression</li>
+      <li>don't run untrusted code</li>
+    </ul>
+    <p>Examples of JavaScript code and its output.</p>
+    <pre><code class="language-javascript">&quot;foo&quot;;
 </code></pre>
-<p>Last expression is string <code>&quot;foo&quot;</code> so the output will be <code>foo</code>.</p>
-<hr>
-<pre><code class="language-javascript">let a = [1, 2, 3];
+    <p>Last expression is string <code>&quot;foo&quot;</code> so the output will be <code>foo</code>.</p>
+    <hr>
+    <pre><code class="language-javascript">let a = [1, 2, 3];
 </code></pre>
-<p>There is no last expression so the output will be <code>undefined</code></p>
-<hr>
-<pre><code class="language-javascript">let a = [1, 2, 3];
+    <p>There is no last expression so the output will be <code>undefined</code></p>
+    <hr>
+    <pre><code class="language-javascript">let a = [1, 2, 3];
 a;
 </code></pre>
-<p>Last expression is an array <code>a</code> so output is <code>1,2,3</code>.</p>
-<hr>
-<pre><code class="language-javascript">let a = [1, 2, 3];
+    <p>Last expression is an array <code>a</code> so output is <code>1,2,3</code>.</p>
+    <hr>
+    <pre><code class="language-javascript">let a = [1, 2, 3];
 JSON.stringify(a);
 </code></pre>
-<p>Last expression is an array formatted as json so output is <code>[1,2,3]</code>.</p>
-<hr>
-<p>We also capture <code>console.log()</code>, <code>console.warn()</code>, <code>console.debug()</code>, <code>console.error()</code> calls.</p>
-<pre><code class="language-javascript">console.log(&quot;hello&quot;);
+    <p>Last expression is an array formatted as json so output is <code>[1,2,3]</code>.</p>
+    <hr>
+    <p>We also capture <code>console.log()</code>, <code>console.warn()</code>, <code>console.debug()</code>,
+      <code>console.error()</code> calls.
+    </p>
+    <pre><code class="language-javascript">console.log(&quot;hello&quot;);
 </code></pre>
-<p>Output is:</p>
-<pre><code>undefined
+    <p>Output is:</p>
+    <pre><code>undefined
 console output:
 hello
 </code></pre>
-<ul>
-<li><code>undefined</code> because there was no last expression</li>
-<li><code>console output:</code> to indicate those are capture console.log calls</li>
-<li><code>hello</code> from console.log calls in your code</li>
-</ul>
-<hr>
-<pre><code class="language-javascript">async function main() {
+    <ul>
+      <li><code>undefined</code> because there was no last expression</li>
+      <li><code>console output:</code> to indicate those are capture console.log calls</li>
+      <li><code>hello</code> from console.log calls in your code</li>
+    </ul>
+    <hr>
+    <pre><code class="language-javascript">async function main() {
   return &quot;foo&quot;;
 }
 main();
 </code></pre>
-<p>The last expression is return value of <code>main()</code> function, so output is <code>foo</code>.</p>
-<p>We handle async functions.</p>
-<h2 id="run-javascript-functions-over-content" tabindex="-1"><a class="header-anchor" href="#run-javascript-functions-over-content">Run JavaScript functions over content</a></h2>
-<p>You can run JavaScript functions with the content of a current block or a selection.</p>
-<p>The function gets the content as argument, can traform it, and we show the output in a block below.</p>
-<p>For example a function can sort the lines in a block, calculate md5 hash or transform it to upper case. The possibilities are literally limitless.</p>
-<p>To run a JavasScript function with content of block:</p>
-<ul>
-<li>context menu: <code>Run</code> / <code>Run function with block content</code></li>
-<li>command palette: <code>Run function with block content</code></li>
-<li>pick a function from the list</li>
-</ul>
-<p>To run a JavasScript function with selection:</p>
-<ul>
-<li>context menu: <code>Run</code> / <code>Run function with selection</code></li>
-<li>command palette: <code>Run function with selection</code></li>
-<li>pick a function from the list</li>
-</ul>
-<p>If you want to see all built-in functions use:</p>
-<ul>
-<li>context menu: <code>Run</code>, <code>Show built-in functions</code></li>
-<li>command palette: <code>Shw built-in functions</code></li>
-</ul>
-<p>You can see what built-in functions are available, how they are implemented and use them as an example of how to write your own functions.</p>
-<p>This functionality is inspired by <a href="https://boop.okat.best/" target="_blank">https://boop.okat.best/</a> so our built-in functions come from Boop.</p>
-<h2 id="write-your-own-functions" tabindex="-1"><a class="header-anchor" href="#write-your-own-functions">Write your own functions</a></h2>
-<p>You can write custom JavaScript functions that operate on text (content of the block or a selection), transform it in some way to create an output block.</p>
-<p>For example you can write a function that sorts lines of text.</p>
-<p>To write custom functions create a special <code>edna: my functions</code> note:</p>
-<ul>
-<li>context menu: <code>Run</code>, <code>Create your own functions</code></li>
-<li>command palette: <code>Create your own functions</code></li>
-</ul>
-<p>Each JavaScript block is a function.</p>
-<p>The code must be implemented as <code>function main(input) { ... your code }</code>.</p>
-<p>We use the same format as <a href="https://boop.okat.best/" target="_blank">https://boop.okat.best/</a>.</p>
-<p><code>input</code> is an object:</p>
-<pre><code class="language-json">{
+    <p>The last expression is return value of <code>main()</code> function, so output is <code>foo</code>.</p>
+    <p>We handle async functions.</p>
+    <h2 id="run-javascript-functions-over-content" tabindex="-1"><a class="header-anchor"
+        href="#run-javascript-functions-over-content">Run JavaScript functions over content</a></h2>
+    <p>You can run JavaScript functions with the content of a current block or a selection.</p>
+    <p>The function gets the content as argument, can traform it, and we show the output in a block below.</p>
+    <p>For example a function can sort the lines in a block, calculate md5 hash or transform it to upper case. The
+      possibilities are literally limitless.</p>
+    <p>To run a JavasScript function with content of block:</p>
+    <ul>
+      <li>context menu: <code>Run</code> / <code>Run function with block content</code></li>
+      <li>command palette: <code>Run function with block content</code></li>
+      <li>pick a function from the list</li>
+    </ul>
+    <p>To run a JavasScript function with selection:</p>
+    <ul>
+      <li>context menu: <code>Run</code> / <code>Run function with selection</code></li>
+      <li>command palette: <code>Run function with selection</code></li>
+      <li>pick a function from the list</li>
+    </ul>
+    <p>If you want to see all built-in functions use:</p>
+    <ul>
+      <li>context menu: <code>Run</code>, <code>Show built-in functions</code></li>
+      <li>command palette: <code>Shw built-in functions</code></li>
+    </ul>
+    <p>You can see what built-in functions are available, how they are implemented and use them as an example of how to
+      write your own functions.</p>
+    <p>This functionality is inspired by <a href="https://boop.okat.best/" target="_blank">https://boop.okat.best/</a>
+      so our built-in functions come from Boop.</p>
+    <h2 id="write-your-own-functions" tabindex="-1"><a class="header-anchor" href="#write-your-own-functions">Write your
+        own functions</a></h2>
+    <p>You can write custom JavaScript functions that operate on text (content of the block or a selection), transform
+      it in some way to create an output block.</p>
+    <p>For example you can write a function that sorts lines of text.</p>
+    <p>To write custom functions create a special <code>edna: my functions</code> note:</p>
+    <ul>
+      <li>context menu: <code>Run</code>, <code>Create your own functions</code></li>
+      <li>command palette: <code>Create your own functions</code></li>
+    </ul>
+    <p>Each JavaScript block is a function.</p>
+    <p>The code must be implemented as <code>function main(input) { ... your code }</code>.</p>
+    <p>We use the same format as <a href="https://boop.okat.best/" target="_blank">https://boop.okat.best/</a>.</p>
+    <p><code>input</code> is an object:</p>
+    <pre><code class="language-json">{
   text: string,
   fullText: string,
   postInfo: (message: string) =&gt; void,
   postError: (message: string) =&gt; void,
 }
 </code></pre>
-<p>To return value you assign it to <code>input.text</code> and <code>input.fullText</code>. <code>postInfo()</code> and <code>postError()</code> functions show a notification message.</p>
-<p>We show <code>input.text</code> or <code>input.fullText</code> as output block if, after execution, it differs from the original value.</p>
-<p>Why <code>text</code> and <code>fullText</code>? I have no idea, I just copied <a href="https://boop.okat.best/" target="_blank">Boop</a> and that's how their API works.</p>
-<p>In my implementation <code>text</code> and <code>fullText</code> are the same.</p>
-<p>You also need to provide metadata at the top in the format:</p>
-<pre><code>/**
+    <p>To return value you assign it to <code>input.text</code> and <code>input.fullText</code>. <code>postInfo()</code>
+      and <code>postError()</code> functions show a notification message.</p>
+    <p>We show <code>input.text</code> or <code>input.fullText</code> as output block if, after execution, it differs
+      from the original value.</p>
+    <p>Why <code>text</code> and <code>fullText</code>? I have no idea, I just copied <a href="https://boop.okat.best/"
+        target="_blank">Boop</a> and that's how their API works.</p>
+    <p>In my implementation <code>text</code> and <code>fullText</code> are the same.</p>
+    <p>You also need to provide metadata at the top in the format:</p>
+    <pre><code>/**
 {
   &quot;api&quot;:1,
   &quot;name&quot;:&quot;Add Slashes&quot;,
@@ -338,11 +383,13 @@ main();
 }
 **/
 </code></pre>
-<p>Don't get cute and reformat it any way or change <code>/**</code> and <code>**/</code> to something else. Best to copy it and change values.</p>
-<p>Currently the important fields are <code>name</code>, and <code>description</code> because they are shown in function selection dialog.</p>
-<p>In future I might add more <code>api</code> versions, but at the moment there's just 1.</p>
-<p>Here's the simplest function that returns <code>foo</code> as a result:</p>
-<pre><code class="language-javascript">/**
+    <p>Don't get cute and reformat it any way or change <code>/**</code> and <code>**/</code> to something else. Best to
+      copy it and change values.</p>
+    <p>Currently the important fields are <code>name</code>, and <code>description</code> because they are shown in
+      function selection dialog.</p>
+    <p>In future I might add more <code>api</code> versions, but at the moment there's just 1.</p>
+    <p>Here's the simplest function that returns <code>foo</code> as a result:</p>
+    <pre><code class="language-javascript">/**
 {
   &quot;api&quot;:1,
   &quot;name&quot;:&quot;Show foo&quot;,
@@ -357,43 +404,58 @@ async function main(input) {
   input.text = &quot;foo&quot;;
 }
 </code></pre>
-<p>As you can see, we support <code>async</code> functions.</p>
-<h3 id="using-external-libraries" tabindex="-1"><a class="header-anchor" href="#using-external-libraries">Using external libraries</a></h3>
-<p>You can use any JavaScript library available via <a href="https://esm.sh" target="_blank">https://esm.sh</a> or <a href="https://www.jsdelivr.com/" target="_blank">https://www.jsdelivr.com/</a> (or similar).</p>
-<p>Here's an example function that uses <code>camelCase</code> functio from <code>lodash</code> package imported from <a href="https://esm.sh" target="_blank">https://esm.sh</a></p>
-<pre><code class="language-javascript">async function main(input) {
+    <p>As you can see, we support <code>async</code> functions.</p>
+    <h3 id="using-external-libraries" tabindex="-1"><a class="header-anchor" href="#using-external-libraries">Using
+        external libraries</a></h3>
+    <p>You can use any JavaScript library available via <a href="https://esm.sh" target="_blank">https://esm.sh</a> or
+      <a href="https://www.jsdelivr.com/" target="_blank">https://www.jsdelivr.com/</a> (or similar).
+    </p>
+    <p>Here's an example function that uses <code>camelCase</code> functio from <code>lodash</code> package imported
+      from <a href="https://esm.sh" target="_blank">https://esm.sh</a></p>
+    <pre><code class="language-javascript">async function main(input) {
   let lodash = (await import(&quot;https://esm.sh/lodash@4.17.21&quot;)).default;
   input.text = lodash.camelCase(input.text);
 }
 </code></pre>
-<p>Debugging tip: sometimes module exports functions direct, sometimes as <code>default</code>.</p>
-<p>To figure this out for a library, in browser's dev tools console do:</p>
-<pre><code>let m = (await import(&quot;https://esm.sh/lodash@4.17.21&quot;))
+    <p>Debugging tip: sometimes module exports functions direct, sometimes as <code>default</code>.</p>
+    <p>To figure this out for a library, in browser's dev tools console do:</p>
+    <pre><code>let m = (await import(&quot;https://esm.sh/lodash@4.17.21&quot;))
 </code></pre>
-<p>then inspect the <code>m</code> object in console to see available functions.</p>
-<h2 id="share-your-javascript-functions-with-others" tabindex="-1"><a class="header-anchor" href="#share-your-javascript-functions-with-others">Share your JavaScript functions with others</a></h2>
-<p>Share your functions with other via <a href="https://github.com/kjk/edna/discussions/categories/share-javascript-functions" target="_blank">https://github.com/kjk/edna/discussions/categories/share-javascript-functions</a></p>
-<h2 id="smart-run" tabindex="-1"><a class="header-anchor" href="#smart-run">Smart Run</a></h2>
-<p><code>Ctrl + E</code> is a shortcut for smart run, which has the following logic:</p>
-<ul>
-<li>if there is selection, it does <code>Run functions with selection</code> command</li>
-<li>if current block is runnable (JavaScript or Go) it'll run the block as code (command <code>Block: Run &lt;language&gt; block</code>)</li>
-<li>otherwise it does <code>Run function with block content</code> command</li>
-</ul>
-<p>Use <code>Alt + Shift + R</code> to force <code>Run function with block content</code> command.</p>
-<h1 id="exporting-notes-to-a-.zip-file" tabindex="-1"><a class="header-anchor" href="#exporting-notes-to-a-.zip-file">Exporting notes to a .zip file</a></h1>
-<p>Edna files are just text files with <code>.edna.txt</code> extension.</p>
-<p>You can export all the notes to a .zip file.</p>
-<p>Context menu: <code>Export notes to zip file</code> menu.</p>
-<p>We pack all the notes into a .zip file and initiate auto-download as <code>edna.notes.export-YYYY-MM-DD.zip</code> file to browser's downloads directory.</p>
-<p>You can then e.g. restore the notes by unzipping it to a directory and opening that directory in Edna with <code>Notes storage</code> / <code>Switch to notes in a directory</code> context menu.</p>
-<h1 id="lists-with-todo-items" tabindex="-1"><a class="header-anchor" href="#lists-with-todo-items">Lists with TODO items</a></h1>
-<p>In Markdown blocks, lists with [x] and [ ] are rendered as checkboxes:</p>
-<ul>
-<li>[ ] Try out Edna</li>
-<li>[ ] Do laundry</li>
-</ul>
-<pre><code class="language-js">// code blocks
+    <p>then inspect the <code>m</code> object in console to see available functions.</p>
+    <h2 id="share-your-javascript-functions-with-others" tabindex="-1"><a class="header-anchor"
+        href="#share-your-javascript-functions-with-others">Share your JavaScript functions with others</a></h2>
+    <p>Share your functions with other via <a
+        href="https://github.com/kjk/edna/discussions/categories/share-javascript-functions"
+        target="_blank">https://github.com/kjk/edna/discussions/categories/share-javascript-functions</a></p>
+    <h2 id="smart-run" tabindex="-1"><a class="header-anchor" href="#smart-run">Smart Run</a></h2>
+    <p><code>Ctrl + E</code> is a shortcut for smart run, which has the following logic:</p>
+    <ul>
+      <li>if there is selection, it does <code>Run functions with selection</code> command</li>
+      <li>if current block is runnable (JavaScript or Go) it'll run the block as code (command
+        <code>Block: Run &lt;language&gt; block</code>)
+      </li>
+      <li>otherwise it does <code>Run function with block content</code> command</li>
+    </ul>
+    <p>Use <code>Alt + Shift + R</code> to force <code>Run function with block content</code> command.</p>
+    <h1 id="exporting-notes-to-a-.zip-file" tabindex="-1"><a class="header-anchor"
+        href="#exporting-notes-to-a-.zip-file">Exporting notes to a .zip file</a></h1>
+    <p>Edna files are just text files with <code>.edna.txt</code> extension.</p>
+    <p>You can export all the notes to a .zip file.</p>
+    <p>Context menu: <code>Export notes to zip file</code> menu.</p>
+    <p>We pack all the notes into a .zip file and initiate auto-download as
+      <code>edna.notes.export-YYYY-MM-DD.zip</code> file to browser's downloads directory.
+    </p>
+    <p>You can then e.g. restore the notes by unzipping it to a directory and opening that directory in Edna with
+      <code>Notes storage</code> / <code>Switch to notes in a directory</code> context menu.
+    </p>
+    <h1 id="lists-with-todo-items" tabindex="-1"><a class="header-anchor" href="#lists-with-todo-items">Lists with TODO
+        items</a></h1>
+    <p>In Markdown blocks, lists with [x] and [ ] are rendered as checkboxes:</p>
+    <ul>
+      <li>[ ] Try out Edna</li>
+      <li>[ ] Do laundry</li>
+    </ul>
+    <pre><code class="language-js">// code blocks
 // Edna is great for storing code snippets
 // this is a javascript block
 // change type of block with `Ctrl + L`
@@ -402,46 +464,58 @@ async function main(input) {
 let x = 5
 console.log(&quot;x is&quot;, x)
 </code></pre>
-<h1 id="privacy-and-security" tabindex="-1"><a class="header-anchor" href="#privacy-and-security">Privacy and security</a></h1>
-<p>Your notes are private and secure.</p>
-<p>Notes are stored on your computer: in the browser (local storage) or on disk.</p>
-<p>For additional security, you can <a href="#encryption">encrypt notes</a> with a password.</p>
-<p>The code is <a href="https://github.com/kjk/edna" target="_blank">open source</a> so you can audit it.</p>
-<h1 id="no-lock-in" tabindex="-1"><a class="header-anchor" href="#no-lock-in">No lock in</a></h1>
-<p>The notes are stored in plain text files on disk (or in localStorage under <code>note:${name}</code> key)</p>
-<p>Blocks are marked with <code>\n∞∞∞${type}\n</code> e.g. <code>\n∞∞∞markdown\n</code> marks the beginning of markdown block.</p>
-<p>You can edit the notes in any text editor (just be mindful of the above block markers).</p>
-<p>You can back them up, store in git repositories, write scripts to process them.</p>
-<p>They are not locked in a proprietary Edna format.</p>
-<h1 id="how-i-use-edna" tabindex="-1"><a class="header-anchor" href="#how-i-use-edna">How I use Edna</a></h1>
-<p>Edna is flexible and you should find your own way of using it.</p>
-<p>I use Edna daily::</p>
-<ul>
-<li>I use <code>scratch</code> note for temporary notes</li>
-<li>I use <code>daily journal</code> for keeping track of what I do</li>
-<li>I have <code>todo</code> note for keeping track of short term todos</li>
-<li>I have a note for each project I work on</li>
-<li>I have a note for each programming language / technology I use. I keep code snippets and notes about it</li>
-<li>I have <code>ideas</code> note for jotting down ideas</li>
-<li>I have <code>investing</code> note for keeping track of various stock investment ideas</li>
-</ul>
-<h1 id="open-source" tabindex="-1"><a class="header-anchor" href="#open-source">Open source</a></h1>
-<p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is open source: <a href="https://github.com/kjk/edna" target="_blank">https://github.com/kjk/edna</a></p>
-<p>To report a bug or request a feature: <a href="https://github.com/kjk/edna/issues" target="_blank">https://github.com/kjk/edna/issues</a></p>
-<h1 id="contact" tabindex="-1"><a class="header-anchor" href="#contact">Contact</a></h1>
-<p>You can contact me via <a href="https://blog.kowalczyk.info/contactme" target="_blank">https://blog.kowalczyk.info/contactme</a></p>
-<p>You can find more software by <a href="https://blog.kowalczyk.info/" target="_blank">me</a> on <a href="https://arslexis.io" target="_blank">https://arslexis.io</a></p>
-<h1 id="credits" tabindex="-1"><a class="header-anchor" href="#credits">Credits</a></h1>
-<p>Edna is a fork of <a href="https://github.com/heyman/heynote" target="_blank">Heynote</a> with the following differences:</p>
-<ul>
-<li>web first (no desktop apps)</li>
-<li>multiple notes</li>
-<li>ability to access notes on multiple devices by storing them on folder managed by Dropbox / One Drive / Google Drive</li>
-</ul>
-<p>There's a spirit of Notational Velocity and Simplenote in Edna in how it allows quickly creating notes and switching between them.</p>
-<p>Edna is built on <a href="https://codemirror.net/" target="_blank">CodeMirror</a>, <a href="https://svelte.dev/" target="_blank">Svelte 5</a>, <a href="https://mathjs.org/" target="_blank">Math.js</a>, <a href="https://prettier.io/" target="_blank">Prettier</a>.</p>
+    <h1 id="privacy-and-security" tabindex="-1"><a class="header-anchor" href="#privacy-and-security">Privacy and
+        security</a></h1>
+    <p>Your notes are private and secure.</p>
+    <p>Notes are stored on your computer: in the browser (local storage) or on disk.</p>
+    <p>For additional security, you can <a href="#encryption">encrypt notes</a> with a password.</p>
+    <p>The code is <a href="https://github.com/kjk/edna" target="_blank">open source</a> so you can audit it.</p>
+    <h1 id="no-lock-in" tabindex="-1"><a class="header-anchor" href="#no-lock-in">No lock in</a></h1>
+    <p>The notes are stored in plain text files on disk (or in localStorage under <code>note:${name}</code> key)</p>
+    <p>Blocks are marked with <code>\n∞∞∞${type}\n</code> e.g. <code>\n∞∞∞markdown\n</code> marks the beginning of
+      markdown block.</p>
+    <p>You can edit the notes in any text editor (just be mindful of the above block markers).</p>
+    <p>You can back them up, store in git repositories, write scripts to process them.</p>
+    <p>They are not locked in a proprietary Edna format.</p>
+    <h1 id="how-i-use-edna" tabindex="-1"><a class="header-anchor" href="#how-i-use-edna">How I use Edna</a></h1>
+    <p>Edna is flexible and you should find your own way of using it.</p>
+    <p>I use Edna daily::</p>
+    <ul>
+      <li>I use <code>scratch</code> note for temporary notes</li>
+      <li>I use <code>daily journal</code> for keeping track of what I do</li>
+      <li>I have <code>todo</code> note for keeping track of short term todos</li>
+      <li>I have a note for each project I work on</li>
+      <li>I have a note for each programming language / technology I use. I keep code snippets and notes about it</li>
+      <li>I have <code>ideas</code> note for jotting down ideas</li>
+      <li>I have <code>investing</code> note for keeping track of various stock investment ideas</li>
+    </ul>
+    <h1 id="open-source" tabindex="-1"><a class="header-anchor" href="#open-source">Open source</a></h1>
+    <p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is open source: <a href="https://github.com/kjk/edna"
+        target="_blank">https://github.com/kjk/edna</a></p>
+    <p>To report a bug or request a feature: <a href="https://github.com/kjk/edna/issues"
+        target="_blank">https://github.com/kjk/edna/issues</a></p>
+    <h1 id="contact" tabindex="-1"><a class="header-anchor" href="#contact">Contact</a></h1>
+    <p>You can contact me via <a href="https://blog.kowalczyk.info/contactme"
+        target="_blank">https://blog.kowalczyk.info/contactme</a></p>
+    <p>You can find more software by <a href="https://blog.kowalczyk.info/" target="_blank">me</a> on <a
+        href="https://arslexis.io" target="_blank">https://arslexis.io</a></p>
+    <h1 id="credits" tabindex="-1"><a class="header-anchor" href="#credits">Credits</a></h1>
+    <p>Edna is a fork of <a href="https://github.com/heyman/heynote" target="_blank">Heynote</a> with the following
+      differences:</p>
+    <ul>
+      <li>web first (no desktop apps)</li>
+      <li>multiple notes</li>
+      <li>ability to access notes on multiple devices by storing them on folder managed by Dropbox / One Drive / Google
+        Drive</li>
+    </ul>
+    <p>There's a spirit of Notational Velocity and Simplenote in Edna in how it allows quickly creating notes and
+      switching between them.</p>
+    <p>Edna is built on <a href="https://codemirror.net/" target="_blank">CodeMirror</a>, <a href="https://svelte.dev/"
+        target="_blank">Svelte 5</a>, <a href="https://mathjs.org/" target="_blank">Math.js</a>, <a
+        href="https://prettier.io/" target="_blank">Prettier</a>.</p>
 
-    </div>
+  </div>
   <script src="/help.js" defer></script>
-  </body>
+</body>
+
 </html>
