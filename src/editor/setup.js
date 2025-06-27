@@ -91,6 +91,23 @@ you take this package's source (which is just a bunch of imports
 and an array literal), copy it into your own code, and adjust it
 as desired.
 */
+
+function getDefaultKeymap() {
+  // https://github.com/kjk/edna/issues/87
+  // remove "Mod-Shift-k" which is "delete line" but we use it
+  // for "open command palette"
+  let keymap = defaultKeymap;
+  for (let i = 0; i < keymap.length; i++) {
+    const item = keymap[i];
+    if (item.key === "Shift-Mod-k") {
+      // @ts-ignore
+      keymap.splice(i, 1);
+      break;
+    }
+  }
+  return keymap;
+}
+
 const customSetup = /*@__PURE__*/ (() => [
   //lineNumbers(),
   highlightActiveLineGutter(),
@@ -118,7 +135,7 @@ const customSetup = /*@__PURE__*/ (() => [
   // @ts-ignore
   keymap.of([
     ...closeBracketsKeymap,
-    ...defaultKeymap,
+    ...getDefaultKeymap(),
     ...searchKeymap,
     ...historyKeymap,
     // ...foldKeymap,

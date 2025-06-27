@@ -59,7 +59,9 @@ export class EdnaEditor {
     showLineNumberGutter = true,
     showFoldGutter = true,
     bracketClosing = false,
-    spacesPerTab = 2,
+    tabSize = 2,
+    defaultBlockToken,
+    defaultBlockAutoDetect,
     fontFamily,
     fontSize,
   }) {
@@ -74,6 +76,7 @@ export class EdnaEditor {
     this.deselectOnCopy = keymap === "emacs";
     this.emacsMetaKey = emacsMetaKey;
     this.fontTheme = new Compartment();
+    this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
     this.tabsCompartment = new Compartment();
     this.noteName = noteName;
     this.contentLoaded = false;
@@ -116,7 +119,7 @@ export class EdnaEditor {
         this.themeCompartment.of(theme === "dark" ? heynoteDark : heynoteLight),
         heynoteBase,
         this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
-        makeTabState(true, spacesPerTab),
+        makeTabState(true, tabSize),
         EditorView.scrollMargins.of((f) => {
           return { top: 80, bottom: 80 };
         }),
@@ -358,6 +361,11 @@ export class EdnaEditor {
         show ? [foldGutterExtension()] : [],
       ),
     });
+  }
+
+  setDefaultBlockLanguage(token, autoDetect) {
+    this.defaultBlockToken = token || "text";
+    this.defaultBlockAutoDetect = autoDetect === undefined ? true : autoDetect;
   }
 
   setBracketClosing(value) {

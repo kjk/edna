@@ -110,7 +110,10 @@
       bracketClosing: bracketClosing,
       fontFamily: fontFamily,
       fontSize: fontSize,
-      spacesPerTab: 2, // TODO: add a setting for this
+      tabSize: 2, // TODO: add a setting for this
+      // TODO: add a setting for this
+      defaultBlockToken: "text",
+      defaultBlockAutoDetect: true,
     });
     editor.loadNotePromise.then(() => {
       didLoadNote(noteName, false);

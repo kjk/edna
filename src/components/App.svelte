@@ -1264,8 +1264,10 @@
       await exportCurrentBlock();
       view.focus();
     } else if (cmdId === kCmdBlockDelete) {
-      deleteBlock(view);
       view.focus();
+      tick().then(() => {
+        deleteBlock(ednaEditor)(view);
+      });
     } else if (cmdId === kCmdOpenNoteFromDisk) {
       openNoteFromDisk();
     } else if (cmdId === kCmdToggleSpellChecking) {
@@ -1806,7 +1808,8 @@
     let content = state.sliceDoc(block.content.from, block.content.to);
     await appendToNote(name, delim + content);
     let view = getEditorView();
-    deleteBlock(view);
+    let ednaEditor = getEditor();
+    deleteBlock(ednaEditor)(view);
     view.focus();
   }
 

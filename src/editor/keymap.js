@@ -98,9 +98,6 @@ export function ednaKeymap(editor) {
     ["Alt-Shift-f", formatBlockContent],
     ["Mod-Alt-ArrowDown", newCursorBelow],
     ["Mod-Alt-ArrowUp", newCursorAbove],
-    // https://github.com/kjk/edna/issues/87
-    // this is a "open command palette" shortcut
-    //    ["Mod-Shift-k", deleteLine],
     {
       key: "Mod-ArrowUp",
       run: gotoPreviousBlock,
