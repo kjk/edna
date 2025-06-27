@@ -112,9 +112,9 @@
       noteInfo.isStarred = isStarred;
     });
   }
-  let cls = forHistory
-    ? "flex z-20 top-[2rem]"
-    : "hidden group-hover:flex top-full border border-gray-400";
+  // if forHistory, showing in absolute position inside overlay
+  // otherwise is absolute child of relative parent
+  let cls = forHistory ? "z-20 top-[2rem]" : "top-full border border-gray-400";
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -122,7 +122,7 @@
   {onkeydown}
   tabindex="-1"
   use:focus
-  class="absolute group-hover:flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden center-x-with-translate {cls}"
+  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden center-x-with-translate {cls}"
 >
   <ListBox
     bind:this={listboxRef}

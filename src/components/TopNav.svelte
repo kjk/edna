@@ -35,6 +35,7 @@
   let eatNextClick = false;
   function mySelectNote(item) {
     eatNextClick = true;
+    showingQuickAccess = false;
     selectNote(item);
   }
   function myOnClick() {
@@ -44,6 +45,8 @@
     }
     openCommandPalette();
   }
+
+  let showingQuickAccess = $state(false);
 </script>
 
 <div
@@ -66,9 +69,12 @@
     title="Documentation"
     target="_blank">?</a
   >
+  <div class="text-gray-300 px-1">|</div>
   <button
-    class="flex bg-white ml-2 align-baseline cursor-pointer clickable-icon hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg relative group"
+    class="flex bg-white ml-2 align-baseline cursor-pointer clickable-icon hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg relative"
     onclick={myOnClick}
+    onmouseenter={() => (showingQuickAccess = true)}
+    onmouseleave={() => (showingQuickAccess = false)}
     title={fixUpShortcuts("Open Another Note (Mod + P)")}
   >
     <div class="max-w-32 truncate">
@@ -83,7 +89,9 @@
       {/if}
     </div>
     <div class="mt-[-2px]">&nbsp;⏷</div>
-    <QuickAccess selectNote={mySelectNote} forHistory={false} />
+    {#if showingQuickAccess}
+      <QuickAccess selectNote={mySelectNote} forHistory={false} />
+    {/if}
   </button>
   <div class="grow"></div>
   <a
