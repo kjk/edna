@@ -4,7 +4,13 @@
   import { isMoving } from "../mouse-track.svelte";
   import { loadNote } from "../notes";
   import { appState } from "../state.svelte";
-  import { hilightText, len, makeHilightRegExp } from "../util";
+  import {
+    hilightText,
+    isWholeWord,
+    len,
+    makeHilightRegExp,
+    splitStringPreservingQuotes,
+  } from "../util";
   import {
     IconFluentWholeWord,
     IconLucideReplace,
@@ -56,22 +62,42 @@
 
   const kMaxSearchResults = 64;
   let uniqueId = 0;
-  async function startSearch(searchTerm) {
+  let lastChangeNo = 0;
+  let changeNo = 1;
+
+  let noResultsMsg = $state("");
+
+  /**
+   * @param {string} searchTerm
+   */
+  async function searchAllNotes(searchTerm) {
     currSearchTerm = searchTerm;
     hiliRegExp = makeHilightRegExp(searchTerm);
     results = [];
     selectedItem = null;
+    lastChangeNo = changeNo;
+    noResultsMsg = "";
     let notesToSearch = $state.snapshot(appState.noteNames);
+    let matchCase = appState.searchNotesMatchCase;
+    let wholeWord = appState.searchNotesMatchWholeWord;
 
+    if (!matchCase) {
+      searchTerm = searchTerm.toLowerCase();
+    }
+    let parts = splitStringPreservingQuotes(searchTerm);
+    let nParts = len(parts);
     while (len(notesToSearch) > 0) {
       noteBeingSearched = notesToSearch[0];
       notesToSearch.splice(0, 1);
-      // TODO: need to remove histryPush()
       let s = await loadNote(noteBeingSearched);
+      if (!matchCase) {
+        s = s.toLowerCase();
+      }
       let startIdx = 0;
       let line;
       while (true) {
-        let idx = s.indexOf(searchTerm, startIdx);
+        let toFind = parts[0];
+        let idx = s.indexOf(toFind, startIdx);
         if (idx < 0) {
           break;
         }
@@ -84,6 +110,34 @@
         } else {
           line = s.substring(lineStartIdx, lineEndIdx);
         }
+        if (wholeWord) {
+          let ok = isWholeWord(s, idx, idx + len(toFind));
+          if (!ok) {
+            continue;
+          }
+        }
+
+        // must match all parts
+        function matchesAll() {
+          for (let i = 1; i < nParts; i++) {
+            toFind = parts[i];
+            let idx = line.indexOf(toFind);
+            if (idx < 0) {
+              return false;
+            }
+            if (wholeWord) {
+              let ok = isWholeWord(line, idx, idx + len(toFind));
+              if (!ok) {
+                return false;
+              }
+            }
+          }
+          return true;
+        }
+        if (!matchesAll()) {
+          continue;
+        }
+
         let res = {
           key: uniqueId,
           note: noteBeingSearched,
@@ -98,6 +152,9 @@
       }
     }
     noteBeingSearched = "";
+    if (len(results) == 0) {
+      noResultsMsg = `No results for '${searchTerm}''`;
+    }
   }
 
   /**
@@ -107,20 +164,28 @@
     if (ev.key == "Enter") {
       ev.preventDefault();
       let sameSearchTerm = searchTerm == currSearchTerm;
-      if (sameSearchTerm && len(results) > 0 && selectedItem) {
+      if (
+        sameSearchTerm &&
+        lastChangeNo == changeNo &&
+        len(results) > 0 &&
+        selectedItem
+      ) {
         openItem(selectedItem);
       } else {
-        startSearch(searchTerm);
+        searchAllNotes(searchTerm);
       }
       return;
     }
     listboxRef?.onkeydown(ev, searchTerm === "");
   }
 
-  onMount(() => {
+  function focusInput() {
     tick().then(() => {
       searchInputREf.select();
     });
+  }
+  onMount(() => {
+    focusInput();
     isMoving.disableMoveTracking = true;
 
     return () => {
@@ -129,21 +194,25 @@
   });
 
   function matchCase() {
-    appState.searchMatchCase = !appState.searchMatchCase;
-    console.log("matchCase", appState.searchMatchCase);
+    appState.searchNotesMatchCase = !appState.searchNotesMatchCase;
+    console.log("matchCase", appState.searchNotesMatchCase);
+    changeNo++; // make Enter redo the search
+    focusInput();
   }
   function matchWholeWOrd() {
-    appState.searchMatchWholeWord = !appState.searchMatchWholeWord;
-    console.log("matchWholeWOrd", appState.searchMatchWholeWord);
+    appState.searchNotesMatchWholeWord = !appState.searchNotesMatchWholeWord;
+    console.log("matchWholeWOrd", appState.searchNotesMatchWholeWord);
+    changeNo++; // make Enter redo the search
+    focusInput();
   }
   function btnPressedCls(isPressed) {
     return isPressed
       ? "bg-gray-100 border-1 border-gray-300"
       : "bg-white border-1 border-white";
   }
-  let matchCaseCls = $derived(btnPressedCls(appState.searchMatchCase));
+  let matchCaseCls = $derived(btnPressedCls(appState.searchNotesMatchCase));
   let matchWholeWordCls = $derived(
-    btnPressedCls(appState.searchMatchWholeWord),
+    btnPressedCls(appState.searchNotesMatchWholeWord),
   );
 
   function openItem(item) {
@@ -239,6 +308,11 @@
     </div>
   </div>
 
+  {#if noResultsMsg}
+    <div class=" px-2 py-4 mt-2 flex justify-center">
+      <div>{noResultsMsg}</div>
+    </div>
+  {/if}
   {#if len(results) > 0}
     <ListBox
       bind:this={listboxRef}

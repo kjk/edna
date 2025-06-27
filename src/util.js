@@ -461,12 +461,43 @@ export function noOp() {
   // do nothing
 }
 
+export function isWholeWord(s, startIdx, endIdx) {
+  // Ensure indices are within the string boundaries
+  if (startIdx < 0 || endIdx > s.length || startIdx >= endIdx) {
+    return false;
+  }
+  // Check if the start boundary is the beginning of the string or a non-word character
+  const startOk = startIdx === 0 || /\W/.test(s[startIdx - 1]);
+  // Check if the end boundary is the end of the string or a non-word character
+  const endOk = endIdx === s.length || /\W/.test(s[endIdx]);
+
+  return startOk && endOk;
+}
+
+export function splitStringPreservingQuotes(input) {
+  // This regex matches sequences of characters that are either:
+  // 1. Enclosed in double quotes ("quoted text")
+  // 2. Non-space characters (words)
+  const regex = /"([^"]*)"|\S+/g;
+  let result = [];
+  let match;
+  while ((match = regex.exec(input)) !== null) {
+    // If it's a quoted match, remove the quotes
+    if (match[1]) {
+      result.push(match[1]);
+    } else {
+      result.push(match[0]);
+    }
+  }
+  return result;
+}
+
 /**
  * @param {string} filter
  * @returns {RegExp}
  */
 export function makeHilightRegExp(filter) {
-  let parts = filter.split(" ");
+  let parts = splitStringPreservingQuotes(filter);
   let a = [];
   for (let s of parts) {
     s = s.trim().toLowerCase();
