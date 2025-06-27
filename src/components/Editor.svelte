@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
-  import { setCurrenciesLoadedCb, startLoadCurrencies } from "../currency.js";
+  import { loadCurrencies } from "../currency.js";
   import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
   import { EdnaEditor } from "../editor/editor.js";
   import { getSettings } from "../settings.svelte.js";
@@ -53,14 +53,13 @@
     editor?.setFont(fontFamily, fontSize);
   });
 
-  onMount(mounted);
+  function didLoadCurrencies() {
+    editor?.didLoadCurrencies();
+  }
+  onMount(didMount);
 
-  function mounted() {
-    console.log("Editor.svelte: mounted, editorEl:", editorRef);
-    if (!editorRef) {
-      return;
-    }
-
+  function didMount() {
+    console.log("Editor.svelte: mounted, editorRef:", editorRef);
     document.addEventListener("keydown", (e) => {
       // console.log(e);
       // prevent the default Save dialog from opening and save if dirty
@@ -75,6 +74,7 @@
       }
     });
 
+    window.document.addEventListener("currenciesLoaded", didLoadCurrencies);
     // forward events dispatched from editor.js
 
     /**
@@ -119,11 +119,9 @@
       didLoadNote(noteName, false);
     });
     rememberEditor(editor);
-    setCurrenciesLoadedCb(() => {
-      triggerCurrenciesLoaded(editor.view);
-    });
-    // intentially we delay it until we register a callback
-    startLoadCurrencies();
+
+    loadCurrencies();
+    setInterval(loadCurrencies, 1000 * 3600 * 4);
 
     // if debugSyntaxTree prop is set, display syntax tree for debugging
     if (debugSyntaxTree) {
@@ -143,9 +141,11 @@
         syntaxTreeDebugContent = render(syntaxTree(editor.view.state));
       }, 1000);
     }
-
     return () => {
-      setCurrenciesLoadedCb(null);
+      window.document.removeEventListener(
+        "currenciesLoaded",
+        didLoadCurrencies,
+      );
     };
   }
 

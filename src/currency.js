@@ -1,72 +1,40 @@
-import { startTimer } from "./util";
-
-/** @type { () => void } */
-let currenciesLoadedCb = null;
-
-/**
- * @param {() => void} cb
- */
-export function setCurrenciesLoadedCb(cb) {
-  currenciesLoadedCb = cb;
-}
-
+let currencyData = null;
 async function getCurrencyData() {
-  // currencyData = JSON.parse(cachedCurrencies)
-  let durFn = startTimer();
+  if (currencyData !== null) {
+    return currencyData;
+  }
   const response = await fetch("/api/currency_rates.json", {
     cache: "no-cache",
   });
-  let s = await response.text();
-  // console.log(`currencyData: '${s}'`)
-  let res = JSON.parse(s);
-  // console.log("currencyData:", currencyData)
-  console.log("got currency data in ", durFn(), "ms");
-  return res;
+  currencyData = JSON.parse(await response.text());
+  return currencyData;
 }
 
-let didLoadCurrencies = false;
-function loadCurrencies() {
-  function onCurrenciesLoaded(data) {
-    // @ts-ignore
-    let math = window.math;
-    let base = data.base_code || data.base;
-    math.createUnit(base, {
-      override: didLoadCurrencies,
-      aliases: [base.toLowerCase()],
+let currenciesLoaded = false;
+export async function loadCurrencies() {
+  const data = await getCurrencyData();
+  data.base = data.base_code; // our api returns base_code, the code expects base
+  if (!currenciesLoaded) {
+    math.createUnit(data.base, {
+      override: currenciesLoaded,
+      aliases: [data.base.toLowerCase()],
     });
-
-    Object.keys(data.rates)
-      .filter(function (currency) {
-        return currency !== base;
-      })
-      .forEach(function (currency) {
-        math.createUnit(
-          currency,
-          {
-            definition: math.unit(1 / data.rates[currency], base),
-            aliases: currency === "CUP" ? [] : [currency.toLowerCase()], // Lowercase CUP clashes with the measurement unit cup
-          },
-          { override: didLoadCurrencies },
-        );
-      });
-    didLoadCurrencies = true;
-    if (currenciesLoadedCb) {
-      currenciesLoadedCb();
-    }
   }
 
-  getCurrencyData()
-    .then((data) => {
-      onCurrenciesLoaded(data);
+  Object.keys(data.rates)
+    .filter(function (currency) {
+      return currency !== data.base;
     })
-    .catch((e) => {
-      console.log("error getting currency data:", e);
-      return;
+    .forEach(function (currency) {
+      math.createUnit(
+        currency,
+        {
+          definition: math.unit(1 / data.rates[currency], data.base),
+          aliases: currency === "CUP" ? [] : [currency.toLowerCase()], // Lowercase CUP clashes with the measurement unit cup
+        },
+        { override: currenciesLoaded },
+      );
     });
-}
-
-export function startLoadCurrencies() {
-  loadCurrencies();
-  // repeat every 4 hrs
-  setInterval(loadCurrencies, 1000 * 3600 * 4);
+  currenciesLoaded = true;
+  window.document.dispatchEvent(new Event("currenciesLoaded"));
 }

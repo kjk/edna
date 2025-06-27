@@ -23,6 +23,7 @@ import {
   blockState,
   noteBlockExtension,
 } from "./block/block.js";
+import { triggerCurrenciesLoaded } from "./block/commands.js";
 import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils.js";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs.js";
@@ -366,6 +367,10 @@ export class EdnaEditor {
   setDefaultBlockLanguage(token, autoDetect) {
     this.defaultBlockToken = token || "text";
     this.defaultBlockAutoDetect = autoDetect === undefined ? true : autoDetect;
+  }
+
+  didLoadCurrencies() {
+    triggerCurrenciesLoaded(this.view);
   }
 
   setBracketClosing(value) {
