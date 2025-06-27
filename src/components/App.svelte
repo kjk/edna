@@ -219,10 +219,6 @@
   let editorRef;
 
   $effect(() => {
-    console.log("showingCreateNewNote changed to:", showingCreateNewNote);
-  });
-
-  $effect(() => {
     isMoving.disableMoveTracking = isShowingDialog;
   });
 
@@ -1047,8 +1043,8 @@
     }
 
     const contextMenu = [
-      ["Command Palette\tMod + Shift + P", kCmdCommandPalette],
-      ["Open note\tMod + P", kCmdOpenNote],
+      ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
+      ["Open note\tMod + K", kCmdOpenNote],
       // ["Find\tMod + Q", kCmdOpenFind],
       ["This note", menuNote],
       ["Block", menuBlock],
@@ -1737,7 +1733,6 @@
 
   function openHistorySelector() {
     showingHistorySelector = true;
-    getEditorComp().focus();
   }
 
   function onSelectHistory(name) {
@@ -1910,10 +1905,7 @@
   class="grid w-screen max-h-screen h-screen fixed grid-rows-[1fr_auto]"
   {oncontextmenu}
 >
-  <TopNav {noteName} />
-  {#if !showingHistorySelector}
-    <QuickAccess selectNote={onSelectHistory} forHistory={false} />
-  {/if}
+  <TopNav selectNote={onSelectHistory} {noteName} />
 
   <Editor
     cursorChange={onCursorChange}
@@ -1935,6 +1927,12 @@
     {toggleSpellCheck}
   />
 </div>
+
+{#if showingHistorySelector}
+  <Overlay onclose={closeDialogs} blur={true}>
+    <QuickAccess selectNote={onSelectHistory} forHistory={true} />
+  </Overlay>
+{/if}
 
 {#if showingCreateNewNote}
   <Overlay onclose={closeDialogs} blur={true}>
@@ -1993,12 +1991,6 @@
       />
     </Overlay>
   {/if}
-{/if}
-
-{#if showingHistorySelector}
-  <Overlay onclose={closeDialogs} blur={true}>
-    <QuickAccess selectNote={onSelectHistory} forHistory={true} />
-  </Overlay>
 {/if}
 
 {#if showingLanguageSelector}

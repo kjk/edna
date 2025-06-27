@@ -176,6 +176,7 @@
    * @param {MouseEvent} ev
    */
   function click(ev) {
+    console.log("click:", ev);
     let idx = findItemIdxForMouseEvent(ev);
     if (idx < 0) {
       return;

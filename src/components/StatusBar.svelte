@@ -5,12 +5,11 @@
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages.js";
-  import { fmtSize, getScrollbarWidth } from "../util";
-  import { IconSettings } from "./Icons.svelte";
-  import { IconGitHub } from "./Icons.svelte";
   import { openLanguageSelector, openSettings } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
+  import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
+  import { IconGitHub, IconSettings } from "./Icons.svelte";
 
   /** @type { {
     line: number,
@@ -152,7 +151,6 @@
   <div class="text-gray-400">&bull;</div>
   <CurrentTime class="ml-1 mr-1"></CurrentTime>
   <div class="text-gray-400">&bull;</div>
-  <a class="clickable" href="/help" title="Documentation" target="_blank">?</a>
 </div>
 
 <style scoped>
