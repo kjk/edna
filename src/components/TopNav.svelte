@@ -1,11 +1,10 @@
 <script>
-  import {
-    openCommandPalette,
-    openContextMenu,
-    openNoteSelector,
-  } from "../globals.js";
+  import { openCommandPalette, openContextMenu } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import { getNoteMeta } from "../metadata.js";
+  import { isMoving } from "../mouse-track.svelte.js";
+  import { getSettings } from "../settings.svelte.js";
+  import { appState } from "../state.svelte.js";
   import { getAltChar } from "../util.js";
   import { IconCommandPalette, IconMenu } from "./Icons.svelte";
   import QuickAccess from "./QuickAccess.svelte";
@@ -50,11 +49,24 @@
     openCommandPalette();
   }
 
+  let settings = getSettings();
   let showingQuickAccess = $state(false);
+  let cls = $derived.by(() => {
+    if (settings.alwaysShowTopNav) {
+      return "bg-gray-50";
+    }
+    if (isMoving.moving) {
+      return "visible fixed top-0 z-10 bg-gray-50 right-0 border-l rounded-lg";
+    }
+    return "invisible fixed top-0 z-10 bg-gray-50 right-0 border-l rounded-lg";
+  });
+  $effect(() => {
+    console.log("cls:", cls);
+  });
 </script>
 
 <div
-  class="text-sm flex px-1 select-none text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center bg-gray-50 border-b"
+  class="flex text-sm px-1 select-none text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b {cls} hover:visible hover:bg-gray-50"
 >
   <button onclick={openContextMenu} class="clickable-icon" title="open menu">
     {@render IconMenu()}
@@ -97,12 +109,14 @@
       <QuickAccess selectNote={mySelectNote} forHistory={false} />
     {/if}
   </button>
-  <div class="grow"></div>
-  <a
-    class="mr-2 font-bold text-blue-600 hover:text-blue-800"
-    href="/help"
-    target="_blank">Edna</a
-  >
+  {#if settings.alwaysShowTopNav}
+    <div class="grow"></div>
+    <a
+      class="mr-2 font-bold text-blue-600 hover:text-blue-800"
+      href="/help"
+      target="_blank">Edna</a
+    >
+  {/if}
 </div>
 
 <style>

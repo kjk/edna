@@ -157,6 +157,10 @@
       <input type="checkbox" bind:checked={settings.useWideSelectors} />
       <div>Use wide selectors</div>
     </label>
+    <label class="flex">
+      <input type="checkbox" bind:checked={settings.alwaysShowTopNav} />
+      <div>Always show top navigation bar</div>
+    </label>
   </div>
 
   <div class="mt-2 mr-0.5 flex text-xs justify-end text-gray-400">

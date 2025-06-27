@@ -1,6 +1,7 @@
 <script>
   import { focus } from "../actions";
   import { toggleNoteStarred } from "../metadata";
+  import { getSettings } from "../settings.svelte";
   import { appState } from "../state.svelte";
   import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
@@ -24,6 +25,8 @@
   let listboxRef;
 
   console.log("QuickAcess, forHistory:", forHistory);
+
+  let settings = getSettings();
 
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
   /**
@@ -114,7 +117,15 @@
   }
   // if forHistory, showing in absolute position inside overlay
   // otherwise is absolute child of relative parent
-  let cls = forHistory ? "z-20 top-[2rem]" : "top-full border border-gray-400";
+  let cls = $derived.by(() => {
+    if (forHistory) {
+      return "z-20 top-[2rem]";
+    }
+    if (settings.alwaysShowTopNav) {
+      return "top-full border border-gray-400 center-x-with-translate";
+    }
+    return "top-full border border-gray-400 right-0";
+  });
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -122,7 +133,7 @@
   {onkeydown}
   tabindex="-1"
   use:focus
-  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden center-x-with-translate {cls}"
+  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden {cls}"
 >
   <ListBox
     bind:this={listboxRef}
