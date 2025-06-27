@@ -3,6 +3,7 @@
   import { foldCode, unfoldAll, unfoldCode } from "@codemirror/language";
   import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
+  import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
   import {
     getActiveNoteBlock,
     getBlockN,
@@ -67,6 +68,7 @@
   import { isMoving } from "../mouse-track.svelte";
   import {
     appendToNote,
+    blockHdrMarkdown,
     canDeleteNote,
     createIfNotExists,
     createNewScratchNote,
@@ -103,6 +105,7 @@
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,
+    formatDateYYYYMMDDDay,
     getClipboardText,
     isAltNumEvent,
     isDev,
@@ -1861,6 +1864,36 @@
   }
 
   /**
+   * @param {EdnaEditor} editor
+   */
+  function autoCreateDayInJournal(editor) {
+    // create block for a current day if doesn't exist
+    let s = blockHdrMarkdown + "# " + formatDateYYYYMMDDDay();
+    let content = editor.getContent();
+    if (content.includes(s)) {
+      return;
+    }
+    // console.log("autoCreateDayInJournal: inserting:", s);
+    let { state, dispatch } = editor.view;
+    dispatch(
+      state.update(
+        {
+          changes: {
+            from: 0,
+            insert: s + "\n",
+          },
+          selection: EditorSelection.cursor(len(s) + 1),
+          annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
+        },
+        {
+          scrollIntoView: true,
+          userEvent: "input",
+        },
+      ),
+    );
+  }
+
+  /**
    * @param {string} name
    * @param {boolean} noPushHistory
    */
@@ -1869,20 +1902,21 @@
     throwIf(!name);
     noteName = name;
     console.log("onDocChanged: just opened");
-    let readOnly = isSystemNoteName(name);
     let editor = editorRef.getEditor();
+    let readOnly = isSystemNoteName(name);
     editor.setReadOnly(readOnly);
-    if (name === kDailyJournalNoteName) {
-      console.log("journal, so going to next block");
-      // editor.gotoNextBlock();
-    }
-
     window.document.title = name;
     if (!noPushHistory) {
       addNoteToBrowserHistory(name);
       addNoteToHistory(name);
     }
     settings.currentNoteName = name;
+    if (name == kDailyJournalNoteName) {
+      // doesn't work without delay
+      setTimeout(() => autoCreateDayInJournal(editor), 100);
+      // console.log("journal, so going to next block");
+      // editor.gotoNextBlock();
+    }
     updateDocSize();
   }
 

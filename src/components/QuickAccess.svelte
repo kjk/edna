@@ -139,7 +139,7 @@
   >
     {#snippet renderItem(noteInfo, idx)}
       {@const shortcut = getNoteShortcut(noteInfo)}
-      {@const cls = firstInHistoryIdx == idx ? "border-t" : ""}
+      {@const cls = firstInHistoryIdx == idx ? "border-t-not-good-enough" : ""}
       {@const historyTrigger = idx - firstInHistoryIdx}
       {#if forHistory && historyTrigger >= 0}
         <div class="px-1 grow text-gray-800 font-bold dark:text-gray-400 {cls}">

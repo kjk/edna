@@ -718,27 +718,6 @@ export async function createNewScratchNote() {
   return scratchName;
 }
 
-/**
- * @param {string} name
- * @param {string} content
- * @returns {string}
- */
-function autoCreateDayInJournal(name, content) {
-  if (name != kDailyJournalNoteName) {
-    return content;
-  }
-  // create block for a current day
-  const dt = formatDateYYYYMMDDDay();
-  if (content === null) {
-    content = blockHdrMarkdown + "# " + dt + "\n";
-  } else {
-    if (!content.includes(dt)) {
-      content = blockHdrMarkdown + "# " + dt + "\n" + content;
-    }
-  }
-  return content;
-}
-
 function isEncryptedNote(name) {
   let res = encryptedNoteNames.includes(name);
   return res;
@@ -802,8 +781,6 @@ export async function loadNote(name) {
   if (res === null) {
     return null;
   }
-  // TODO: this should happen in App.vue:onDocChange(); this was easier to write
-  res = autoCreateDayInJournal(name, res);
   return fixUpNoteContent(res);
 }
 

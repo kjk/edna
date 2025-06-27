@@ -59,7 +59,6 @@
   onMount(didMount);
 
   function didMount() {
-    console.log("Editor.svelte: mounted, editorRef:", editorRef);
     document.addEventListener("keydown", (e) => {
       // console.log(e);
       // prevent the default Save dialog from opening and save if dirty
