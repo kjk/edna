@@ -172,8 +172,9 @@ export function ednaKeymap(editor) {
   if (platform.isWindows) {
     spec.push(["Mod-Shift-z", redo]);
   }
-  if (platform.isMac) {
-    // I don't have a good Mac keybinding for this
+  if (!platform.isMac) {
+    // I don't have a good Mac keybinding for this. Option-n is used to enter
+    // accented characters.
     spec.push(["Alt-n", createScratchNote]);
   }
 
