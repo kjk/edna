@@ -15,15 +15,15 @@
     IconMdiArrowCollapseLeft,
     IconMdiArrowCollapseRight,
     IconMenu,
-    IconTablerPlus,
   } from "./Icons.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
   /** @type {{ 
+    class?: string,
     noteName: string,
     selectNote: (name: string) => void,
   }} */
-  let { selectNote, noteName = "" } = $props();
+  let { class: klass, selectNote, noteName = "" } = $props();
 
   let altChar = getAltChar();
 
@@ -60,8 +60,26 @@
 </script>
 
 <div
-  class="flex bg-white text-sm px-1 select-none text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b {cls} hover:visible"
+  class="flex bg-white text-sm px-1 select-none text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b {cls} hover:visible {klass}"
 >
+  {#if settings.showSidebar}
+    <button
+      onclick={() => (settings.showSidebar = false)}
+      class="clickable-icon"
+      title={"Hide Sidebar"}
+    >
+      {@render IconMdiArrowCollapseLeft()}
+    </button>
+  {:else}
+    <button
+      onclick={() => (settings.showSidebar = true)}
+      class="clickable-icon"
+      title={"Show Sidebar"}
+    >
+      {@render IconMdiArrowCollapseRight()}
+    </button>
+  {/if}
+
   <button onclick={openContextMenu} class="clickable-icon" title="open menu">
     {@render IconMenu()}
   </button>
@@ -130,7 +148,7 @@
     <button
       onclick={() => (settings.alwaysShowTopNav = false)}
       class="clickable-icon"
-      title={"minimize"}
+      title={"Make Navigation Bar Smaller"}
     >
       {@render IconMdiArrowCollapseRight()}
     </button>
@@ -138,7 +156,7 @@
     <button
       onclick={() => (settings.alwaysShowTopNav = true)}
       class="clickable-icon"
-      title={"maximize"}
+      title={"Make Navigation Bar Full Size"}
     >
       {@render IconMdiArrowCollapseLeft()}
     </button>

@@ -3,7 +3,6 @@
   import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
   import { loadCurrencies } from "../currency.js";
-  import { triggerCurrenciesLoaded } from "../editor/block/commands.js";
   import { EdnaEditor } from "../editor/editor.js";
   import { getSettings } from "../settings.svelte.js";
   import { rememberEditor } from "../state.js";
@@ -13,13 +12,19 @@
   /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
 
   /** @type {{
+    class?: string,
     debugSyntaxTree: boolean,
     cursorChange: (e: SelectionChangeEvent) => void,
     docDidChange: () => void,
     didLoadNote: (name: string, noPushHistory: boolean) => void,
    }}*/
-
-  let { debugSyntaxTree, cursorChange, docDidChange, didLoadNote } = $props();
+  let {
+    class: klass = "",
+    debugSyntaxTree,
+    cursorChange,
+    docDidChange,
+    didLoadNote,
+  } = $props();
 
   let syntaxTreeDebugContent = $state(null);
   let settings = getSettings();
@@ -215,7 +220,7 @@
   }
 </script>
 
-<div class="overflow-hidden">
+<div class="overflow-hidden {klass}">
   <div class="editor" bind:this={editorRef}></div>
   {#if debugSyntaxTree}
     <div class="debug-syntax-tree">

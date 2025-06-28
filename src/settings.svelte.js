@@ -13,6 +13,7 @@ const settingsKeys = [
   "showLineNumberGutter",
   "useWideSelectors",
   "alwaysShowTopNav",
+  "showSidebar",
   "theme",
 ];
 
@@ -29,6 +30,7 @@ export class Settings {
   showLineNumberGutter = $state(true);
   useWideSelectors = $state(false);
   alwaysShowTopNav = $state(true);
+  showSidebar = $state(false);
   theme = $state("system"); // "system", "light", "dark"
 
   constructor(settings) {

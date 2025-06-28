@@ -1,6 +1,6 @@
 <script>
   import { tick } from "svelte";
-  import { foldCode, unfoldAll, unfoldCode } from "@codemirror/language";
+  import { foldCode, unfoldCode } from "@codemirror/language";
   import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
@@ -138,6 +138,7 @@
   import QuickAccess from "./QuickAccess.svelte";
   import RenameNote from "./RenameNote.svelte";
   import Settings from "./Settings.svelte";
+  import Sidebar from "./Sidebar.svelte";
   import StatusBar from "./StatusBar.svelte";
   import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
   import TopNav from "./TopNav.svelte";
@@ -957,6 +958,7 @@
   export const kCmdExportCurrentBlock = nmid();
   export const kCmdNoteToggleStarred = nmid();
   export const kCmdOpenNoteFromDisk = nmid();
+  export const kCmdToggleSidebar = nmid();
 
   function buildMenuDef() {
     // let starAction = "Star";
@@ -1330,6 +1332,11 @@
       openCustomFunctionsNote();
     } else if (cmdId === kCmdShowBuiltInFunctions) {
       openNote(kBuiltInFunctionsNoteName);
+    } else if (cmdId === kCmdToggleSidebar) {
+      settings.showSidebar = !settings.showSidebar;
+      if (!settings.showSidebar) {
+        view.focus();
+      }
     } else {
       console.log("unknown menu cmd id");
     }
@@ -1456,6 +1463,7 @@
   const commandPaletteAdditions = [
     ["Create New Scratch Note", kCmdCreateScratchNote],
     ["Open recent note", kCmdOpenRecent],
+    ["Toggle Sidebar", kCmdToggleSidebar],
     ["Open note from disk", kCmdOpenNoteFromDisk],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
@@ -1941,31 +1949,41 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="grid w-screen max-h-screen h-screen fixed grid-rows-[1fr_auto]"
+  class="fixed inset-0 grid w-screen max-h-screen h-screen grid-cols-[auto_1fr] grid-rows-[1fr_auto]"
   {oncontextmenu}
 >
-  <TopNav selectNote={onSelectHistory} {noteName} />
-
+  <TopNav
+    class="row-start-1 col-start-1 col-span-2"
+    selectNote={onSelectHistory}
+    {noteName}
+  />
+  {#if settings.showSidebar}
+    <Sidebar openNote={onOpenNote} class="row-start-2 col-start-1"></Sidebar>
+  {:else}
+    <div class="row-start-2 col-start-1"></div>
+  {/if}
   <Editor
+    class="row-start-2 col-start-2"
     cursorChange={onCursorChange}
     debugSyntaxTree={false}
     {didLoadNote}
     {docDidChange}
     bind:this={editorRef}
   />
-  <StatusBar
-    {line}
-    {column}
-    {docSize}
-    {selectionSize}
-    {language}
-    {languageAuto}
-    {isSpellChecking}
-    {formatCurrentBlock}
-    {smartRun}
-    {toggleSpellCheck}
-  />
 </div>
+
+<StatusBar
+  {line}
+  {column}
+  {docSize}
+  {selectionSize}
+  {language}
+  {languageAuto}
+  {isSpellChecking}
+  {formatCurrentBlock}
+  {smartRun}
+  {toggleSpellCheck}
+/>
 
 {#if showingHistorySelector}
   <Overlay onclose={closeDialogs} blur={true}>
