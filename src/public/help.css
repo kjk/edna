@@ -84,8 +84,9 @@ h6 {
 
 .toc-wrapper {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 1rem;
   z-index: 50;
 
   max-height: calc(100vh - 2rem);
