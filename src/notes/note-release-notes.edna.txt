@@ -2,6 +2,14 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.29
+
+- fix replace in `Ctrl + F` find / replace UI
+
+## 1.28
+
+- added a sidebar with list of notes. Add command `Toggle Sidebar`, setting and a toggle at the right top corner in navigation bar
+
 ## 1.27
 - added "Always show top navigation bar" setting. If false, we show top nav bar in upper right corner when mouse is moving or mouse is over it. If true, we always show it.
 

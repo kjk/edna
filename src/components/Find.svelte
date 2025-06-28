@@ -79,14 +79,20 @@
   }
 
   $effect(() => {
-    console.log("new search query:", searchTerm);
-    query = new SearchQuery({
+    console.log("new search query:", searchTerm, "replaceTerm:", replaceTerm);
+    let q = new SearchQuery({
       search: searchTerm,
+      replace: replaceTerm,
       caseSensitive: appState.searchMatchCase,
       regexp: appState.searchRegex,
       wholeWord: appState.searchMatchWholeWord,
       literal: true,
     });
+    if (!q.valid) {
+      return;
+    }
+
+    query = q;
     view.dispatch({
       effects: setSearchQuery.of(query),
     });
