@@ -9,7 +9,7 @@
   import { fixUpShortcuts } from "../key-helper.js";
   import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
-  import { IconGitHub, IconSettings } from "./Icons.svelte";
+  import { IconSettings } from "./Icons.svelte";
 
   /** @type { {
     line: number,
@@ -133,21 +133,11 @@
         </path>
       </svg>
     </button>
-    <div class="text-gray-400">&bull;</div>
   {/if}
-
+  <div class="text-gray-400">&bull;</div>
   <button onclick={openSettings} class="clickable-icon ml-1" title="Settings">
     {@render IconSettings()}
   </button>
-  <div class="text-gray-400">&bull;</div>
-  <a
-    class="clickable-icon mt-[1px]"
-    href="https://github.com/kjk/edna"
-    target="_blank"
-    title="Source code on GitHub"
-  >
-    {@render IconGitHub()}
-  </a>
   <div class="text-gray-400">&bull;</div>
   <CurrentTime class="ml-1 mr-1"></CurrentTime>
   <div class="text-gray-400">&bull;</div>
