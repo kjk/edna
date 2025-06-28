@@ -79,7 +79,7 @@
 <form
   {onkeydown}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] max-h-[94vh] flex flex-col p-2"
+  class="selector z-20 absolute center-x-with-translate top-[2rem] max-h-[94vh] flex flex-col p-2 max-w-[80vw] w-[40em]"
 >
   <div>
     <input
