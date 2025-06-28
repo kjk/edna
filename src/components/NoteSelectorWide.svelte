@@ -19,7 +19,7 @@
   import ListBox2 from "./ListBox2.svelte";
   import { buildNoteInfos } from "./NoteSelector.svelte";
 
-  /** @typedef {import("./NoteSelector.svelte").NoteInfo} Item */
+  /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo */
 
   /** @type {{
     openNote: (name: string) => void,
@@ -56,7 +56,7 @@
     return findMatchingItems(items, sanitizedFilter, "nameLC");
   });
 
-  /** @type {Item} */
+  /** @type {NoteInfo} */
   let selectedItem = $state(null);
   let selectedName = $state("");
   let canOpenSelected = $state(false);
@@ -71,7 +71,6 @@
   }
 
   let itemsCountMsg = $derived.by(() => {
-    // $state(`${noteCount} notes`);
     let n = len(itemsFiltered);
     if (n === 0) {
       return ""; // don't obscure user entering new, long note name
@@ -84,7 +83,6 @@
   });
 
   function selectionChanged(item, idx) {
-    // console.log("selectionChanged:", item, idx);
     selectedItem = item;
     selectedName = item ? selectedItem.name : "";
     canOpenSelected = !!selectedItem;
@@ -126,7 +124,7 @@
   }
 
   /**
-   * @param {Item} note
+   * @param {NoteInfo} note
    * @returns {string}
    */
   function noteShortcut(note) {
@@ -196,7 +194,7 @@
   }
 
   /**
-   * @param {Item} item
+   * @param {NoteInfo} item
    */
   function emitOpenNote(item) {
     // console.log("emitOpenNote", item);
@@ -209,7 +207,7 @@
   }
 
   /**
-   * @param {Item} item
+   * @param {NoteInfo} item
    */
   async function toggleStarred(item) {
     // there's a noticeable UI lag when we do the obvious:
