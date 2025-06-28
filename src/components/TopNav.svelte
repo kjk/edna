@@ -40,22 +40,9 @@
 
   let shortcut = $derived(getNoteShortcut(noteName));
 
-  // hack: ListBox is a child of the button shown when on hover
-  // click in ListBox (selection of the note) propagates to parent
-  // button and triggers opening command palette
-  // so we ignore click after mySelectNote is called
-  let eatNextClick = false;
   function mySelectNote(item) {
-    eatNextClick = true;
     showingQuickAccess = false;
     selectNote(item);
-  }
-  function myOnClick() {
-    if (eatNextClick) {
-      eatNextClick = false;
-      return;
-    }
-    openCommandPalette();
   }
 
   let settings = getSettings();
@@ -92,11 +79,9 @@
     target="_blank">?</a
   >
   <button
-    class="flex bg-white ml-2 align-baseline cursor-pointer clickable-icon hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg relative"
-    onclick={myOnClick}
-    onmouseenter={() => (showingQuickAccess = true)}
-    onmouseleave={() => (showingQuickAccess = false)}
-    title={fixUpShortcuts("Open Another Note (Mod + K)")}
+    class="flex bg-white ml-2 align-baseline cursor-pointer clickable-icon hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
+    onclick={openNoteSelector}
+    title={fixUpShortcuts("Click To Open Another Note (Mod + K)")}
   >
     <div class="max-w-32 truncate">
       {noteName}
@@ -109,11 +94,19 @@
         </span>
       {/if}
     </div>
-    <div class="mt-[-2px]">&nbsp;⏷</div>
+  </button>
+
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    onmouseenter={() => (showingQuickAccess = true)}
+    onmouseleave={() => (showingQuickAccess = false)}
+    class="clickable-icon mt-[-2px] relative"
+  >
+    &nbsp;⏷
     {#if showingQuickAccess}
       <QuickAccess selectNote={mySelectNote} forHistory={false} />
     {/if}
-  </button>
+  </div>
 
   <!-- <button
     onclick={openNoteSelector}
