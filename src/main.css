@@ -153,7 +153,7 @@ select {
 }
 
 .hili {
-  @apply bg-yellow-200;
+  @apply bg-yellow-200 dark:bg-yellow-800 font-semibold;
 }
 
 .button-outline {
