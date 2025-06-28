@@ -1462,6 +1462,7 @@
 
   const commandPaletteAdditions = [
     ["Create New Scratch Note", kCmdCreateScratchNote],
+    ["Create New Note", kCmdCreateNewNote],
     ["Open recent note", kCmdOpenRecent],
     ["Toggle Sidebar", kCmdToggleSidebar],
     ["Open note from disk", kCmdOpenNoteFromDisk],
