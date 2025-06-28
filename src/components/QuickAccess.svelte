@@ -177,9 +177,14 @@
       </div>
     {/snippet}
   </ListBox>
-  {#if !forHistory}
-    <div class="text-xs text-center text-gray-400 ml-2 mr-3 mt-1">
+  <div class="flex text-xs justify-between ml-2 mr-3 mt-2">
+    <div class="text-gray-400">
       tip: {modChar} + H
     </div>
-  {/if}
+    <a
+      target="_blank"
+      class="underline underline-offset-2"
+      href="help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
+    >
+  </div>
 </form>

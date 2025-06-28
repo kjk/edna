@@ -65,11 +65,11 @@ For native context menu do `Ctrl + right-click`. This is useful when spell check
 
 ## Switch to recently opened note
 
-Press `Mod + E` to switch to a note from list of recently opened notes.
+Press `Mod + H` to switch to a note from list of recently opened notes.
 
 Last 9 recently opened notes can be opened with `0` ... `9` shortcut.
 
-To switch to previous note: press `Mod + E` and `Enter`.
+To switch to previous note: press `Mod + H` and `Enter`.
 
 ## Quick access shortcut
 
@@ -85,7 +85,24 @@ Default shortcuts are:
 - `Alt + 2` : daily journal
 - `Alt + 3` : inbox
 
-Notes with quick access shortcut are shown at the top of note selector (`Mod + K`).
+Notes with quick access shortcut are shown at the top of note selector (`Mod + K`) and quick access UI (`Mod + H`)
+
+## Quick access UI for starred, recent notes
+
+To quickly open frequently accessed notes:
+- `Mod + H`
+- hover over ⏷ in top navigation bar
+
+You'll get a drop-down list with following notes:
+- notes that have quick access shortcut
+- starred notes
+- recently opened notes
+
+To open last note: `Mod + H`, `Enter`.
+
+When triggering the list with `Mod + H`, last 10 recently opened notes get a shortcut `0` to `9`.
+
+You can `Mod + H` and then press `0` to `9` to re-open recent note just using the keyboard.
 
 ## Syntax highlighting of blocks
 
@@ -141,19 +158,6 @@ A `scratch` note cannot be deleted.
 
 context menu: `This Note / Rename`
 
-## Quick access shortcut
-
-You can assign `Alt + 1` to `Alt + 9` keyboard shortcuts for quickly opening up to 10 notes.
-
-- `Mod + K`
-- select a note
-- press `Alt + <n>` shortcut to re-assign it to selected note
-
-Notes with assigned shortcut show up at the top of note switcher.
-
-## Open recent note
-
-Press `Mod + E` to open a note from history. You can press `0` to `9` to open one of the last 10 notes.
 ∞∞∞markdown
 # Default notes
 
