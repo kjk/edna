@@ -13,8 +13,8 @@ function getKeyHelp(platform = platformName) {
   const altChar = getAltChar(platform);
   let isMac = platform === "darwin";
   let res = [
-    [`Mod + P`, "Open, create or delete a note"],
-    [`Mod + K`, ``],
+    [`Mod + K`, "Open, create or delete a note"],
+    [`Mod + P`, ``],
     [`Mod + O`, ``],
     [`Mod + H`, "Open recent note (from history)"],
     [`Mod + Shift + P`, "Command Palette"],

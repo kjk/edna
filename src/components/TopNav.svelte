@@ -91,13 +91,12 @@
     title="Documentation"
     target="_blank">?</a
   >
-  <div class="text-gray-300 px-1">|</div>
   <button
     class="flex bg-white ml-2 align-baseline cursor-pointer clickable-icon hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg relative"
     onclick={myOnClick}
     onmouseenter={() => (showingQuickAccess = true)}
     onmouseleave={() => (showingQuickAccess = false)}
-    title={fixUpShortcuts("Open Another Note (Mod + P)")}
+    title={fixUpShortcuts("Open Another Note (Mod + K)")}
   >
     <div class="max-w-32 truncate">
       {noteName}

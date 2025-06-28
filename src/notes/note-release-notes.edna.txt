@@ -63,7 +63,7 @@
 
 ## 1.14
 
-- added a wide selector for `Mod + P` note selector. Use settings `Use wide selectors` to use it
+- added a wide selector for `Mod + K` note selector. Use settings `Use wide selectors` to use it
 
 ## 1.13
 
