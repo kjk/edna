@@ -196,6 +196,68 @@
     }
     select(idx);
   }
+
+  let draggedItem = $state(null);
+  let draggedOverItem = $state(null);
+
+  function handleDragStart(e, item) {
+    draggedItem = item;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", e.target.innerHTML);
+    e.target.classList.add("dragging");
+  }
+
+  function handleDragEnd(e) {
+    e.target.classList.remove("dragging");
+    draggedItem = null;
+    draggedOverItem = null;
+  }
+
+  function handleDragOver(e) {
+    if (e.preventDefault) {
+      e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = "move";
+    return false;
+  }
+
+  function handleDragEnter(e, item) {
+    if (draggedItem.key !== item.key) {
+      draggedOverItem = item;
+    }
+  }
+
+  function handleDragLeave(e) {
+    if (e.target.classList.contains("list-item")) {
+      e.target.classList.remove("drag-over");
+    }
+  }
+
+  function handleDrop(e, targetItem) {
+    if (e.stopPropagation) {
+      e.stopPropagation();
+    }
+
+    if (draggedItem !== targetItem) {
+      const draggedIndex = items.findIndex(
+        (item) => item.key === draggedItem.key,
+      );
+      const targetIndex = items.findIndex(
+        (item) => item.key === targetItem.key,
+      );
+
+      // Remove dragged item
+      const [removed] = items.splice(draggedIndex, 1);
+
+      // Insert at new position
+      items.splice(targetIndex, 0, removed);
+
+      // Trigger reactivity
+      items = items;
+    }
+
+    return false;
+  }
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -210,8 +272,17 @@
   {#each items as item, idx (item.key)}
     <li
       role="option"
+      class:drag-over={draggedOverItem?.key === item.key &&
+        draggedItem?.key !== item.key}
+      draggable="true"
+      ondragstart={(e) => handleDragStart(e, item)}
+      ondragend={handleDragEnd}
+      ondragover={handleDragOver}
+      ondragenter={(e) => handleDragEnter(e, item)}
+      ondragleave={handleDragLeave}
+      ondrop={(e) => handleDrop(e, item)}
       aria-selected={idx === selectedIdx}
-      class="flex items-center px-2 leading-5 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700 {compact
+      class="l-item flex items-center px-2 leading-5 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700 {compact
         ? ''
         : 'py-0.5'}"
       bind:this={refs[idx]}
@@ -224,5 +295,19 @@
 <style>
   :global(.os-scrollbar) {
     --os-size: 10px;
+  }
+
+  .l-item {
+    cursor: move;
+  }
+
+  .l-item.dragging {
+    opacity: 0.5;
+    background-color: #e3f2fd;
+  }
+
+  .l-item.drag-over {
+    border: 2px dashed #2196f3;
+    background-color: #e3f2fd;
   }
 </style>
