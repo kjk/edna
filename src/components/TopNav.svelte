@@ -1,5 +1,6 @@
 <script>
   import {
+    focusEditor,
     openCommandPalette,
     openContextMenu,
     openNoteSelector,
@@ -78,8 +79,23 @@
     title="Documentation"
     target="_blank">?</a
   >
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    onmouseenter={() => (showingQuickAccess = true)}
+    onmouseleave={() => {
+      showingQuickAccess = false;
+      focusEditor();
+    }}
+    class="clickable-icon mt-[-2px] relative"
+  >
+    &nbsp;⏷
+    {#if showingQuickAccess}
+      <QuickAccess selectNote={mySelectNote} forHistory={false} />
+    {/if}
+  </div>
+
   <button
-    class="flex bg-white ml-2 align-baseline cursor-pointer clickable-icon hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
+    class="flex bg-white align-baseline cursor-pointer clickable-icon hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
     onclick={openNoteSelector}
     title={fixUpShortcuts("Click To Open Another Note (Mod + K)")}
   >
@@ -95,18 +111,6 @@
       {/if}
     </div>
   </button>
-
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div
-    onmouseenter={() => (showingQuickAccess = true)}
-    onmouseleave={() => (showingQuickAccess = false)}
-    class="clickable-icon mt-[-2px] relative"
-  >
-    &nbsp;⏷
-    {#if showingQuickAccess}
-      <QuickAccess selectNote={mySelectNote} forHistory={false} />
-    {/if}
-  </div>
 
   <!-- <button
     onclick={openNoteSelector}

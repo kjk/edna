@@ -11,6 +11,7 @@
   openBlockSelector: () => void,
   openFunctionSelector: (boolean) => void,
   smartRun: () => void,
+  focusEditor: () => void,
   getPassword: (msg: string) => Promise<string>,
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>,
 }} GlobalFuncs
@@ -86,6 +87,10 @@ export function openFindInNotes() {
 
 export function smartRun() {
   globalFunctions.smartRun();
+}
+
+export function focusEditor() {
+  globalFunctions.focusEditor();
 }
 
 /**

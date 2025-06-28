@@ -80,16 +80,14 @@
    * @param {KeyboardEvent} ev
    */
   function onkeydown(ev) {
-    if (forHistory) {
-      // '0' ... '9' picks an item
-      let idx = getKeyEventNumber(ev);
-      let lastIdx = len(history) - 1;
-      if (idx >= 0 && idx <= lastIdx) {
-        ev.preventDefault();
-        let item = quickAccessNotes[firstInHistoryIdx + idx];
-        selectItem(item.name);
-        return;
-      }
+    // '0' ... '9' picks an item
+    let idx = getKeyEventNumber(ev);
+    let lastIdx = len(history) - 1;
+    if (idx >= 0 && idx <= lastIdx) {
+      ev.preventDefault();
+      let item = quickAccessNotes[firstInHistoryIdx + idx];
+      selectItem(item.name);
+      return;
     }
 
     listboxRef.onkeydown(ev, true);
@@ -141,7 +139,7 @@
       {@const shortcut = getNoteShortcut(noteInfo)}
       {@const cls = firstInHistoryIdx == idx ? "border-t-not-good-enough" : ""}
       {@const historyTrigger = idx - firstInHistoryIdx}
-      {#if forHistory && historyTrigger >= 0}
+      {#if historyTrigger >= 0}
         <div class="px-1 grow text-gray-800 font-bold dark:text-gray-400 {cls}">
           {"" + historyTrigger}
         </div>

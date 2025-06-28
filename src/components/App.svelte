@@ -242,6 +242,7 @@
     openBlockSelector: openBlockSelector,
     openFunctionSelector: openFunctionSelector,
     smartRun: smartRun,
+    focusEditor: focusEditor,
     getPassword: getPassword,
     requestFileWritePermission: requestFileWritePermission,
   };
@@ -250,6 +251,10 @@
   $effect(() => {
     getEditorComp().setSpellChecking(isSpellChecking);
   });
+
+  function focusEditor() {
+    getEditor().focus();
+  }
 
   $effect(() => {
     // console.log("App.svelte did mount");
