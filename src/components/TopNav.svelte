@@ -91,6 +91,7 @@
   ];
   let colorIndex = 0;
   let colorChangeInterval;
+  let startColor;
 </script>
 
 <div
@@ -147,7 +148,7 @@
   </div>
 
   <button
-    class="flex bg-white align-baseline cursor-pointer clickable-icon hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
+    class="flex bg-white dark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
     onclick={openNoteSelector}
     title={fixUpShortcuts("Click To Open Another Note (Mod + K)")}
   >
@@ -155,7 +156,7 @@
       {noteName}
       {#if shortcut}
         <span
-          class="text-gray-500 dark:text-gray-400 text-xs"
+          class=" text-xs"
           title="This Note Quick Access Shortcut ({shortcut})"
         >
           {shortcut}
@@ -176,8 +177,11 @@
     <div class="grow"></div>
     <a
       bind:this={ednaRef}
-      class="edna mr-2 font-bold text-slate-600"
+      class="edna mr-2 font-bold text-slate-600 dark:text-slate-200"
       onmouseenter={() => {
+        if (!startColor) {
+          startColor = ednaRef.style.color;
+        }
         colorChangeInterval = setInterval(() => {
           ednaRef.style.color = colors[colorIndex];
           colorIndex = (colorIndex + 1) % colors.length;
@@ -185,7 +189,7 @@
       }}
       onmouseleave={() => {
         clearInterval(colorChangeInterval);
-        ednaRef.style.color = "var(--color-slate-600)";
+        ednaRef.style.color = startColor;
       }}
       href="/help"
       target="_blank">Edna</a

@@ -154,7 +154,7 @@
 <form
   onkeydown={onKeydown}
   tabindex="-1"
-  class="flex flex-col w-[16em] p-2 text-sm h-full overflow-auto"
+  class="flex flex-col w-[16em] p-2 text-sm h-full overflow-auto bg-white dark:bg-gray-900 dark:text-gray-300"
 >
   <div class="relative">
     <input
