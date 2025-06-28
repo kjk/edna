@@ -132,20 +132,6 @@
     title="Documentation"
     target="_blank">?</a
   >
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div
-    onmouseenter={() => (showingQuickAccess = true)}
-    onmouseleave={() => {
-      showingQuickAccess = false;
-      focusEditor();
-    }}
-    class="clickable-icon mt-[-2px] relative"
-  >
-    &nbsp;⏷
-    {#if showingQuickAccess}
-      <QuickAccess selectNote={mySelectNote} forHistory={false} />
-    {/if}
-  </div>
 
   <button
     class="flex bg-white dark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
@@ -172,6 +158,21 @@
   >
     {@render IconTablerPlus()}
   </button> -->
+
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    onmouseenter={() => (showingQuickAccess = true)}
+    onmouseleave={() => {
+      showingQuickAccess = false;
+      focusEditor();
+    }}
+    class="clickable-icon mt-[-2px] relative"
+  >
+    &nbsp;⏷
+    {#if showingQuickAccess}
+      <QuickAccess selectNote={mySelectNote} forHistory={false} />
+    {/if}
+  </div>
 
   {#if settings.alwaysShowTopNav}
     <div class="grow"></div>
