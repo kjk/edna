@@ -10,6 +10,7 @@
   import { isMoving } from "../mouse-track.svelte.js";
   import { getSettings } from "../settings.svelte.js";
   import { getAltChar } from "../util.js";
+  import HelpDropDown from "./HelpDropDown.svelte";
   import {
     IconCommandPalette,
     IconMdiArrowCollapseLeft,
@@ -92,6 +93,21 @@
   let colorIndex = 0;
   let colorChangeInterval;
   let startColor;
+
+  let showingHelp = $state(false);
+
+  function openURLOrNote(url) {
+    console.log("url:", url);
+    showingHelp = false;
+    if (url.startsWith("system:")) {
+      selectNote(url);
+      return;
+    }
+    if (!url.startsWith("http")) {
+      url = window.location.origin + url;
+    }
+    window.open(url, "_blank");
+  }
 </script>
 
 <div
@@ -126,15 +142,25 @@
   >
     {@render IconCommandPalette()}
   </button>
-  <a
-    class="clickable-icon px-4"
-    href="/help"
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <div
+    onmouseenter={() => (showingHelp = true)}
+    onmouseleave={() => {
+      showingHelp = false;
+      focusEditor();
+    }}
+    class="clickable-icon px-2 relative"
     title="Documentation"
-    target="_blank">?</a
   >
+    ?
+    {#if showingHelp}
+      <HelpDropDown selectItem={(url) => openURLOrNote(url)}></HelpDropDown>
+    {/if}
+  </div>
 
   <button
-    class="flex bg-white dark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
+    class="ml-2 flex bg-white dark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
     onclick={openNoteSelector}
     title={fixUpShortcuts("Click To Open Another Note (Mod + K)")}
   >
