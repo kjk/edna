@@ -57,6 +57,40 @@
     }
     return "invisible fixed top-0 z-10 right-0 border-l rounded-lg";
   });
+
+  /** @type {HTMLElement} */
+  let ednaRef;
+
+  const colors = [
+    "red",
+    "orange",
+    "green",
+    "blue",
+    "indigo",
+    "violet", // original rainbow colors
+    "darkred",
+    "darkorange",
+    "gold",
+    "forestgreen",
+    "royalblue",
+    "purple",
+    "deeppink",
+    "crimson",
+    "teal",
+    "navy",
+    "darkgreen",
+    "darkcyan",
+    "mediumvioletred",
+    "darkslateblue",
+    "firebrick",
+    "orchid",
+    "mediumspringgreen",
+    "darkmagenta",
+    "darkolivegreen",
+    "saddlebrown",
+  ];
+  let colorIndex = 0;
+  let colorChangeInterval;
 </script>
 
 <div
@@ -141,7 +175,18 @@
   {#if settings.alwaysShowTopNav}
     <div class="grow"></div>
     <a
-      class="mr-2 font-bold text-slate-600 hover:text-slate-800"
+      bind:this={ednaRef}
+      class="edna mr-2 font-bold text-slate-600"
+      onmouseenter={() => {
+        colorChangeInterval = setInterval(() => {
+          ednaRef.style.color = colors[colorIndex];
+          colorIndex = (colorIndex + 1) % colors.length;
+        }, 300); // Change color every 500 milliseconds
+      }}
+      onmouseleave={() => {
+        clearInterval(colorChangeInterval);
+        ednaRef.style.color = "var(--color-slate-600)";
+      }}
       href="/help"
       target="_blank">Edna</a
     >
@@ -165,6 +210,9 @@
 
 <style>
   @reference "../main.css";
+
+  .edna {
+  }
 
   .clickable-icon {
     @apply cursor-pointer px-2 py-1;
