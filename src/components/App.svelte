@@ -1952,11 +1952,15 @@
   class="fixed inset-0 grid w-screen max-h-screen h-screen grid-cols-[auto_1fr] grid-rows-[1fr_auto]"
   {oncontextmenu}
 >
-  <TopNav
-    class="row-start-1 col-start-1 col-span-2"
-    selectNote={onSelectHistory}
-    {noteName}
-  />
+  {#if settings.alwaysShowTopNav}
+    <TopNav
+      class="row-start-1 col-start-1 col-span-2"
+      selectNote={onSelectHistory}
+      {noteName}
+    />
+  {:else}
+    <div class="row-start-1 col-start-1 col-span-2"></div>
+  {/if}
   {#if settings.showSidebar}
     <Sidebar openNote={onOpenNote} class="row-start-2 col-start-1"></Sidebar>
   {:else}
@@ -1972,6 +1976,9 @@
   />
 </div>
 
+{#if !settings.alwaysShowTopNav}
+  <TopNav class="" selectNote={onSelectHistory} {noteName} />
+{/if}
 <StatusBar
   {line}
   {column}
