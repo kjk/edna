@@ -1,7 +1,10 @@
-import { NoteContent, NoteLanguage } from "./parser.terms.js";
-import { getLanguage, langGetParser } from "../languages.js";
-
 import { parseMixed } from "@lezer/common";
+import { getLanguage, langGetParser, LANGUAGES } from "../languages.js";
+import { NoteContent, NoteLanguage } from "./parser.terms.js";
+
+const languageMapping = Object.fromEntries(
+  LANGUAGES.map((l) => [l.token, langGetParser(l)]),
+);
 
 export function configureNesting() {
   // TODO: would have to by async to implement on-demand loading of parsers
@@ -10,13 +13,18 @@ export function configureNesting() {
     if (id == NoteContent) {
       let noteLang = node.node.parent.firstChild.getChildren(NoteLanguage)[0];
       let langName = input.read(noteLang?.from, noteLang?.to);
-      // console.log("langName:", langName);
-      const lang = getLanguage(langName);
-      let res = langGetParser(lang);
-      if (res) {
-        // console.log("found parser for language:", langName, "res:", res);
+
+      // if the NoteContent is empty, we don't want to return a parser, since that seems to cause an
+      // error for StreamLanguage parsers when the buffer size is large (e.g >300 kb)
+      if (node.node.from == node.node.to) {
+        return null;
+      }
+
+      if (langName in languageMapping && languageMapping[langName] !== null) {
+        //console.log("found parser for language:", langName)
         return {
-          parser: res,
+          parser: languageMapping[langName],
+          overlay: [{ from: node.from, to: node.to }],
         };
       }
     }

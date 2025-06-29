@@ -1,39 +1,38 @@
+import { cppLanguage } from "@codemirror/lang-cpp";
+import { cssLanguage } from "@codemirror/lang-css";
+import { htmlLanguage } from "@codemirror/lang-html";
+import { javaLanguage } from "@codemirror/lang-java";
 import {
   javascriptLanguage,
   jsxLanguage,
   tsxLanguage,
   typescriptLanguage,
 } from "@codemirror/lang-javascript";
-
-import { StandardSQL } from "@codemirror/lang-sql";
-import { StreamLanguage } from "@codemirror/language";
-import { clojure } from "@codemirror/legacy-modes/mode/clojure";
-import { cppLanguage } from "@codemirror/lang-cpp";
-import { csharpLanguage } from "@replit/codemirror-lang-csharp";
-import { cssLanguage } from "@codemirror/lang-css";
-import { diff } from "@codemirror/legacy-modes/mode/diff";
-import { lua } from "@codemirror/legacy-modes/mode/lua";
-import { erlang } from "@codemirror/legacy-modes/mode/erlang";
-import { go } from "@codemirror/legacy-modes/mode/go";
-import { groovy } from "@codemirror/legacy-modes/mode/groovy";
-import { htmlLanguage } from "@codemirror/lang-html";
-import { javaLanguage } from "@codemirror/lang-java";
 import { jsonLanguage } from "@codemirror/lang-json";
-import { dart, kotlin, scala } from "@codemirror/legacy-modes/mode/clike";
 import { lezerLanguage } from "@codemirror/lang-lezer";
 import { markdownLanguage } from "@codemirror/lang-markdown";
 import { phpLanguage } from "@codemirror/lang-php";
-import { powerShell } from "@codemirror/legacy-modes/mode/powershell";
 import { pythonLanguage } from "@codemirror/lang-python";
-import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { rustLanguage } from "@codemirror/lang-rust";
-import { shell } from "@codemirror/legacy-modes/mode/shell";
-import { svelteLanguage } from "@replit/codemirror-lang-svelte";
-import { swift } from "@codemirror/legacy-modes/mode/swift";
-import { toml } from "@codemirror/legacy-modes/mode/toml";
+import { StandardSQL } from "@codemirror/lang-sql";
 import { vueLanguage } from "@codemirror/lang-vue";
 import { xmlLanguage } from "@codemirror/lang-xml";
+import { StreamLanguage } from "@codemirror/language";
+import { dart, kotlin, scala } from "@codemirror/legacy-modes/mode/clike";
+import { clojure } from "@codemirror/legacy-modes/mode/clojure";
+import { diff } from "@codemirror/legacy-modes/mode/diff";
+import { erlang } from "@codemirror/legacy-modes/mode/erlang";
+import { go } from "@codemirror/legacy-modes/mode/go";
+import { groovy } from "@codemirror/legacy-modes/mode/groovy";
+import { lua } from "@codemirror/legacy-modes/mode/lua";
+import { powerShell } from "@codemirror/legacy-modes/mode/powershell";
+import { ruby } from "@codemirror/legacy-modes/mode/ruby";
+import { shell } from "@codemirror/legacy-modes/mode/shell";
+import { swift } from "@codemirror/legacy-modes/mode/swift";
+import { toml } from "@codemirror/legacy-modes/mode/toml";
 import { yaml } from "@codemirror/legacy-modes/mode/yaml";
+import { csharpLanguage } from "@replit/codemirror-lang-csharp";
+import { svelteLanguage } from "@replit/codemirror-lang-svelte";
 
 /*
 TODO: more langs from @codemirror/legacy-modes/mode/clike
@@ -238,6 +237,8 @@ export const kLanguages = [
     guesslang: "lua",
   },
 ];
+
+export const LANGUAGES = kLanguages;
 
 /**
  * @param {string} lang

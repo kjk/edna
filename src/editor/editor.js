@@ -1,4 +1,3 @@
-import { tick } from "svelte";
 import { markdown } from "@codemirror/lang-markdown";
 import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
 import {

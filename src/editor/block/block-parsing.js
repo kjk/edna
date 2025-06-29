@@ -21,40 +21,40 @@ export function getBlocksFromSyntaxTree(state) {
   const blocks = [];
   const tree = syntaxTree(state, state.doc.length);
   if (tree) {
-  tree.iterate({
-    enter: (type) => {
-      if (type.type.id == Document || type.type.id == Note) {
-        return true;
-      } else if (type.type.id === NoteDelimiter) {
-        const langNode = type.node.getChild("NoteLanguage");
-        const language = state.doc.sliceString(langNode.from, langNode.to);
-        const isAuto = !!type.node.getChild("Auto");
-        const contentNode = type.node.nextSibling;
-        blocks.push({
-          language: {
-            name: language,
-            auto: isAuto,
-          },
-          content: {
-            from: contentNode.from,
-            to: contentNode.to,
-          },
-          delimiter: {
-            from: type.from,
-            to: type.to,
-          },
-          range: {
-            from: type.node.from,
-            to: contentNode.to,
-          },
-        });
+    tree.iterate({
+      enter: (type) => {
+        if (type.type.id == Document || type.type.id == Note) {
+          return true;
+        } else if (type.type.id === NoteDelimiter) {
+          const langNode = type.node.getChild("NoteLanguage");
+          const language = state.doc.sliceString(langNode.from, langNode.to);
+          const isAuto = !!type.node.getChild("Auto");
+          const contentNode = type.node.nextSibling;
+          blocks.push({
+            language: {
+              name: language,
+              auto: isAuto,
+            },
+            content: {
+              from: contentNode.from,
+              to: contentNode.to,
+            },
+            delimiter: {
+              from: type.from,
+              to: type.to,
+            },
+            range: {
+              from: type.node.from,
+              to: contentNode.to,
+            },
+          });
+          return false;
+        }
         return false;
-      }
-      return false;
-    },
-    mode: IterMode.IgnoreMounts,
-  });
-  firstBlockDelimiterSize = blocks[0]?.delimiter.to;
+      },
+      mode: IterMode.IgnoreMounts,
+    });
+    firstBlockDelimiterSize = blocks[0]?.delimiter.to;
   }
   //console.log("getBlocksSyntaxTree took", timer(), "ms")
   return blocks;

@@ -1,12 +1,12 @@
+import { json } from "@codemirror/lang-json";
 import {
-  LRLanguage,
-  LanguageSupport,
   foldNodeProp,
+  LanguageSupport,
+  LRLanguage,
 } from "@codemirror/language";
 import { styleTags, tags as t } from "@lezer/highlight";
-
+import { FOLD_LABEL_LENGTH } from "../../common/constants.js";
 import { configureNesting } from "./nested-parser.js";
-import { json } from "@codemirror/lang-json";
 import { parser } from "./parser.js";
 
 function foldNode(node) {
@@ -26,8 +26,15 @@ export const HeynoteLanguage = LRLanguage.define({
       foldNodeProp.add({
         //NoteContent: foldNode,
         //NoteContent: foldInside,
-        NoteContent(node) {
-          return { from: node.from, to: node.to - 1 };
+        NoteContent(node, state) {
+          //return {from:node.from, to:node.to}
+          return {
+            from: Math.min(
+              state.doc.lineAt(node.from).to,
+              node.from + FOLD_LABEL_LENGTH,
+            ),
+            to: node.to,
+          };
         },
       }),
     ],

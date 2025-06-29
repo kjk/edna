@@ -121,10 +121,10 @@ const customSetup = /*@__PURE__*/ (() => [
   rectangularSelection(),
   crosshairCursor(),
   highlightActiveLine(),
+  highlightSelectionMatches(),
   search({
     createPanel: createFnddPanel,
   }),
-  highlightSelectionMatches(),
   EditorView.lineWrapping,
   scrollPastEnd(),
   // @ts-ignore

@@ -24,6 +24,9 @@ import {
 import { mathBlock } from "./math.js";
 import { emptyBlockSelected } from "./select-all.js";
 
+export const delimiterRegex = /^\n∞∞∞[a-z]+?(-a)?\n$/;
+export const delimiterRegexWithoutNewline = /^∞∞∞[a-z]+?(-a)?$/;
+
 /**
  * Get the blocks from the document state.
  * If the syntax tree is available, we'll extract the blocks from that. Otherwise
