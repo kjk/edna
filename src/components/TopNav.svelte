@@ -6,6 +6,7 @@
     openNoteSelector,
   } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
+  import Menu from "../Menu.svelte";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
   import { getSettings } from "../settings.svelte.js";
@@ -22,12 +23,26 @@
   } from "./Icons.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
+  /** @typedef {import("../Menu.svelte").MenuDef} MenuDef */
+  /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
+
   /** @type {{ 
     class?: string,
     openNote: (name: string, newTab: boolean) => void,
     closeTab: (name: string) => void,
+    buildMenuDef: any,
+    menuItemStatus?: (mi: MenuItemDef) => number,
+    onmenucmd: (cmd: number) => void,
+
   }} */
-  let { class: klass = "", openNote, closeTab } = $props();
+  let {
+    class: klass = "",
+    openNote,
+    closeTab,
+    buildMenuDef,
+    menuItemStatus,
+    onmenucmd,
+  } = $props();
 
   let altChar = getAltChar();
 
@@ -113,6 +128,14 @@
     }
     window.open(url, "_blank");
   }
+
+  let shwingMenu = $state(false);
+  let noFocusEditorOnMenuOut = false;
+  function myOnMenuCmd(cmdid) {
+    console.warn("myOnMenuCmd");
+    noFocusEditorOnMenuOut = true;
+    onmenucmd(cmdid);
+  }
 </script>
 
 <div
@@ -136,8 +159,32 @@
     </button>
   {/if}
 
-  <button onclick={openContextMenu} class="clickable-icon" title="open menu">
+  <button
+    onmouseenter={() => {
+      noFocusEditorOnMenuOut = false;
+      shwingMenu = true;
+    }}
+    onmouseleave={() => {
+      shwingMenu = false;
+      console.warn("mouseleave");
+      if (!noFocusEditorOnMenuOut) {
+        focusEditor();
+      }
+    }}
+    onclick={openContextMenu}
+    class="clickable-icon"
+    title="open menu"
+  >
     {@render IconMenu()}
+    {#if shwingMenu}
+      {@const menuDef = buildMenuDef()}
+      <Menu
+        {menuItemStatus}
+        onmenucmd={myOnMenuCmd}
+        {menuDef}
+        pos={{ x: 10, y: 10 }}
+      />
+    {/if}
   </button>
 
   <button

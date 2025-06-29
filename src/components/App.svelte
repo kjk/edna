@@ -2019,6 +2019,9 @@
       class="row-start-1 col-start-1 col-span-2"
       openNote={onOpenNote}
       {closeTab}
+      {menuItemStatus}
+      {onmenucmd}
+      {buildMenuDef}
     />
   {:else}
     <div class="row-start-1 col-start-1 col-span-2"></div>
@@ -2039,7 +2042,13 @@
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav openNote={onOpenNote} {closeTab} />
+  <TopNav
+    openNote={onOpenNote}
+    {closeTab}
+    {menuItemStatus}
+    {onmenucmd}
+    {buildMenuDef}
+  />
 {/if}
 <StatusBar
   {line}
