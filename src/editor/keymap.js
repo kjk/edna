@@ -23,6 +23,8 @@ import {
   gotoPreviousBlock,
   gotoPreviousParagraph,
   insertNewBlockAtCursor,
+  moveCurrentBlockDown,
+  moveCurrentBlockUp,
   moveLineDown,
   moveLineUp,
   newCursorAbove,
@@ -98,6 +100,9 @@ export function ednaKeymap(editor) {
     ["Alt-Shift-f", formatBlockContent],
     ["Mod-Alt-ArrowDown", newCursorBelow],
     ["Mod-Alt-ArrowUp", newCursorAbove],
+    ["Alt-Mod-Shift-ArrowUp", moveCurrentBlockUp],
+    ["Alt-Mod-Shift-ArrowDown", moveCurrentBlockDown],
+
     {
       key: "Mod-ArrowUp",
       run: gotoPreviousBlock,

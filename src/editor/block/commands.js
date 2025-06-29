@@ -5,6 +5,7 @@ import {
   DELETE_BLOCK,
   heynoteEvent,
   LANGUAGE_CHANGE,
+  MOVE_BLOCK,
 } from "../annotation.js";
 import {
   blockState,
@@ -17,6 +18,10 @@ import { moveLineDown, moveLineUp } from "./move-lines.js";
 import { selectAll } from "./select-all.js";
 
 export { moveLineDown, moveLineUp, selectAll };
+
+export function getBlockDelimiter(defaultToken, autoDetect) {
+  return `\n∞∞∞${autoDetect ? defaultToken + "-a" : defaultToken}\n`;
+}
 
 export function insertNewBlockAtCursor({ state, dispatch }) {
   if (state.readOnly) return false;
@@ -380,8 +385,81 @@ export function triggerCurrenciesLoaded({ state, dispatch }) {
   );
 }
 
-export function getBlockDelimiter(defaultToken, autoDetect) {
-  return `\n∞∞∞${autoDetect ? defaultToken + "-a" : defaultToken}\n`;
+export function moveCurrentBlockUp({ state, dispatch }) {
+  return moveCurrentBlock(state, dispatch, true);
+}
+
+export function moveCurrentBlockDown({ state, dispatch }) {
+  return moveCurrentBlock(state, dispatch, false);
+}
+
+function moveCurrentBlock(state, dispatch, up) {
+  if (state.readOnly) {
+    return false;
+  }
+
+  const blocks = state.facet(blockState);
+  const currentBlock = getActiveNoteBlock(state);
+  const blockIndex = blocks.indexOf(currentBlock);
+  if ((up && blockIndex === 0) || (!up && blockIndex === blocks.length - 1)) {
+    return false;
+  }
+
+  const dir = up ? -1 : 1;
+  const neighborBlock = blocks[blockIndex + dir];
+
+  const currentBlockContent = state.sliceDoc(
+    currentBlock.delimiter.from,
+    currentBlock.content.to,
+  );
+  const neighborBlockContent = state.sliceDoc(
+    neighborBlock.delimiter.from,
+    neighborBlock.content.to,
+  );
+  const newContent = up
+    ? currentBlockContent + neighborBlockContent
+    : neighborBlockContent + currentBlockContent;
+
+  const selectionRange = state.selection.asSingle().ranges[0];
+  let newSelectionRange;
+  if (up) {
+    newSelectionRange = EditorSelection.range(
+      selectionRange.anchor -
+        currentBlock.delimiter.from +
+        neighborBlock.delimiter.from,
+      selectionRange.head -
+        currentBlock.delimiter.from +
+        neighborBlock.delimiter.from,
+    );
+  } else {
+    newSelectionRange = EditorSelection.range(
+      selectionRange.anchor +
+        neighborBlock.content.to -
+        neighborBlock.delimiter.from,
+      selectionRange.head +
+        neighborBlock.content.to -
+        neighborBlock.delimiter.from,
+    );
+  }
+
+  dispatch(
+    state.update(
+      {
+        changes: {
+          from: up ? neighborBlock.delimiter.from : currentBlock.delimiter.from,
+          to: up ? currentBlock.content.to : neighborBlock.content.to,
+          insert: newContent,
+        },
+        selection: newSelectionRange,
+        annotations: [heynoteEvent.of(MOVE_BLOCK)],
+      },
+      {
+        scrollIntoView: true,
+        userEvent: "input",
+      },
+    ),
+  );
+  return true;
 }
 
 export const deleteBlock =
@@ -427,6 +505,34 @@ export const deleteBlock =
     dispatch(
       state.update({
         changes: change,
+        selection: EditorSelection.cursor(newSelection),
+        annotations: [heynoteEvent.of(DELETE_BLOCK)],
+      }),
+    );
+    return true;
+  };
+
+export const deleteBlockSetCursorPreviousBlock =
+  (editor) =>
+  ({ state, dispatch }) => {
+    const block = getActiveNoteBlock(state);
+    const blocks = state.facet(blockState);
+    let replace = "";
+    let newSelection = block.delimiter.from;
+    if (blocks.length == 1) {
+      replace = getBlockDelimiter(
+        editor.defaultBlockToken,
+        editor.defaultBlockAutoDetect,
+      );
+      newSelection = replace.length;
+    }
+    dispatch(
+      state.update({
+        changes: {
+          from: block.range.from,
+          to: block.range.to,
+          insert: replace,
+        },
         selection: EditorSelection.cursor(newSelection),
         annotations: [heynoteEvent.of(DELETE_BLOCK)],
       }),

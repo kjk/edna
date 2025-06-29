@@ -20,6 +20,8 @@
     gotoNextBlock,
     gotoPreviousBlock,
     insertNewBlockAtCursor,
+    moveCurrentBlockDown,
+    moveCurrentBlockUp,
     selectAll,
   } from "../editor/block/commands";
   import {
@@ -931,6 +933,8 @@
   export const kCmdFoldCode = nmid();
   export const kCmdUnfoldColde = nmid();
   export const kCmdUnfoldEverything = nmid();
+  export const kCmdMoveBlockUp = nmid();
+  export const kCmdMoveBlockDown = nmid();
   export const kCmdFormatBlock = nmid();
   const kCmdBlockLast = kCmdFormatBlock;
 
@@ -990,6 +994,8 @@
       ["Split at cursor position\tMod + Alt + Enter", kCmdSplitBlockAtCursor],
       ["Goto next\tMod + Down", kCmdGoToNextBlock],
       ["Goto previous\tMod + Up", kCmdGoToPreviousBlock],
+      ["Move up\tAlt-Mod-Shift-ArrowUp", kCmdMoveBlockUp],
+      ["Move down\tAlt-Mod-Shift-ArrowDown", kCmdMoveBlockDown],
       ["Change language\tMod + L", kCmdChangeBlockLanguage],
       ["Select all text\tMod + A", kCmdBlockSelectAll],
       ["Format as " + language + "\tAlt + Shift + F", kCmdFormatBlock],
@@ -1241,6 +1247,12 @@
       view.focus();
     } else if (cmdId === kCmdGoToPreviousBlock) {
       gotoPreviousBlock(view);
+      view.focus();
+    } else if (cmdId === kCmdMoveBlockUp) {
+      moveCurrentBlockUp(view);
+      view.focus();
+    } else if (cmdId === kCmdMoveBlockDown) {
+      moveCurrentBlockDown(view);
       view.focus();
     } else if (cmdId === kCmdChangeBlockLanguage) {
       openLanguageSelector();
