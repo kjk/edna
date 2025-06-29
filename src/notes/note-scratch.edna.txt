@@ -22,6 +22,29 @@ Mod + L to change the type of block
 Mod + B to navigate between blocks
 
 Blocks have alternate background color.
+∞∞∞markdown
+# Command Palette
+
+Use Mod + Shift + K to open command palette or use icon in top navigation bar.
+∞∞∞markdown
+# Multiple notes
+
+Use Mod + K to switch between notes.
+
+To create new note:
+* Mod + K, type the name of new note and Enter or Mod + Enter to create the note
+* Mod + Shift + K for Command Palette, Create New Note, provide a name of the note
+* Mod + Shift + K for Command Palette, Create New Scratch Note. Meant for temporary, scratch notes, the name will automatically be scratch-<N>
+∞∞∞markdown
+# Note storage
+
+By default notes are stored in browsers' localStorage.
+
+In supported browsers (Chrome, Edge, Brave) you can store notes on disk.
+
+To share notes between computers, you can store notes on shared file system like DropBox, One Drive, Google Drive etc.
+
+Read more at https://edna.arslexis.io/help#storing-notes-on-disk
 ∞∞∞math
 This is a Math block. Lines are evaluated as math expressions with result rendered at end of line right.
 
