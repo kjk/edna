@@ -476,13 +476,6 @@
       {notesCountMsg}
     </div>
   </div>
-  <div class="flex justify-center mb-2">
-    {#if canCreate}
-      <button class="truncate button-outline cursor-pointer max-w-[80%]"
-        >Create Note <b>{filter}</b></button
-      >
-    {/if}
-  </div>
   <ListBox
     bind:this={listboxRef}
     items={filteredNoteInfos}
@@ -513,6 +506,14 @@
       </div>
     {/snippet}
   </ListBox>
+
+  <div class="flex justify-center mt-2">
+    {#if canCreate}
+      <button class="truncate button-outline cursor-pointer max-w-[80%]"
+        >Create Note <b>{filter}</b></button
+      >
+    {/if}
+  </div>
 
   {#if canOpenSelected || canDeleteSelected || filter.length > 0}
     <!-- <hr class="mt-2 border-gray-300 dark:border-gray-600" /> -->
