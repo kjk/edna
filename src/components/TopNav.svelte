@@ -25,8 +25,9 @@
   /** @type {{ 
     class?: string,
     openNote: (name: string, newTab: boolean) => void,
+    closeTab: (name: string),
   }} */
-  let { class: klass, openNote } = $props();
+  let { class: klass = "", openNote, closeTab } = $props();
 
   let altChar = getAltChar();
 
@@ -111,19 +112,6 @@
       url = window.location.origin + url;
     }
     window.open(url, "_blank");
-  }
-  function closeTab(noteName) {
-    if (noteName != settings.currentNoteName) {
-      settings.removeTab(noteName);
-      return;
-    }
-    let idx = settings.tabs.indexOf(noteName);
-    settings.removeTab(noteName);
-    if (idx >= len(settings.tabs)) {
-      idx = len(settings.tabs) - 1;
-    }
-    let toOpen = settings.tabs[idx];
-    openNote(toOpen, false);
   }
 </script>
 

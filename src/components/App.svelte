@@ -905,6 +905,7 @@
   export const kCmdOpenNoteInNewTab = nmid();
   export const kCmdOpenFind = nmid();
   export const kCmdCreateNewNote = nmid();
+  export const kCmdCloseCurrentTab = nmid();
   export const kCmdRenameCurrentNote = nmid();
   export const kCmdDeleteCurrentNote = nmid();
   export const kCmdCreateScratchNote = nmid();
@@ -1210,6 +1211,8 @@
       // TODO: open search panel
     } else if (cmdId === kCmdCreateNewNote) {
       openCreateNewNote();
+    } else if (cmdId === kCmdCloseCurrentTab) {
+      closeCurrentTab();
     } else if (cmdId === kCmdRenameCurrentNote) {
       showingRenameNote = true;
     } else if (cmdId === kCmdDeleteCurrentNote) {
@@ -1495,6 +1498,30 @@
     console.log("commandPaletteAdditions:", commandPaletteAdditions);
     let name = commandNameOverride(kCmdToggleSpellChecking);
     commandsDef.push([name, kCmdToggleSpellChecking]);
+    if (len(settings.tabs) > 1) {
+      commandsDef.push(["Close current tab", kCmdCloseCurrentTab]);
+    }
+  }
+
+  function closeTab(noteName) {
+    if (noteName != settings.currentNoteName) {
+      settings.removeTab(noteName);
+      return;
+    }
+    let idx = settings.tabs.indexOf(noteName);
+    settings.removeTab(noteName);
+    if (idx >= len(settings.tabs)) {
+      idx = len(settings.tabs) - 1;
+    }
+    let toOpen = settings.tabs[idx];
+    openNote(toOpen, false);
+  }
+
+  function closeCurrentTab() {
+    if (len(settings.tabs) < 2) {
+      return;
+    }
+    closeTab(settings.currentNoteName);
   }
 
   function openCommandPalette() {
@@ -1996,7 +2023,7 @@
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav class="" openNote={onOpenNote} />
+  <TopNav openNote={onOpenNote} {closeTab} />
 {/if}
 <StatusBar
   {line}
