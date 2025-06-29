@@ -187,27 +187,16 @@
     return `${n} of ${nItems} notes`;
   });
 
-  function selectionChanged(item, idx) {
-    // console.log("selectionChanged:", $state.snapshot(item), idx);
-    selectedNote = item;
-    selectedName = item ? selectedNote.name : "";
+  function recalcAvailableActions(item, name) {
     canOpenSelected = !!selectedNote;
-
-    // TODO: use lowerCase name?
-    let name = sanitizeNoteName(filter);
+    canCreateWithEnter = !(len(name) == 0) && !canOpenSelected;
     canCreate = len(name) > 0;
     for (let i of filteredNoteInfos) {
       if (i.name === name) {
         canCreate = false;
+        canCreateWithEnter = false;
         break;
       }
-    }
-
-    canCreateWithEnter = !canOpenSelected;
-    // if there are no matches for the filter, we can create with just Enter
-    // otherwise we need Ctrl + Enter
-    if (name.length === 0) {
-      canCreateWithEnter = false;
     }
 
     canDeleteSelected = false;
@@ -217,8 +206,19 @@
         canDeleteSelected = true;
       }
     }
-
     showDelete = canOpenSelected;
+  }
+
+  $effect(() => {
+    recalcAvailableActions(null, sanitizedFilter);
+  });
+
+  function selectionChanged(item, idx) {
+    // console.log("selectionChanged:", $state.snapshot(item), idx);
+    selectedNote = item;
+    selectedName = item ? selectedNote.name : "";
+
+    recalcAvailableActions(item, sanitizedFilter);
   }
 
   /**
@@ -475,6 +475,13 @@
     <div class="absolute right-[0.5rem] top-[0.25rem] italic text-gray-400">
       {notesCountMsg}
     </div>
+  </div>
+  <div class="flex justify-center mb-2">
+    {#if canCreate}
+      <button class="truncate button-outline cursor-pointer max-w-[80%]"
+        >Create Note <b>{filter}</b></button
+      >
+    {/if}
   </div>
   <ListBox
     bind:this={listboxRef}
