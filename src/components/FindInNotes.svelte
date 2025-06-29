@@ -246,7 +246,7 @@
     type="text"
     class="w-full"
     spellcheck="false"
-    placeholder="Find in notes"
+    placeholder="Find in notes, Enter to start search"
     bind:value={searchTerm}
     use:focus
     onkeydown={onKeyDown}
