@@ -104,6 +104,8 @@ When triggering the list with `Mod + H`, last 10 recently opened notes get a sho
 
 You can `Mod + H` and then press `0` to `9` to re-open recent note just using the keyboard.
 
+To open in new tab: hold `Mod` key when clicking.
+
 ## Syntax highlighting of blocks
 
 Blocks are syntax highlighted based on their type.

@@ -173,13 +173,22 @@
       </div>
     {/snippet}
   </ListBox>
-  <div class="flex text-xs justify-between ml-2 mr-3 mt-2">
-    <div class="text-gray-400">
-      tip: {modChar} + H
+  <div
+    class="flex flex-col text-xs justify-between ml-2 mr-3 mt-2 text-gray-500"
+  >
+    <div class="flex justify-between">
+      <div>
+        {modChar} + H
+      </div>
+      <div>invoke</div>
+    </div>
+    <div class="flex justify-between">
+      <div>Ctrl + click</div>
+      <div>open in new tab</div>
     </div>
     <a
       target="_blank"
-      class="underline underline-offset-2"
+      class="underline underline-offset-2 self-center"
       href="help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
     >
   </div>
