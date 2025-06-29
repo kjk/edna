@@ -105,15 +105,15 @@ export async function boot() {
   settings.currentNoteName = toOpenAtStartup;
   settings.addTab(toOpenAtStartup);
 
-  // TODO: temporary, for testing
-  // settings.addTab("inbox");
-  // settings.addTab("daily note");
-  // settings.addTab("banks, credit cards");
-  // settings.addTab("block functions");
-  // settings.addTab("comic books kindle");
-  // settings.addTab("documents");
-  // settings.addTab("block functions");
-  // settings.addTab("buying online");
+  // remove non-existing notes from tabs
+  let nTabs = settings.tabs.length;
+  for (let i = nTabs - 1; i >= 0; i--) {
+    let noteName = settings.tabs[i];
+    if (!isValidNote(noteName)) {
+      console.warn(`removing tab ${noteName} becase no note of that name`);
+      settings.tabs.splice(i, 1);
+    }
+  }
 
   console.log("mounting App");
   if (appSvelte) {
