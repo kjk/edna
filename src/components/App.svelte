@@ -902,6 +902,7 @@
 
   export const kCmdCommandPalette = nmid();
   export const kCmdOpenNote = nmid();
+  export const kCmdOpenNoteInNewTab = nmid();
   export const kCmdOpenFind = nmid();
   export const kCmdCreateNewNote = nmid();
   export const kCmdRenameCurrentNote = nmid();
@@ -1202,6 +1203,9 @@
       openCommandPalette();
     } else if (cmdId === kCmdOpenNote) {
       openNoteSelector();
+    } else if (cmdId === kCmdOpenNoteInNewTab) {
+      appState.forceNewTab = true;
+      openNoteSelector();
     } else if (cmdId === kCmdOpenFind) {
       // TODO: open search panel
     } else if (cmdId === kCmdCreateNewNote) {
@@ -1467,6 +1471,7 @@
     ["Create New Scratch Note", kCmdCreateScratchNote],
     ["Create New Note", kCmdCreateNewNote],
     ["Open recent note", kCmdOpenRecent],
+    ["Open note in new tab", kCmdOpenNoteInNewTab],
     ["Toggle Sidebar", kCmdToggleSidebar],
     ["Open note from disk", kCmdOpenNoteFromDisk],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],

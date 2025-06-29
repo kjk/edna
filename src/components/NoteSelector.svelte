@@ -301,7 +301,7 @@
    * @param {boolean} newTab
    */
   function emitOpenNote(noteInfo, newTab) {
-    // console.log("emitOpenNote", item, "newTab:", newTab);
+    // console.log("emitOpenNote", noteInfo.name, "newTab:", newTab);
     openNote(noteInfo.name, newTab);
   }
 
@@ -481,7 +481,7 @@
     bind:this={listboxRef}
     items={filteredNoteInfos}
     {selectionChanged}
-    onclick={(item, ev) => emitOpenNote(item, ev.ctrlKey)}
+    onclick={(item, ev) => emitOpenNote(item, ev?.ctrlKey)}
   >
     {#snippet renderItem(noteInfo)}
       {@const hili = hilightText(noteInfo.name, hiliRegExp)}

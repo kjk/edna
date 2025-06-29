@@ -2,6 +2,10 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.30
+
+- add tabs
+
 ## 1.29
 
 - fix replace in `Ctrl + F` find / replace UI
@@ -11,18 +15,22 @@
 - added a sidebar with list of notes. Add command `Toggle Sidebar`, setting and a toggle at the right top corner in navigation bar
 
 ## 1.27
+
 - added "Always show top navigation bar" setting. If false, we show top nav bar in upper right corner when mouse is moving or mouse is over it. If true, we always show it.
 
 ## 1.26
+
 - remember folding state
 - remember selection / cursor position
 - implement "Edit: unfold everything" that unfolds code and blocks
 - show number of matches in `Ctrl + F` find
 
 ## 1.25
+
 - implement search across all notes (`Ctrl + Shift + F`)
 
 ## 1.24
+
 - added folding of blocks:
   - `Alt + Ctrl + [` : fold current block
   - `Alt + Ctrl + ]` : unfold current block
@@ -30,15 +38,19 @@
 - and `Fold all blocks` and `Unfold all blocks` commands (available via command palette)
 
 ## 1.23
+
 - improved search UI (For `Ctrl + F`)
 
 ## 1.22
+
 - remove `Show Quick Notes Access". Instead show top navigation element only when mouse is moving (for discoverability) or is over the element
 
 ## 1.21
+
 - higlight matching part in Command Palette
 
 ## 1.20
+
 - add menu button in top nav
 - add `Show Quick Notes Access` setting to show starred notes and history in upper right corner
 - move '?' from top nav to status bar

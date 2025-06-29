@@ -17,7 +17,7 @@
 
   /** @type {{
     class?: string,
-    openNote: (name: string) => void,
+    openNote: (name: string, newTab: boolean) => void,
 }}*/
   let { class: klass, openNote } = $props();
 
@@ -109,9 +109,9 @@
 
     if (key === "Enter") {
       ev.preventDefault();
-      let name = sanitizedFilter;
+      // let name = sanitizedFilter;
       if (selectedNote) {
-        emitOpenNote(selectedNote);
+        emitOpenNote(selectedNote, false);
       }
       return;
     }
@@ -121,10 +121,11 @@
 
   /**
    * @param {NoteInfo} noteInfo
+   * @param {boolean} newTab
    */
-  function emitOpenNote(noteInfo) {
-    // console.log("emitOpenNote", item);
-    openNote(noteInfo.name);
+  function emitOpenNote(noteInfo, newTab) {
+    // console.log("emitOpenNote", noteInfo.name, newTab);
+    openNote(noteInfo.name, newTab);
   }
 
   /**
@@ -172,7 +173,7 @@
     bind:this={listboxRef}
     items={filteredNoteInfos}
     {selectionChanged}
-    onclick={(item) => emitOpenNote(item)}
+    onclick={(item, ev) => emitOpenNote(item, ev.ctrlKey)}
   >
     {#snippet renderItem(noteInfo)}
       {@const hili = hilightText(noteInfo.name, hiliRegExp)}
