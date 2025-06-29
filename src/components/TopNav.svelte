@@ -25,7 +25,7 @@
   /** @type {{ 
     class?: string,
     openNote: (name: string, newTab: boolean) => void,
-    closeTab: (name: string),
+    closeTab: (name: string) => void,
   }} */
   let { class: klass = "", openNote, closeTab } = $props();
 
