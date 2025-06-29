@@ -2003,7 +2003,11 @@
   {oncontextmenu}
 >
   {#if settings.alwaysShowTopNav}
-    <TopNav class="row-start-1 col-start-1 col-span-2" openNote={onOpenNote} />
+    <TopNav
+      class="row-start-1 col-start-1 col-span-2"
+      openNote={onOpenNote}
+      {closeTab}
+    />
   {:else}
     <div class="row-start-1 col-start-1 col-span-2"></div>
   {/if}
