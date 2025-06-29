@@ -6,7 +6,7 @@
 
   /** @type {{ 
     items: any[],
-    onclick: (any) => void,
+    onclick: (item: any, ev: any) => void,
     renderItem: any,
     selectionChanged?: (any, number) => void,
     initialSelection?: number,
@@ -132,7 +132,7 @@
     let isEnter = selectedItem && key === "Enter";
     let res = true;
     if (isEnter) {
-      onclick(selectedItem);
+      onclick(selectedItem, ev);
     } else if (isUp) {
       up();
     } else if (isDown) {
@@ -176,13 +176,12 @@
    * @param {MouseEvent} ev
    */
   function click(ev) {
-    console.log("click:", ev);
     let idx = findItemIdxForMouseEvent(ev);
     if (idx < 0) {
       return;
     }
     let item = items[idx];
-    onclick(item);
+    onclick(item, ev);
     // console.log("didn't find item for ev.target:", ev.target);
   }
 

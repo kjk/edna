@@ -119,7 +119,7 @@
 
   /** @type {{
     header?: string,
-    openNote: (name: string) => void,
+    openNote: (name: string, newTab: boolean) => void,
     createNote: (name: string) => void,
     deleteNote?: (name: string) => Promise<void>,
     switchToCommandPalette?: () => void,
@@ -279,7 +279,7 @@
         return;
       }
       if (selectedNote) {
-        emitOpenNote(selectedNote);
+        emitOpenNote(selectedNote, false);
       }
       return;
     }
@@ -298,10 +298,11 @@
 
   /**
    * @param {NoteInfo} noteInfo
+   * @param {boolean} newTab
    */
-  function emitOpenNote(noteInfo) {
-    // console.log("emitOpenNote", item);
-    openNote(noteInfo.name);
+  function emitOpenNote(noteInfo, newTab) {
+    // console.log("emitOpenNote", item, "newTab:", newTab);
+    openNote(noteInfo.name, newTab);
   }
 
   /**
@@ -480,7 +481,7 @@
     bind:this={listboxRef}
     items={filteredNoteInfos}
     {selectionChanged}
-    onclick={(item) => emitOpenNote(item)}
+    onclick={(item, ev) => emitOpenNote(item, ev.ctrlKey)}
   >
     {#snippet renderItem(noteInfo)}
       {@const hili = hilightText(noteInfo.name, hiliRegExp)}

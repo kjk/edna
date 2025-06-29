@@ -9,10 +9,10 @@
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
   /** @type {{ 
-    selectNote: (name: string) => void,
+    openNote: (name: string, newTab?: boolean) => void,
     forHistory: boolean,
   }} */
-  let { forHistory, selectNote } = $props();
+  let { forHistory, openNote } = $props();
 
   let altChar = getAltChar();
   let modChar = getModChar();
@@ -72,10 +72,6 @@
     return "";
   }
 
-  function selectItem(noteName) {
-    selectNote(noteName);
-  }
-
   /**
    * @param {KeyboardEvent} ev
    */
@@ -86,7 +82,7 @@
     if (idx >= 0 && idx <= lastIdx) {
       ev.preventDefault();
       let item = quickAccessNotes[firstInHistoryIdx + idx];
-      selectItem(item.name);
+      openNote(item.name, ev.ctrlKey);
       return;
     }
 
@@ -131,7 +127,9 @@
   <ListBox
     bind:this={listboxRef}
     items={quickAccessNotes}
-    onclick={(noteInfo) => selectItem(noteInfo.name)}
+    onclick={(noteInfo, ev) => {
+      openNote(noteInfo.name, ev.ctrlKey);
+    }}
     {initialSelection}
     compact={true}
   >

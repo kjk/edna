@@ -1,10 +1,18 @@
 import { kScratchNoteName } from "./notes";
 import { appState } from "./state.svelte";
-import { copyObj, len, platform, throwIf } from "./util";
+import {
+  arrayRemove,
+  copyObj,
+  len,
+  platform,
+  pushIfNotExists,
+  throwIf,
+} from "./util";
 
 const settingsKeys = [
   "bracketClosing",
   "currentNoteName",
+  "tabs",
   "emacsMetaKey",
   "fontFamily",
   "fontSize",
@@ -20,6 +28,7 @@ const settingsKeys = [
 export class Settings {
   bracketClosing = $state(true);
   currentNoteName = $state(kScratchNoteName);
+  tabs = $state([]);
   emacsMetaKey = $state("alt");
   /** @type { string} */
   fontFamily = $state(undefined);
@@ -42,6 +51,12 @@ export class Settings {
         this[key] = settings[key];
       }
     }
+  }
+  addTab(noteName) {
+    pushIfNotExists(this.tabs, noteName);
+  }
+  removeTab(noteName) {
+    arrayRemove(this.tabs, noteName);
   }
   toJSON() {
     return copyObj(this, settingsKeys);

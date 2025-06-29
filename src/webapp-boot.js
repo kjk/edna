@@ -1,5 +1,9 @@
 import "./main.css";
-
+import { mount, unmount } from "svelte";
+import App from "./components/App.svelte";
+import AskFSPermissions from "./components/AskFSPermissions.svelte";
+import { hasHandlePermission } from "./fileutil";
+import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import {
   createDefaultNotes,
   dbGetDirHandle,
@@ -10,14 +14,8 @@ import {
   preLoadAllNotes,
   setStorageFS,
 } from "./notes";
-import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import { getSettings } from "./settings.svelte";
 import { isDev } from "./util";
-import { mount, unmount } from "svelte";
-
-import App from "./components/App.svelte";
-import AskFSPermissions from "./components/AskFSPermissions.svelte";
-import { hasHandlePermission } from "./fileutil";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
 
@@ -105,6 +103,18 @@ export async function boot() {
 
   // will open this note in Editor.vue on mounted()
   settings.currentNoteName = toOpenAtStartup;
+  settings.addTab(toOpenAtStartup);
+
+  // TODO: temporary, for testing
+  // settings.addTab("inbox");
+  // settings.addTab("daily note");
+  // settings.addTab("banks, credit cards");
+  // settings.addTab("block functions");
+  // settings.addTab("comic books kindle");
+  // settings.addTab("documents");
+  // settings.addTab("block functions");
+  // settings.addTab("buying online");
+
   console.log("mounting App");
   if (appSvelte) {
     unmount(appSvelte);

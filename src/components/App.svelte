@@ -206,6 +206,9 @@
     showingHistorySelector = false;
     showingBlockSelector = false;
     showingFindInNotes = false;
+
+    appState.forceNewTab = false;
+
     getEditorComp().focus();
   }
 
@@ -1740,7 +1743,7 @@
   }
 
   async function onRename(newName) {
-    showingRenameNote = false;
+    closeDialogs();
     let editor = getEditor();
     let s = editor.getContent() || "";
     await renameNote(noteName, newName, s);
@@ -1752,14 +1755,36 @@
     showingHistorySelector = true;
   }
 
-  function onSelectHistory(name) {
-    // console.log("onSelectHistory:", name);
+  /**
+   * @param {string} name
+   */
+  async function onOpenNote(name, newTab = false) {
+    // must get before closeDialg()
+    let forceNewTab = appState.forceNewTab;
+
     closeDialogs();
-    if (name != noteName) {
-      openNote(name);
-    } else {
-      // console.log("onSelectHistory: skipping opening becase same note");
+    if (name == settings.currentNoteName) {
+      return;
     }
+    console.warn("onOpenNote: name:", name, "newTab:", newTab);
+    if (forceNewTab) {
+      newTab = true;
+      console.warn("forcing new tab");
+    }
+
+    function maybeReplaceCurrentTab() {
+      if (newTab || settings.tabs.includes(name)) {
+        return;
+      }
+      // replace current tab with new note
+      let idx = settings.tabs.indexOf(settings.currentNoteName);
+      if (idx >= 0) {
+        // openNote() will change settings.currentNoteName to
+        settings.tabs[idx] = name;
+      }
+    }
+    maybeReplaceCurrentTab();
+    await openNote(name);
   }
 
   /**
@@ -1776,14 +1801,6 @@
     // await sleep(400);
     clearModalMessage();
     getEditorComp().focus();
-  }
-
-  /**
-   * @param {string} name
-   */
-  function onOpenNote(name) {
-    closeDialogs();
-    openNote(name);
   }
 
   function openNoteFind(name, pos) {
@@ -1914,7 +1931,6 @@
   function didLoadNote(name, noPushHistory = false) {
     console.log("didLoadNote:", name);
     throwIf(!name);
-    noteName = name;
     console.log("onDocChanged: just opened");
     let editor = editorRef.getEditor();
     let readOnly = isSystemNoteName(name);
@@ -1931,6 +1947,7 @@
       // console.log("journal, so going to next block");
       // editor.gotoNextBlock();
     }
+    settings.addTab(name);
     updateDocSize();
   }
 
@@ -1954,11 +1971,7 @@
   {oncontextmenu}
 >
   {#if settings.alwaysShowTopNav}
-    <TopNav
-      class="row-start-1 col-start-1 col-span-2"
-      selectNote={onSelectHistory}
-      {noteName}
-    />
+    <TopNav class="row-start-1 col-start-1 col-span-2" openNote={onOpenNote} />
   {:else}
     <div class="row-start-1 col-start-1 col-span-2"></div>
   {/if}
@@ -1978,7 +1991,7 @@
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav class="" selectNote={onSelectHistory} {noteName} />
+  <TopNav class="" openNote={onOpenNote} />
 {/if}
 <StatusBar
   {line}
@@ -1995,7 +2008,7 @@
 
 {#if showingHistorySelector}
   <Overlay onclose={closeDialogs} blur={true}>
-    <QuickAccess selectNote={onSelectHistory} forHistory={true} />
+    <QuickAccess openNote={onOpenNote} forHistory={true} />
   </Overlay>
 {/if}
 

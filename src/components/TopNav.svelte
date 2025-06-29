@@ -9,22 +9,24 @@
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
   import { getSettings } from "../settings.svelte.js";
-  import { getAltChar } from "../util.js";
+  import { appState } from "../state.svelte.js";
+  import { getAltChar, len } from "../util.js";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
     IconCommandPalette,
     IconMdiArrowCollapseLeft,
     IconMdiArrowCollapseRight,
     IconMenu,
+    IconTablerPlus,
+    IconTablerX,
   } from "./Icons.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
   /** @type {{ 
     class?: string,
-    noteName: string,
-    selectNote: (name: string) => void,
+    openNote: (name: string, newTab: boolean) => void,
   }} */
-  let { class: klass, selectNote, noteName = "" } = $props();
+  let { class: klass, openNote } = $props();
 
   let altChar = getAltChar();
 
@@ -40,11 +42,13 @@
     return "";
   }
 
-  let shortcut = $derived(getNoteShortcut(noteName));
-
-  function mySelectNote(item) {
+  /**
+   * @param {string} noteName
+   * @param {boolean} newTab
+   */
+  function myOpenNote(noteName, newTab) {
     showingQuickAccess = false;
-    selectNote(item);
+    openNote(noteName, newTab);
   }
 
   let settings = getSettings();
@@ -100,13 +104,26 @@
     console.log("url:", url);
     showingHelp = false;
     if (url.startsWith("system:")) {
-      selectNote(url);
+      openNote(url, true);
       return;
     }
     if (!url.startsWith("http")) {
       url = window.location.origin + url;
     }
     window.open(url, "_blank");
+  }
+  function closeTab(noteName) {
+    if (noteName != settings.currentNoteName) {
+      settings.removeTab(noteName);
+      return;
+    }
+    let idx = settings.tabs.indexOf(noteName);
+    settings.removeTab(noteName);
+    if (idx >= len(settings.tabs)) {
+      idx = len(settings.tabs) - 1;
+    }
+    let toOpen = settings.tabs[idx];
+    openNote(toOpen, false);
   }
 </script>
 
@@ -159,31 +176,54 @@
     {/if}
   </div>
 
-  <button
-    class="ml-2 flex bg-white dark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg"
-    onclick={openNoteSelector}
-    title={fixUpShortcuts("Click To Open Another Note (Mod + K)")}
-  >
-    <div class="max-w-32 truncate">
-      {noteName}
-      {#if shortcut}
-        <span
-          class=" text-xs"
-          title="This Note Quick Access Shortcut ({shortcut})"
-        >
-          {shortcut}
-        </span>
-      {/if}
-    </div>
-  </button>
+  <div class="flex items-center overflow-hidden">
+    {#each settings.tabs as noteName}
+      {@const isSelected = noteName == settings.currentNoteName}
+      {@const shortcut = getNoteShortcut(noteName)}
+      {@const cls = isSelected ? "bg-gray-100" : "bg-white"}
+      <button
+        class="truncate flex justify-between whitespace-nowrap flex-[1] ml-2 flexdark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg {cls}"
+        onclick={() => openNote(noteName, false)}
+        title={noteName}
+      >
+        <div class="max-w-32 truncate">
+          {noteName}
+          {#if shortcut}
+            <span
+              class=" text-xs"
+              title="This Note Quick Access Shortcut ({shortcut})"
+            >
+              {shortcut}
+            </span>
+          {/if}
+        </div>
+        {#if len(settings.tabs) > 1}
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div
+            onclick={(ev) => {
+              ev.stopPropagation();
+              closeTab(noteName);
+            }}
+            class="hover:bg-red-300 hover:text-red-600"
+          >
+            {@render IconTablerX()}
+          </div>
+        {/if}
+      </button>
+    {/each}
+  </div>
 
-  <!-- <button
-    onclick={openNoteSelector}
+  <button
+    onclick={() => {
+      appState.forceNewTab = true;
+      openNoteSelector();
+    }}
     class="clickable-icon ml-1 px-1!"
     title={"Open note in a new tab"}
   >
     {@render IconTablerPlus()}
-  </button> -->
+  </button>
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
@@ -196,10 +236,9 @@
   >
     &nbsp;⏷
     {#if showingQuickAccess}
-      <QuickAccess selectNote={mySelectNote} forHistory={false} />
+      <QuickAccess openNote={myOpenNote} forHistory={false} />
     {/if}
   </div>
-
   {#if settings.alwaysShowTopNav}
     <div class="grow"></div>
     <a

@@ -23,6 +23,8 @@ class AppState {
   history = $state([]); // names of opened notes
   /** @type {import("./settings.svelte").Settings} */
   settings = $state(undefined); // user settings
+
+  forceNewTab = false;
 }
 
 /** @returns {string[]} */

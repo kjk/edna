@@ -520,3 +520,16 @@ export function copyObj(src, keys) {
   }
   return res;
 }
+
+export function pushIfNotExists(arr, item) {
+  if (!arr.includes(item)) {
+    arr.push(item);
+  }
+}
+
+export function arrayRemove(arr, item) {
+  let i = arr.indexOf(item);
+  if (i >= 0) {
+    arr.splice(i, 1);
+  }
+}
