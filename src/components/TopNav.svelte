@@ -50,12 +50,12 @@
    * @param {string} noteName
    * @returns {string}
    */
-  function getNoteShortcut(noteName) {
+  function getNameWithShortcut(noteName) {
     let m = getNoteMeta(noteName);
     if (m && m.altShortcut) {
-      return `${altChar} + ${m.altShortcut}`;
+      return `${noteName}  (${altChar} + ${m.altShortcut})`;
     }
-    return "";
+    return noteName;
   }
 
   /**
@@ -214,23 +214,14 @@
   <div class="flex items-center overflow-hidden">
     {#each settings.tabs as noteName}
       {@const isSelected = noteName == settings.currentNoteName}
-      {@const shortcut = getNoteShortcut(noteName)}
       {@const cls = isSelected ? "bg-gray-100" : "bg-white"}
       <button
         class="truncate flex justify-between whitespace-nowrap flex-[1] ml-2 flexdark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg {cls}"
         onclick={() => openNote(noteName, false)}
-        title={noteName}
+        title={getNameWithShortcut(noteName)}
       >
         <div class="max-w-32 truncate">
           {noteName}
-          {#if shortcut}
-            <span
-              class=" text-xs"
-              title="This Note Quick Access Shortcut ({shortcut})"
-            >
-              {shortcut}
-            </span>
-          {/if}
         </div>
         {#if len(settings.tabs) > 1}
           <!-- svelte-ignore a11y_click_events_have_key_events -->
