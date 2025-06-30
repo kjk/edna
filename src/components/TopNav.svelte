@@ -172,7 +172,6 @@
       }
     }}
     class="clickable-icon relative"
-    title="open menu"
   >
     {@render IconMenu()}
     {#if shwingMenu}
