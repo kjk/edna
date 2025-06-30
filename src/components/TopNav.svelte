@@ -210,7 +210,7 @@
       {@const isSelected = noteName == settings.currentNoteName}
       {@const cls = isSelected ? "bg-gray-100" : "bg-white"}
       <button
-        class="truncate flex justify-between whitespace-nowrap flex-[1] ml-2 flexdark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg {cls}"
+        class="truncate flex justify-between whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg {cls}"
         onclick={() => openNote(noteName, false)}
         title={getNameWithShortcut(noteName)}
       >

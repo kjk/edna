@@ -265,24 +265,10 @@
 {/snippet}
 
 <div
-  class="absolute top-[2rem] left-1/2 -translate-x-1/2 z-20 bg-white text-sm w-4/5 shadow-lg border border-gray-300 max-h-[90vh] flex flex-col p-2"
+  class="absolute top-[2rem] left-1/2 -translate-x-1/2 z-20 bg-white dark:text-sm w-4/5 shadow-lg border border-gray-300 max-h-[90vh] flex flex-col p-2 selector-colors"
   use:trapfocus
 >
   <div class="flex flex-row mb-2">
-    {#if false}
-      <div class="flex mr-1">
-        {#if showReplace}
-          <button onclick={toggleShowReplace} title="hide replace"
-            >{@render IconTablerChevronDown()}</button
-          >
-        {:else}
-          <button onclick={toggleShowReplace} title="show replace"
-            >{@render IconTablerChevronRight()}</button
-          >
-        {/if}
-      </div>
-    {/if}
-
     <div class="flex flex-col grow">
       <div class="flex">
         <!-- top row -->
@@ -342,9 +328,11 @@
     </div>
   {/if}
   <div
-    class="flex justify-between text-gray-700 text-xs max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
+    class="flex justify-center gap-4 text-gray-700 text-xs max-w-full dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg px-2 pt-1 pb-1.5 mt-2"
   >
     <div>Enter: start search</div>
+    <div>Esc: dismiss</div>
+    <a href="/help#search-in-notes" target="_blank">learn more</a>
   </div>
 </div>
 
@@ -352,9 +340,13 @@
   @reference "../main.css";
 
   input {
-    @apply bg-white px-2 py-1 border-1 border-gray-200 outline-1 outline-gray-200;
+    @apply bg-white px-2 py-1 border-1 border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;
+  }
+
+  a {
+    @apply underline underline-offset-2;
   }
   button {
-    @apply px-[6px] py-[2px] hover:bg-gray-200;
+    @apply px-[6px] py-[2px] hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
   }
 </style>

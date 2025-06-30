@@ -127,6 +127,10 @@ select {
   @apply dark:bg-gray-900 dark:text-gray-300;
 }
 
+.selector-colors {
+  @apply dark:bg-gray-900 dark:text-gray-300;
+}
+
 .red {
   @apply text-red-500 dark:text-red-400;
 }

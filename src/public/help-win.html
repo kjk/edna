@@ -172,6 +172,18 @@ Ctrl + Shift + F       Search in all notes
 <p><code>scratch</code> note is meant for temporary notes.</p>
 <p><code>inbox</code> for storing things to process later e.g. links to YouTube videos to watch later or web pages to read later.</p>
 <p><code>daily journal</code> is for daily notes. We auto-create a block for each day.</p>
+<h1 id="search-in-notes" tabindex="-1"><a class="header-anchor" href="#search-in-notes">Search in notes</a></h1>
+<p>To invoke full-text search in notes:</p>
+<ul>
+<li><code>Ctrl + Shift + F</code></li>
+<li><code>Find in notes</code> in Command Palette (Ctrl + Shift + K)</li>
+</ul>
+<p>The search algorightm is:</p>
+<ul>
+<li>if you search for <code>foo,</code> it'll find all lines that have <code>foo</code></li>
+<li>if you search for <code>foo bar</code>, it'll find all lines that have <code>foo</code> <strong>AND</strong> <code>bar</code></li>
+<li>if you want exact search: <code>&quot;foo bar&quot;</code></li>
+</ul>
 <h1 id="storing-notes-on-disk" tabindex="-1"><a class="header-anchor" href="#storing-notes-on-disk">Storing notes on disk</a></h1>
 <p>By default notes are stored in the browser (localStorage).</p>
 <p>If your browser supports file system access (currently Chrome and Edge) you can store notes on disk.</p>

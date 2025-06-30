@@ -349,7 +349,7 @@
 {/snippet}
 
 <div
-  class="fixed top-[2px] left-1/2 -translate-x-1/2 z-20 px-1 py-1 bg-white text-sm max-w-4/5 shadow-lg border border-gray-300"
+  class="selector-colors fixed top-[2px] left-1/2 -translate-x-1/2 z-20 px-1 py-1 bg-white text-sm max-w-4/5 shadow-lg border border-gray-300 dark:border-gray-700"
   use:trapfocus
 >
   <div class="flex flex-row">
@@ -396,9 +396,10 @@
   @reference "../main.css";
 
   input {
-    @apply bg-white px-2 py-1 border-1 border-gray-200 outline-1 outline-gray-200;
+    @apply bg-white px-2 py-1 border-1 border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;
   }
+
   button {
-    @apply px-[6px] py-[2px] hover:bg-gray-200;
+    @apply px-[6px] py-[2px] hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
   }
 </style>

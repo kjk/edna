@@ -1,7 +1,11 @@
 <script>
   import { tick } from "svelte";
   import { foldCode, unfoldCode } from "@codemirror/language";
-  import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
+  import {
+    closeSearchPanel,
+    openSearchPanel,
+    searchPanelOpen,
+  } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
   import {
@@ -968,6 +972,8 @@
   export const kCmdNoteToggleStarred = nmid();
   export const kCmdOpenNoteFromDisk = nmid();
   export const kCmdToggleSidebar = nmid();
+  export const kCmdFind = nmid();
+  export const kCmdFindInNotes = nmid();
 
   function buildMenuDef() {
     // let starAction = "Star";
@@ -1201,6 +1207,11 @@
     return selectedText != "";
   }
 
+  function openFindPanel() {
+    let view = getEditorView();
+    openSearchPanel(view);
+  }
+
   /**
    * @param {number} cmdId
    * @param ev
@@ -1364,6 +1375,10 @@
       if (!settings.showSidebar) {
         view.focus();
       }
+    } else if (cmdId === kCmdFind) {
+      openFindPanel();
+    } else if (cmdId === kCmdFindInNotes) {
+      openFindInNotes();
     } else {
       console.log("unknown menu cmd id");
     }
@@ -1494,6 +1509,8 @@
     ["Open recent note", kCmdOpenRecent],
     ["Open note in new tab", kCmdOpenNoteInNewTab],
     ["Toggle Sidebar", kCmdToggleSidebar],
+    ["Find", kCmdFind],
+    ["Find in notes", kCmdFindInNotes],
     ["Open note from disk", kCmdOpenNoteFromDisk],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
@@ -1850,7 +1867,7 @@
     getEditorComp().focus();
   }
 
-  function openNoteFind(name, pos) {
+  function openNoteFromFind(name, pos) {
     closeDialogs();
     openNote(name).then(() => {
       // TODO: this is not reliable, must pass pos down via openNote()
@@ -2173,7 +2190,7 @@
 
 {#if showingFindInNotes}
   <Overlay blur={true} onclose={closeDialogs}>
-    <FindInNotes openNote={openNoteFind}></FindInNotes>
+    <FindInNotes openNote={openNoteFromFind}></FindInNotes>
   </Overlay>
 {/if}
 

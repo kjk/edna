@@ -177,6 +177,18 @@ You can delete them (except the `scratch` note).
 
 `daily journal` is for daily notes. We auto-create a block for each day.
 ∞∞∞markdown
+# Search in notes
+
+To invoke full-text search in notes:
+- `Mod + Shift + F`
+- `Find in notes` in Command Palette (Mod + Shift + K)
+
+The search algorightm is:
+- if you search for `foo,` it'll find all lines that have `foo`
+- if you search for `foo bar`, it'll find all lines that have `foo` **AND** `bar`
+- if you want exact search: `"foo bar"`
+
+∞∞∞markdown
 # Storing notes on disk
 
 By default notes are stored in the browser (localStorage).
