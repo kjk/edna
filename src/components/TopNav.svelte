@@ -71,12 +71,12 @@
   let showingQuickAccess = $state(false);
   let cls = $derived.by(() => {
     if (settings.alwaysShowTopNav) {
-      return "bg-white";
+      return "bg-gray-200";
     }
     if (isMoving.moving) {
-      return "visible fixed top-0 z-10 right-0 border-l rounded-lg";
+      return "visible fixed top-0 z-10 right-0";
     }
-    return "invisible fixed top-0 z-10 right-0 border-l rounded-lg";
+    return "invisible fixed top-0 z-10 right-0";
   });
 
   /** @type {HTMLElement} */
@@ -139,7 +139,7 @@
 </script>
 
 <div
-  class="flex bg-white text-sm px-1 select-none text-gray-900 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 items-center border-b {cls} hover:visible {klass}"
+  class="flex bg-gray-200 text-sm px-1 select-none text-gray-900 dark:bg-gray-500 dark:text-gray-300 items-center {cls} hover:visible {klass}"
 >
   {#if settings.showSidebar}
     <button
@@ -208,9 +208,11 @@
   <div class="flex items-center overflow-hidden">
     {#each settings.tabs as noteName}
       {@const isSelected = noteName == settings.currentNoteName}
-      {@const cls = isSelected ? "bg-gray-100" : "bg-white"}
+      {@const cls = isSelected
+        ? "bg-white hover:bg-white! dark:bg-gray-800 dark:hover:bg-gray-800!"
+        : "bg-gray-200 dark:bg-gray-500! hover:bg-gray-100 cursor-pointer"}
       <button
-        class="truncate flex justify-between whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 align-baseline cursor-pointer clickable-icon text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 items-center border-b border-l border-r rounded-b-lg {cls}"
+        class="truncate justify-between whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 align-baseline clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 items-center {cls}"
         onclick={() => openNote(noteName, false)}
         title={getNameWithShortcut(noteName)}
       >
