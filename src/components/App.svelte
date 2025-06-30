@@ -1394,6 +1394,7 @@
    * @param {{x: number, y: number}} pos
    */
   async function openContextMenu(ev, pos = null) {
+    console.warn("openContextMenu: ev:", ev, "pos:", pos);
     ev.preventDefault();
     ev.stopPropagation();
     ev.stopImmediatePropagation();

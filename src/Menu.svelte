@@ -98,6 +98,7 @@
 </script>
 
 <script>
+  import { onMount } from "svelte";
   import { ensurevisible, focus } from "./actions.js";
   import { extractShortcut } from "./keys.js";
   import { len, splitMax } from "./util.js";
@@ -397,8 +398,16 @@
   }
 
   function initialPositionStyle() {
-    let st = `left: ${pos.x}px; top: ${pos.y}px`;
-    // console.log("initialStyle:", st);
+    let st = "";
+    // hack: when used as a drop-down of relative element
+    // we position it just right relative to the icon
+    if (!pos) {
+      st = `left: -12px; top: 14px`;
+    } else {
+      // otherwise it's a mouse click so initial position where mouse is
+      st = `left: ${pos.x}px; top: ${pos.y}px`;
+    }
+    // console.log("initialStyle:", st, "pos:", pos);
     return st;
   }
 
@@ -411,7 +420,15 @@
     didSelectFirst = true;
     selectFirst(rootMenu);
   });
+
+  /** @type {HTMLElement} */
   let menuRef;
+  onMount(() => {
+    if (pos) {
+      // invoked via mouse click
+      ensurevisible(menuRef);
+    }
+  });
 </script>
 
 {#snippet separator(mi)}
@@ -508,13 +525,12 @@
   role="menu"
   tabindex="-1"
   use:focus
-  use:ensurevisible
+  bind:this={menuRef}
   class="absolute z-20 mt-1 rounded-md border border-neutral-50 bg-white dark:bg-gray-700 dark:text-gray-300 py-1 shadow-lg focus:outline-hidden cursor-pointer select-none"
   style={initialPositionStyle()}
   onclick={handleClicked}
   onmouseover={handleMouseOver}
   onkeydown={handleKeydown}
-  bind:this={menuRef}
 >
   {@render menuItems(rootMenu)}
 </div>

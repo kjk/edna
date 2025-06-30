@@ -117,7 +117,6 @@
   let showingHelp = $state(false);
 
   function openURLOrNote(url) {
-    console.log("url:", url);
     showingHelp = false;
     if (url.startsWith("system:")) {
       openNote(url, true);
@@ -131,9 +130,10 @@
 
   let shwingMenu = $state(false);
   let noFocusEditorOnMenuOut = false;
+  let menuPos = { x: 0, y: 0 };
   function myOnMenuCmd(cmdid) {
-    console.warn("myOnMenuCmd");
     noFocusEditorOnMenuOut = true;
+    shwingMenu = false;
     onmenucmd(cmdid);
   }
 </script>
@@ -160,30 +160,24 @@
   {/if}
 
   <button
-    onmouseenter={() => {
+    onmouseenter={(ev) => {
+      menuPos = { x: ev.x, y: ev.y };
       noFocusEditorOnMenuOut = false;
       shwingMenu = true;
     }}
     onmouseleave={() => {
       shwingMenu = false;
-      console.warn("mouseleave");
       if (!noFocusEditorOnMenuOut) {
         focusEditor();
       }
     }}
-    onclick={openContextMenu}
-    class="clickable-icon"
+    class="clickable-icon relative"
     title="open menu"
   >
     {@render IconMenu()}
     {#if shwingMenu}
       {@const menuDef = buildMenuDef()}
-      <Menu
-        {menuItemStatus}
-        onmenucmd={myOnMenuCmd}
-        {menuDef}
-        pos={{ x: 10, y: 10 }}
-      />
+      <Menu {menuItemStatus} onmenucmd={myOnMenuCmd} {menuDef} pos={null} />
     {/if}
   </button>
 
