@@ -180,13 +180,13 @@
     {/if}
   </button>
 
-  <button
+  <!-- <button
     onclick={openCommandPalette}
     class="clickable-icon"
     title={fixUpShortcuts("Command Palette (Mod + Shift + K)")}
   >
     {@render IconCommandPalette()}
-  </button>
+  </button> -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div
