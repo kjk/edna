@@ -940,6 +940,11 @@ export async function renameNote(oldName, newName, content) {
   // remove from history and metadata
   await renameNoteInMetadata(oldName, newName);
   renameNoteInHistory(oldName, newName);
+  let settings = getSettings();
+  let idx = settings.tabs.indexOf(oldName);
+  if (idx >= 0) {
+    settings.tabs[idx] = newName;
+  }
   await deleteNote(oldName);
 }
 

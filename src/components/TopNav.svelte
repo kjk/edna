@@ -1,11 +1,5 @@
 <script>
-  import {
-    focusEditor,
-    openCommandPalette,
-    openContextMenu,
-    openNoteSelector,
-  } from "../globals.js";
-  import { fixUpShortcuts } from "../key-helper.js";
+  import { focusEditor, openNoteSelector } from "../globals.js";
   import Menu from "../Menu.svelte";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
@@ -14,7 +8,6 @@
   import { getAltChar, len } from "../util.js";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
-    IconCommandPalette,
     IconMdiArrowCollapseLeft,
     IconMdiArrowCollapseRight,
     IconMenu,
@@ -30,6 +23,7 @@
     class?: string,
     openNote: (name: string, newTab: boolean) => void,
     closeTab: (name: string) => void,
+
     buildMenuDef: any,
     menuItemStatus?: (mi: MenuItemDef) => number,
     onmenucmd: (cmd: number) => void,

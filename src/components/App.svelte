@@ -1807,6 +1807,7 @@
   }
 
   async function onRename(newName) {
+    let noteName = settings.currentNoteName;
     closeDialogs();
     let editor = getEditor();
     let s = editor.getContent() || "";
