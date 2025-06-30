@@ -1516,9 +1516,6 @@
     console.log("commandPaletteAdditions:", commandPaletteAdditions);
     let name = commandNameOverride(kCmdToggleSpellChecking);
     commandsDef.push([name, kCmdToggleSpellChecking]);
-    if (len(settings.tabs) > 1) {
-      commandsDef.push(["Close current tab", kCmdCloseCurrentTab]);
-    }
   }
 
   function closeTab(noteName) {
