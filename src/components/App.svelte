@@ -979,6 +979,7 @@
     }
 
     const menuNote = [
+      ["Close", kCmdCloseCurrentTab],
       ["Rename", kCmdRenameCurrentNote],
       ["Delete", kCmdDeleteCurrentNote],
       [starAction, kCmdNoteToggleStarred],
@@ -1181,6 +1182,10 @@
       mid === kCmdRunFunctionWithSelection
     ) {
       if (mid === kCmdRunFunctionWithSelection && !hasSelection()) {
+        return kMenuStatusDisabled;
+      }
+    } else if (mid === kCmdCloseCurrentTab) {
+      if (len(settings.tabs) < 2) {
         return kMenuStatusDisabled;
       }
     }
