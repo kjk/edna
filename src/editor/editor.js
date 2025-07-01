@@ -1,16 +1,17 @@
-import { markdown } from "@codemirror/lang-markdown";
+import { markdown, markdownKeymap } from "@codemirror/lang-markdown";
 import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
 import {
   Compartment,
   EditorSelection,
   EditorState,
+  Prec,
   Transaction,
 } from "@codemirror/state";
 import {
+  keymap as cmKeymap,
   drawSelection,
   EditorView,
   lineNumbers,
-  ViewPlugin,
 } from "@codemirror/view";
 import { getNoteMeta, saveNotesMetadata } from "../metadata.js";
 import { loadNote, saveNote } from "../notes.js";
@@ -143,7 +144,8 @@ export class EdnaEditor {
 
         todoCheckboxPlugin,
         // foldNotifications(this),
-        markdown(),
+        markdown({ addKeymap: false }),
+        Prec.highest(cmKeymap.of(markdownKeymap)),
         links,
       ],
     });

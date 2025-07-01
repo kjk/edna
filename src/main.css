@@ -152,9 +152,9 @@ select {
 
 /* without this the space between checkbox and text is really large
    I have no idea why this helps */
-.cm-taskmarker-toggle {
+/* .cm-taskmarker-toggle {
   font-family: ui-monospace;
-}
+} */
 
 .hili {
   @apply bg-yellow-200 dark:bg-yellow-800 font-semibold;
