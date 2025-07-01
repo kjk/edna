@@ -1,7 +1,7 @@
 import { tick } from "svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { getStorageFS } from "./notes";
-import { updateStarred, updateWithShortcuts } from "./state.svelte";
+import { updateStarred } from "./state.svelte";
 
 export const kMetadataName = "__metadata.edna.json";
 
@@ -9,6 +9,7 @@ export const kMetadataName = "__metadata.edna.json";
     name: string,
     altShortcut?: string,
     isStarred?: boolean,
+    isArchived?: boolean,
     foldedRanges?: { from: number, to: number }[],
     selection? : any,
 }} NoteMetadata */

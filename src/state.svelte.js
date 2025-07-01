@@ -3,6 +3,10 @@ import { getNoteMeta } from "./metadata";
 class AppState {
   /** @type {string[]} */
   noteNames = $state([]);
+
+  /** @type {string[]} */
+  archivedNoteNames = $derived(calcArchived(this.noteNames));
+
   /** @type {string[]} */
   starredNotes = $derived(calcStarred(this.noteNames)); // starred notes
   /** @type {string[]} */
@@ -41,6 +45,19 @@ function calcStarred(noteNames) {
 }
 
 /** @returns {string[]} */
+function calcArchived(noteNames) {
+  /** @type {string[]} */
+  let res = [];
+  for (let name of noteNames) {
+    let m = getNoteMeta(name, false);
+    if (m && m.isArchived) {
+      res.push(name);
+    }
+  }
+  return res;
+}
+
+/** @returns {string[]} */
 function callcWithShortcuts(noteNames) {
   /** @type {string[]} */
   let res = [];
@@ -55,6 +72,10 @@ function callcWithShortcuts(noteNames) {
 
 export function updateStarred() {
   appState.starredNotes = calcStarred(appState.noteNames);
+}
+
+export function updateArchived() {
+  appState.archivedNoteNames = calcArchived(appState.noteNames);
 }
 
 export function updateWithShortcuts() {
