@@ -996,7 +996,7 @@
       ["Rename", kCmdRenameCurrentNote],
       [starAction, kCmdNoteToggleStarred],
       ["Archive", kCmdArchiveCurrentNote],
-      ["UnArchive", kCmdUnArchiveCurrentNote],
+      ["Un-archive", kCmdUnArchiveCurrentNote],
       ["Move to trash", kCmdMoveNoteToTrash],
       ["Restore from trash", kCmdRestoreNoteFromTrash],
       ["Permanently delte", kCmdPermanentlyDeleteNote],
@@ -1217,7 +1217,9 @@
         return kMenuStatusRemoved;
       }
     } else if (mid === kCmdPermanentlyDeleteNote) {
-      if (!canDeleteNote(noteName)) {
+      // only show permanently delete for notes in trash
+      // should show always (for notes that can be deleted)?
+      if (!isNoteTrashed(noteName)) {
         return kMenuStatusRemoved;
       }
     } else if (mid === kCmdArchiveCurrentNote) {
@@ -1267,22 +1269,30 @@
       // TODO: open search panel
     } else if (cmdId === kCmdCreateNewNote) {
       openCreateNewNote();
+      view.focus();
     } else if (cmdId === kCmdCloseCurrentTab) {
       closeCurrentTab();
+      view.focus();
     } else if (cmdId === kCmdRenameCurrentNote) {
       showingRenameNote = true;
     } else if (cmdId === kCmdMoveNoteToTrash) {
       moveNoteToTrash(settings.currentNoteName);
+      view.focus();
     } else if (cmdId === kCmdRestoreNoteFromTrash) {
       restoreNoteFromTrash(settings.currentNoteName);
+      view.focus();
     } else if (cmdId == kCmdPermanentlyDeleteNote) {
       deleteNotePermanently(settings.currentNoteName, true);
+      view.focus();
     } else if (cmdId === kCmdArchiveCurrentNote) {
       archiveNote(settings.currentNoteName);
+      view.focus();
     } else if (cmdId === kCmdUnArchiveCurrentNote) {
       unArchiveNote(settings.currentNoteName);
+      view.focus();
     } else if (cmdId === kCmdCreateScratchNote) {
       await createScratchNote();
+      view.focus();
     } else if (cmdId === kCmdNewBlockAfterCurrent) {
       addNewBlockAfterCurrent(view);
       view.focus();
@@ -1470,7 +1480,11 @@
     kCmdRenameCurrentNote,
     "Rename current note",
     kCmdMoveNoteToTrash,
-    "Delete current note",
+    "Move note to trash",
+    kCmdRestoreNoteFromTrash,
+    "Restore note from trash",
+    kCmdPermanentlyDeleteNote,
+    "Delete note permanently",
     kCmdExportCurrentNote,
     "Export current note to a file",
     kCmdExportCurrentBlock,
@@ -1483,6 +1497,38 @@
     "Help",
     kCmdShowHelpAsNote,
     "Help as note",
+    kCmdCloseCurrentTab,
+    "Close tab",
+    kCmdArchiveCurrentNote,
+    "Archive note",
+    kCmdUnArchiveCurrentNote,
+    "Un-archive note",
+  ];
+
+  const commandPaletteAdditions = [
+    ["Create New Scratch Note", kCmdCreateScratchNote],
+    ["Create New Note", kCmdCreateNewNote],
+    ["Open recent note", kCmdOpenRecent],
+    ["Open note in new tab", kCmdOpenNoteInNewTab],
+    ["Toggle Sidebar", kCmdToggleSidebar],
+    ["Find", kCmdFind],
+    ["Find in notes", kCmdFindInNotes],
+    ["Search", kCmdSearch],
+    ["Search in notes", kCmdSearchInNotes],
+    ["Open note from disk", kCmdOpenNoteFromDisk],
+    ["Block: Fold all blocks", kCmdFoldAllBlocks],
+    ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
+    ["Edit: Unfold everything", kCmdUnfoldEverything],
+    // ["Export current note", kCmdExportCurrentNote],
+    ...(isMac
+      ? [
+          ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
+          ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
+        ]
+      : [
+          ["Edit: Fold code\tCtrl-Shift-[", kCmdFoldCode],
+          ["Edit: Unfold code\tCtrl-Shift-]", kCmdUnfoldColde],
+        ]),
   ];
 
   function commandNameOverride(id, name) {
@@ -1544,36 +1590,10 @@
     return a;
   }
 
-  const commandPaletteAdditions = [
-    ["Create New Scratch Note", kCmdCreateScratchNote],
-    ["Create New Note", kCmdCreateNewNote],
-    ["Open recent note", kCmdOpenRecent],
-    ["Open note in new tab", kCmdOpenNoteInNewTab],
-    ["Toggle Sidebar", kCmdToggleSidebar],
-    ["Find", kCmdFind],
-    ["Find in notes", kCmdFindInNotes],
-    ["Search", kCmdSearch],
-    ["Search in notes", kCmdSearchInNotes],
-    ["Open note from disk", kCmdOpenNoteFromDisk],
-    ["Block: Fold all blocks", kCmdFoldAllBlocks],
-    ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
-    ["Edit: Unfold everything", kCmdUnfoldEverything],
-    // ["Export current note", kCmdExportCurrentNote],
-    ...(isMac
-      ? [
-          ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
-          ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
-        ]
-      : [
-          ["Edit: Fold code\tCtrl-Shift-[", kCmdFoldCode],
-          ["Edit: Unfold code\tCtrl-Shift-]", kCmdUnfoldColde],
-        ]),
-  ];
-
   function buildCommandPaletteDef() {
     commandsDef = buildCommandsDef();
     commandsDef.push(...commandPaletteAdditions);
-    console.log("commandPaletteAdditions:", commandPaletteAdditions);
+    // console.log("commandPaletteAdditions:", commandPaletteAdditions);
     let name = commandNameOverride(kCmdToggleSpellChecking);
     commandsDef.push([name, kCmdToggleSpellChecking]);
   }
