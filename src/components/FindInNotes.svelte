@@ -12,12 +12,7 @@
     makeHilightRegExp,
     splitStringPreservingQuotes,
   } from "../util";
-  import {
-    IconFluentWholeWord,
-    IconLucideReplace,
-    IconLucideReplaceAll,
-    IconTablerLetterCase,
-  } from "./Icons.svelte";
+  import { IconFluentWholeWord, IconTablerLetterCase } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{
@@ -27,13 +22,12 @@
 
   let searchTerm = $state("");
   let replaceTerm = $state("");
-  let showReplace = $state(false);
 
   let currSearchTerm = "";
   let selectedItem;
 
   /** @type {HTMLInputElement} */
-  let searchInputREf;
+  let searchInputRef;
 
   /** @type {HTMLInputElement} */
   let replaceInputRef = $state(undefined);
@@ -157,6 +151,14 @@
     if (ev.key == "Enter") {
       ev.preventDefault();
       let sameSearchTerm = searchTerm == currSearchTerm;
+      console.log(
+        "searchTerm:",
+        searchTerm,
+        "currSearchTerm:",
+        currSearchTerm,
+        "same:",
+        sameSearchTerm,
+      );
       if (
         sameSearchTerm &&
         lastChangeNo == changeNo &&
@@ -174,7 +176,7 @@
 
   function focusInput() {
     tick().then(() => {
-      searchInputREf.select();
+      searchInputRef.select();
     });
   }
   onMount(() => {
@@ -237,7 +239,7 @@
 
 {#snippet InputTop()}
   <input
-    bind:this={searchInputREf}
+    bind:this={searchInputRef}
     type="text"
     class="w-full"
     spellcheck="false"
@@ -318,9 +320,11 @@
             ev.preventDefault();
             ev.stopPropagation();
             appState.searchIncludeArchived = false;
+            changeNo++; // make Enter redo the search
+            searchInputRef.focus();
           }}
           class="btn-link"
-          >include {len(appState.archivedNotes)} archived</button
+          >exclude {len(appState.archivedNotes)} archived</button
         >
       {:else}
         <button
@@ -328,9 +332,11 @@
             ev.preventDefault();
             ev.stopPropagation();
             appState.searchIncludeArchived = true;
+            changeNo++; // make Enter redo the search
+            searchInputRef.focus();
           }}
           class="btn-link"
-          >exclude {len(appState.archivedNotes)} archived</button
+          >include {len(appState.archivedNotes)} archived</button
         >
       {/if}
     {/if}
@@ -342,8 +348,10 @@
             ev.preventDefault();
             ev.stopPropagation();
             appState.searchIncludeTrashed = false;
+            changeNo++; // make Enter redo the search
+            searchInputRef.focus();
           }}
-          class="btn-link">include {len(appState.trashedNotes)} trashed</button
+          class="btn-link">exclude {len(appState.trashedNotes)} trashed</button
         >
       {:else}
         <button
@@ -351,8 +359,10 @@
             ev.preventDefault();
             ev.stopPropagation();
             appState.searchIncludeTrashed = true;
+            changeNo++; // make Enter redo the search
+            searchInputRef.focus();
           }}
-          class="btn-link">exclude {len(appState.trashedNotes)} trashed</button
+          class="btn-link">include {len(appState.trashedNotes)} trashed</button
         >
       {/if}
     {/if}
