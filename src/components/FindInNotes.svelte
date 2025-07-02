@@ -1,5 +1,6 @@
 <script>
   import { onMount, tick } from "svelte";
+  import { preventDefault, stopPropagation } from "svelte/legacy";
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
@@ -15,8 +16,6 @@
     IconFluentWholeWord,
     IconLucideReplace,
     IconLucideReplaceAll,
-    IconTablerChevronDown,
-    IconTablerChevronRight,
     IconTablerLetterCase,
   } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
@@ -48,18 +47,6 @@
   // svelte-ignore non_reactive_update
   let listboxRef;
 
-  function replace() {}
-  function _replaceAll() {}
-
-  function toggleShowReplace() {
-    showReplace = !showReplace;
-    if (showReplace) {
-      tick().then(() => replaceInputRef.focus());
-    } else {
-      tick().then(() => searchInputREf.focus());
-    }
-  }
-
   const kMaxSearchResults = 64;
   let uniqueId = 0;
   let lastChangeNo = 0;
@@ -77,7 +64,13 @@
     selectedItem = null;
     lastChangeNo = changeNo;
     noResultsMsg = "";
-    let notesToSearch = $state.snapshot(appState.allNotes);
+    let notesToSearch = $state.snapshot(appState.regularNotes);
+    if (appState.searchIncludeArchived) {
+      notesToSearch.push(...$state.snapshot(appState.archivedNotes));
+    }
+    if (appState.searchIncludeTrashed) {
+      notesToSearch.push(...$state.snapshot(appState.trashedNotes));
+    }
     let matchCase = appState.searchNotesMatchCase;
     let wholeWord = appState.searchNotesMatchWholeWord;
 
@@ -229,11 +222,13 @@
 // svelte-ignore non_reactive_update
 {#snippet InsideInput()}
   <div class="absolute right-[0.25rem] top-[6px] flex">
-    <button class={matchCaseCls} onclick={matchCase} title="Match Case"
-      >{@render IconTablerLetterCase()}</button
+    <button
+      class="btn-icon {matchCaseCls}"
+      onclick={matchCase}
+      title="Match Case">{@render IconTablerLetterCase()}</button
     >
     <button
-      class={matchWholeWordCls}
+      class="btn-icon {matchWholeWordCls}"
       onclick={matchWholeWOrd}
       title="Match Whole Word">{@render IconFluentWholeWord()}</button
     >
@@ -277,20 +272,6 @@
           {@render InsideInput()}
         </div>
       </div>
-      {#if showReplace}
-        <div class="flex">
-          <!-- bottom row -->
-          <div class="flex mt-2 grow">
-            {@render InputBottom()}
-            <button class="ml-2" title="replace" onclick={replace}
-              >{@render IconLucideReplace()}</button
-            >
-            <button title="replace all" onclick={_replaceAll}
-              >{@render IconLucideReplaceAll()}</button
-            >
-          </div>
-        </div>
-      {/if}
     </div>
   </div>
 
@@ -328,8 +309,54 @@
     </div>
   {/if}
   <div
-    class="flex justify-center gap-4 text-gray-700 text-xs max-w-full dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg px-2 pt-1 pb-1.5 mt-2"
+    class="flex items-baseline gap-4 text-gray-700 text-xs max-w-full dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg px-2 pt-1 pb-1.5 mt-2"
   >
+    {#if len(appState.archivedNotes) > 0}
+      {#if appState.searchIncludeArchived}
+        <button
+          onclick={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            appState.searchIncludeArchived = false;
+          }}
+          class="btn-link"
+          >include {len(appState.archivedNotes)} archived</button
+        >
+      {:else}
+        <button
+          onclick={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            appState.searchIncludeArchived = true;
+          }}
+          class="btn-link"
+          >exclude {len(appState.archivedNotes)} archived</button
+        >
+      {/if}
+    {/if}
+
+    {#if len(appState.trashedNotes) > 0}
+      {#if appState.searchIncludeTrashed}
+        <button
+          onclick={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            appState.searchIncludeTrashed = false;
+          }}
+          class="btn-link">include {len(appState.trashedNotes)} trashed</button
+        >
+      {:else}
+        <button
+          onclick={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            appState.searchIncludeTrashed = true;
+          }}
+          class="btn-link">exclude {len(appState.trashedNotes)} trashed</button
+        >
+      {/if}
+    {/if}
+    <div class="grow"></div>
     <div>Enter: start search</div>
     <div>Esc: dismiss</div>
     <a href="/help#search-in-notes" target="_blank">learn more</a>
@@ -346,7 +373,11 @@
   a {
     @apply underline underline-offset-2;
   }
-  button {
+  .btn-icon {
     @apply px-[6px] py-[2px] hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
+  }
+
+  .btn-link {
+    @apply underline underline-offset-2 cursor-pointer;
   }
 </style>

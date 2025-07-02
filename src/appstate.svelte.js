@@ -34,6 +34,9 @@ class AppState {
   showingArchived = $state(false); // show archived notes in note selector
   showingTrashed = $state(false); // show deleted notes in note selector
 
+  searchIncludeArchived = $state(false);
+  searchIncludeTrashed = $state(false);
+
   /** @type {string[]} */
   history = $state([]); // names of opened notes
   /** @type {import("./settings.svelte").Settings} */
