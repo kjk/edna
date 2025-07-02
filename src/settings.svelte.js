@@ -1,3 +1,4 @@
+import { getNoteMeta, saveNotesMetadata } from "./metadata";
 import { kScratchNoteName } from "./notes";
 import { appState } from "./state.svelte";
 import {

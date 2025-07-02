@@ -28,7 +28,7 @@ function selectedLineBlocks(state) {
 export const deleteLine = (view) => {
   if (view.state.readOnly) return false;
 
-  console.warn("deleteLine: started");
+  // console.log("deleteLine: started");
   const { state } = view;
 
   const block = getActiveNoteBlock(view.state);

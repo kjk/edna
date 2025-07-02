@@ -3,6 +3,7 @@
   import Menu from "../Menu.svelte";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
+  import { isSystemNoteName } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { appState } from "../state.svelte.js";
   import { getAltChar, len } from "../util.js";
@@ -130,6 +131,22 @@
     shwingMenu = false;
     onmenucmd(cmdid);
   }
+
+  function noteCls(name) {
+    let m = getNoteMeta(name);
+    let isArchived = m && m.isArchived;
+    let isTrashed = m && m.isTrashed;
+    console.log(
+      `noteCls: ${name}, isArchived: ${isArchived}, isTrashed: ${isTrashed}`,
+    );
+    if (isTrashed) {
+      return "italic text-red-400";
+    }
+    if (isSystemNoteName(name) || isArchived) {
+      return "italic";
+    }
+    return "";
+  }
 </script>
 
 <div
@@ -198,36 +215,39 @@
     {/if}
   </div>
 
-  <div class="flex items-center overflow-hidden">
-    {#each settings.tabs as noteName}
-      {@const isSelected = noteName == settings.currentNoteName}
-      {@const cls = isSelected
-        ? "bg-white hover:bg-white! dark:bg-gray-800 dark:hover:bg-gray-800!"
-        : "bg-gray-200 dark:bg-gray-500! hover:bg-gray-100 cursor-pointer"}
-      <button
-        class="truncate justify-between whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 align-baseline clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 items-center {cls}"
-        onclick={() => openNote(noteName, false)}
-        title={getNameWithShortcut(noteName)}
-      >
-        <div class="max-w-32 truncate">
-          {noteName}
-        </div>
-        {#if len(settings.tabs) > 1}
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <div
-            onclick={(ev) => {
-              ev.stopPropagation();
-              closeTab(noteName);
-            }}
-            class="hover:bg-red-300 hover:text-red-600"
-          >
-            {@render IconTablerX()}
+  {#key settings.tabs}
+    <div class="flex items-center overflow-hidden">
+      {#each settings.tabs as noteName}
+        {@const isSelected = noteName == settings.currentNoteName}
+        {@const cls = isSelected
+          ? "bg-white hover:bg-white! dark:bg-gray-800 dark:hover:bg-gray-800!"
+          : "bg-gray-200 dark:bg-gray-500! hover:bg-gray-100 cursor-pointer"}
+        {@const noteNameCls = noteCls(noteName)}
+        <button
+          class="truncate justify-between whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 align-baseline clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 items-center {cls}"
+          onclick={() => openNote(noteName, false)}
+          title={getNameWithShortcut(noteName)}
+        >
+          <div class="max-w-32 truncate {noteNameCls}">
+            {noteName}
           </div>
-        {/if}
-      </button>
-    {/each}
-  </div>
+          {#if len(settings.tabs) > 1}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
+              onclick={(ev) => {
+                ev.stopPropagation();
+                closeTab(noteName);
+              }}
+              class="hover:bg-red-300 hover:text-red-600"
+            >
+              {@render IconTablerX()}
+            </div>
+          {/if}
+        </button>
+      {/each}
+    </div>
+  {/key}
 
   <button
     onclick={() => {

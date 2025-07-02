@@ -221,7 +221,7 @@ export class EdnaEditor {
         let savedSelection = noteMeta?.selection;
         // TODO: validate selection?
         if (savedSelection) {
-          // console.warn("setContent: restoring selection:", savedSelection);
+          // console.log("setContent: restoring selection:", savedSelection);
           try {
             this.view.dispatch({
               selection: EditorSelection.fromJSON(savedSelection),
@@ -244,7 +244,7 @@ export class EdnaEditor {
           if (this.noteName.startsWith("scratch")) {
             pos = this.view.state.doc.length;
           }
-          // console.warn("setContent: setting pos:", pos);
+          // console.log("setContent: setting pos:", pos);
           this.view.dispatch({
             selection: EditorSelection.single(pos),
             scrollIntoView: true,
@@ -253,7 +253,7 @@ export class EdnaEditor {
 
         let ranges = noteMeta?.foldedRanges || [];
         if (len(ranges) > 0) {
-          // console.warn("setContent: restoring folded ranges:", ranges);
+          // console.log("setContent: restoring folded ranges:", ranges);
           try {
             this.view.dispatch({
               effects: ranges.map((range) => foldEffect.of(range)),
@@ -283,7 +283,7 @@ export class EdnaEditor {
       meta.selection = selection;
     }
     if (!didChange) {
-      // console.warn("saveFoldedState: skipping save, no changes");
+      // console.log("saveFoldedState: skipping save, no changes");
       return;
     }
     // console.log(

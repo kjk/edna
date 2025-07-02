@@ -14,6 +14,7 @@
   focusEditor: () => void,
   getPassword: (msg: string) => Promise<string>,
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>,
+  updateAfterNoteStateChange: () => void,
 }} GlobalFuncs
 */
 
@@ -91,6 +92,10 @@ export function smartRun() {
 
 export function focusEditor() {
   globalFunctions.focusEditor();
+}
+
+export function updateAfterNoteStateChange() {
+  globalFunctions.updateAfterNoteStateChange();
 }
 
 /**

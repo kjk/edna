@@ -21,7 +21,7 @@
     if (name === "" || name === oldName) {
       return false;
     }
-    let noteNames = appState.noteNames;
+    let noteNames = appState.allNotes;
     return !noteNames.includes(name);
   });
 
@@ -30,7 +30,7 @@
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = appState.noteNames;
+    let noteNames = appState.allNotes;
     if (noteNames.includes(name)) {
       return `note <span class="font-bold">${name}</span> already exists`;
     }

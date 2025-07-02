@@ -18,7 +18,7 @@
     if (name === "") {
       return false;
     }
-    let noteNames = appState.noteNames;
+    let noteNames = appState.allNotes;
     return !noteNames.includes(name);
   });
 
@@ -28,7 +28,7 @@
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = appState.noteNames;
+    let noteNames = appState.allNotes;
     if (noteNames.includes(name)) {
       console.log("already exists");
       return `note <span class="font-bold">${name}</span> already exists`;

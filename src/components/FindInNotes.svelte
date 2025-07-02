@@ -77,7 +77,7 @@
     selectedItem = null;
     lastChangeNo = changeNo;
     noResultsMsg = "";
-    let notesToSearch = $state.snapshot(appState.noteNames);
+    let notesToSearch = $state.snapshot(appState.allNotes);
     let matchCase = appState.searchNotesMatchCase;
     let wholeWord = appState.searchNotesMatchWholeWord;
 

@@ -67,9 +67,15 @@
     kMenuStatusRemoved,
   } from "../Menu.svelte";
   import {
+    archiveNote,
     getNoteMeta,
     getNotesMetadata,
+    isNoteArchived,
+    isNoteTrashed,
+    moveNoteToTrash,
+    restoreNoteFromTrash,
     toggleNoteStarred,
+    unArchiveNote,
   } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
   import {
@@ -85,6 +91,7 @@
     deleteNote,
     encryptAllNotes,
     getStorageFS,
+    isNoteArchivable,
     isSystemNoteName,
     isUsingEncryption,
     kBuiltInFunctionsNoteName,
@@ -107,7 +114,7 @@
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import { getSettings } from "../settings.svelte";
-  import { appState } from "../state.svelte";
+  import { appState, appStateUpdateAfterNotesChange } from "../state.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,
@@ -239,6 +246,14 @@
     showingFindInNotes = true;
   }
 
+  function updateAfterNoteStateChange() {
+    tick().then(() => {
+      appStateUpdateAfterNotesChange();
+      // re-assign tabs to redraw the state of the note in title
+      settings.tabs = [...settings.tabs];
+    });
+  }
+
   let gf = {
     openSettings: openSettings,
     openLanguageSelector: openLanguageSelector,
@@ -251,6 +266,7 @@
     createScratchNote: createScratchNote,
     openBlockSelector: openBlockSelector,
     openFunctionSelector: openFunctionSelector,
+    updateAfterNoteStateChange: updateAfterNoteStateChange,
     smartRun: smartRun,
     focusEditor: focusEditor,
     getPassword: getPassword,
@@ -558,21 +574,6 @@
 
   function openSettings() {
     showingSettings = true;
-  }
-
-  async function deleteCurrentNote() {
-    let name = noteName;
-    console.log("deleteNote:", name);
-    if (!canDeleteNote(name)) {
-      showWarning(`Can't delete special note ${name}`);
-      console.log("cannot delete note:", name);
-      return;
-    }
-    await openNote(kScratchNoteName, true);
-    await deleteNote(name);
-    // TODO: add a way to undo deletion of the note
-    showToast(`Deleted note '${name}'`);
-    logNoteOp("noteDelete");
   }
 
   async function createScratchNote() {
@@ -913,7 +914,11 @@
   export const kCmdCreateNewNote = nmid();
   export const kCmdCloseCurrentTab = nmid();
   export const kCmdRenameCurrentNote = nmid();
-  export const kCmdDeleteCurrentNote = nmid();
+  export const kCmdArchiveCurrentNote = nmid();
+  export const kCmdUnArchiveCurrentNote = nmid();
+  export const kCmdMoveNoteToTrash = nmid();
+  export const kCmdRestoreNoteFromTrash = nmid();
+  export const kCmdPermanentlyDeleteNote = nmid();
   export const kCmdCreateScratchNote = nmid();
 
   export const kCmdNewBlockAfterCurrent = nmid();
@@ -987,8 +992,12 @@
     const menuNote = [
       ["Close", kCmdCloseCurrentTab],
       ["Rename", kCmdRenameCurrentNote],
-      ["Delete", kCmdDeleteCurrentNote],
       [starAction, kCmdNoteToggleStarred],
+      ["Archive", kCmdArchiveCurrentNote],
+      ["UnArchive", kCmdUnArchiveCurrentNote],
+      ["Move to trash", kCmdMoveNoteToTrash],
+      ["Restore from trash", kCmdRestoreNoteFromTrash],
+      ["Permanently delte", kCmdPermanentlyDeleteNote],
       ["Export to file", kCmdExportCurrentNote],
     ];
 
@@ -1101,7 +1110,7 @@
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
     }
-
+    let noteName = settings.currentNoteName;
     // console.log("menuItemStatus:", mi);
     // console.log("s:", s, "mid:", mid);
     // note: this is called for each menu item so should be fast
@@ -1194,6 +1203,29 @@
       if (len(settings.tabs) < 2) {
         return kMenuStatusDisabled;
       }
+    } else if (mid === kCmdMoveNoteToTrash) {
+      if (!canDeleteNote(noteName)) {
+        return kMenuStatusRemoved;
+      }
+      if (isNoteTrashed(noteName)) {
+        return kMenuStatusRemoved;
+      }
+    } else if (mid === kCmdRestoreNoteFromTrash) {
+      if (!isNoteTrashed(noteName)) {
+        return kMenuStatusRemoved;
+      }
+    } else if (mid === kCmdPermanentlyDeleteNote) {
+      if (!canDeleteNote(noteName)) {
+        return kMenuStatusRemoved;
+      }
+    } else if (mid === kCmdArchiveCurrentNote) {
+      if (!isNoteArchivable(noteName) || isNoteArchived(noteName)) {
+        return kMenuStatusRemoved;
+      }
+    } else if (mid === kCmdUnArchiveCurrentNote) {
+      if (!isNoteArchived(noteName)) {
+        return kMenuStatusRemoved;
+      }
     }
     return kMenuStatusNormal;
   }
@@ -1237,8 +1269,16 @@
       closeCurrentTab();
     } else if (cmdId === kCmdRenameCurrentNote) {
       showingRenameNote = true;
-    } else if (cmdId === kCmdDeleteCurrentNote) {
-      deleteCurrentNote();
+    } else if (cmdId === kCmdMoveNoteToTrash) {
+      moveNoteToTrash(settings.currentNoteName);
+    } else if (cmdId === kCmdRestoreNoteFromTrash) {
+      restoreNoteFromTrash(settings.currentNoteName);
+    } else if (cmdId == kCmdPermanentlyDeleteNote) {
+      deleteNotePermanently(settings.currentNoteName, true);
+    } else if (cmdId === kCmdArchiveCurrentNote) {
+      archiveNote(settings.currentNoteName);
+    } else if (cmdId === kCmdUnArchiveCurrentNote) {
+      unArchiveNote(settings.currentNoteName);
     } else if (cmdId === kCmdCreateScratchNote) {
       await createScratchNote();
     } else if (cmdId === kCmdNewBlockAfterCurrent) {
@@ -1414,7 +1454,6 @@
    * @param {{x: number, y: number}} pos
    */
   async function openContextMenu(ev, pos = null) {
-    console.warn("openContextMenu: ev:", ev, "pos:", pos);
     ev.preventDefault();
     ev.stopPropagation();
     ev.stopImmediatePropagation();
@@ -1428,7 +1467,7 @@
   const commandNameOverrides = [
     kCmdRenameCurrentNote,
     "Rename current note",
-    kCmdDeleteCurrentNote,
+    kCmdMoveNoteToTrash,
     "Delete current note",
     kCmdExportCurrentNote,
     "Export current note to a file",
@@ -1831,10 +1870,8 @@
     if (name == settings.currentNoteName) {
       return;
     }
-    console.warn("onOpenNote: name:", name, "newTab:", newTab);
     if (forceNewTab) {
       newTab = true;
-      console.warn("forcing new tab");
     }
 
     function maybeReplaceCurrentTab() {
@@ -1873,7 +1910,6 @@
     openNote(name).then(() => {
       // TODO: this is not reliable, must pass pos down via openNote()
       setTimeout(() => {
-        console.warn("openNoteFind: setting pos:", pos);
         let view = getEditorView();
         view.dispatch({
           selection: {
@@ -1922,21 +1958,29 @@
   /**
    * @param {string} name
    */
-  async function onDeleteNote(name) {
+  async function deleteNotePermanently(name, showNotif) {
+    if (!canDeleteNote(name)) {
+      showWarning(`Can't delete special note ${name}`);
+      console.log("cannot delete note:", name);
+      return;
+    }
+
     let settings = getSettings();
+    let noteTabIdx = settings.tabs.indexOf(name);
+    if (noteTabIdx >= 0) {
+      settings.tabs.splice(noteTabIdx);
+    }
     // if deleting current note, first switch to scratch note
     // TODO: maybe switch to the most recently opened
-    if (name === settings.currentNoteName) {
-      console.log("deleted current note, opening scratch note");
+    if (name === settings.currentNoteName || len(settings.tabs) == 0) {
       await openNote(kScratchNoteName);
     }
-    // must delete after openNote() because openNote() saves
-    // current note
-    await deleteNote(name);
-    // getEditorComp().focus();
+
     console.log("deleted note", name);
-    // TODO: add a way to undo deletion of the note
-    showToast(`Deleted note '${name}'`);
+    await deleteNote(name);
+    if (showNotif) {
+      showToast(`Deleted note '${name}'`);
+    }
     logNoteOp("noteDelete");
   }
 
@@ -2121,6 +2165,7 @@
       forMoveBlock={true}
       openNote={onMoveBlockToNote}
       createNote={onMoveBlockToNote}
+      deleteNote={deleteNotePermanently}
     />
   </Overlay>
 {/if}
@@ -2133,7 +2178,6 @@
         {switchToCommandPalette}
         openNote={onOpenNote}
         createNote={onCreateNote}
-        deleteNote={onDeleteNote}
       />
     </Overlay>
   {:else}
@@ -2143,7 +2187,7 @@
         {switchToCommandPalette}
         openNote={onOpenNote}
         createNote={onCreateNote}
-        deleteNote={onDeleteNote}
+        deleteNote={deleteNotePermanently}
       />
     </Overlay>
   {/if}

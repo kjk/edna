@@ -1,7 +1,7 @@
 import { tick } from "svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
+import { updateAfterNoteStateChange } from "./globals";
 import { getStorageFS } from "./notes";
-import { updateStarred } from "./state.svelte";
 
 export const kMetadataName = "__metadata.edna.json";
 
@@ -10,6 +10,7 @@ export const kMetadataName = "__metadata.edna.json";
     altShortcut?: string,
     isStarred?: boolean,
     isArchived?: boolean,
+    isTrashed?: boolean,
     foldedRanges?: { from: number, to: number }[],
     selection? : any,
 }} NoteMetadata */
@@ -117,18 +118,6 @@ export function getNoteMeta(name, createIfNotExists = false) {
 
 /**
  * @param {string} name
- * @returns {Promise<boolean>}
- */
-export async function toggleNoteStarred(name) {
-  let meta = getNoteMeta(name, true);
-  meta.isStarred = !meta.isStarred;
-  await saveNotesMetadata();
-  tick().then(updateStarred);
-  return meta.isStarred;
-}
-
-/**
- * @param {string} name
  */
 export async function removeNoteFromMetadata(name) {
   let notes = getNotesMetadata();
@@ -182,6 +171,84 @@ export async function reassignNoteShortcut(name, altShortcut) {
   let meta = getNoteMeta(name, true);
   meta.altShortcut = altShortcut;
   await saveNotesMetadata();
+  updateAfterNoteStateChange();
+}
+
+/**
+ * @param {string} name
+ */
+export async function archiveNote(name) {
+  let m = getNoteMeta(name, true);
+  m.isArchived = true;
+  await saveNotesMetadata();
+  updateAfterNoteStateChange();
+}
+
+/**
+ * @param {string} name
+ */
+export async function unArchiveNote(name) {
+  let m = getNoteMeta(name, true);
+  m.isArchived = false;
+  await saveNotesMetadata();
+  updateAfterNoteStateChange();
+}
+
+/**
+ * @param {string} name
+ */
+export async function moveNoteToTrash(name) {
+  let m = getNoteMeta(name, true);
+  m.isTrashed = true;
+  m.isArchived = false;
+  await saveNotesMetadata();
+  updateAfterNoteStateChange();
+}
+
+/**
+ * @param {string} name
+ */
+export async function restoreNoteFromTrash(name) {
+  let m = getNoteMeta(name, true);
+  m.isTrashed = false;
+  await saveNotesMetadata();
+  updateAfterNoteStateChange();
+}
+
+/**
+ * @param {string} name
+ * @returns {Promise<boolean>}
+ */
+export async function toggleNoteStarred(name) {
+  let meta = getNoteMeta(name, true);
+  meta.isStarred = !meta.isStarred;
+  await saveNotesMetadata();
+  updateAfterNoteStateChange();
+  return meta.isStarred;
+}
+
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isNoteArchived(name) {
+  let meta = getNoteMeta(name);
+  if (!meta) {
+    return false;
+  }
+  return meta.isArchived === true;
+}
+
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isNoteTrashed(name) {
+  let meta = getNoteMeta(name);
+  if (!meta) {
+    return false;
+  }
+  return meta.isTrashed === true;
 }
 
 /**
@@ -216,6 +283,18 @@ export async function toggleFunctionStarred(name) {
   m.isStarred = !m.isStarred;
   await saveNotesMetadata();
   return m.isStarred;
+}
+
+export function printMetaInfo() {
+  let notes = getNotesMetadata();
+  console.log("Notes metadata:");
+  for (let m of notes) {
+    if (m.isArchived || m.isTrashed) {
+      console.log(
+        `  ${m.name} isArchived: ${m.isArchived}, isTrashed: ${m.isTrashed}`,
+      );
+    }
+  }
 }
 
 // TODO: temporary

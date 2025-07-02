@@ -201,7 +201,6 @@
     if (!cursor.done) {
       counter.exceed = true;
     }
-    // console.warn("calcTotalCountOfMatches: counter:", $state.snapshot(counter));
   }
 
   function next() {

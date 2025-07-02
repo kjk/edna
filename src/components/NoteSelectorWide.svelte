@@ -1,6 +1,10 @@
 <script>
   import { focus } from "../actions";
-  import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
+  import {
+    moveNoteToTrash,
+    reassignNoteShortcut,
+    toggleNoteStarred,
+  } from "../metadata";
   import {
     isSystemNoteName,
     kScratchNoteName,
@@ -24,19 +28,17 @@
   /** @type {{
     openNote: (name: string) => void,
     createNote: (name: string) => void,
-    deleteNote: (name: string) => Promise<void>,
     switchToCommandPalette: () => void,
     switchToRegularNoteSelector: () => void,
 }}*/
   let {
     openNote,
     createNote,
-    deleteNote,
     switchToCommandPalette,
     switchToRegularNoteSelector,
   } = $props();
 
-  let noteNames = appState.noteNames;
+  let noteNames = appState.allNotes;
   let items = $derived(buildNoteInfos(noteNames));
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
@@ -66,7 +68,7 @@
   let showDelete = $state(false);
 
   function reloadNotes() {
-    let noteNames = appState.noteNames;
+    let noteNames = appState.allNotes;
     items = buildNoteInfos(noteNames);
   }
 
@@ -177,7 +179,7 @@
         return;
       }
       if (selectedItem) {
-        deleteNote(selectedItem.name).then(reloadNotes);
+        moveNoteToTrash(selectedItem.name);
       }
       return;
     }

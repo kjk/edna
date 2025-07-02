@@ -22,6 +22,8 @@ import {
 import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import {
+  isNoteArchived,
+  isNoteTrashed,
   kMetadataName,
   loadNotesMetadata,
   reassignNoteShortcut,
@@ -245,7 +247,7 @@ export const blockHdrPHP = "\n∞∞∞php\n";
  */
 export async function createIfNotExists(name, content, existingNotes) {
   if (!existingNotes) {
-    existingNotes = appState.noteNames;
+    existingNotes = appState.allNotes;
   }
   if (existingNotes.includes(name)) {
     console.log(`note ${name} already exists`);
@@ -393,7 +395,7 @@ export function unrememberOpenedNote(noteName) {
   openedNotes = openedNotes.filter(
     (openedNote) => openedNote.noteName !== noteName,
   );
-  appState.noteNames = appState.noteNames.filter((name) => name != noteName);
+  appState.allNotes = appState.allNotes.filter((name) => name != noteName);
 }
 
 /**
@@ -418,7 +420,7 @@ export function rememberOpenedNote(fh) {
   // ids to identify notes
   let baseNoteName = noteName;
   let n = 1;
-  while (appState.noteNames.includes(noteName)) {
+  while (appState.allNotes.includes(noteName)) {
     noteName = baseNoteName + `-${n}`;
     n++;
   }
@@ -428,7 +430,7 @@ export function rememberOpenedNote(fh) {
     noteName: noteName,
   };
   openedNotes.push(opened);
-  appState.noteNames.push(noteName);
+  appState.allNotes.push(noteName);
   return noteName;
 }
 
@@ -541,10 +543,10 @@ export async function loadNoteNames() {
   // TODO: got a case where I had both foo.edna.txt and foo.encr.edna.txt which caused
   // duplicate names which cased note selector to fail due to duplicate key
   // don't quite know how this happened but it could be done maliciously
-  appState.noteNames = removeDuplicates(res[0]);
+  appState.allNotes = removeDuplicates(res[0]);
   encryptedNoteNames = removeDuplicates(res[1]);
   // console.log("loadNoteNames() res:", res);
-  return appState.noteNames;
+  return appState.allNotes;
 }
 
 export function startsWithBlockHeader(s) {
@@ -740,7 +742,7 @@ function loadNoteLS(name) {
  * @returns {boolean}
  */
 export function noteExists(name) {
-  let notes = appState.noteNames;
+  let notes = appState.allNotes;
   return notes.includes(name) || isSystemNoteName(name);
 }
 
@@ -892,6 +894,35 @@ export function canDeleteNote(name) {
   return !isSystemNoteName(name);
 }
 
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isNoteTrashable(name) {
+  if (name === kScratchNoteName) {
+    return false;
+  }
+  let openedNote = getOpenedNote(name);
+  if (openedNote) {
+    return false;
+  }
+  return !isSystemNoteName(name);
+}
+
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isNoteArchivable(name) {
+  if (!isNoteTrashable(name)) {
+    return false;
+  }
+  if (isNoteTrashed(name)) {
+    return false;
+  }
+  return true;
+}
+
 /* I've seen loadNoteNames() fail. I assume that's because of doing directory read
 right after deleting a file, so retry it after a tick */
 async function loadNoteNamesMoreRobust() {
@@ -1039,7 +1070,7 @@ export async function switchToStoringNotesOnDisk(dh) {
   let diskNoteNames = res[0];
 
   // migrate notes
-  let latestNoteNames = appState.noteNames;
+  let latestNoteNames = appState.allNotes;
   for (let name of latestNoteNames) {
     if (isSystemNoteName(name)) {
       continue;
@@ -1111,7 +1142,7 @@ export function sanitizeNoteName(name) {
  * @returns {number}
  */
 export function getNotesCount() {
-  return len(appState.noteNames);
+  return len(appState.allNotes);
 }
 
 /**

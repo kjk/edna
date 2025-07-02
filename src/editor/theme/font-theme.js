@@ -15,7 +15,7 @@ function isMonospace(fontFamily) {
 
   const widths = testCharacters.map((char) => context.measureText(char).width);
   let res = widths.every((width) => width === widths[0]);
-  console.warn(`isMonospace("${fontFamily}"): ${res}`);
+  // console.log(`isMonospace("${fontFamily}"): ${res}`);
   return res;
 }
 
