@@ -1,6 +1,6 @@
+import { appState } from "./appstate.svelte";
 import { getNoteMeta, saveNotesMetadata } from "./metadata";
 import { kScratchNoteName } from "./notes";
-import { appState } from "./state.svelte";
 import {
   arrayRemove,
   copyObj,

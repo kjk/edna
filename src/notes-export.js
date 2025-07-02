@@ -1,4 +1,6 @@
+import { appState } from "./appstate.svelte";
 import { blobFromUint8Array, fsReadBinaryFile, readDir } from "./fileutil";
+import { kMetadataName, loadNotesMetadata } from "./metadata";
 import {
   forEachNoteFileFS,
   getStorageFS,
@@ -6,10 +8,8 @@ import {
   loadNoteNames,
   notePathFromNameFS,
 } from "./notes";
-import { kMetadataName, loadNotesMetadata } from "./metadata";
-import { formatDateYYYYMMDD, len, throwIf } from "./util";
 import { kSettingsPath } from "./settings.svelte";
-import { appState } from "./state.svelte";
+import { formatDateYYYYMMDD, len, throwIf } from "./util";
 
 /**
  * @param {any} libZip

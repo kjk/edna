@@ -1,8 +1,8 @@
 <script>
   import { focus } from "../actions";
+  import { appState } from "../appstate.svelte";
   import { toggleNoteStarred } from "../metadata";
   import { getSettings } from "../settings.svelte";
-  import { appState } from "../state.svelte";
   import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";

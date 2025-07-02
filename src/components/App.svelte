@@ -7,6 +7,7 @@
     searchPanelOpen,
   } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
+  import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
   import {
     getActiveNoteBlock,
@@ -114,7 +115,6 @@
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import { getSettings } from "../settings.svelte";
-  import { appState, appStateUpdateAfterNotesChange } from "../state.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,

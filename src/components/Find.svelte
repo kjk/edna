@@ -12,8 +12,8 @@
     setSearchQuery,
   } from "@codemirror/search";
   import { focus, trapfocus } from "../actions";
+  import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
-  import { appState } from "../state.svelte";
   import {
     IconFluentWholeWord,
     IconLucideReplace,

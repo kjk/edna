@@ -1,5 +1,6 @@
 <script>
   import { focus } from "../actions";
+  import { appState } from "../appstate.svelte";
   import {
     moveNoteToTrash,
     reassignNoteShortcut,
@@ -10,7 +11,6 @@
     kScratchNoteName,
     sanitizeNoteName,
   } from "../notes";
-  import { appState } from "../state.svelte";
   import {
     findMatchingItems,
     getAltChar,

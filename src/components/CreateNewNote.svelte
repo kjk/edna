@@ -1,7 +1,7 @@
 <script>
   import { focus } from "../actions";
+  import { appState } from "../appstate.svelte";
   import { sanitizeNoteName } from "../notes";
-  import { appState } from "../state.svelte";
 
   /** @type { {
     onclose: () => void,

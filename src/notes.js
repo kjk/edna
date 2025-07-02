@@ -1,5 +1,6 @@
 import { tick } from "svelte";
 import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
+import { appState } from "./appstate.svelte";
 import {
   clearModalMessage,
   showModalMessageHTML,
@@ -37,7 +38,6 @@ import {
   incNoteDeleteCount,
   incNoteSaveCount,
 } from "./state";
-import { appState } from "./state.svelte";
 import {
   getBuiltInFunctionsNote,
   getHelp,

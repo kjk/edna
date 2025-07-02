@@ -1,4 +1,4 @@
-import { appState } from "./state.svelte";
+import { appState } from "./appstate.svelte";
 
 // history of opened files
 

@@ -1,9 +1,9 @@
 <script>
   import { onMount, tick } from "svelte";
   import { focus, trapfocus } from "../actions";
+  import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
   import { loadNote } from "../notes";
-  import { appState } from "../state.svelte";
   import {
     hilightText,
     isWholeWord,
