@@ -26,6 +26,8 @@
     IconTablerPlus,
     IconMdiArrowCollapseLeft,
     IconMdiArrowCollapseRight,
+    IconTablerTrash,
+    IconTablerArchive,
   };
 </script>
 
@@ -136,12 +138,53 @@ https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-left
   </svg>
 {/snippet}
 
-<!-- 
-Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE 
-
-https://icones.js.org/collection/tabler?s=plus&icon=tabler:plus
+<!--
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
+https://icones.js.org/collection/tabler?s=archive&icon=tabler:trash
 -->
 
+{#snippet IconTablerTrash()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    ><path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 7h16m-10 4v6m4-6v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"
+    /></svg
+  >
+{/snippet}
+
+<!-- 
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE 
+https://icones.js.org/collection/tabler?s=archive&icon=tabler:archive
+-->
+{#snippet IconTablerArchive()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    ><path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2m2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8m-9 4h4"
+    /></svg
+  >
+{/snippet}
+
+<!-- 
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE 
+https://icones.js.org/collection/tabler?s=plus&icon=tabler:plus
+-->
 {#snippet IconTablerPlus()}
   <svg
     xmlns="http://www.w3.org/2000/svg"

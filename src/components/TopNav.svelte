@@ -296,9 +296,6 @@
 <style>
   @reference "../main.css";
 
-  .edna {
-  }
-
   .clickable-icon {
     @apply cursor-pointer px-2 py-1;
 

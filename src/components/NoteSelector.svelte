@@ -114,7 +114,11 @@
     makeHilightRegExp,
     noOp,
   } from "../util";
-  import { IconTablerStar } from "./Icons.svelte";
+  import {
+    IconTablerArchive,
+    IconTablerStar,
+    IconTablerTrash,
+  } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{
@@ -485,25 +489,38 @@
   >
     {#snippet renderItem(noteInfo)}
       {@const hili = hilightText(noteInfo.name, hiliRegExp)}
-      <button
-        tabindex="-1"
-        class="ml-[-6px] cursor-pointer hover:text-yellow-600"
-        onclick={(ev) => {
-          toggleStarred(noteInfo);
-          ev.preventDefault();
-          ev.stopPropagation();
-        }}
-      >
-        {@render IconTablerStar(
-          noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
-        )}
-      </button>
-      <div class="ml-2 truncate {sysNoteCls(noteInfo) ? 'italic' : ''}">
-        {@html hili}
-      </div>
-      <div class="grow"></div>
-      <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap">
-        {noteShortcut(noteInfo)}
+      <div class="flex w-full relative group">
+        <button
+          tabindex="-1"
+          class="ml-[-6px] cursor-pointer hover:text-yellow-600"
+          onclick={(ev) => {
+            toggleStarred(noteInfo);
+            ev.preventDefault();
+            ev.stopPropagation();
+          }}
+        >
+          {@render IconTablerStar(
+            noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
+          )}
+        </button>
+        <div class="ml-2 truncate {sysNoteCls(noteInfo) ? 'italic' : ''}">
+          {@html hili}
+        </div>
+        <div class="grow"></div>
+        <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap">
+          {noteShortcut(noteInfo)}
+        </div>
+
+        <div
+          class="absolute top-0 right-[8px] opacity-0 invisible group-hover:visible group-hover:opacity-100 flex items-center self-center bg-gray-100"
+        >
+          <button title="archive note" class="clickable-icon"
+            >{@render IconTablerArchive()}</button
+          >
+          <button title="move note to trash" class="clickable-icon text-red-400"
+            >{@render IconTablerTrash()}</button
+          >
+        </div>
       </div>
     {/snippet}
   </ListBox>
@@ -528,3 +545,15 @@
     {/if}
   {/if}
 </form>
+
+<style>
+  @reference "../main.css";
+
+  .clickable-icon {
+    @apply cursor-pointer px-1 py-1;
+
+    &:hover {
+      @apply bg-gray-200 dark:bg-gray-500;
+    }
+  }
+</style>
