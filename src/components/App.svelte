@@ -979,6 +979,8 @@
   export const kCmdToggleSidebar = nmid();
   export const kCmdFind = nmid();
   export const kCmdFindInNotes = nmid();
+  export const kCmdSearch = nmid();
+  export const kCmdSearchInNotes = nmid();
 
   function buildMenuDef() {
     // let starAction = "Star";
@@ -1415,9 +1417,9 @@
       if (!settings.showSidebar) {
         view.focus();
       }
-    } else if (cmdId === kCmdFind) {
+    } else if (cmdId === kCmdFind || cmdId == kCmdSearch) {
       openFindPanel();
-    } else if (cmdId === kCmdFindInNotes) {
+    } else if (cmdId === kCmdFindInNotes || cmdId == kCmdSearchInNotes) {
       openFindInNotes();
     } else {
       console.log("unknown menu cmd id");
@@ -1550,6 +1552,8 @@
     ["Toggle Sidebar", kCmdToggleSidebar],
     ["Find", kCmdFind],
     ["Find in notes", kCmdFindInNotes],
+    ["Search", kCmdSearch],
+    ["Search in notes", kCmdSearchInNotes],
     ["Open note from disk", kCmdOpenNoteFromDisk],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
