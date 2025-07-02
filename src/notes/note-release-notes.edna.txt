@@ -2,6 +2,10 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.32
+
+- add archiving notes and moving them to a trash
+
 ## 1.31
 
 - add "move block up" and "move block down" commands
