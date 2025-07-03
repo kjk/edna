@@ -37,6 +37,7 @@ import {
 } from "./block/commands.js";
 import { formatBlockContent } from "./block/format-code.js";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
+import { insertDateAndTime } from "./date-time.js";
 import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter.js";
 
 const isMac = platform.isMac;
@@ -102,6 +103,7 @@ export function ednaKeymap(editor) {
     ["Mod-Alt-ArrowUp", newCursorAbove],
     ["Alt-Mod-Shift-ArrowUp", moveCurrentBlockUp],
     ["Alt-Mod-Shift-ArrowDown", moveCurrentBlockDown],
+    ["Alt-Shift-d", insertDateAndTime],
 
     {
       key: "Mod-ArrowUp",

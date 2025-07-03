@@ -2,6 +2,10 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.34
+
+- add `Edit: Insert date and time` command, keyboard shortcut: `Alt + Shift + d`
+
 ## 1.33
 
 - add setting for tabSize and using tabs/spaces for indentation

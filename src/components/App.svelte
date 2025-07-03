@@ -35,6 +35,7 @@
   } from "../editor/block/format-code";
   import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
+  import { insertDateAndTime } from "../editor/date-time";
   import { EdnaEditor, setReadOnly } from "../editor/editor";
   import {
     foldAllBlocks,
@@ -908,81 +909,82 @@
     return nextMenuID;
   }
 
-  export const kCmdCommandPalette = nmid();
-  export const kCmdOpenNote = nmid();
-  export const kCmdOpenNoteInNewTab = nmid();
-  export const kCmdOpenFind = nmid();
-  export const kCmdCreateNewNote = nmid();
-  export const kCmdCloseCurrentTab = nmid();
-  export const kCmdRenameCurrentNote = nmid();
-  export const kCmdArchiveCurrentNote = nmid();
-  export const kCmdUnArchiveCurrentNote = nmid();
-  export const kCmdMoveNoteToTrash = nmid();
-  export const kCmdRestoreNoteFromTrash = nmid();
-  export const kCmdPermanentlyDeleteNote = nmid();
-  export const kCmdCreateScratchNote = nmid();
+  const kCmdCommandPalette = nmid();
+  const kCmdOpenNote = nmid();
+  const kCmdOpenNoteInNewTab = nmid();
+  const kCmdOpenFind = nmid();
+  const kCmdCreateNewNote = nmid();
+  const kCmdCloseCurrentTab = nmid();
+  const kCmdRenameCurrentNote = nmid();
+  const kCmdArchiveCurrentNote = nmid();
+  const kCmdUnArchiveCurrentNote = nmid();
+  const kCmdMoveNoteToTrash = nmid();
+  const kCmdRestoreNoteFromTrash = nmid();
+  const kCmdPermanentlyDeleteNote = nmid();
+  const kCmdCreateScratchNote = nmid();
 
-  export const kCmdNewBlockAfterCurrent = nmid();
+  const kCmdNewBlockAfterCurrent = nmid();
   const kCmdBlockFirst = kCmdNewBlockAfterCurrent;
-  export const kCmdGoToBlock = nmid();
-  export const kCmdNewBlockBeforeCurrent = nmid();
-  export const kCmdNewBlockAtEnd = nmid();
-  export const kCmdNewBlockAtStart = nmid();
-  export const kCmdBlockDelete = nmid();
-  export const kCmdSplitBlockAtCursor = nmid();
-  export const kCmdGoToNextBlock = nmid();
-  export const kCmdGoToPreviousBlock = nmid();
-  export const kCmdChangeBlockLanguage = nmid();
-  export const kCmdBlockSelectAll = nmid();
-  export const kCmdMoveBlock = nmid();
-  export const kCmdTransposeChars = nmid();
-  export const kCmdToggleBlockFold = nmid();
-  export const kCmdFoldBlock = nmid();
-  export const kCmdUnfoldBlock = nmid();
-  export const kCmdFoldAllBlocks = nmid();
-  export const kCmdUnfoldAllBlocks = nmid();
-  export const kCmdFoldCode = nmid();
-  export const kCmdUnfoldColde = nmid();
-  export const kCmdUnfoldEverything = nmid();
-  export const kCmdMoveBlockUp = nmid();
-  export const kCmdMoveBlockDown = nmid();
-  export const kCmdFormatBlock = nmid();
+  const kCmdGoToBlock = nmid();
+  const kCmdNewBlockBeforeCurrent = nmid();
+  const kCmdNewBlockAtEnd = nmid();
+  const kCmdNewBlockAtStart = nmid();
+  const kCmdBlockDelete = nmid();
+  const kCmdSplitBlockAtCursor = nmid();
+  const kCmdGoToNextBlock = nmid();
+  const kCmdGoToPreviousBlock = nmid();
+  const kCmdChangeBlockLanguage = nmid();
+  const kCmdBlockSelectAll = nmid();
+  const kCmdMoveBlock = nmid();
+  const kCmdTransposeChars = nmid();
+  const kCmdInsertDateAndTime = nmid();
+  const kCmdToggleBlockFold = nmid();
+  const kCmdFoldBlock = nmid();
+  const kCmdUnfoldBlock = nmid();
+  const kCmdFoldAllBlocks = nmid();
+  const kCmdUnfoldAllBlocks = nmid();
+  const kCmdFoldCode = nmid();
+  const kCmdUnfoldColde = nmid();
+  const kCmdUnfoldEverything = nmid();
+  const kCmdMoveBlockUp = nmid();
+  const kCmdMoveBlockDown = nmid();
+  const kCmdFormatBlock = nmid();
   const kCmdBlockLast = kCmdFormatBlock;
 
-  export const kCmdShowHelp = nmid();
-  export const kCmdShowHelpAsNote = nmid();
-  export const kCmdShowReleaseNotes = nmid();
-  export const kCmdMoveNotesToDirectory = nmid();
-  export const kCmdSwitchToNotesInDir = nmid();
-  export const kCmdSwitchToLocalStorage = nmid();
-  export const kCmdExportNotes = nmid();
-  export const kCmdExportCurrentNote = nmid();
-  export const kCmdEncryptNotes = nmid();
-  export const kCmdDecryptNotes = nmid();
-  export const kCmdEncryptionHelp = nmid();
-  export const kCmdToggleSpellChecking = nmid();
-  export const kCmdShowStorageHelp = nmid();
-  export const kCmdSettings = nmid();
-  export const kCmdOpenRecent = nmid();
-  export const kCmdShowWelcomeNote = nmid();
-  export const kCmdShowWelcomeDevNote = nmid();
-  export const kCmdSmartRun = nmid();
-  export const kCmdRunBlock = nmid();
-  export const kCmdRunBlockWithAnotherBlock = nmid();
-  export const kCmdRunBlockWithClipboard = nmid();
-  export const kCmdRunFunctionWithBlockContent = nmid();
-  export const kCmdRunFunctionWithSelection = nmid();
-  export const kCmdCreateYourOwnFunctions = nmid();
-  export const kCmdShowBuiltInFunctions = nmid();
-  export const kCmdRunHelp = nmid();
-  export const kCmdExportCurrentBlock = nmid();
-  export const kCmdNoteToggleStarred = nmid();
-  export const kCmdOpenNoteFromDisk = nmid();
-  export const kCmdToggleSidebar = nmid();
-  export const kCmdFind = nmid();
-  export const kCmdFindInNotes = nmid();
-  export const kCmdSearch = nmid();
-  export const kCmdSearchInNotes = nmid();
+  const kCmdShowHelp = nmid();
+  const kCmdShowHelpAsNote = nmid();
+  const kCmdShowReleaseNotes = nmid();
+  const kCmdMoveNotesToDirectory = nmid();
+  const kCmdSwitchToNotesInDir = nmid();
+  const kCmdSwitchToLocalStorage = nmid();
+  const kCmdExportNotes = nmid();
+  const kCmdExportCurrentNote = nmid();
+  const kCmdEncryptNotes = nmid();
+  const kCmdDecryptNotes = nmid();
+  const kCmdEncryptionHelp = nmid();
+  const kCmdToggleSpellChecking = nmid();
+  const kCmdShowStorageHelp = nmid();
+  const kCmdSettings = nmid();
+  const kCmdOpenRecent = nmid();
+  const kCmdShowWelcomeNote = nmid();
+  const kCmdShowWelcomeDevNote = nmid();
+  const kCmdSmartRun = nmid();
+  const kCmdRunBlock = nmid();
+  const kCmdRunBlockWithAnotherBlock = nmid();
+  const kCmdRunBlockWithClipboard = nmid();
+  const kCmdRunFunctionWithBlockContent = nmid();
+  const kCmdRunFunctionWithSelection = nmid();
+  const kCmdCreateYourOwnFunctions = nmid();
+  const kCmdShowBuiltInFunctions = nmid();
+  const kCmdRunHelp = nmid();
+  const kCmdExportCurrentBlock = nmid();
+  const kCmdNoteToggleStarred = nmid();
+  const kCmdOpenNoteFromDisk = nmid();
+  const kCmdToggleSidebar = nmid();
+  const kCmdFind = nmid();
+  const kCmdFindInNotes = nmid();
+  const kCmdSearch = nmid();
+  const kCmdSearchInNotes = nmid();
 
   function buildMenuDef() {
     // let starAction = "Star";
@@ -1319,6 +1321,9 @@
     } else if (cmdId === kCmdTransposeChars) {
       transposeChars(view);
       view.focus();
+    } else if (cmdId === kCmdInsertDateAndTime) {
+      insertDateAndTime(view);
+      view.focus();
     } else if (cmdId === kCmdGoToPreviousBlock) {
       gotoPreviousBlock(view);
       view.focus();
@@ -1525,6 +1530,7 @@
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
     ["Edit: Transpose chars", kCmdTransposeChars],
+    ["Edit: Insert date and time", kCmdInsertDateAndTime],
     ["Edit: Unfold everything", kCmdUnfoldEverything],
     // ["Export current note", kCmdExportCurrentNote],
     ...(isMac
