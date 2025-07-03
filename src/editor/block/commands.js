@@ -497,14 +497,14 @@ export const deleteBlock =
         block.delimiter.from +
         (nextBlock.delimiter.to - nextBlock.delimiter.from);
     }
-    let change = {
-      from: block.range.from,
-      to: block.range.to,
-      insert: replace,
-    };
+
     dispatch(
       state.update({
-        changes: change,
+        changes: {
+          from: block.range.from,
+          to: block.range.to,
+          insert: replace,
+        },
         selection: EditorSelection.cursor(newSelection),
         annotations: [heynoteEvent.of(DELETE_BLOCK)],
       }),

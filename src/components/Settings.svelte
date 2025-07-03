@@ -27,6 +27,22 @@
     ["dark", "Dark"],
   ];
 
+  let spaces = [
+    [1, "1 space"],
+    [2, "2 spaces"],
+    [3, "3 spaces"],
+    [4, "4 spaces"],
+    [5, "5 spaces"],
+    [6, "6 spaces"],
+    [7, "7 spaces"],
+    [8, "8 spaces"],
+  ];
+
+  let indentWith = [
+    ["tabs", "Tabs"],
+    ["spaces", "Spaces"],
+  ];
+
   let defaultFontSize = $state(kDefaultFontSize);
   let appVersion = getVersion();
   let gitHash = getGitHash();
@@ -76,6 +92,30 @@
       <input use:focus type="checkbox" bind:checked={settings.bracketClosing} />
       Auto-close brackets and quotation marks
     </label>
+  </div>
+
+  <div class="mt-2 flex justify-end items-center">
+    <h2>Indent With</h2>
+    <select bind:value={settings.indentType}>
+      {#each indentWith as t}
+        {@const th = t[0]}
+        {@const label = t[1]}
+        <option selected={th === settings.indentType} value={th}
+          >{label}
+        </option>
+      {/each}
+    </select>
+  </div>
+
+  <div class="mt-2 flex justify-end items-center">
+    <h2>Tab Size</h2>
+    <select bind:value={settings.tabSize}>
+      {#each spaces as t}
+        {@const th = t[0]}
+        {@const label = t[1]}
+        <option selected={th === settings.tabSize} value={th}>{label} </option>
+      {/each}
+    </select>
   </div>
 
   <div class="mt-2 flex flex-col">

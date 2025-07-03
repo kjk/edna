@@ -2,6 +2,10 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.33
+
+- add setting for tabSize and using tabs/spaces for indentation
+
 ## 1.32
 
 - add archiving notes and moving them to a trash

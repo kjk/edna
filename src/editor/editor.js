@@ -60,7 +60,8 @@ export class EdnaEditor {
     showLineNumberGutter = true,
     showFoldGutter = true,
     bracketClosing = false,
-    tabSize = 2,
+    useTabs,
+    tabSize,
     defaultBlockToken,
     defaultBlockAutoDetect,
     fontFamily,
@@ -74,16 +75,16 @@ export class EdnaEditor {
     this.foldGutterCompartment = new Compartment();
     this.readOnlyCompartment = new Compartment();
     this.closeBracketsCompartment = new Compartment();
+    this.tabsCompartment = new Compartment();
     this.deselectOnCopy = keymap === "emacs";
     this.emacsMetaKey = emacsMetaKey;
     this.fontTheme = new Compartment();
     this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
-    this.tabsCompartment = new Compartment();
     this.noteName = noteName;
     this.contentLoaded = false;
 
-    const makeTabState = (tabsAsSpaces, tabSpaces) => {
-      const indentChar = tabsAsSpaces ? " ".repeat(tabSpaces) : "\t";
+    const makeTabState = (useTabs, tabSize) => {
+      const indentChar = useTabs ? "\t" : " ".repeat(tabSize);
       const v = indentUnit.of(indentChar);
       return this.tabsCompartment.of(v);
     };
@@ -120,7 +121,7 @@ export class EdnaEditor {
         this.themeCompartment.of(theme === "dark" ? heynoteDark : heynoteLight),
         heynoteBase,
         this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
-        makeTabState(true, tabSize),
+        makeTabState(useTabs, tabSize),
         EditorView.scrollMargins.of((f) => {
           return { top: 80, bottom: 80 };
         }),
@@ -304,6 +305,13 @@ export class EdnaEditor {
     return this.view.state.selection.main.head;
   }
 
+  setCursorPosition(position) {
+    this.view.dispatch({
+      selection: { anchor: position, head: position },
+      scrollIntoView: true,
+    });
+  }
+
   focus() {
     focusEditorView(this.view);
   }
@@ -382,9 +390,13 @@ export class EdnaEditor {
     });
   }
 
-  setTabsState(tabsAsSpaces, tabSpaces) {
+  /**
+   * @param {boolean} useTabs
+   * @param {number} tabSpaces
+   */
+  setTabsState(useTabs, tabSpaces) {
     if (!this.view) return;
-    const indentChar = tabsAsSpaces ? " ".repeat(tabSpaces) : "\t";
+    const indentChar = useTabs ? "\t" : " ".repeat(tabSpaces);
     const v = indentUnit.of(indentChar);
     this.view.dispatch({
       effects: this.tabsCompartment.reconfigure(v),

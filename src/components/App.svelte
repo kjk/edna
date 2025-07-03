@@ -1625,7 +1625,7 @@
   }
 
   async function executeCommand(cmdId) {
-    console.log("executeCommand:", cmdId);
+    // console.log("executeCommand:", cmdId);
     showingCommandPalette = false;
     onmenucmd(cmdId);
   }

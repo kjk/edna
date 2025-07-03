@@ -56,6 +56,9 @@
     let fontFamily = settings.fontFamily;
     let fontSize = settings.fontSize;
     editor?.setFont(fontFamily, fontSize);
+    let tabSize = settings.tabSize;
+    let useTabs = settings.indentType == "tabs";
+    editor?.setTabsState(useTabs, tabSize);
   });
 
   function didLoadCurrencies() {
@@ -102,6 +105,8 @@
     let fontSize = settings.fontSize;
 
     let noteName = settings.currentNoteName;
+    let useTabs = settings.indentType == "tabs";
+    let tabSize = settings.tabSize;
 
     editor = new EdnaEditor({
       element: editorRef,
@@ -114,7 +119,8 @@
       bracketClosing: bracketClosing,
       fontFamily: fontFamily,
       fontSize: fontSize,
-      tabSize: 2, // TODO: add a setting for this
+      tabSize: tabSize,
+      useTabs: useTabs,
       // TODO: add a setting for this
       defaultBlockToken: "text",
       defaultBlockAutoDetect: true,

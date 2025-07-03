@@ -23,6 +23,8 @@ const settingsKeys = [
   "useWideSelectors",
   "alwaysShowTopNav",
   "showSidebar",
+  "tabSize",
+  "indentType",
   "theme",
 ];
 
@@ -41,6 +43,8 @@ export class Settings {
   useWideSelectors = $state(false);
   alwaysShowTopNav = $state(true);
   showSidebar = $state(false);
+  tabSize = $state(4);
+  indentType = $state("spaces"); // "tabs" or "spaces"
   theme = $state("system"); // "system", "light", "dark"
 
   constructor(settings) {
@@ -74,6 +78,16 @@ export let kDefaultFontSize = isMobileDevice ? 16 : 12;
 
 export const kSettingsPath = "settings.json";
 
+function validateTabSize(tabSize) {
+  if (tabSize < 1) {
+    return 1;
+  }
+  if (tabSize > 8) {
+    return 8;
+  }
+  return tabSize;
+}
+
 let lastSettings;
 
 /** @returns {Settings} */
@@ -87,6 +101,8 @@ export function getSettings() {
   console.log("getSettings: loaded from localStorage:", d);
   let settings = d === null ? {} : JSON.parse(d);
   appState.settings = new Settings(settings);
+  appState.settings.tabSize = validateTabSize(appState.settings.tabSize || 4);
+  // console.log("getSettings: settings:", app
   if (!appState.settings.currentNoteName) {
     appState.settings.currentNoteName = kScratchNoteName;
   }
@@ -116,6 +132,7 @@ function updateWebsiteTheme() {
  */
 function saveSettings(newSettings) {
   throwIf(!newSettings.currentNoteName);
+  newSettings.tabSize = validateTabSize(newSettings.tabSize);
   let settings = newSettings.toJSON();
   let changed = [];
   for (let key of settingsKeys) {
