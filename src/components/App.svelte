@@ -32,6 +32,8 @@
     insertNewBlockAtCursor,
     moveCurrentBlockDown,
     moveCurrentBlockUp,
+    moveLineDown,
+    moveLineUp,
     selectAll,
   } from "../editor/block/commands";
   import {
@@ -927,7 +929,10 @@
   const kCmdRestoreNoteFromTrash = nmid();
   const kCmdPermanentlyDeleteNote = nmid();
   const kCmdCreateScratchNote = nmid();
-
+  const kCmdMoveLineUp = nmid();
+  const kCmdMoveLineDown = nmid();
+  const kCmdMoveSelectionUp = nmid();
+  const kCmdMoveSelectionDown = nmid();
   const kCmdNewBlockAfterCurrent = nmid();
   const kCmdBlockFirst = kCmdNewBlockAfterCurrent;
   const kCmdGoToBlock = nmid();
@@ -1116,8 +1121,10 @@
     return contextMenu;
   }
 
+  /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
+
   /**
-   * @param {import("../Menu.svelte").MenuItemDef} mi
+   * @param {MenuItemDef} mi
    * @returns {number}
    */
   function menuItemStatus(mi) {
@@ -1135,6 +1142,7 @@
     let hasFS = supportsFileSystem();
     let view = getEditorView();
     let readOnly = isReadOnly(view);
+    let hasSel = hasSelection();
 
     let removeIfReadOnly = [
       kCmdFormatBlock,
@@ -1157,6 +1165,10 @@
       kCmdToggleComment,
       kCmdToggleLineComment,
       kCmdToggleBlockComment,
+      kCmdMoveLineUp,
+      kCmdMoveLineDown,
+      kCmdMoveSelectionUp,
+      kCmdMoveSelectionDown,
     ];
     let removedfNeedsFS = [
       kCmdOpenNoteFromDisk,
@@ -1215,8 +1227,18 @@
       mid === kCmdRunFunctionWithBlockContent ||
       mid === kCmdRunFunctionWithSelection
     ) {
-      if (mid === kCmdRunFunctionWithSelection && !hasSelection()) {
+      if (mid === kCmdRunFunctionWithSelection && !hasSel) {
         return kMenuStatusDisabled;
+      }
+    } else if (mid === kCmdMoveLineUp || mid == kCmdMoveLineDown) {
+      console.warn("line up / down:hasSel:", hasSel);
+      if (hasSel) {
+        return kMenuStatusRemoved;
+      }
+    } else if (mid === kCmdMoveSelectionUp || mid == kCmdMoveSelectionDown) {
+      console.warn("selection up / down:hasSel:", hasSel);
+      if (!hasSel) {
+        return kMenuStatusRemoved;
       }
     } else if (mid === kCmdCloseCurrentTab) {
       if (len(settings.tabs) < 2) {
@@ -1250,7 +1272,7 @@
   }
 
   /**
-   * @returns {boolean} hasSelection
+   * @returns {boolean}
    */
   function hasSelection() {
     let view = getEditorView();
@@ -1373,6 +1395,12 @@
       view.focus();
     } else if (cmdId === kCmdUnfoldBlock) {
       unfoldBlock(ednaEditor)(view);
+      view.focus();
+    } else if (cmdId === kCmdMoveLineUp || cmdId === kCmdMoveSelectionUp) {
+      moveLineUp(view);
+      view.focus();
+    } else if (cmdId === kCmdMoveLineDown || cmdId === kCmdMoveSelectionDown) {
+      moveLineDown(view);
       view.focus();
     } else if (cmdId === kCmdFoldAllBlocks) {
       foldAllBlocks(ednaEditor)(view);
@@ -1538,6 +1566,7 @@
     "Un-archive note",
   ];
 
+  /** @type {MenuItemDef[]} */
   const commandPaletteAdditions = [
     ["Create New Scratch Note", kCmdCreateScratchNote],
     ["Create New Note", kCmdCreateNewNote],
@@ -1553,12 +1582,17 @@
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
     ["Edit: Transpose chars", kCmdTransposeChars],
-    ["Edit: Insert date and time", kCmdInsertDateAndTime],
+    ["Edit: Move line up\tAlt-ArrowUp", kCmdMoveLineUp],
+    ["Edit: Move line down\tAlt-ArrowDown", kCmdMoveLineDown],
+    ["Edit: Move selection up\tAlt-ArrowUp", kCmdMoveSelectionUp],
+    ["Edit: Move selection down\tAlt-ArrowDown", kCmdMoveSelectionDown],
+    ["Edit: Insert date and time\tAlt-Shift-d", kCmdInsertDateAndTime],
     ["Edit: Unfold everything", kCmdUnfoldEverything],
     ["Edit: Toggle comment\tMod-/", kCmdToggleComment],
     ["Edit: Toggle line comment", kCmdToggleLineComment],
     ["Edit: Toggle block comment\tAlt-Shift-a", kCmdToggleBlockComment],
     // ["Export current note", kCmdExportCurrentNote],
+    // @ts-ignore
     ...(isMac
       ? [
           ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
@@ -1631,7 +1665,13 @@
 
   function buildCommandPaletteDef() {
     commandsDef = buildCommandsDef();
-    commandsDef.push(...commandPaletteAdditions);
+    for (let mi of commandPaletteAdditions) {
+      let status = menuItemStatus(mi);
+      if (status != kMenuStatusNormal) {
+        continue;
+      }
+      commandsDef.push(mi);
+    }
     // console.log("commandPaletteAdditions:", commandPaletteAdditions);
     let name = commandNameOverride(kCmdToggleSpellChecking);
     commandsDef.push([name, kCmdToggleSpellChecking]);
@@ -1871,13 +1911,10 @@
       return;
     }
 
-    let { selectedText } = getCurrentSelection(view.state);
-    let hasSelection = selectedText !== "";
+    let hasSel = hasSelection();
     let supportsRun = currentBlockSupportsRun(view.state);
-    console.log(
-      `smartRun: hasSelection=${hasSelection} supportsRun=${supportsRun}`,
-    );
-    if (hasSelection) {
+    // console.log(`smartRun: hasSelection=${hasSel} supportsRun=${supportsRun}`);
+    if (hasSel) {
       openFunctionSelector(true);
     } else if (supportsRun) {
       runCurrentBlock();

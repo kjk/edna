@@ -2,6 +2,14 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.36
+
+- add commands to command palette (`Mod + K`):
+  - `Edit: move line up`
+  - `Edit: move line down`
+  - `Edit: move selection up`
+  - `Edit: move selection down`
+
 ## 1.35
 
 - add commands to command palette (`Mod + K`):
