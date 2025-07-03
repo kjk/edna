@@ -33,6 +33,7 @@
     formatBlockContent,
     insertAfterActiveBlock,
   } from "../editor/block/format-code";
+  import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { EdnaEditor, setReadOnly } from "../editor/editor";
   import {
@@ -934,6 +935,7 @@
   export const kCmdChangeBlockLanguage = nmid();
   export const kCmdBlockSelectAll = nmid();
   export const kCmdMoveBlock = nmid();
+  export const kCmdTransposeChars = nmid();
   export const kCmdToggleBlockFold = nmid();
   export const kCmdFoldBlock = nmid();
   export const kCmdUnfoldBlock = nmid();
@@ -1140,6 +1142,7 @@
       kCmdSmartRun, // disable?
       kCmdRunFunctionWithBlockContent, // disable?
       kCmdRunFunctionWithSelection, // disable?
+      kCmdTransposeChars,
     ];
     let removedfNeedsFS = [
       kCmdOpenNoteFromDisk,
@@ -1312,6 +1315,9 @@
       openBlockSelector();
     } else if (cmdId === kCmdGoToNextBlock) {
       gotoNextBlock(view);
+      view.focus();
+    } else if (cmdId === kCmdTransposeChars) {
+      transposeChars(view);
       view.focus();
     } else if (cmdId === kCmdGoToPreviousBlock) {
       gotoPreviousBlock(view);
@@ -1518,6 +1524,7 @@
     ["Open note from disk", kCmdOpenNoteFromDisk],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
+    ["Edit: Transpose chars", kCmdTransposeChars],
     ["Edit: Unfold everything", kCmdUnfoldEverything],
     // ["Export current note", kCmdExportCurrentNote],
     ...(isMac

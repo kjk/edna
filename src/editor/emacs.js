@@ -1,5 +1,3 @@
-import { EditorSelection, EditorState, Prec } from "@codemirror/state";
-import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
 import {
   cursorCharLeft,
   cursorCharRight,
@@ -24,10 +22,9 @@ import {
   selectLineUp,
   simplifySelection,
   splitLine,
-  transposeChars,
   undo,
 } from "@codemirror/commands";
-import { ednaKeymap, keymapFromSpec } from "./keymap.js";
+import { EditorSelection, EditorState, Prec } from "@codemirror/state";
 import {
   gotoNextBlock,
   gotoNextParagraph,
@@ -39,6 +36,9 @@ import {
   selectPreviousBlock,
   selectPreviousParagraph,
 } from "./block/commands.js";
+import { transposeChars } from "./block/transpose-chars.js";
+import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
+import { ednaKeymap, keymapFromSpec } from "./keymap.js";
 
 // if set to true, all keybindings for moving around is changed to their corresponding select commands
 let emacsMarkMode = false;
