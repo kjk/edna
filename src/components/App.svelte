@@ -1,5 +1,10 @@
 <script>
   import { tick } from "svelte";
+  import {
+    toggleBlockComment,
+    toggleComment,
+    toggleLineComment,
+  } from "@codemirror/commands";
   import { foldCode, unfoldCode } from "@codemirror/language";
   import {
     closeSearchPanel,
@@ -946,6 +951,9 @@
   const kCmdFoldCode = nmid();
   const kCmdUnfoldColde = nmid();
   const kCmdUnfoldEverything = nmid();
+  const kCmdToggleComment = nmid();
+  const kCmdToggleLineComment = nmid();
+  const kCmdToggleBlockComment = nmid();
   const kCmdMoveBlockUp = nmid();
   const kCmdMoveBlockDown = nmid();
   const kCmdFormatBlock = nmid();
@@ -1145,6 +1153,9 @@
       kCmdRunFunctionWithBlockContent, // disable?
       kCmdRunFunctionWithSelection, // disable?
       kCmdTransposeChars,
+      kCmdToggleComment,
+      kCmdToggleLineComment,
+      kCmdToggleBlockComment,
     ];
     let removedfNeedsFS = [
       kCmdOpenNoteFromDisk,
@@ -1320,6 +1331,15 @@
       view.focus();
     } else if (cmdId === kCmdTransposeChars) {
       transposeChars(view);
+      view.focus();
+    } else if (cmdId === kCmdToggleComment) {
+      toggleComment(view);
+      view.focus();
+    } else if (cmdId === kCmdToggleLineComment) {
+      toggleLineComment(view);
+      view.focus();
+    } else if (cmdId === kCmdToggleBlockComment) {
+      toggleBlockComment(view);
       view.focus();
     } else if (cmdId === kCmdInsertDateAndTime) {
       insertDateAndTime(view);
@@ -1532,6 +1552,9 @@
     ["Edit: Transpose chars", kCmdTransposeChars],
     ["Edit: Insert date and time", kCmdInsertDateAndTime],
     ["Edit: Unfold everything", kCmdUnfoldEverything],
+    ["Edit: Toggle comment\tMod-/", kCmdToggleComment],
+    ["Edit: Toggle line comment", kCmdToggleLineComment],
+    ["Edit: Toggle block comment\tAlt-Shift-a", kCmdToggleBlockComment],
     // ["Export current note", kCmdExportCurrentNote],
     ...(isMac
       ? [
