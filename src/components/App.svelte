@@ -971,6 +971,7 @@
   const kCmdDecryptNotes = nmid();
   const kCmdEncryptionHelp = nmid();
   const kCmdToggleSpellChecking = nmid();
+  const kCmdToggleSpellChecking2 = nmid();
   const kCmdShowStorageHelp = nmid();
   const kCmdSettings = nmid();
   const kCmdOpenRecent = nmid();
@@ -1398,6 +1399,9 @@
     } else if (cmdId === kCmdToggleSpellChecking) {
       toggleSpellCheck();
       view.focus();
+    } else if (cmdId === kCmdToggleSpellChecking2) {
+      toggleSpellCheck();
+      view.focus();
     } else if (cmdId === kCmdShowHelp) {
       showHTMLHelp();
       view.focus();
@@ -1545,6 +1549,7 @@
     ["Search", kCmdSearch],
     ["Search in notes", kCmdSearchInNotes],
     ["Open note from disk", kCmdOpenNoteFromDisk],
+    ["Toggle Spellchecking", kCmdToggleSpellChecking2],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
     ["Edit: Transpose chars", kCmdTransposeChars],
