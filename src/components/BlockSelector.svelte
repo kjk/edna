@@ -9,7 +9,13 @@
 
 <script>
   import { focus } from "../actions";
-  import { findMatchingItems, getKeyEventNumber, len } from "../util";
+  import {
+    findMatchingItems,
+    getKeyEventNumber,
+    hilightText,
+    len,
+    makeHilightRegExp,
+  } from "../util";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{
@@ -21,6 +27,7 @@
 
   /** @type {string} */
   let filter = $state("");
+  let hiliRegExp = $derived(makeHilightRegExp(filter));
 
   let blockCountMsg = $state(`${len(blocks)} blocks`);
   if (len(blocks) == 1) {
@@ -100,8 +107,9 @@
     {initialSelection}
   >
     {#snippet renderItem(item, idx)}
+      {@const hili = hilightText(item.item.text, hiliRegExp)}
       <div class="truncate">
-        {item.item.text}
+        {@html hili}
       </div>
       <div class="grow"></div>
       {#if idx < 10}
