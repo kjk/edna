@@ -124,7 +124,7 @@
     listboxRef.onkeydown(ev, allowLeftRight);
   }}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[90vh] w-[32em] p-2"
+  class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[90vh] w-[42em] max-w-[90vw] p-2"
 >
   <div>
     <input

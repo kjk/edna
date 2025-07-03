@@ -586,7 +586,7 @@
 <form
   onkeydown={onKeydown}
   tabindex="-1"
-  class="selector absolute flex flex-col z-20 center-x-with-translate top-[2rem] max-h-[90vh] w-[32em] p-2"
+  class="selector absolute flex flex-col z-20 center-x-with-translate top-[2rem] max-h-[90vh] w-[42em] max-w-[90vw] p-2"
 >
   {#if header}
     <div class="font-bold mb-2 text-lg ml-1">{header}</div>
