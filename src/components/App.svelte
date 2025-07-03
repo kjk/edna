@@ -1011,7 +1011,7 @@
       ["Un-archive", kCmdUnArchiveCurrentNote],
       ["Move to trash", kCmdMoveNoteToTrash],
       ["Restore from trash", kCmdRestoreNoteFromTrash],
-      ["Permanently delte", kCmdPermanentlyDeleteNote],
+      ["Delete permanently", kCmdPermanentlyDeleteNote],
       ["Export to file", kCmdExportCurrentNote],
     ];
 
@@ -1233,9 +1233,7 @@
         return kMenuStatusRemoved;
       }
     } else if (mid === kCmdPermanentlyDeleteNote) {
-      // only show permanently delete for notes in trash
-      // should show always (for notes that can be deleted)?
-      if (!isNoteTrashed(noteName)) {
+      if (!canDeleteNote(noteName)) {
         return kMenuStatusRemoved;
       }
     } else if (mid === kCmdArchiveCurrentNote) {
