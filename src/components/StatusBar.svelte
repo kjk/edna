@@ -5,11 +5,10 @@
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages.js";
-  import { openLanguageSelector, openSettings } from "../globals.js";
+  import { openLanguageSelector } from "../globals.js";
   import { fixUpShortcuts } from "../key-helper.js";
   import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
-  import { IconSettings } from "./Icons.svelte";
 
   /** @type { {
     line: number,
@@ -134,10 +133,6 @@
       </svg>
     </button>
   {/if}
-  <div class="text-gray-400">&bull;</div>
-  <button onclick={openSettings} class="clickable-icon ml-1" title="Settings">
-    {@render IconSettings()}
-  </button>
   <div class="text-gray-400">&bull;</div>
   <CurrentTime class="ml-1 mr-1"></CurrentTime>
   <div class="text-gray-400">&bull;</div>
