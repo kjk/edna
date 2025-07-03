@@ -2,9 +2,16 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.35
+
+- add commands to command palette (`Mod + K`):
+  - `Block: Toggle comment` (`Mod + /`)
+  - `Block: Toggle line comment`
+  - `Block: Toggle block comment` (`Alt + Shift + A`)
+
 ## 1.34
 
-- add `Edit: Insert date and time` command, keyboard shortcut: `Alt + Shift + d`
+- add `Edit: Insert date and time` command, keyboard shortcut: `Alt + Shift + D`
 
 ## 1.33
 
