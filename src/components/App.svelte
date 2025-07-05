@@ -2356,6 +2356,6 @@
 
 {#if showingAskAI}
   <Overlay blur={true} onclose={closeDialogs}>
-    <AskAI startText={askAIStartText}></AskAI>
+    <AskAI close={closeDialogs} startText={askAIStartText}></AskAI>
   </Overlay>
 {/if}
