@@ -81,9 +81,6 @@
     getNoteMeta,
     getNotesMetadata,
     isNoteArchived,
-    isNoteTrashed,
-    moveNoteToTrash,
-    restoreNoteFromTrash,
     toggleNoteStarred,
     unArchiveNote,
   } from "../metadata";
@@ -139,6 +136,7 @@
     trimSuffix,
   } from "../util";
   import { boot } from "../webapp-boot";
+  import AskAI from "./AskAI.svelte";
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
@@ -165,6 +163,7 @@
   import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
   import TopNav from "./TopNav.svelte";
 
+  /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
   const isMac = platform.isMac;
@@ -194,6 +193,7 @@
   let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
   let showingAskFileWritePermissions = $state(false);
+  let showingAskAI = $state(false);
 
   let isShowingDialog = $derived.by(() => {
     return (
@@ -228,6 +228,7 @@
     showingHistorySelector = false;
     showingBlockSelector = false;
     showingFindInNotes = false;
+    showingAskAI = false;
 
     appState.forceNewTab = false;
 
@@ -240,6 +241,8 @@
   let runFunctionOnSelection = false;
   let userFunctions = $state([]); // note: $state() not needed
   let contextMenuPos = $state({ x: 0, y: 0 });
+
+  let askAIStartText = "";
 
   // /** @type {import("../editor/editor").EdnaEditor} */
   // let ednaEditor = $state(null);
@@ -925,8 +928,6 @@
   const kCmdRenameCurrentNote = nmid();
   const kCmdArchiveCurrentNote = nmid();
   const kCmdUnArchiveCurrentNote = nmid();
-  const kCmdMoveNoteToTrash = nmid();
-  const kCmdRestoreNoteFromTrash = nmid();
   const kCmdPermanentlyDeleteNote = nmid();
   const kCmdCreateScratchNote = nmid();
   const kCmdMoveLineUp = nmid();
@@ -999,6 +1000,7 @@
   const kCmdFindInNotes = nmid();
   const kCmdSearch = nmid();
   const kCmdSearchInNotes = nmid();
+  const kCmdAskAI = nmid();
 
   function buildMenuDef() {
     // let starAction = "Star";
@@ -1015,8 +1017,6 @@
       [starAction, kCmdNoteToggleStarred],
       ["Archive", kCmdArchiveCurrentNote],
       ["Un-archive", kCmdUnArchiveCurrentNote],
-      ["Move to trash", kCmdMoveNoteToTrash],
-      ["Restore from trash", kCmdRestoreNoteFromTrash],
       ["Delete permanently", kCmdPermanentlyDeleteNote],
       ["Export to file", kCmdExportCurrentNote],
     ];
@@ -1102,6 +1102,7 @@
     const contextMenu = [
       ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
       ["Open note\tMod + K", kCmdOpenNote],
+      ["Ask AI", kCmdAskAI],
       // ["Find\tMod + Q", kCmdOpenFind],
       ["This note", menuNote],
       ["Block", menuBlock],
@@ -1121,7 +1122,68 @@
     return contextMenu;
   }
 
-  /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
+  const commandNameOverrides = [
+    kCmdRenameCurrentNote,
+    "Rename current note",
+    kCmdPermanentlyDeleteNote,
+    "Delete note permanently",
+    kCmdExportCurrentNote,
+    "Export current note to a file",
+    kCmdExportCurrentBlock,
+    "Export current block to a file",
+    kCmdShowStorageHelp,
+    "Help: storage",
+    kCmdRunHelp,
+    "Help: running code",
+    kCmdShowHelp,
+    "Help",
+    kCmdShowHelpAsNote,
+    "Help as note",
+    kCmdCloseCurrentTab,
+    "Close tab",
+    kCmdArchiveCurrentNote,
+    "Archive note",
+    kCmdUnArchiveCurrentNote,
+    "Un-archive note",
+  ];
+
+  /** @type {MenuItemDef[]} */
+  const commandPaletteAdditions = [
+    ["Create New Scratch Note", kCmdCreateScratchNote],
+    ["Create New Note", kCmdCreateNewNote],
+    ["Open recent note", kCmdOpenRecent],
+    ["Open note in new tab", kCmdOpenNoteInNewTab],
+    ["Toggle Sidebar", kCmdToggleSidebar],
+    ["Find", kCmdFind],
+    ["Find in notes", kCmdFindInNotes],
+    ["Search", kCmdSearch],
+    ["Search in notes", kCmdSearchInNotes],
+    ["Open note from disk", kCmdOpenNoteFromDisk],
+    ["Toggle Spellchecking", kCmdToggleSpellChecking2],
+    ["Block: Fold all blocks", kCmdFoldAllBlocks],
+    ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
+    ["Edit: Transpose chars", kCmdTransposeChars],
+    ["Edit: Move line up\tAlt-ArrowUp", kCmdMoveLineUp],
+    ["Edit: Move line down\tAlt-ArrowDown", kCmdMoveLineDown],
+    ["Edit: Move selection up\tAlt-ArrowUp", kCmdMoveSelectionUp],
+    ["Edit: Move selection down\tAlt-ArrowDown", kCmdMoveSelectionDown],
+    ["Edit: Insert date and time\tAlt-Shift-d", kCmdInsertDateAndTime],
+    ["Edit: Unfold everything", kCmdUnfoldEverything],
+    ["Edit: Toggle comment\tMod-/", kCmdToggleComment],
+    ["Edit: Toggle line comment", kCmdToggleLineComment],
+    ["Edit: Toggle block comment\tAlt-Shift-a", kCmdToggleBlockComment],
+    // ["Export current note", kCmdExportCurrentNote],
+    // @ts-ignore
+    ...(isMac
+      ? [
+          ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
+          ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
+        ]
+      : [
+          ["Edit: Fold code\tCtrl-Shift-[", kCmdFoldCode],
+          ["Edit: Unfold code\tCtrl-Shift-]", kCmdUnfoldColde],
+        ]),
+  ];
 
   /**
    * @param {MenuItemDef} mi
@@ -1231,29 +1293,16 @@
         return kMenuStatusDisabled;
       }
     } else if (mid === kCmdMoveLineUp || mid == kCmdMoveLineDown) {
-      console.warn("line up / down:hasSel:", hasSel);
       if (hasSel) {
         return kMenuStatusRemoved;
       }
     } else if (mid === kCmdMoveSelectionUp || mid == kCmdMoveSelectionDown) {
-      console.warn("selection up / down:hasSel:", hasSel);
       if (!hasSel) {
         return kMenuStatusRemoved;
       }
     } else if (mid === kCmdCloseCurrentTab) {
       if (len(settings.tabs) < 2) {
         return kMenuStatusDisabled;
-      }
-    } else if (mid === kCmdMoveNoteToTrash) {
-      if (!canDeleteNote(noteName)) {
-        return kMenuStatusRemoved;
-      }
-      if (isNoteTrashed(noteName)) {
-        return kMenuStatusRemoved;
-      }
-    } else if (mid === kCmdRestoreNoteFromTrash) {
-      if (!isNoteTrashed(noteName)) {
-        return kMenuStatusRemoved;
       }
     } else if (mid === kCmdPermanentlyDeleteNote) {
       if (!canDeleteNote(noteName)) {
@@ -1312,12 +1361,6 @@
       view.focus();
     } else if (cmdId === kCmdRenameCurrentNote) {
       showingRenameNote = true;
-    } else if (cmdId === kCmdMoveNoteToTrash) {
-      moveNoteToTrash(settings.currentNoteName);
-      view.focus();
-    } else if (cmdId === kCmdRestoreNoteFromTrash) {
-      restoreNoteFromTrash(settings.currentNoteName);
-      view.focus();
     } else if (cmdId == kCmdPermanentlyDeleteNote) {
       deleteNotePermanently(settings.currentNoteName, true);
       view.focus();
@@ -1424,6 +1467,8 @@
       });
     } else if (cmdId === kCmdOpenNoteFromDisk) {
       openNoteFromDisk();
+    } else if (cmdId === kCmdAskAI) {
+      openAskAI();
     } else if (cmdId === kCmdToggleSpellChecking) {
       toggleSpellCheck();
       view.focus();
@@ -1535,75 +1580,6 @@
     showingContextMenu = true;
   }
 
-  let commandsDef = $state(null);
-
-  const commandNameOverrides = [
-    kCmdRenameCurrentNote,
-    "Rename current note",
-    kCmdMoveNoteToTrash,
-    "Move note to trash",
-    kCmdRestoreNoteFromTrash,
-    "Restore note from trash",
-    kCmdPermanentlyDeleteNote,
-    "Delete note permanently",
-    kCmdExportCurrentNote,
-    "Export current note to a file",
-    kCmdExportCurrentBlock,
-    "Export current block to a file",
-    kCmdShowStorageHelp,
-    "Help: storage",
-    kCmdRunHelp,
-    "Help: running code",
-    kCmdShowHelp,
-    "Help",
-    kCmdShowHelpAsNote,
-    "Help as note",
-    kCmdCloseCurrentTab,
-    "Close tab",
-    kCmdArchiveCurrentNote,
-    "Archive note",
-    kCmdUnArchiveCurrentNote,
-    "Un-archive note",
-  ];
-
-  /** @type {MenuItemDef[]} */
-  const commandPaletteAdditions = [
-    ["Create New Scratch Note", kCmdCreateScratchNote],
-    ["Create New Note", kCmdCreateNewNote],
-    ["Open recent note", kCmdOpenRecent],
-    ["Open note in new tab", kCmdOpenNoteInNewTab],
-    ["Toggle Sidebar", kCmdToggleSidebar],
-    ["Find", kCmdFind],
-    ["Find in notes", kCmdFindInNotes],
-    ["Search", kCmdSearch],
-    ["Search in notes", kCmdSearchInNotes],
-    ["Open note from disk", kCmdOpenNoteFromDisk],
-    ["Toggle Spellchecking", kCmdToggleSpellChecking2],
-    ["Block: Fold all blocks", kCmdFoldAllBlocks],
-    ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
-    ["Edit: Transpose chars", kCmdTransposeChars],
-    ["Edit: Move line up\tAlt-ArrowUp", kCmdMoveLineUp],
-    ["Edit: Move line down\tAlt-ArrowDown", kCmdMoveLineDown],
-    ["Edit: Move selection up\tAlt-ArrowUp", kCmdMoveSelectionUp],
-    ["Edit: Move selection down\tAlt-ArrowDown", kCmdMoveSelectionDown],
-    ["Edit: Insert date and time\tAlt-Shift-d", kCmdInsertDateAndTime],
-    ["Edit: Unfold everything", kCmdUnfoldEverything],
-    ["Edit: Toggle comment\tMod-/", kCmdToggleComment],
-    ["Edit: Toggle line comment", kCmdToggleLineComment],
-    ["Edit: Toggle block comment\tAlt-Shift-a", kCmdToggleBlockComment],
-    // ["Export current note", kCmdExportCurrentNote],
-    // @ts-ignore
-    ...(isMac
-      ? [
-          ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
-          ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
-        ]
-      : [
-          ["Edit: Fold code\tCtrl-Shift-[", kCmdFoldCode],
-          ["Edit: Unfold code\tCtrl-Shift-]", kCmdUnfoldColde],
-        ]),
-  ];
-
   function commandNameOverride(id, name) {
     if (id === kCmdToggleSpellChecking) {
       return (isSpellChecking ? "Disable" : "Enable") + " spell checking";
@@ -1663,6 +1639,8 @@
     return a;
   }
 
+  let commandsDef = $state(null);
+
   function buildCommandPaletteDef() {
     commandsDef = buildCommandsDef();
     for (let mi of commandPaletteAdditions) {
@@ -1696,6 +1674,15 @@
       return;
     }
     closeTab(settings.currentNoteName);
+  }
+
+  function openAskAI() {
+    showingAskAI = true;
+    let view = getEditorView();
+    let b = getActiveNoteBlock(view.state);
+    let s = view.state.sliceDoc(b.content.from, b.content.to);
+    console.warn(s);
+    askAIStartText = s;
   }
 
   function openCommandPalette() {
@@ -2277,6 +2264,7 @@
         {switchToRegularNoteSelector}
         {switchToCommandPalette}
         openNote={onOpenNote}
+        deleteNote={deleteNotePermanently}
         createNote={onCreateNote}
       />
     </Overlay>
@@ -2363,5 +2351,11 @@
       fileHandle={fileWritePermissionsFileHandle}
       close={askFileWritePermissionsClose}
     ></AskFileWritePermissions>
+  </Overlay>
+{/if}
+
+{#if showingAskAI}
+  <Overlay blur={true} onclose={closeDialogs}>
+    <AskAI startText={askAIStartText}></AskAI>
   </Overlay>
 {/if}

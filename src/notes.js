@@ -23,8 +23,6 @@ import {
 import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import {
-  isNoteArchived,
-  isNoteTrashed,
   kMetadataName,
   loadNotesMetadata,
   reassignNoteShortcut,
@@ -914,13 +912,7 @@ export function isNoteTrashable(name) {
  * @returns {boolean}
  */
 export function isNoteArchivable(name) {
-  if (!isNoteTrashable(name)) {
-    return false;
-  }
-  if (isNoteTrashed(name)) {
-    return false;
-  }
-  return true;
+  return isNoteTrashable(name);
 }
 
 /* I've seen loadNoteNames() fail. I assume that's because of doing directory read

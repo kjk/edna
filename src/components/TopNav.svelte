@@ -135,13 +135,6 @@
   function noteCls(name) {
     let m = getNoteMeta(name);
     let isArchived = m && m.isArchived;
-    let isTrashed = m && m.isTrashed;
-    console.log(
-      `noteCls: ${name}, isArchived: ${isArchived}, isTrashed: ${isTrashed}`,
-    );
-    if (isTrashed) {
-      return "italic text-red-400";
-    }
     if (isSystemNoteName(name) || isArchived) {
       return "italic";
     }

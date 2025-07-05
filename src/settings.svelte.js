@@ -98,7 +98,7 @@ export function getSettings() {
     return appState.settings;
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
-  console.log("getSettings: loaded from localStorage:", d);
+  // console.log("getSettings: loaded from localStorage:", d);
   let settings = d === null ? {} : JSON.parse(d);
   appState.settings = new Settings(settings);
   appState.settings.tabSize = validateTabSize(appState.settings.tabSize || 4);

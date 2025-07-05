@@ -5,7 +5,6 @@
     nameLC: string,
     isStarred: boolean,
     isArchived: boolean,
-    isTrashed: boolean,
     altShortcut?: number, // if present, 1 to 9 for Alt-1 to Alt-9
     ref: HTMLElement,
   }} NoteInfo
@@ -19,11 +18,7 @@
    * @param {NoteInfo} b
    */
   export function sortNotes(a, b) {
-    // first deleted
-    if (a.isTrashed && !b.isTrashed) {
-      return -1;
-    }
-    // then archived
+    // first archived
     if (a.isArchived && !b.isArchived) {
       return -1;
     }
@@ -68,13 +63,11 @@
    */
   export function buildNoteInfo(name) {
     let isArchived = false;
-    let isTrashed = false;
     let isStarred = false;
     let m = getNoteMeta(name, false);
     if (m) {
       isStarred = m.isStarred;
       isArchived = m.isArchived;
-      isTrashed = m.isTrashed;
     }
     /** @type {NoteInfo} */
     let item = {
@@ -83,7 +76,6 @@
       nameLC: name.toLowerCase(),
       isStarred: isStarred,
       isArchived: isArchived,
-      isTrashed: isTrashed,
       ref: null,
     };
     lastKey++;
@@ -119,16 +111,12 @@
     archiveNote,
     getNoteMeta,
     isNoteArchived,
-    isNoteTrashed,
-    moveNoteToTrash,
     reassignNoteShortcut,
-    restoreNoteFromTrash,
     toggleNoteStarred,
     unArchiveNote,
   } from "../metadata";
   import {
     isNoteArchivable,
-    isNoteTrashable,
     isSystemNoteName,
     sanitizeNoteName,
   } from "../notes";
@@ -167,20 +155,9 @@
     forMoveBlock = false,
   } = $props();
 
-  function localBuildNoteInfos(
-    regular,
-    archived,
-    includeArchived,
-    deleted,
-    includeDeleted,
-  ) {
+  function localBuildNoteInfos(regular, archived) {
     let notes = [...regular];
-    if (includeArchived) {
-      notes.push(...archived);
-    }
-    if (includeDeleted) {
-      notes.push(...deleted);
-    }
+    notes.push(...archived);
     let res = buildNoteInfos(notes);
     // console.log(
     //   "localBuildNoteInfos: regular:",
@@ -201,10 +178,7 @@
   let noteInfos = $derived(
     localBuildNoteInfos(
       appState.regularNotes,
-      appState.archivedNotes,
-      appState.showingArchived,
-      appState.trashedNotes,
-      appState.showingTrashed,
+      appState.showingArchived ? appState.archivedNotes : [],
     ),
   );
 
@@ -218,10 +192,7 @@
     // rebuilding of items
     noteInfos = localBuildNoteInfos(
       appState.regularNotes,
-      appState.archivedNotes,
-      appState.showingArchived,
-      appState.trashedNotes,
-      appState.showingTrashed,
+      appState.showingArchived ? appState.archivedNotes : [],
     );
   }
 
@@ -286,7 +257,7 @@
   }
 
   function selectionChanged(item, idx) {
-    console.log("selectionChanged:", $state.snapshot(item), idx);
+    // console.log("selectionChanged:", $state.snapshot(item), idx);
     selectedNote = item;
     selectedName = item ? selectedNote.name : "";
 
@@ -352,8 +323,8 @@
     if (isCtrlDelete(ev)) {
       ev.preventDefault();
       if (canDeleteSelected && selectedNote) {
-        // console.log("trash note", name);
-        moveNoteToTrash(selectedNote.name);
+        // console.log("delete note", name);
+        deleteNote(selectedNote.name, false);
         // .then(updateNoteInfos);
       }
       return;
@@ -406,9 +377,6 @@
   function toggleShowArchived() {
     appState.showingArchived = !appState.showingArchived;
   }
-  function toggleShowDeleted() {
-    appState.showingTrashed = !appState.showingTrashed;
-  }
   function showHideTxt(isShowing) {
     return isShowing ? "hide" : "show";
   }
@@ -417,10 +385,6 @@
     let name = noteInfo.name;
     let m = getNoteMeta(name);
     let isArchived = m && m.isArchived;
-    let isTrashed = m && m.isTrashed;
-    if (isTrashed) {
-      return "italic text-red-400";
-    }
     if (isSystemNoteName(name) || isArchived) {
       return "italic";
     }
@@ -428,24 +392,11 @@
   }
 </script>
 
-{#snippet archivedAndTrashed()}
-  {#if len(appState.archivedNotes) + len(appState.trashedNotes)}
+{#snippet showArchived()}
+  {#if len(appState.archivedNotes)}
     <div
       class="flex justify-around text-gray-700 text-sm max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
     >
-      {#if len(appState.trashedNotes) > 0}
-        <button
-          onclick={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            toggleShowDeleted();
-          }}
-          class="underline underline-offset-2 cursor-pointer"
-        >
-          {showHideTxt(appState.showingTrashed)}
-          {len(appState.trashedNotes)} in trash
-        </button>
-      {/if}
       {#if len(appState.archivedNotes) > 0}
         <button
           onclick={(ev) => {
@@ -467,7 +418,7 @@
   <div
     class="flex justify-between text-gray-700 text-xs max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
   >
-    {@render archivedAndTrashed()}
+    {@render showArchived()}
     <button
       onclick={(ev) => {
         ev.preventDefault();
@@ -545,7 +496,7 @@
     {#if showDelete && canDeleteSelected}
       <div class="kbd">Ctrl + Delete</div>
       <div class="red truncate">
-        trash note <span class="font-bold">
+        delete note <span class="font-bold">
           {selectedName}
         </span>
       </div>
@@ -659,38 +610,17 @@
               >
             {/if}
           {/if}
-          {#if isNoteTrashable(noteInfo.name)}
-            {#if isNoteTrashed(noteInfo.name)}
-              <button
-                title={"restore from trash"}
-                class="clickable-icon"
-                onclick={(ev) => {
-                  ev.preventDefault();
-                  ev.stopPropagation();
-                  restoreNoteFromTrash(noteInfo.name);
-                }}>{@render IconTablerTrash()}</button
-              >
-              <button
-                title={"permanently delete"}
-                class="clickable-icon text-red-400"
-                onclick={(ev) => {
-                  ev.preventDefault();
-                  ev.stopPropagation();
-                  deleteNote(noteInfo.name, false);
-                }}>{@render IconTablerTrash()}</button
-              >
-            {:else}
-              <button
-                title={"move note to trash"}
-                class="clickable-icon text-red-400"
-                onclick={(ev) => {
-                  ev.preventDefault();
-                  ev.stopPropagation();
-                  moveNoteToTrash(noteInfo.name);
-                }}>{@render IconTablerTrash()}</button
-              >
-            {/if}
-          {/if}
+          <!-- {#if isNoteTrashable(noteInfo.name)}
+            <button
+              title={"permanently delete"}
+              class="clickable-icon text-red-400"
+              onclick={(ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                deleteNote(noteInfo.name, false);
+              }}>{@render IconTablerTrash()}</button
+            >
+          {/if} -->
         </div>
       </div>
     {/snippet}
@@ -709,7 +639,7 @@
   {/if}
 
   {#if !forMoveBlock}
-    {@render archivedAndTrashed()}
+    {@render showArchived()}
     {#if appState.noteSelectorInfoCollapsed}
       {@render shortHelp()}
     {:else}

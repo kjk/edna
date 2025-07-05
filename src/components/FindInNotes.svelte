@@ -62,9 +62,7 @@
     if (appState.searchIncludeArchived) {
       notesToSearch.push(...$state.snapshot(appState.archivedNotes));
     }
-    if (appState.searchIncludeTrashed) {
-      notesToSearch.push(...$state.snapshot(appState.trashedNotes));
-    }
+
     let matchCase = appState.searchNotesMatchCase;
     let wholeWord = appState.searchNotesMatchWholeWord;
 
@@ -341,31 +339,6 @@
       {/if}
     {/if}
 
-    {#if len(appState.trashedNotes) > 0}
-      {#if appState.searchIncludeTrashed}
-        <button
-          onclick={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            appState.searchIncludeTrashed = false;
-            changeNo++; // make Enter redo the search
-            searchInputRef.focus();
-          }}
-          class="btn-link">exclude {len(appState.trashedNotes)} trashed</button
-        >
-      {:else}
-        <button
-          onclick={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            appState.searchIncludeTrashed = true;
-            changeNo++; // make Enter redo the search
-            searchInputRef.focus();
-          }}
-          class="btn-link">include {len(appState.trashedNotes)} trashed</button
-        >
-      {/if}
-    {/if}
     <div class="grow"></div>
     <div>Enter: start search</div>
     <div>Esc: dismiss</div>

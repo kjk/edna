@@ -10,9 +10,6 @@ class AppState {
   regularNotes = $derived(calcRegular(this.allNotes));
 
   /** @type {string[]} */
-  trashedNotes = $derived(calcDeleted(this.allNotes));
-
-  /** @type {string[]} */
   archivedNotes = $derived(calcArchived(this.allNotes));
 
   /** @type {string[]} */
@@ -32,10 +29,8 @@ class AppState {
   searchNotesMatchWholeWord = $state(false);
 
   showingArchived = $state(false); // show archived notes in note selector
-  showingTrashed = $state(false); // show deleted notes in note selector
 
   searchIncludeArchived = $state(false);
-  searchIncludeTrashed = $state(false);
 
   /** @type {string[]} */
   history = $state([]); // names of opened notes
@@ -54,7 +49,7 @@ function calcRegular(noteNames) {
   let res = [];
   for (let name of noteNames) {
     let m = getNoteMeta(name, false);
-    if (m && (m.isArchived || m.isTrashed)) {
+    if (m && m.isArchived) {
       continue;
     }
     res.push(name);
@@ -86,11 +81,6 @@ function calcArchived(noteNames) {
 }
 
 /** @returns {string[]} */
-function calcDeleted(noteNames) {
-  return calcWithBoolKey(noteNames, "isTrashed");
-}
-
-/** @returns {string[]} */
 function callcWithShortcuts(noteNames) {
   // altShortcut is string not bool but it still works
   return calcWithBoolKey(noteNames, "altShortcut");
@@ -100,7 +90,6 @@ export function appStateUpdateAfterNotesChange() {
   let all = appState.allNotes;
   appState.regularNotes = calcRegular(all);
   appState.archivedNotes = calcArchived(all);
-  appState.trashedNotes = calcDeleted(all);
   appState.starredNotes = calcStarred(all);
   appState.withShortcuts = callcWithShortcuts(all);
   // console.log(

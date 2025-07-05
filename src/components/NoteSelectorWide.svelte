@@ -1,11 +1,7 @@
 <script>
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import {
-    moveNoteToTrash,
-    reassignNoteShortcut,
-    toggleNoteStarred,
-  } from "../metadata";
+  import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
   import {
     isSystemNoteName,
     kScratchNoteName,
@@ -28,12 +24,14 @@
   /** @type {{
     openNote: (name: string) => void,
     createNote: (name: string) => void,
+    deleteNote: (name: string, showNotif: boolean) => Promise<void>,
     switchToCommandPalette: () => void,
     switchToRegularNoteSelector: () => void,
 }}*/
   let {
     openNote,
     createNote,
+    deleteNote,
     switchToCommandPalette,
     switchToRegularNoteSelector,
   } = $props();
@@ -179,7 +177,7 @@
         return;
       }
       if (selectedItem) {
-        moveNoteToTrash(selectedItem.name);
+        deleteNote(selectedItem.name, false);
       }
       return;
     }
