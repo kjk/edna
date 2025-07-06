@@ -26,6 +26,7 @@ const settingsKeys = [
   "tabSize",
   "indentType",
   "theme",
+  "openAIKey",
 ];
 
 export class Settings {
@@ -46,6 +47,7 @@ export class Settings {
   tabSize = $state(4);
   indentType = $state("spaces"); // "tabs" or "spaces"
   theme = $state("system"); // "system", "light", "dark"
+  openAIKey = $state("");
 
   constructor(settings) {
     if (!settings) {

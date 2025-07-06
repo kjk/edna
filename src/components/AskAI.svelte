@@ -1,10 +1,111 @@
 <script>
   import { focus } from "../actions";
+  import { getSettings } from "../settings.svelte";
+  import { len } from "../util";
 
   let { close, startText } = $props();
 
+  let questionText = $state(startText);
+
   function askai() {
     console.warn("askai");
+    settings.openAIKey = settings.openAIKey.trim();
+    openAIKey = openAIKey.trim();
+    let apiKey = "";
+    if (looksValidOpenAIKey(settings.openAIKey)) {
+      apiKey = settings.openAIKey;
+    } else if (looksValidOpenAIKey(openAIKey)) {
+      apiKey = openAIKey;
+    } else {
+      throw new Error(`no openai api key`);
+    }
+    streamChatGPTResponse(questionText, apiKey);
+  }
+
+  let settings = getSettings();
+  let openAIKey = $state("");
+  // heuristc. my openai keys start with "sk-proj-" and are 164 chars in length
+  function looksValidOpenAIKey(s) {
+    return len(s) > 100;
+  }
+
+  let responseText = $state("");
+
+  let canSendRequest = $derived(
+    looksValidOpenAIKey(settings.openAIKey) || looksValidOpenAIKey(openAIKey),
+  );
+
+  let reqInProgress = $state(false);
+  let askAIDisabled = $derived(!canSendRequest || reqInProgress);
+
+  async function streamChatGPTResponse(prompt, apiKey) {
+    console.warn("streamChatGPTResponse");
+    reqInProgress = true;
+
+    const requestBody = {
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 150,
+      temperature: 0.7,
+      stream: true,
+    };
+
+    try {
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        },
+      );
+      console.warn("got response");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // looks like a valid key, remember it
+      if (!looksValidOpenAIKey(settings.openAIKey)) {
+        settings.openAIKey = apiKey;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") return;
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices[0]?.delta?.content;
+              if (content) {
+                responseText += content;
+                console.warn(content);
+              }
+            } catch (e) {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error.message);
+    } finally {
+      reqInProgress = false;
+    }
+    console.warn("finished");
   }
 </script>
 
@@ -13,14 +114,33 @@
   tabindex="-1"
   class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[90vh] w-[75vw] p-2"
 >
-  <div class="p-1">AskAI</div>
+  <div class="p-1 font-bold text-lg">Ask AI</div>
   <textarea
+    bind:value={questionText}
     use:focus
     class="w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/20 p-1.5"
-    >{startText}</textarea
-  >
-  <div class="flex justify-end mt-2">
+  ></textarea>
+  {#if settings.openAIKey == ""}
+    <div class="flex mt-2 text-sm items-center">
+      <div>OpenAI API Key:</div>
+      <input bind:value={openAIKey} class="ml-2 grow px-1 py-[2px]" />
+    </div>
+  {/if}
+  {#if len(responseText) > 0}
+    <div
+      class="mt-2 font-mono whitespace-pre-wrap h-auto w-full overflow-auto border border-gray-950/20 outline-gray-950/20 p-1.5"
+    >
+      {responseText}
+    </div>
+  {/if}
+  <div class="flex mt-2">
+    {#if reqInProgress}
+      <div>thinking...</div>
+    {/if}
+    <div class="grow"></div>
     <button onclick={close} class="button-outline">Cancel</button>
-    <button onclick={askai} class="button-outline">Ask AI</button>
+    <button onclick={askai} disabled={askAIDisabled} class="ml-2 button-outline"
+      >Ask AI</button
+    >
   </div>
 </form>
