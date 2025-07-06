@@ -1733,6 +1733,18 @@
   }
 
   /**
+   * @param {string} s
+   */
+  function insertAskAIResponse(s) {
+    let view = getEditorView();
+    if (isReadOnly(view)) {
+      return false;
+    }
+    let text = blockHdrMarkdown + s;
+    insertAfterActiveBlock(view, text);
+  }
+
+  /**
    * @param {EditorView} view
    * @returns {Promise<boolean>}
    */
@@ -2356,6 +2368,10 @@
 
 {#if showingAskAI}
   <Overlay blur={true} onclose={closeDialogs}>
-    <AskAI close={closeDialogs} startText={askAIStartText}></AskAI>
+    <AskAI
+      close={closeDialogs}
+      startText={askAIStartText}
+      insertResponse={insertAskAIResponse}
+    ></AskAI>
   </Overlay>
 {/if}

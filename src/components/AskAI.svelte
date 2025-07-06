@@ -1,14 +1,20 @@
 <script>
+  import { tick } from "svelte";
   import { focus } from "../actions";
   import { getSettings } from "../settings.svelte";
   import { len } from "../util";
 
-  let { close, startText } = $props();
+  /** @type {{
+    close: () => void,
+    startText: string,
+    insertResponse: (string) => void,
+}}*/
+  let { close, startText, insertResponse } = $props();
 
   let questionText = $state(startText);
   let reqFinished = $state(false);
-  let err = $state("this is an error");
-
+  let err = $state("");
+  let aiModel = "gpt-3.5-turbo";
   const maxTokens = 1000;
 
   async function askai() {
@@ -24,20 +30,32 @@
     } else {
       throw new Error(`no openai api key`);
     }
+
+    let ok = true;
     try {
       reqFinished = false;
       reqInProgress = true;
       await streamChatGPTResponse(questionText, apiKey);
       // looks like a valid key, remember it
-      reqFinished = false;
+      reqFinished = true;
       if (!looksValidOpenAIKey(settings.openAIKey)) {
         settings.openAIKey = apiKey;
       }
     } catch (e) {
       console.error(e);
+      ok = false;
       err = e.toString();
     } finally {
       reqInProgress = false;
+    }
+    if (ok) {
+      tick().then(() => {
+        if (btnInsertRef) {
+          btnInsertRef.focus();
+        } else {
+          console.warn("NO btnInsertRef");
+        }
+      });
     }
   }
 
@@ -57,11 +75,17 @@
   let reqInProgress = $state(false);
   let askAIDisabled = $derived(!canSendRequest || reqInProgress);
 
+  function insertRsp() {
+    let s = "# Response from " + aiModel + "\n\n" + responseText + "\n";
+    insertResponse(s);
+    close();
+  }
+
   async function streamChatGPTResponse(prompt, apiKey) {
     console.warn("streamChatGPTResponse");
 
     const requestBody = {
-      model: "gpt-3.5-turbo",
+      model: aiModel,
       messages: [{ role: "user", content: prompt }],
       max_tokens: maxTokens,
       temperature: 0.7,
@@ -119,34 +143,41 @@
     }
     console.warn("finished");
   }
+
+  /** @type {HTMLElement} */
+  let btnInsertRef;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[90vh] w-[75vw] p-2"
+  class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[80vh] w-[75vw] p-2"
 >
   <div class="p-1 font-bold text-lg">Ask AI</div>
   <textarea
     bind:value={questionText}
     use:focus
-    class="w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/20 p-1.5"
+    class="w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
   ></textarea>
   {#if settings.openAIKey == ""}
-    <div class="flex mt-2 text-sm items-center">
+    <div class="flex py-1 text-sm items-center">
       <div>OpenAI API Key:</div>
       <input bind:value={openAIKey} class="ml-2 grow px-1 py-[2px]" />
     </div>
   {/if}
+  <div class="flex py-1 text-sm">
+    <div>model: {aiModel}</div>
+  </div>
   {#if len(responseText) > 0}
     <div
+      tabindex="-1"
       class="mt-2 font-mono whitespace-pre-wrap h-auto w-full overflow-auto border border-gray-950/20 outline-gray-950/20 p-1.5"
     >
       {responseText}
     </div>
   {/if}
   {#if err}
-    <div class="flex mt-2 text-red-600">
+    <div class="flex mt-2 text-red-600 px-2 py-[2px]">
       {err}
     </div>
   {/if}
@@ -155,12 +186,13 @@
       <div>thinking...</div>
     {/if}
     <div class="grow"></div>
-    {#if reqFinished}
-      <button onclick={insertAsBlock} class="button-outline"
-        >Insert as block</button
-      >
-    {/if}
-    <button onclick={close} class="button-outline">Cancel</button>
+    <button
+      bind:this={btnInsertRef}
+      onclick={insertRsp}
+      class="button-outline {reqFinished ? 'visible' : 'invisible'}"
+      >Insert response as block</button
+    >
+    <button onclick={close} class="button-outline ml-2">Cancel</button>
     <button onclick={askai} disabled={askAIDisabled} class="ml-2 button-outline"
       >Ask AI</button
     >

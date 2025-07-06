@@ -163,7 +163,9 @@ select {
 .button-outline {
   @apply px-4 py-1 rounded-lg border;
   @apply border-gray-950/20 disabled:border-gray-950/5;
+  @apply outline-gray-950/50 disabled:outline-gray-950/5;
   @apply dark:border-gray-400 dark:disabled:border-gray-600;
+  @apply dark:outline-gray-400/50 dark:disabled:outline-gray-600;
 
   @apply hover:bg-gray-100 disabled:hover:bg-transparent;
   @apply dark:hover:bg-gray-600 dark:disabled:hover:bg-gray-900;
