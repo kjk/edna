@@ -6,9 +6,14 @@
   let { close, startText } = $props();
 
   let questionText = $state(startText);
+  let reqFinished = $state(false);
+  let err = $state("this is an error");
 
-  function askai() {
+  const maxTokens = 1000;
+
+  async function askai() {
     console.warn("askai");
+    err = "";
     settings.openAIKey = settings.openAIKey.trim();
     openAIKey = openAIKey.trim();
     let apiKey = "";
@@ -19,7 +24,21 @@
     } else {
       throw new Error(`no openai api key`);
     }
-    streamChatGPTResponse(questionText, apiKey);
+    try {
+      reqFinished = false;
+      reqInProgress = true;
+      await streamChatGPTResponse(questionText, apiKey);
+      // looks like a valid key, remember it
+      reqFinished = false;
+      if (!looksValidOpenAIKey(settings.openAIKey)) {
+        settings.openAIKey = apiKey;
+      }
+    } catch (e) {
+      console.error(e);
+      err = e.toString();
+    } finally {
+      reqInProgress = false;
+    }
   }
 
   let settings = getSettings();
@@ -40,12 +59,11 @@
 
   async function streamChatGPTResponse(prompt, apiKey) {
     console.warn("streamChatGPTResponse");
-    reqInProgress = true;
 
     const requestBody = {
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 150,
+      max_tokens: maxTokens,
       temperature: 0.7,
       stream: true,
     };
@@ -62,14 +80,8 @@
           body: JSON.stringify(requestBody),
         },
       );
-      console.warn("got response");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // looks like a valid key, remember it
-      if (!looksValidOpenAIKey(settings.openAIKey)) {
-        settings.openAIKey = apiKey;
       }
 
       const reader = response.body.getReader();
@@ -80,6 +92,7 @@
         if (done) break;
 
         const chunk = decoder.decode(value);
+        console.log("chunk:", chunk);
         const lines = chunk.split("\n");
 
         for (const line of lines) {
@@ -92,18 +105,17 @@
               const content = parsed.choices[0]?.delta?.content;
               if (content) {
                 responseText += content;
-                console.warn(content);
+                // console.log(content);
               }
             } catch (e) {
               // Skip invalid JSON
+              console.error(e);
             }
           }
         }
       }
     } catch (error) {
       console.error("Error:", error.message);
-    } finally {
-      reqInProgress = false;
     }
     console.warn("finished");
   }
@@ -133,11 +145,21 @@
       {responseText}
     </div>
   {/if}
+  {#if err}
+    <div class="flex mt-2 text-red-600">
+      {err}
+    </div>
+  {/if}
   <div class="flex mt-2">
     {#if reqInProgress}
       <div>thinking...</div>
     {/if}
     <div class="grow"></div>
+    {#if reqFinished}
+      <button onclick={insertAsBlock} class="button-outline"
+        >Insert as block</button
+      >
+    {/if}
     <button onclick={close} class="button-outline">Cancel</button>
     <button onclick={askai} disabled={askAIDisabled} class="ml-2 button-outline"
       >Ask AI</button

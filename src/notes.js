@@ -698,7 +698,7 @@ export async function appendToNote(name, content) {
   let newContent = content;
   if (noteExists(name)) {
     let oldContent = await loadNote(name);
-    newContent = content + oldContent;
+    newContent = oldContent + content;
     incNoteSaveCount();
   } else {
     incNoteCreateCount();
