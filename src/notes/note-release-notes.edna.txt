@@ -2,6 +2,10 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.37
+
+- added basic support for asking ai/llm
+
 ## 1.36
 
 - add commands to command palette (`Mod + K`):
