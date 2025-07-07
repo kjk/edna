@@ -11,6 +11,8 @@
 }}*/
   let { close, startText, insertResponse } = $props();
 
+  let forceBadApiKey = false;
+
   let questionText = $state(startText);
   let reqFinished = $state(false);
   let err = $state("");
@@ -31,7 +33,6 @@
       throw new Error(`no openai api key`);
     }
 
-    let ok = true;
     try {
       reqFinished = false;
       reqInProgress = true;
@@ -43,18 +44,23 @@
       }
     } catch (e) {
       console.error(e);
-      ok = false;
+      console.error(e.cause ? e.cause : "");
       err = e.toString();
+      if (e.cause) {
+        let r = /** @type {Request} */ (e.cause);
+        try {
+          let rsp = await r.text();
+          err += rsp;
+        } catch (e) {
+          console.error(e);
+        }
+      }
     } finally {
       reqInProgress = false;
     }
-    if (ok) {
+    if (err == "") {
       tick().then(() => {
-        if (btnInsertRef) {
-          btnInsertRef.focus();
-        } else {
-          console.warn("NO btnInsertRef");
-        }
+        btnInsertRef?.focus();
       });
     }
   }
@@ -84,6 +90,10 @@
   async function streamChatGPTResponse(prompt, apiKey) {
     console.warn("streamChatGPTResponse");
 
+    if (forceBadApiKey) {
+      apiKey = "g" + apiKey;
+    }
+
     const requestBody = {
       model: aiModel,
       messages: [{ role: "user", content: prompt }],
@@ -92,56 +102,50 @@
       stream: true,
     };
 
-    try {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    if (!response.ok) {
+      let e = new Error(`HTTP error! status: ${response.status}`);
+      e.cause = response;
+      throw e;
+    }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-        const chunk = decoder.decode(value);
-        console.log("chunk:", chunk);
-        const lines = chunk.split("\n");
+      const chunk = decoder.decode(value);
+      // console.log("chunk:", chunk);
+      const lines = chunk.split("\n");
 
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") return;
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6);
+          if (data === "[DONE]") return;
 
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices[0]?.delta?.content;
-              if (content) {
-                responseText += content;
-                // console.log(content);
-              }
-            } catch (e) {
-              // Skip invalid JSON
-              console.error(e);
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices[0]?.delta?.content;
+            if (content) {
+              responseText += content;
+              // console.log(content);
             }
+          } catch (e) {
+            // Skip invalid JSON
+            console.error(e);
           }
         }
       }
-    } catch (error) {
-      console.error("Error:", error.message);
     }
-    console.warn("finished");
   }
 
   /** @type {HTMLElement} */
@@ -165,7 +169,7 @@
       <input bind:value={openAIKey} class="ml-2 grow px-1 py-[2px]" />
     </div>
   {/if}
-  <div class="flex py-1 text-sm">
+  <div class="flex py-1 text-sm ml-2">
     <div>model: {aiModel}</div>
   </div>
   {#if len(responseText) > 0}
@@ -177,13 +181,15 @@
     </div>
   {/if}
   {#if err}
-    <div class="flex mt-2 text-red-600 px-2 py-[2px]">
+    <div
+      class="flex mt-2 text-red-600 px-2 py-[2px] whitespace-pre-line overflow-auto"
+    >
       {err}
     </div>
   {/if}
   <div class="flex mt-2">
     {#if reqInProgress}
-      <div>thinking...</div>
+      <div class="ml-2 font-bold">thinking...</div>
     {/if}
     <div class="grow"></div>
     <button
@@ -192,9 +198,9 @@
       class="button-outline {reqFinished ? 'visible' : 'invisible'}"
       >Insert response as block</button
     >
-    <button onclick={close} class="button-outline ml-2">Cancel</button>
     <button onclick={askai} disabled={askAIDisabled} class="ml-2 button-outline"
       >Ask AI</button
     >
+    <button onclick={close} class="button-outline ml-2">Cancel</button>
   </div>
 </form>
