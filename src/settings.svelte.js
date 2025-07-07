@@ -27,11 +27,10 @@ const settingsKeys = [
   "tabSize",
   "indentType",
   "theme",
-  "aiModelID",
   "openAIKey",
   "grokKey",
-  "anthropicKey",
   "openRouterKey",
+  "aiModelID",
   "starredModels",
 ];
 
@@ -53,11 +52,10 @@ export class Settings {
   tabSize = $state(2);
   indentType = $state("spaces"); // "tabs" or "spaces"
   theme = $state("system"); // "system", "light", "dark"
-  aiModelID = $state("chatgpt-4o-latest");
   openAIKey = $state("");
   grokKey = $state("");
-  anthropicKey = $state("");
   openRouterKey = $state("");
+  aiModelID = $state("chatgpt-4o-latest");
   starredModels = $state(["grok-3", "chatgpt-4o-latest"]);
 
   constructor(settings) {

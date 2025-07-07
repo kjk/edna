@@ -191,47 +191,32 @@
     </select>
   </div>
 
-  <div class="mt-2 flex flex-col">
-    <h2>AI API Keys</h2>
+  <label class="flex-col mt-2">
+    <h2 class="font-bold text-left">OpenAI API Key</h2>
+    <input
+      class="w-full mt-0.5 px-1 py-1"
+      type="text"
+      bind:value={settings.openAIKey}
+    />
+  </label>
 
-    <label class="flex items-center mt-2">
-      <div class="font-bold w-[11ch] text-right">OpenAI</div>
-      <input
-        class="grow ml-2 px-1 py-0.5"
-        type="text"
-        bind:value={settings.openAIKey}
-      />
-    </label>
+  <label class="flex-col mt-2">
+    <h2 class="font-bold text-left">Grok API Key</h2>
+    <input
+      class="w-full mt-0.5 px-1 py-1"
+      type="text"
+      bind:value={settings.grokKey}
+    />
+  </label>
 
-    {#if false}
-      <label class="flex items-center mt-2">
-        <div class="font-bold w-[11ch] text-right">Grok</div>
-        <input
-          class="grow ml-2 px-1 py-0.5"
-          type="text"
-          bind:value={settings.grokKey}
-        />
-      </label>
-
-      <label class="flex items-center mt-2">
-        <div class="font-bold w-[11ch] text-right">Anthropic</div>
-        <input
-          class="grow ml-2 px-1 py-0.5"
-          type="text"
-          bind:value={settings.anthropicKey}
-        />
-      </label>
-
-      <label class="flex items-center mt-2">
-        <div class="font-bold w-[11ch] text-right">OpenRouter</div>
-        <input
-          class="grow ml-2 px-1 py-0.5"
-          type="text"
-          bind:value={settings.openRouterKey}
-        />
-      </label>
-    {/if}
-  </div>
+  <label class="flex-col mt-2">
+    <h2 class="font-bold text-left">OpenRouter API Key</h2>
+    <input
+      class="w-full mt-0.5 px-1 py-1"
+      type="text"
+      bind:value={settings.openRouterKey}
+    />
+  </label>
 
   <div class="mt-2 flex flex-col">
     <h2>Misc</h2>

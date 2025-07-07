@@ -134,8 +134,10 @@
         {@render IconTablerStar(isStarred ? "var(--color-yellow-300)" : "none")}
       </button>
 
-      <div class="ml-2">{providerName}</div>
-      <div class="px-1 ml-2 grow truncate text-left min-w-[32ch]">
+      <div class="ml-2 min-w-[10ch] whitespace-nowrap text-left">
+        {providerName}
+      </div>
+      <div class="px-1 ml-4 grow truncate text-left min-w-[32ch]">
         {@html hili}
       </div>
       <div class="w-[6ch] text-right">{pricePrompt}</div>

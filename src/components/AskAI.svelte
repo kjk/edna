@@ -1,7 +1,14 @@
 <script>
   import { tick } from "svelte";
-  import { clickOutside, focus } from "../actions";
-  import { kModelIDIdx, kModelNameIdx, modelsShort } from "../models-short";
+  import { focus } from "../actions";
+  import {
+    kModelIDIdx,
+    kModelNameIdx,
+    kModelProviderIdx,
+    kProviderOpenAI,
+    kProviderXAI,
+    providersInfo,
+  } from "../models-short";
   import { findModelByID, getSettings } from "../settings.svelte";
   import { len } from "../util";
   import AiModels from "./AiModels.svelte";
@@ -13,39 +20,110 @@
 }}*/
   let { close, startText, insertResponse } = $props();
 
+  const kApiProviderOpenAI = 0;
+  const kApiProviderGrok = 1;
+  const kApiProviderOpenRouter = 2;
+  // const kApiProviderAnthropic = 3;
+  // const kApiProviderGoogle = 3;
+
+  function pickApiKeyForProvider(apiProvider) {
+    switch (apiProvider) {
+      case kApiProviderOpenAI:
+        return settings.openAIKey;
+      case kApiProviderGrok:
+        return settings.grokKey;
+      // case kApiProviderAnthropic:
+      //   return settings.anthropicKey;
+      case kApiProviderOpenRouter:
+        return settings.openRouterKey;
+      // case kApiProviderGoogle:
+      //   return settings.googleAIKey;
+      default:
+        throw new Error(`no api key for `);
+    }
+  }
+
   let forceBadApiKey = false;
 
   let settings = getSettings();
   let questionText = $state(startText);
   let reqFinished = $state(false);
   let err = $state("");
+  let forceShowingApiKey = $state(false);
   let aiModel = $derived(findModelByID(settings.aiModelID));
   let aiModelName = $derived(aiModel[kModelNameIdx]);
+  let apiProvider = $derived(apiProviderForModelID(aiModel));
+  let needsOpenAPIKey = $derived(
+    apiProvider == kApiProviderOpenAI &&
+      (forceShowingApiKey || err || !looksValidOpenAIKey(settings.openAIKey)),
+  );
+  let needsGrokAPIKey = $derived(
+    apiProvider == kApiProviderGrok &&
+      (forceShowingApiKey || err || !looksValidGrokKey(settings.grokKey)),
+  );
+  // let needsGoogleAPIKey = $derived(
+  //   apiProvider == kApiProviderGoogle &&
+  //     (forceShowingApiKey || err || !looksValidGrokKey(settings.googleAIKey)),
+  // );
+  let needsOpenRouterAPIKey = $derived(
+    apiProvider == kApiProviderOpenRouter &&
+      (forceShowingApiKey || err || !looksValidGrokKey(settings.openRouterKey)),
+  );
+  let apiKey = $derived(pickApiKeyForProvider(apiProvider));
+
   const maxTokens = 1000;
+
+  function apiProviderForModelID(aiModel) {
+    let provider = aiModel[kModelProviderIdx];
+    switch (provider) {
+      case kProviderOpenAI:
+        return kApiProviderOpenAI;
+      case kProviderXAI:
+        return kApiProviderGrok;
+      // case kProviderGoogle:
+      //   return kApiProviderGoogle;
+      default:
+        return kApiProviderOpenRouter;
+    }
+  }
+
+  /**
+   * @type {[number, string][]}
+   */
+  const apiProviders = [
+    [kApiProviderGrok, "https://api.x.ai/v1/chat/completions"],
+    [kApiProviderOpenAI, "https://api.openai.com/v1/chat/completions"],
+    [kApiProviderOpenRouter, "https://openrouter.ai/api/v1/chat/completions"],
+    // [
+    //   kApiProviderGoogle,
+    //   "https://generativelanguage.googleapis.com/v1beta/openai/",
+    // ],
+    // [kApiProviderAnthropic, "https://api.anthropic.com/completions"],
+  ];
+
+  /**
+   * @param {number} apiProvider
+   * @returns {string}
+   */
+  function getApiProviderBaseURL(apiProvider) {
+    for (let p of apiProviders) {
+      if (p[0] == apiProvider) {
+        return p[1];
+      }
+    }
+    return "";
+  }
 
   async function askai() {
     // console.warn("askai");
     err = "";
-    settings.openAIKey = settings.openAIKey.trim();
-    openAIKey = openAIKey.trim();
-    let apiKey = "";
-    if (looksValidOpenAIKey(settings.openAIKey)) {
-      apiKey = settings.openAIKey;
-    } else if (looksValidOpenAIKey(openAIKey)) {
-      apiKey = openAIKey;
-    } else {
-      throw new Error(`no openai api key`);
-    }
-
+    let baseURL = getApiProviderBaseURL(apiProvider);
     try {
       reqFinished = false;
       reqInProgress = true;
-      await streamChatGPTResponse(questionText, apiKey);
+      await streamChatGPTResponse(questionText, apiKey, baseURL);
       // looks like a valid key, remember it
       reqFinished = true;
-      if (!looksValidOpenAIKey(settings.openAIKey)) {
-        settings.openAIKey = apiKey;
-      }
     } catch (e) {
       console.error(e);
       console.error(e.cause ? e.cause : "");
@@ -69,17 +147,38 @@
     }
   }
 
-  let openAIKey = $state("");
   // heuristc. my openai keys start with "sk-proj-" and are 164 chars in length
   function looksValidOpenAIKey(s) {
     return len(s) > 100;
   }
 
+  // mine is 84 chars
+  function looksValidGrokKey(s) {
+    return len(s) > 70;
+  }
+
+  // mine is 39 chars
+  function looksValidGoogleKey(s) {
+    return len(s) > 30;
+  }
+
+  function looksValidKey(apiKey) {
+    switch (apiProvider) {
+      case kApiProviderOpenAI:
+        return looksValidOpenAIKey(apiKey);
+      case kApiProviderGrok:
+        return looksValidGrokKey(apiKey);
+      // case kApiProviderAnthropic:
+      //   return looksValidAnthropicKey(apiKey);
+      // case kApiProviderGoogle:
+      //   return looksValidGoogleKey(apiKey);
+    }
+    return true;
+  }
+
   let responseText = $state("");
 
-  let canSendRequest = $derived(
-    looksValidOpenAIKey(settings.openAIKey) || looksValidOpenAIKey(openAIKey),
-  );
+  let canSendRequest = $derived(looksValidKey(apiKey));
 
   let reqInProgress = $state(false);
   let askAIDisabled = $derived(!canSendRequest || reqInProgress);
@@ -90,22 +189,29 @@
     close();
   }
 
-  async function streamChatGPTResponse(prompt, apiKey) {
+  async function streamChatGPTResponse(prompt, apiKey, baseURL) {
     // console.warn("streamChatGPTResponse");
 
     if (forceBadApiKey) {
       apiKey = "g" + apiKey;
     }
 
+    let modelID = settings.aiModelID;
+    if (apiProvider == kApiProviderOpenRouter) {
+      let providerIdx = aiModel[kModelProviderIdx];
+      let prefix = providersInfo[providerIdx][0];
+      modelID = prefix + "/" + modelID;
+    }
+
     const requestBody = {
-      model: settings.aiModelID,
+      model: modelID,
       messages: [{ role: "user", content: prompt }],
       max_tokens: maxTokens,
       temperature: 0.7,
       stream: true,
     };
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(baseURL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -164,6 +270,17 @@
 >
   <div class="flex items-baseline">
     <div class="grow p-1 font-bold text-lg">Ask AI</div>
+
+    <button
+      onclick={(ev) => {
+        forceShowingApiKey = !forceShowingApiKey;
+        // console.warn("forceShowingApiKey:", forceShowingApiKey);
+        ev.preventDefault();
+        ev.stopPropagation();
+      }}
+      class="underline underline-offset-2 cursor-pointer hover:text-gray-900"
+      >{forceShowingApiKey ? "hide" : "show"} api key</button
+    >
     <div class="flex text-sm ml-1 mt-2 items-baseline">
       <div class="px-1 py-1">model:</div>
       <button
@@ -198,17 +315,45 @@
       >
     </div>
   </div>
+
+  {#if needsOpenAPIKey}
+    <div class="flex py-1 text-sm items-center">
+      <div>OpenAI API Key:</div>
+      <input
+        use:focus
+        bind:value={settings.openAIKey}
+        class="ml-2 grow px-1 py-[1px]"
+      />
+    </div>
+  {/if}
+
+  {#if needsGrokAPIKey}
+    <div class="flex py-1 text-sm items-center">
+      <div>Grok API Key:</div>
+      <input
+        use:focus
+        bind:value={settings.grokKey}
+        class="ml-2 grow px-1 py-[1px]"
+      />
+    </div>
+  {/if}
+
+  {#if needsOpenRouterAPIKey}
+    <div class="flex py-1 text-sm items-center">
+      <div>OpenRouter API Key:</div>
+      <input
+        use:focus
+        bind:value={settings.openRouterKey}
+        class="ml-2 grow px-1 py-[1px]"
+      />
+    </div>
+  {/if}
+
   <textarea
     bind:value={questionText}
     use:focus
     class="w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
   ></textarea>
-  {#if settings.openAIKey == ""}
-    <div class="flex py-1 text-sm items-center">
-      <div>OpenAI API Key:</div>
-      <input bind:value={openAIKey} class="ml-2 grow px-1 py-[2px]" />
-    </div>
-  {/if}
   {#if len(responseText) > 0}
     <div
       tabindex="-1"
