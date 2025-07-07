@@ -245,6 +245,7 @@
       {itemsCountMsg}
     </div>
   </div>
+
   <ListBox2
     bind:this={listboxRef}
     items={itemsFiltered}
@@ -260,11 +261,12 @@
         )}
       {/if}
       {@html hili}
-      <span class="ml-0.5 text-xs text-gray-400 whitespace-nowrap"
+      <span class="ml-0.5 mr-0.5 text-xs text-gray-400 whitespace-nowrap"
         >{noteShortcut(item)}</span
       >
     {/snippet}
   </ListBox2>
+
   <div
     class="flex flex-row items-baseline justify-between mt-2 text-xs max-w-full bg-gray-100 dark:bg-gray-700 rounded-lg py-1 px-2"
   >

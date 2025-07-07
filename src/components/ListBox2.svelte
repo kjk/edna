@@ -176,7 +176,7 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-  class="overflow-y-auto cursor-pointer flex flex-wrap gap-y-[2px]"
+  class="overflow-y-auto cursor-pointer flex flex-wrap gap-y-[2px] pb-4"
   tabindex="-1"
   role="listbox"
   bind:this={listboxRef}
@@ -184,10 +184,13 @@
 >
   {#each items as item, idx (item.key)}
     {@const isSelected = idx === selectedIdx}
+    {#if idx > 0}
+      <span class="text-gray-300">&bull;</span>
+    {/if}
     <span
       role="option"
       aria-selected={isSelected}
-      class="item px-1 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700 even:text-blue-700 dark:even:text-blue-200"
+      class="item px-1 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700"
       bind:this={refs[idx]}
     >
       {@render renderItem(item, idx)}
