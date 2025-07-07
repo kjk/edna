@@ -387,6 +387,42 @@ export function findMatchingItems(items, filter, itemKey) {
 }
 
 /**
+ * Find items whose string propety itemKey matches a filter string
+ * We lowercase filter and split it by whitespace
+ * item matches if its itemKey property string includes all of the filter parts
+ * itemKey should be lowercased. for performance lowercasing should be
+ * pre-computed by the caller. We assume filtering is done multiple
+ * times over the same items so pre-computing it once saves allocations
+ * @param {any[]} items
+ * @param {string} filter
+ * @param {(item) => any} itemKeyFn
+ * @returns {any[]}
+ */
+export function findMatchingItemsFn(items, filter, itemKeyFn) {
+  filter = filter.trim();
+  if (filter === "") {
+    return items;
+  }
+  filter = filter.toLowerCase();
+  let filterParts = filter.split(" ");
+  for (let [i, part] of filterParts.entries()) {
+    filterParts[i] = part.trim();
+  }
+  // perf: pre-allocate result to max capacity
+  let res = Array(len(items));
+  let i = 0;
+  for (let item of items) {
+    let key = itemKeyFn(item);
+    if (!stringMatchesParts(key, filterParts)) {
+      continue;
+    }
+    res[i++] = item;
+  }
+  res.length = i;
+  return res;
+}
+
+/**
  * @param {string} s
  * @returns {string}
  */

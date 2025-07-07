@@ -248,7 +248,6 @@
    * @param {number} idx
    */
   function selectionChanged(item, idx) {
-    console.warn("selectionChanged:", $state.snapshot(item.name), idx);
     selectedNote = item;
     selectedName = item ? selectedNote.name : "";
     recalcAvailableActions(item, sanitizedFilter);

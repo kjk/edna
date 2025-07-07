@@ -160,7 +160,41 @@
   tabindex="-1"
   class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[80vh] w-[75vw] p-2"
 >
-  <div class="p-1 font-bold text-lg">Ask AI</div>
+  <div class="flex items-baseline">
+    <div class="grow p-1 font-bold text-lg">Ask AI</div>
+    <div class="flex text-sm ml-1 mt-2 items-baseline">
+      <div class="px-1 py-1">model:</div>
+      <button
+        onmouseleave={(ev) => {
+          showingModels = false;
+        }}
+        onclick={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          showingModels = true;
+        }}
+        class="hover:bg-gray-100 cursor-pointer px-1 py-1 relative"
+      >
+        {aiModel}&nbsp;⏷
+        {#if showingModels}
+          <AiModels
+            selectModel={(model) => {
+              console.log("selectModel", model);
+            }}
+          ></AiModels>
+        {/if}
+      </button>
+    </div>
+    <div
+      class="flex flex-col text-xs justify-between ml-2 mr-3 mt-2 text-gray-500"
+    >
+      <a
+        target="_blank"
+        class="underline underline-offset-2 self-center"
+        href="help#quick-access-ui-for-starred%2C-recent-notes">?</a
+      >
+    </div>
+  </div>
   <textarea
     bind:value={questionText}
     use:focus
@@ -172,29 +206,6 @@
       <input bind:value={openAIKey} class="ml-2 grow px-1 py-[2px]" />
     </div>
   {/if}
-  <div class="flex text-sm ml-1 mt-2 items-baseline">
-    <div class="px-1 py-1">model:</div>
-    <button
-      onmouseleave={(ev) => {
-        showingModels = false;
-      }}
-      onclick={(ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        showingModels = true;
-      }}
-      class="hover:bg-gray-100 cursor-pointer px-1 py-1 relative"
-    >
-      {aiModel}&nbsp;⏷
-      {#if showingModels}
-        <AiModels
-          openNote={(name, newTabl) => {
-            console.log("openOnte");
-          }}
-        ></AiModels>
-      {/if}
-    </button>
-  </div>
   {#if len(responseText) > 0}
     <div
       tabindex="-1"

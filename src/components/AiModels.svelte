@@ -1,96 +1,46 @@
 <script>
   import { focus } from "../actions";
-  import { appState } from "../appstate.svelte";
   import { toggleNoteStarred } from "../metadata";
-  import { getSettings } from "../settings.svelte";
-  import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";
+  import { findMatchingItemsFn, len } from "../util";
+  import { kModelIDIdx, kModelNameIdx, modelsShort } from "./../models-short";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
-  import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
   /** @type {{ 
-    openNote: (name: string, newTab?: boolean) => void,
+    selectModel: (model: any) => void,
   }} */
-  let { openNote } = $props();
+  let { selectModel } = $props();
 
-  let altChar = getAltChar();
-  let modChar = getModChar();
-
-  // svelte-ignore non_reactive_update
-  let firstInHistoryIdx = -1;
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
 
+  function modelNameFn(model) {
+    return model[kModelNameIdx].toLowerCase();
+  }
+
+  let filter = $state("");
+  let sanitizedFilter = $derived(filter.trim());
+  let models = $derived(buildModels(modelsShort, sanitizedFilter, modelNameFn));
+
+  /**
+   * @param {any[]} items
+   * @param {string} filter
+   * @param {(item) => any} itemKeyFn
+   * @return {any[]}
+   */
+  function buildModels(items, filter, itemKeyFn) {
+    return findMatchingItemsFn(items, filter, itemKeyFn);
+  }
+
   let listboxRef;
-
-  let settings = getSettings();
-
-  /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
-  /**
-   * @param {string[]} starred
-   * @param {string[]} history
-   * @returns {NoteInfo[]}
-   */
-  function buildQuickAccessNotes(starred, withShortcuts, history) {
-    /** @type {string[]} */
-    let notes = [...starred, ...withShortcuts];
-    // remove duplicate names in notes
-    notes = [...new Set(notes)];
-    let res = buildNoteInfos(notes);
-    firstInHistoryIdx = len(res);
-    initialSelection = firstInHistoryIdx;
-    if (len(history) > 1) {
-      initialSelection++;
-    }
-
-    // history can repeat the names
-    for (let noteName of history) {
-      let item = buildNoteInfo(noteName);
-      item.altShortcut = 0;
-      res.push(item);
-    }
-    return res;
-  }
-
-  let quickAccessNotes = $derived(
-    buildQuickAccessNotes(
-      appState.starredNotes,
-      appState.withShortcuts,
-      appState.history,
-    ),
-  );
-
-  /**
-   * @param {NoteInfo} note
-   * @returns {string}
-   */
-  function getNoteShortcut(note) {
-    if (note.altShortcut) {
-      return `${altChar} + ${note.altShortcut}`;
-    }
-    return "";
-  }
 
   /**
    * @param {KeyboardEvent} ev
    */
   function onkeydown(ev) {
-    // '0' ... '9' picks an item
-    let idx = getKeyEventNumber(ev);
-    let lastIdx = len(history) - 1;
-    if (idx >= 0 && idx <= lastIdx) {
-      ev.preventDefault();
-      let item = quickAccessNotes[firstInHistoryIdx + idx];
-      openNote(item.name, ev.ctrlKey);
-      return;
-    }
-
     listboxRef.onkeydown(ev, true);
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   */
   async function toggleStarred(noteInfo) {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
@@ -103,71 +53,34 @@
       noteInfo.isStarred = isStarred;
     });
   }
+  function itemKey(item) {
+    return item[kModelIDIdx];
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
   {onkeydown}
   tabindex="-1"
-  use:focus
-  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-full border-gray-400 center-x-with-translate"
+  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-full border-gray-400 right-0 max-h-[50vh] min-w-[40ch]"
 >
+  <input bind:value={filter} use:focus class="px-1 py-0.5 mb-2 text-xs" />
   <ListBox
     bind:this={listboxRef}
-    items={quickAccessNotes}
-    onclick={(noteInfo, ev) => {
-      openNote(noteInfo.name, ev.ctrlKey);
+    items={models}
+    onclick={(model, ev) => {
+      console.log("clicked model:", model);
+      selectModel(model);
     }}
+    {itemKey}
     {initialSelection}
     compact={true}
   >
-    {#snippet renderItem(noteInfo, idx)}
-      {@const shortcut = getNoteShortcut(noteInfo)}
-      {@const cls = firstInHistoryIdx == idx ? "border-t-not-good-enough" : ""}
-      {@const historyTrigger = idx - firstInHistoryIdx}
-      {#if historyTrigger >= 0}
-        <div class="px-1 grow text-gray-800 font-bold dark:text-gray-400 {cls}">
-          {"" + historyTrigger}
-        </div>
-      {:else if shortcut}
-        <div
-          class="px-1 whitespace-nowrap text-left grow text-gray-400 dark:text-gray-400 {cls}"
-        >
-          {shortcut}
-        </div>
-      {:else if noteInfo.isStarred && historyTrigger < 0}
-        <button
-          tabindex="-1"
-          class="ml-[2px] cursor-pointer hover:text-yellow-600"
-          onclick={(ev) => {
-            toggleStarred(noteInfo);
-            ev.preventDefault();
-            ev.stopPropagation();
-          }}
-        >
-          {@render IconTablerStar(
-            noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
-          )}
-        </button>
-      {:else}
-        <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
-          &nbsp;
-        </div>
-      {/if}
-      <div
-        class="px-1 ml-4 grow self-end text-right max-w-[32ch] truncate {cls}"
-      >
-        {noteInfo.name}
+    {#snippet renderItem(model, idx)}
+      {@const name = model[kModelNameIdx]}
+      <div class="px-1 ml-4 grow self-end text-right max-w-[32ch] truncate">
+        {name}
       </div>
     {/snippet}
   </ListBox>
-  <div
-    class="flex flex-col text-xs justify-between ml-2 mr-3 mt-2 text-gray-500"
-  >
-    <a
-      target="_blank"
-      class="underline underline-offset-2 self-center"
-      href="help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
-    >
-  </div>
 </form>
