@@ -2,6 +2,10 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.38
+
+- support for OpenAI, Grok, OpenRouter api providers
+
 ## 1.37
 
 - added basic support for asking ai/llm
