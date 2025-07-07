@@ -20,7 +20,7 @@
   const maxTokens = 1000;
 
   async function askai() {
-    console.warn("askai");
+    // console.warn("askai");
     err = "";
     settings.openAIKey = settings.openAIKey.trim();
     openAIKey = openAIKey.trim();
@@ -88,7 +88,7 @@
   }
 
   async function streamChatGPTResponse(prompt, apiKey) {
-    console.warn("streamChatGPTResponse");
+    // console.warn("streamChatGPTResponse");
 
     if (forceBadApiKey) {
       apiKey = "g" + apiKey;
@@ -153,7 +153,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<form
+<div
   tabindex="-1"
   class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[80vh] w-[75vw] p-2"
 >
@@ -203,4 +203,4 @@
     >
     <button onclick={close} class="button-outline ml-2">Cancel</button>
   </div>
-</form>
+</div>

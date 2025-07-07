@@ -1681,7 +1681,6 @@
     let view = getEditorView();
     let b = getActiveNoteBlock(view.state);
     let s = view.state.sliceDoc(b.content.from, b.content.to);
-    console.warn(s);
     askAIStartText = s;
   }
 
