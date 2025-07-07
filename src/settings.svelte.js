@@ -27,6 +27,9 @@ const settingsKeys = [
   "indentType",
   "theme",
   "openAIKey",
+  "grokKey",
+  "anthropicKey",
+  "openRouterKey",
 ];
 
 export class Settings {
@@ -48,6 +51,9 @@ export class Settings {
   indentType = $state("spaces"); // "tabs" or "spaces"
   theme = $state("system"); // "system", "light", "dark"
   openAIKey = $state("");
+  grokKey = $state("");
+  anthropicKey = $state("");
+  openRouterKey = $state("");
 
   constructor(settings) {
     if (!settings) {

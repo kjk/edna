@@ -84,7 +84,7 @@
 </script>
 
 <div
-  class="selector absolute overflow-auto center-x-with-translate top-[2rem] z-20 flex flex-col max-w-full px-4 py-4 max-h-[94vh] select-none"
+  class="selector absolute overflow-auto center-x-with-translate top-[2rem] z-20 flex flex-col w-[68ch] max-w-full px-4 py-4 select-none"
 >
   <div>
     <h2>Input settings</h2>
@@ -94,8 +94,8 @@
     </label>
   </div>
 
-  <div class="mt-2 flex justify-end items-center">
-    <h2>Indent With</h2>
+  <div class="mt-2 flex items-center">
+    <h2 class="w-[12ch] text-right">Indent With</h2>
     <select bind:value={settings.indentType}>
       {#each indentWith as t}
         {@const th = t[0]}
@@ -107,8 +107,8 @@
     </select>
   </div>
 
-  <div class="mt-2 flex justify-end items-center">
-    <h2>Tab Size</h2>
+  <div class="mt-2 flex items-center">
+    <h2 class="w-[12ch] text-right">Tab Size</h2>
     <select bind:value={settings.tabSize}>
       {#each spaces as t}
         {@const th = t[0]}
@@ -131,8 +131,8 @@
     </label>
   </div>
 
-  <div class="mt-2 flex justify-end items-center">
-    <h2>Keymap</h2>
+  <div class="mt-2 flex items-center">
+    <h2 class="w-[12ch] text-right">Keymap</h2>
     <select bind:value={settings.keymap}>
       {#each keymaps as km (km.value)}
         <option selected={km.value === settings.keymap} value={km.value}
@@ -143,8 +143,8 @@
   </div>
 
   {#if settings.keymap == "emacs" && isMac}
-    <div class="mt-2 flex justify-end items-center">
-      <h2>Meta Key</h2>
+    <div class="mt-2 flex items-center">
+      <h2 class="w-[12ch] text-right">Meta Key</h2>
       <select bind:value={settings.emacsMetaKey}>
         <option selected={settings.emacsMetaKey === "meta"} value="meta"
           >Command</option
@@ -156,8 +156,8 @@
     </div>
   {/if}
 
-  <div class="mt-2 flex justify-end items-center">
-    <h2>Font Family</h2>
+  <div class="mt-2 flex items-center">
+    <h2 class="w-[12ch] text-right">Font Family</h2>
     <select bind:value={settings.fontFamily}>
       {#each systemFonts as font}
         {@const family = font[0]}
@@ -169,8 +169,8 @@
     </select>
   </div>
 
-  <div class="mt-2 flex justify-end items-center">
-    <h2>Font Size</h2>
+  <div class="mt-2 flex items-center">
+    <h2 class="w-[12ch] text-right">Font Size</h2>
     <select bind:value={settings.fontSize}>
       {#each fontSizes as size}
         <option selected={size === settings.fontSize} value={size}
@@ -180,8 +180,8 @@
     </select>
   </div>
 
-  <div class="mt-2 flex justify-end items-center">
-    <h2>Theme</h2>
+  <div class="mt-2 flex items-center">
+    <h2 class="w-[12ch] text-right">Theme</h2>
     <select bind:value={settings.theme}>
       {#each themes as t}
         {@const th = t[0]}
@@ -189,6 +189,48 @@
         <option selected={th === settings.theme} value={th}>{label} </option>
       {/each}
     </select>
+  </div>
+
+  <div class="mt-2 flex flex-col">
+    <h2>AI API Keys</h2>
+
+    <label class="flex items-center mt-2">
+      <div class="font-bold w-[11ch] text-right">OpenAI</div>
+      <input
+        class="grow ml-2 px-1 py-0.5"
+        type="text"
+        bind:value={settings.openAIKey}
+      />
+    </label>
+
+    {#if false}
+      <label class="flex items-center mt-2">
+        <div class="font-bold w-[11ch] text-right">Grok</div>
+        <input
+          class="grow ml-2 px-1 py-0.5"
+          type="text"
+          bind:value={settings.grokKey}
+        />
+      </label>
+
+      <label class="flex items-center mt-2">
+        <div class="font-bold w-[11ch] text-right">Anthropic</div>
+        <input
+          class="grow ml-2 px-1 py-0.5"
+          type="text"
+          bind:value={settings.anthropicKey}
+        />
+      </label>
+
+      <label class="flex items-center mt-2">
+        <div class="font-bold w-[11ch] text-right">OpenRouter</div>
+        <input
+          class="grow ml-2 px-1 py-0.5"
+          type="text"
+          bind:value={settings.openRouterKey}
+        />
+      </label>
+    {/if}
   </div>
 
   <div class="mt-2 flex flex-col">
