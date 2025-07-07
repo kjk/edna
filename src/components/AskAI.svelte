@@ -3,6 +3,7 @@
   import { focus } from "../actions";
   import { getSettings } from "../settings.svelte";
   import { len } from "../util";
+  import AiModels from "./AiModels.svelte";
 
   /** @type {{
     close: () => void,
@@ -150,6 +151,8 @@
 
   /** @type {HTMLElement} */
   let btnInsertRef;
+
+  let showingModels = $state(false);
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -169,8 +172,28 @@
       <input bind:value={openAIKey} class="ml-2 grow px-1 py-[2px]" />
     </div>
   {/if}
-  <div class="flex py-1 text-sm ml-2">
-    <div>model: {aiModel}</div>
+  <div class="flex text-sm ml-1 mt-2 items-baseline">
+    <div class="px-1 py-1">model:</div>
+    <button
+      onmouseleave={(ev) => {
+        showingModels = false;
+      }}
+      onclick={(ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        showingModels = true;
+      }}
+      class="hover:bg-gray-100 cursor-pointer px-1 py-1 relative"
+    >
+      {aiModel}&nbsp;⏷
+      {#if showingModels}
+        <AiModels
+          openNote={(name, newTabl) => {
+            console.log("openOnte");
+          }}
+        ></AiModels>
+      {/if}
+    </button>
   </div>
   {#if len(responseText) > 0}
     <div
