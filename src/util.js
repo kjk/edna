@@ -540,3 +540,19 @@ export function arrayRemove(arr, item) {
 export function isKeyCtrlDelete(ev) {
   return (ev.key === "Delete" || ev.key === "Backspace") && ev.ctrlKey;
 }
+
+/**
+ * @param {number} price
+ * @returns {string}
+ */
+export function humanPrice(price) {
+  if (price == 0) {
+    return "0";
+  }
+  let p = price * 1000000;
+  let res = "$" + p.toFixed(2);
+  if (res.endsWith(".00")) {
+    res = res.slice(0, -3);
+  }
+  return res;
+}
