@@ -260,6 +260,7 @@ https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:star
     width="1em"
     height="1em"
     viewBox="0 0 24 24"
+    class={klass}
     ><path
       {fill}
       stroke="currentColor"
