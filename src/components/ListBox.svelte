@@ -6,6 +6,7 @@
 
   /** @type {{ 
     items: any[],
+    itemKey?: (item) => any,
     onclick: (item: any, ev: any) => void,
     renderItem: any,
     selectionChanged?: (any, number) => void,
@@ -15,6 +16,7 @@
   }}*/
   let {
     items,
+    itemKey = (item) => item.key,
     onclick,
     renderItem,
     selectionChanged = (el, idx) => {
@@ -209,7 +211,7 @@
   onclick={click}
   onmousemove={mousemove}
 >
-  {#each items as item, idx (item.key)}
+  {#each items as item, idx (itemKey(item))}
     <li
       role="option"
       aria-selected={idx === selectedIdx}
