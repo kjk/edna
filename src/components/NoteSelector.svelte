@@ -125,6 +125,7 @@
     getAltChar,
     hilightText,
     isAltNumEvent,
+    isKeyCtrlDelete,
     len,
     makeHilightRegExp,
     noOp,
@@ -159,20 +160,6 @@
     let notes = [...regular];
     notes.push(...archived);
     let res = buildNoteInfos(notes);
-    // console.log(
-    //   "localBuildNoteInfos: regular:",
-    //   len(regular),
-    //   "archived:",
-    //   len(archived),
-    //   "deleted:",
-    //   len(deleted),
-    //   "includeArchived:",
-    //   includeArchived,
-    //   "includeDeleted:",
-    //   includeDeleted,
-    //   "all:",
-    //   len(res),
-    // );
     return res;
   }
   let noteInfos = $derived(
@@ -222,7 +209,6 @@
   let showDelete = $state(false);
 
   let notesCountMsg = $derived.by(() => {
-    // $state(`${noteCount} notes`);
     let n = len(filteredNoteInfos);
     if (n === 0) {
       return ""; // don't obscure user entering new, long note name
@@ -262,14 +248,6 @@
     selectedName = item ? selectedNote.name : "";
 
     recalcAvailableActions(item, sanitizedFilter);
-  }
-
-  /**
-   * @param {KeyboardEvent} ev
-   * @returns {boolean}
-   */
-  function isCtrlDelete(ev) {
-    return (ev.key === "Delete" || ev.key === "Backspace") && ev.ctrlKey;
   }
 
   /**
@@ -320,7 +298,7 @@
       return;
     }
 
-    if (isCtrlDelete(ev)) {
+    if (isKeyCtrlDelete(ev)) {
       ev.preventDefault();
       if (canDeleteSelected && selectedNote) {
         // console.log("delete note", name);

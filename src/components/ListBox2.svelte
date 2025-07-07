@@ -54,7 +54,7 @@
     if (n === prevItemsLen) {
       return;
     }
-    console.log("re-runinng effect:", len(items));
+    // console.log("re-runinng effect:", len(items));
     prevItemsLen = n;
     // reset selection if changing items
     if (n > 0) {

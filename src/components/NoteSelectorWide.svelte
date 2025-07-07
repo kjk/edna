@@ -12,6 +12,7 @@
     getAltChar,
     hilightText,
     isAltNumEvent,
+    isKeyCtrlDelete,
     len,
     makeHilightRegExp,
   } from "../util";
@@ -36,11 +37,32 @@
     switchToRegularNoteSelector,
   } = $props();
 
-  let noteNames = appState.allNotes;
-  let items = $derived(buildNoteInfos(noteNames));
+  function localBuildNoteInfos(regular, archived) {
+    let notes = [...regular];
+    notes.push(...archived);
+    let res = buildNoteInfos(notes);
+    return res;
+  }
+  let noteInfos = $derived(
+    localBuildNoteInfos(
+      appState.regularNotes,
+      appState.showingArchived ? appState.archivedNotes : [],
+    ),
+  );
+
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
+
+  function updateNoteInfos() {
+    // actions like re-assigning quick access shortcut do
+    // not modify appState.noteNames so we have to force
+    // rebuilding of items
+    noteInfos = localBuildNoteInfos(
+      appState.regularNotes,
+      appState.showingArchived ? appState.archivedNotes : [],
+    );
+  }
 
   let sanitizedFilter = $derived.by(() => {
     return sanitizeNoteName(filter);
@@ -53,7 +75,7 @@
       switchToCommandPalette();
       return [];
     }
-    return findMatchingItems(items, sanitizedFilter, "nameLC");
+    return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
   /** @type {NoteInfo} */
@@ -65,17 +87,12 @@
   let canDeleteSelected = $state(false);
   let showDelete = $state(false);
 
-  function reloadNotes() {
-    let noteNames = appState.allNotes;
-    items = buildNoteInfos(noteNames);
-  }
-
-  let itemsCountMsg = $derived.by(() => {
+  let notesCountMsg = $derived.by(() => {
     let n = len(itemsFiltered);
     if (n === 0) {
       return ""; // don't obscure user entering new, long note name
     }
-    let nItems = len(items);
+    let nItems = len(noteInfos);
     if (n === nItems) {
       return `${nItems} notes`;
     }
@@ -116,14 +133,6 @@
   }
 
   /**
-   * @param {KeyboardEvent} ev
-   * @returns {boolean}
-   */
-  function isCtrlDelete(ev) {
-    return (ev.key === "Delete" || ev.key === "Backspace") && ev.ctrlKey;
-  }
-
-  /**
    * @param {NoteInfo} note
    * @returns {string}
    */
@@ -145,15 +154,15 @@
       ev.preventDefault();
       let note = selectedItem;
       if (note) {
-        reassignNoteShortcut(note.name, altN).then(reloadNotes);
+        reassignNoteShortcut(note.name, altN).then(updateNoteInfos);
         return;
       }
     }
     let key = ev.key;
 
     if (key === "s" && ev.altKey && selectedItem) {
-      toggleStarred(selectedItem);
       ev.preventDefault();
+      toggleStarred(selectedItem);
       return;
     }
 
@@ -171,7 +180,7 @@
       if (selectedItem) {
         emitOpenNote(selectedItem);
       }
-    } else if (isCtrlDelete(ev)) {
+    } else if (isKeyCtrlDelete(ev)) {
       ev.preventDefault();
       if (!canDeleteSelected) {
         return;
@@ -207,18 +216,18 @@
   }
 
   /**
-   * @param {NoteInfo} item
+   * @param {NoteInfo} noteInfo
    */
-  async function toggleStarred(item) {
+  async function toggleStarred(noteInfo) {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
     // because we wait until metadata file is saved
     // this version makes an optimistic change to reflect in UI
     // and, just to be extra sure, reflects the state after saving
-    item.isStarred = !item.isStarred;
-    toggleNoteStarred(item.name).then((isStarred) => {
+    noteInfo.isStarred = !noteInfo.isStarred;
+    toggleNoteStarred(noteInfo.name).then((isStarred) => {
       // not really necessary, should be in-sync
-      item.isStarred = isStarred;
+      noteInfo.isStarred = isStarred;
     });
     inputRef.focus();
   }
@@ -242,7 +251,7 @@
       class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
     />
     <div class="absolute right-[1rem] top-[0.75rem] italic text-gray-400">
-      {itemsCountMsg}
+      {notesCountMsg}
     </div>
   </div>
 
