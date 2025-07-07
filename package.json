@@ -20,18 +20,18 @@
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.4.2",
     "@lezer/generator": "^1.8.0",
-    "@playwright/test": "^1.53.1",
+    "@playwright/test": "^1.53.2",
     "@rollup/plugin-terser": "^0.4.4",
     "@sveltejs/vite-plugin-svelte": "^5.1.0",
-    "@tailwindcss/vite": "^4.1.10",
-    "@types/bun": "^1.2.17",
-    "@types/node": "^24.0.4",
+    "@tailwindcss/vite": "^4.1.11",
+    "@types/bun": "^1.2.18",
+    "@types/node": "^24.0.10",
     "markdown-it": "^14.1.0",
     "markdown-it-anchor": "^9.2.0",
     "prettier-plugin-svelte": "^3.4.0",
-    "svelte": "^5.34.7",
-    "tailwindcss": "^4.1.10",
-    "vite": "^7.0.0"
+    "svelte": "^5.35.2",
+    "tailwindcss": "^4.1.11",
+    "vite": "^7.0.2"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",
@@ -55,16 +55,16 @@
     "@codemirror/lint": "^6.8.5",
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.37.2",
+    "@codemirror/view": "^6.38.0",
     "@lezer/highlight": "^1.2.1",
     "@lezer/markdown": "^1.4.3",
     "@replit/codemirror-lang-csharp": "^6.2.0",
     "@replit/codemirror-lang-svelte": "^6.0.0",
-    "@zip.js/zip.js": "^2.7.62",
+    "@zip.js/zip.js": "^2.7.63",
     "debounce": "^2.2.0",
     "idb": "^8.0.3",
     "kiss-crypto": "^0.3.4",
     "overlayscrollbars": "^2.11.4",
-    "prettier": "^3.6.0"
+    "prettier": "^3.6.2"
   }
 }
