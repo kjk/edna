@@ -401,7 +401,7 @@ export function findMatchingItems(items, filter, itemKey) {
 export function findMatchingItemsFn(items, filter, itemKeyFn) {
   filter = filter.trim();
   if (filter === "") {
-    return items;
+    return [...items];
   }
   filter = filter.toLowerCase();
   let filterParts = filter.split(" ");

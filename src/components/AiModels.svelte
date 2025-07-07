@@ -1,7 +1,9 @@
 <script>
-  import { focus } from "../actions";
+  import { clickOutside, focus } from "../actions";
   import { toggleNoteStarred } from "../metadata";
+  import { getSettings } from "../settings.svelte";
   import {
+    arrayRemove,
     findMatchingItemsFn,
     hilightText,
     humanPrice,
@@ -22,8 +24,9 @@
 
   /** @type {{ 
     selectModel: (model: any) => void,
+    close: () => void,
   }} */
-  let { selectModel } = $props();
+  let { close, selectModel } = $props();
 
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
@@ -32,19 +35,36 @@
     return model[kModelNameIdx].toLowerCase();
   }
 
+  let settings = getSettings();
+
   let filter = $state("");
+  let forceUpdate = $state(0);
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let sanitizedFilter = $derived(filter.trim());
-  let models = $derived(buildModels(modelsShort, sanitizedFilter, modelNameFn));
+  let models = $derived(
+    buildModels(modelsShort, sanitizedFilter, modelNameFn, forceUpdate),
+  );
 
   /**
    * @param {any[]} items
    * @param {string} filter
    * @param {(item) => any} itemKeyFn
+   * @param {any} ignore
    * @return {any[]}
    */
-  function buildModels(items, filter, itemKeyFn) {
-    return findMatchingItemsFn(items, filter, itemKeyFn);
+  function buildModels(items, filter, itemKeyFn, ignore) {
+    let res = findMatchingItemsFn(items, filter, itemKeyFn);
+    res.sort((a, b) => {
+      const aStarred = settings.starredModels.includes(a[kModelIDIdx]);
+      const bStarred = settings.starredModels.includes(b[kModelIDIdx]);
+      if (aStarred !== bStarred) {
+        return aStarred ? -1 : 1;
+      }
+      const aName = modelNameFn(a);
+      const bName = modelNameFn(b);
+      return aName.localeCompare(bName);
+    });
+    return res;
   }
 
   let listboxRef;
@@ -56,18 +76,18 @@
     listboxRef.onkeydown(ev, true);
   }
 
-  async function toggleStarred(noteInfo) {
-    // there's a noticeable UI lag when we do the obvious:
-    // item.isStarred = toggleNoteStarred(item.name);
-    // because we wait until metadata file is saved
-    // this version makes an optimistic change to reflect in UI
-    // and, just to be extra sure, reflects the state after saving
-    noteInfo.isStarred = !noteInfo.isStarred;
-    toggleNoteStarred(noteInfo.name).then((isStarred) => {
-      // not really necessary, should be in-sync
-      noteInfo.isStarred = isStarred;
-    });
+  async function toggleStarred(model) {
+    let modelID = model[kModelIDIdx];
+    if (settings.starredModels.includes(modelID)) {
+      arrayRemove(settings.starredModels, modelID);
+      console.warn("unstarred model:", modelID);
+    } else {
+      settings.starredModels.push(modelID);
+      console.warn("starred model:", modelID);
+    }
+    forceUpdate++;
   }
+
   function itemKey(item) {
     return item[kModelIDIdx];
   }
@@ -75,9 +95,10 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
+  use:clickOutside={close}
   {onkeydown}
   tabindex="-1"
-  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-full border-gray-400 right-0 max-h-[50vh] min-w-[40ch]"
+  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-[24px] border-gray-400 right-0 max-h-[50vh] min-w-[40ch]"
 >
   <input bind:value={filter} use:focus class="px-1 py-0.5 mb-2 text-xs" />
   <ListBox
@@ -94,15 +115,29 @@
     compact={true}
   >
     {#snippet renderItem(model, idx)}
+      {@const modelID = model[kModelIDIdx]}
       {@const name = model[kModelNameIdx]}
       {@const providerID = model[kModelProviderIdx]}
       {@const providerName = providersInfo[providerID][1]}
       {@const pricePrompt = humanPrice(model[kModelPricePromptIdx])}
       {@const priceCompletion = humanPrice(model[kModelPriceCompletionIdx])}
+      {@const isStarred = settings.starredModels.includes(modelID)}
       {@const hili = hilightText(name, hiliRegExp)}
 
-      <div class="">{providerName}</div>
-      <div class="px-1 ml-2 grow truncate text-right">
+      <button
+        tabindex="-1"
+        class="ml-[-6px] cursor-pointer hover:text-yellow-600"
+        onclick={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          toggleStarred(model);
+        }}
+      >
+        {@render IconTablerStar(isStarred ? "var(--color-yellow-300)" : "none")}
+      </button>
+
+      <div class="ml-2">{providerName}</div>
+      <div class="px-1 ml-2 grow truncate text-left min-w-[32ch]">
         {@html hili}
       </div>
       <div class="w-[6ch] text-right">{pricePrompt}</div>

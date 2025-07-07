@@ -1,8 +1,8 @@
 <script>
   import { tick } from "svelte";
-  import { focus } from "../actions";
+  import { clickOutside, focus } from "../actions";
   import { kModelIDIdx, kModelNameIdx, modelsShort } from "../models-short";
-  import { getSettings } from "../settings.svelte";
+  import { findModelByID, getSettings } from "../settings.svelte";
   import { len } from "../util";
   import AiModels from "./AiModels.svelte";
 
@@ -15,21 +15,11 @@
 
   let forceBadApiKey = false;
 
-  function findModelByName(name) {
-    for (let m of modelsShort) {
-      if (m[kModelIDIdx] == name) {
-        return m;
-      }
-    }
-    throw new Error("didn't find model with name " + name);
-  }
-
-  let initialModelID = "chatgpt-4o-latest";
+  let settings = getSettings();
   let questionText = $state(startText);
   let reqFinished = $state(false);
   let err = $state("");
-  let aiModel = $state(findModelByName(initialModelID));
-  let aiModelID = $derived(aiModel[kModelIDIdx]);
+  let aiModel = $derived(findModelByID(settings.aiModelID));
   let aiModelName = $derived(aiModel[kModelNameIdx]);
   const maxTokens = 1000;
 
@@ -79,7 +69,6 @@
     }
   }
 
-  let settings = getSettings();
   let openAIKey = $state("");
   // heuristc. my openai keys start with "sk-proj-" and are 164 chars in length
   function looksValidOpenAIKey(s) {
@@ -109,7 +98,7 @@
     }
 
     const requestBody = {
-      model: aiModelID,
+      model: settings.aiModelID,
       messages: [{ role: "user", content: prompt }],
       max_tokens: maxTokens,
       temperature: 0.7,
@@ -178,9 +167,6 @@
     <div class="flex text-sm ml-1 mt-2 items-baseline">
       <div class="px-1 py-1">model:</div>
       <button
-        onmouseleave={(ev) => {
-          showingModels = false;
-        }}
         onclick={(ev) => {
           ev.preventDefault();
           ev.stopPropagation();
@@ -191,8 +177,11 @@
         {aiModelName}&nbsp;⏷
         {#if showingModels}
           <AiModels
+            close={() => {
+              showingModels = false;
+            }}
             selectModel={(model) => {
-              aiModel = model;
+              settings.aiModelID = model[kModelIDIdx];
               showingModels = false;
             }}
           ></AiModels>

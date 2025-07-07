@@ -133,3 +133,21 @@ export function trapfocus(node) {
     },
   };
 }
+
+export function clickOutside(node, callback) {
+  let handleClick = (event) => {
+    if (!node.contains(event.target) && !event.defaultPrevented) {
+      callback();
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  };
+
+  document.addEventListener("click", handleClick, true);
+
+  return {
+    destroy() {
+      document.removeEventListener("click", handleClick, true);
+    },
+  };
+}

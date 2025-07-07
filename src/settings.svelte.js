@@ -1,5 +1,5 @@
 import { appState } from "./appstate.svelte";
-import { getNoteMeta, saveNotesMetadata } from "./metadata";
+import { kModelIDIdx, modelsShort } from "./models-short";
 import { kScratchNoteName } from "./notes";
 import {
   arrayRemove,
@@ -26,10 +26,12 @@ const settingsKeys = [
   "tabSize",
   "indentType",
   "theme",
+  "aiModelID",
   "openAIKey",
   "grokKey",
   "anthropicKey",
   "openRouterKey",
+  "starredModels",
 ];
 
 export class Settings {
@@ -47,13 +49,15 @@ export class Settings {
   useWideSelectors = $state(false);
   alwaysShowTopNav = $state(true);
   showSidebar = $state(false);
-  tabSize = $state(4);
+  tabSize = $state(2);
   indentType = $state("spaces"); // "tabs" or "spaces"
   theme = $state("system"); // "system", "light", "dark"
+  aiModelID = $state("chatgpt-4o-latest");
   openAIKey = $state("");
   grokKey = $state("");
   anthropicKey = $state("");
   openRouterKey = $state("");
+  starredModels = $state(["grok-3", "chatgpt-4o-latest"]);
 
   constructor(settings) {
     if (!settings) {
@@ -96,6 +100,49 @@ function validateTabSize(tabSize) {
   return tabSize;
 }
 
+/**
+ * @param {string} modelID
+ * @returns {any[]}
+ */
+export function findModelByID(modelID) {
+  for (let m of modelsShort) {
+    if (m[kModelIDIdx] == modelID) {
+      return m;
+    }
+  }
+  return null;
+}
+
+/**
+ * @param {string} modelID
+ * @returns {string}
+ */
+function validateAiModelID(modelID) {
+  let model = findModelByID(modelID);
+  if (model === null) {
+    console.warn(`validateAiModelID: model not found for id: ${modelID}`);
+    return "chatgpt-4o-latest";
+  }
+  return modelID;
+}
+
+/**
+ * @param {string[]} modelIDs
+ * @returns {string[]}
+ */
+function removeUnknownAiModels(modelIDs) {
+  let validModels = [];
+  for (let modelID of modelIDs) {
+    let model = findModelByID(modelID);
+    if (model) {
+      validModels.push(modelID);
+    } else {
+      console.warn(`removeUnknownAiModels: model not found for id: ${modelID}`);
+    }
+  }
+  return validModels;
+}
+
 let lastSettings;
 
 /** @returns {Settings} */
@@ -107,14 +154,19 @@ export function getSettings() {
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
   // console.log("getSettings: loaded from localStorage:", d);
-  let settings = d === null ? {} : JSON.parse(d);
-  appState.settings = new Settings(settings);
-  appState.settings.tabSize = validateTabSize(appState.settings.tabSize || 4);
+  let settingsRaw = d === null ? {} : JSON.parse(d);
+  let settings = new Settings(settingsRaw);
+  settings.tabSize = validateTabSize(settings.tabSize || 2);
+  settings.aiModelID = validateAiModelID(settings.aiModelID);
+  settings.starredModels = removeUnknownAiModels(settings.starredModels || []);
+
   // console.log("getSettings: settings:", app
-  if (!appState.settings.currentNoteName) {
-    appState.settings.currentNoteName = kScratchNoteName;
+  if (!settings.currentNoteName) {
+    settings.currentNoteName = kScratchNoteName;
   }
-  lastSettings = appState.settings.toJSON();
+  lastSettings = settings.toJSON();
+
+  appState.settings = settings;
   return appState.settings;
 }
 
