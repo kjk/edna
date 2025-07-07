@@ -1,7 +1,13 @@
 <script>
   import { focus } from "../actions";
   import { toggleNoteStarred } from "../metadata";
-  import { findMatchingItemsFn, humanPrice, len } from "../util";
+  import {
+    findMatchingItemsFn,
+    hilightText,
+    humanPrice,
+    len,
+    makeHilightRegExp,
+  } from "../util";
   import {
     kModelIDIdx,
     kModelNameIdx,
@@ -27,6 +33,7 @@
   }
 
   let filter = $state("");
+  let hiliRegExp = $derived(makeHilightRegExp(filter));
   let sanitizedFilter = $derived(filter.trim());
   let models = $derived(buildModels(modelsShort, sanitizedFilter, modelNameFn));
 
@@ -92,9 +99,11 @@
       {@const providerName = providersInfo[providerID][1]}
       {@const pricePrompt = humanPrice(model[kModelPricePromptIdx])}
       {@const priceCompletion = humanPrice(model[kModelPriceCompletionIdx])}
+      {@const hili = hilightText(name, hiliRegExp)}
+
       <div class="">{providerName}</div>
       <div class="px-1 ml-2 grow truncate text-right">
-        {name}
+        {@html hili}
       </div>
       <div class="w-[6ch] text-right">{pricePrompt}</div>
       <div class="w-[6ch] text-right mr-2">{priceCompletion}</div>
