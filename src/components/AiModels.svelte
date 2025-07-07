@@ -1,5 +1,6 @@
 <script>
   import { clickOutside, focus } from "../actions";
+  import { appState } from "../appstate.svelte";
   import { toggleNoteStarred } from "../metadata";
   import { getSettings } from "../settings.svelte";
   import {
@@ -35,8 +36,6 @@
     return model[kModelNameIdx].toLowerCase();
   }
 
-  let settings = getSettings();
-
   let filter = $state("");
   let forceUpdate = $state(0);
   let hiliRegExp = $derived(makeHilightRegExp(filter));
@@ -55,8 +54,8 @@
   function buildModels(items, filter, itemKeyFn, ignore) {
     let res = findMatchingItemsFn(items, filter, itemKeyFn);
     res.sort((a, b) => {
-      const aStarred = settings.starredModels.includes(a[kModelIDIdx]);
-      const bStarred = settings.starredModels.includes(b[kModelIDIdx]);
+      const aStarred = appState.settings.starredModels.includes(a[kModelIDIdx]);
+      const bStarred = appState.settings.starredModels.includes(b[kModelIDIdx]);
       if (aStarred !== bStarred) {
         return aStarred ? -1 : 1;
       }
@@ -78,11 +77,11 @@
 
   async function toggleStarred(model) {
     let modelID = model[kModelIDIdx];
-    if (settings.starredModels.includes(modelID)) {
-      arrayRemove(settings.starredModels, modelID);
+    if (appState.settings.starredModels.includes(modelID)) {
+      arrayRemove(appState.settings.starredModels, modelID);
       console.warn("unstarred model:", modelID);
     } else {
-      settings.starredModels.push(modelID);
+      appState.settings.starredModels.push(modelID);
       console.warn("starred model:", modelID);
     }
     forceUpdate++;
@@ -105,7 +104,6 @@
     bind:this={listboxRef}
     items={models}
     onclick={(model, ev) => {
-      console.log("clicked model:", model);
       ev.preventDefault();
       ev.stopPropagation();
       selectModel(model);
@@ -121,7 +119,7 @@
       {@const providerName = providersInfo[providerID][1]}
       {@const pricePrompt = humanPrice(model[kModelPricePromptIdx])}
       {@const priceCompletion = humanPrice(model[kModelPriceCompletionIdx])}
-      {@const isStarred = settings.starredModels.includes(modelID)}
+      {@const isStarred = appState.settings.starredModels.includes(modelID)}
       {@const hili = hilightText(name, hiliRegExp)}
 
       <button

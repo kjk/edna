@@ -5,6 +5,7 @@ import {
   arrayRemove,
   copyObj,
   len,
+  objectEqualDeep,
   platform,
   pushIfNotExists,
   throwIf,
@@ -143,7 +144,7 @@ function removeUnknownAiModels(modelIDs) {
   return validModels;
 }
 
-let lastSettings;
+let lastSettingsRaw;
 
 /** @returns {Settings} */
 export function getSettings() {
@@ -164,7 +165,7 @@ export function getSettings() {
   if (!settings.currentNoteName) {
     settings.currentNoteName = kScratchNoteName;
   }
-  lastSettings = settings.toJSON();
+  lastSettingsRaw = $state.snapshot(settings.toJSON());
 
   appState.settings = settings;
   return appState.settings;
@@ -193,12 +194,12 @@ function updateWebsiteTheme() {
 function saveSettings(newSettings) {
   throwIf(!newSettings.currentNoteName);
   newSettings.tabSize = validateTabSize(newSettings.tabSize);
-  let settings = newSettings.toJSON();
+  let settingsRaw = $state.snapshot(newSettings.toJSON());
   let changed = [];
   for (let key of settingsKeys) {
-    let valLast = lastSettings[key];
-    let valNew = settings[key];
-    if (valNew !== valLast) {
+    let valLast = lastSettingsRaw[key];
+    let valNew = settingsRaw[key];
+    if (!objectEqualDeep(valNew, valLast)) {
       changed.push(key);
     }
   }
@@ -208,13 +209,13 @@ function saveSettings(newSettings) {
   }
   for (let key of changed) {
     console.log(
-      `saveSettings: ${key} changed from ${lastSettings[key]} to ${settings[key]}`,
+      `saveSettings: ${key} changed from ${lastSettingsRaw[key]} to ${settingsRaw[key]}`,
     );
   }
 
   // console.log("saveSettings:", s);
-  localStorage.setItem(kSettingsPath, JSON.stringify(settings, null, 2));
-  lastSettings = settings;
+  localStorage.setItem(kSettingsPath, JSON.stringify(settingsRaw, null, 2));
+  lastSettingsRaw = settingsRaw;
   updateWebsiteTheme();
   return true;
 }
