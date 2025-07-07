@@ -193,6 +193,9 @@
     if (idx < 0) {
       return;
     }
+    if (idx === selectedIdx) {
+      return;
+    }
     select(idx);
   }
 </script>

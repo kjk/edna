@@ -173,15 +173,16 @@
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
 
-  function updateNoteInfos() {
-    // actions like re-assigning quick access shortcut do
-    // not modify appState.noteNames so we have to force
-    // rebuilding of items
-    noteInfos = localBuildNoteInfos(
-      appState.regularNotes,
-      appState.showingArchived ? appState.archivedNotes : [],
-    );
-  }
+  // TODO: why is this no longer needed?
+  // function updateNoteInfos() {
+  //   // actions like re-assigning quick access shortcut do
+  //   // not modify appState.noteNames so we have to force
+  //   // rebuilding of items
+  //   noteInfos = localBuildNoteInfos(
+  //     appState.regularNotes,
+  //     appState.showingArchived ? appState.archivedNotes : [],
+  //   );
+  // }
 
   let sanitizedFilter = $derived.by(() => {
     return sanitizeNoteName(filter);
@@ -242,11 +243,14 @@
     showDelete = canOpenSelected;
   }
 
+  /**
+   * @param {NoteInfo} item
+   * @param {number} idx
+   */
   function selectionChanged(item, idx) {
-    // console.log("selectionChanged:", $state.snapshot(item), idx);
+    console.warn("selectionChanged:", $state.snapshot(item.name), idx);
     selectedNote = item;
     selectedName = item ? selectedNote.name : "";
-
     recalcAvailableActions(item, sanitizedFilter);
   }
 

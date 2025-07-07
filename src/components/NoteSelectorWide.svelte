@@ -23,7 +23,7 @@
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo */
 
   /** @type {{
-    openNote: (name: string) => void,
+    openNote: (name: string, newTab: boolean) => void,
     createNote: (name: string) => void,
     deleteNote: (name: string, showNotif: boolean) => Promise<void>,
     switchToCommandPalette: () => void,
@@ -99,7 +99,12 @@
     return `${n} of ${nItems} notes`;
   });
 
+  /**
+   * @param {NoteInfo} item
+   * @param {number} idx
+   */
   function selectionChanged(item, idx) {
+    // console.log("selection: ", idx, item.name);
     selectedItem = item;
     selectedName = item ? selectedItem.name : "";
     canOpenSelected = !!selectedItem;
@@ -178,7 +183,7 @@
         return;
       }
       if (selectedItem) {
-        emitOpenNote(selectedItem);
+        emitOpenNote(selectedItem, false);
       }
     } else if (isKeyCtrlDelete(ev)) {
       ev.preventDefault();
@@ -203,11 +208,12 @@
   }
 
   /**
-   * @param {NoteInfo} item
+   * @param {NoteInfo} noteInfo
+   * @param {boolean} newTab
    */
-  function emitOpenNote(item) {
-    // console.log("emitOpenNote", item);
-    openNote(item.name);
+  function emitOpenNote(noteInfo, newTab) {
+    // console.log("emitOpenNote", noteInfo.name, "newTab:", newTab);
+    openNote(noteInfo.name, newTab);
   }
 
   function emitCreateNote(name) {
@@ -259,7 +265,7 @@
     bind:this={listboxRef}
     items={itemsFiltered}
     {selectionChanged}
-    onclick={(item) => emitOpenNote(item)}
+    onclick={(item, ev) => emitOpenNote(item, ev?.ctrlKey)}
   >
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}

@@ -154,8 +154,9 @@
 
   /**
    * @param {MouseEvent} ev
+   * @returns {number}
    */
-  function listboxclick(ev) {
+  function findItemIdxForMouseEvent(ev) {
     // note: could also traverse from ev.target via parentElement
     // until finds tagName === "LI", but this seems more reliable
     // slower but only executed on click
@@ -165,12 +166,36 @@
     for (let i = 0; i < n; i++) {
       let el = refs[i];
       if (el.contains(ev.target)) {
-        let item = items[i];
-        onclick(item);
-        return;
+        return i;
       }
     }
+    return -1;
+  }
+  /**
+   * @param {MouseEvent} ev
+   */
+  function listboxclick(ev) {
+    let idx = findItemIdxForMouseEvent(ev);
+    if (idx < 0) {
+      return;
+    }
+    let item = items[idx];
+    onclick(item);
     // console.log("didn't find item for ev.target:", ev.target);
+  }
+
+  /**
+   * @param {MouseEvent} ev
+   */
+  function mousemove(ev) {
+    let idx = findItemIdxForMouseEvent(ev);
+    if (idx < 0) {
+      return;
+    }
+    if (idx === selectedIdx) {
+      return;
+    }
+    select(idx);
   }
 </script>
 
@@ -180,7 +205,9 @@
   tabindex="-1"
   role="listbox"
   bind:this={listboxRef}
+  data-overlayscrollbars-initialize
   onclick={listboxclick}
+  onmousemove={mousemove}
 >
   {#each items as item, idx (item.key)}
     {@const isSelected = idx === selectedIdx}
@@ -190,7 +217,7 @@
     <span
       role="option"
       aria-selected={isSelected}
-      class="item px-1 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700"
+      class="item px-1 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700 white"
       bind:this={refs[idx]}
     >
       {@render renderItem(item, idx)}
@@ -203,17 +230,18 @@
     --os-size: 10px;
   }
 
-  /*
-    I'm trying to force a break of <span> in wrapper <div> but it doesn't work.
-    This is based on what ChatGPT told me.
-    But maybe it's not needed. With left alignment it looks ok, not much empty space.
-    flex: 1 1 auto; will align on both sides, which I think looks worse (white space 
-    is distributed between )
-  */
+  /* note: those don't seem to have any effect */
   .item {
-    flex: 0 1 auto;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    white-space: normal;
+    /* flex: 0 1 auto; */
+    /* word-break: break-word; */
+    /* overflow-wrap: break-word; */
+    /* white-space: normal; */
   }
+
+  /* alternative: doesn't break on star icon but creates more whitespace */
+  /* .item {
+    flex: 1 1 auto;
+    overflow-wrap: break-word;
+    white-space: nowrap;
+  } */
 </style>
