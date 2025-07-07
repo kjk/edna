@@ -20,19 +20,31 @@ function printSummary(models) {
   }
 }
 
-let whitelistedProviders = [
-  // "openrouter",
-  "openai",
-  "anthropic",
-  // "mistralai",
-  // "cohere",
-  "google",
-  "qwen",
-  "meta-llama",
-  "x-ai",
-  "deepseek",
-  "perplexity",
+export const kProviderOpenAI = 0;
+export const kProviderAnthropic = 1;
+export const kProviderGoogle = 2;
+export const kProviderMetaLlama = 3;
+export const kProviderQwen = 4;
+export const kProviderXAI = 5;
+export const kProviderDeepSeek = 6;
+export const kProviderPerplexity = 7;
+//export const kProviderCohere = 8;
+//export const kProviderMistralAI = 9;
+
+const providersInfo = [
+  ["openai", "OpenAI"],
+  ["anthropic", "Anthropic"],
+  ["google", "Google"],
+  ["meta-llama", "Meta Llama"],
+  ["qwen", "Qwen"],
+  ["x-ai", "xAI"],
+  ["deepseek", "DeepSeek"],
+  ["perplexity", "Perplexity"],
+  //  ["cohere", "Cohere"],
+  //  ["mistralai", "Mistral AI"],
 ];
+
+const whitelistedProviders = providersInfo.map((p) => p[0]);
 
 function parseModelsJSON() {
   let fpath = "./src/open_router_models.json";
@@ -63,23 +75,90 @@ function parseModelsJSON() {
   return res;
 }
 
+function findProviderID(id) {
+  for (let i = 0; i < providersInfo.length; i++) {
+    if (id.startsWith(providersInfo[i][0])) {
+      return i;
+    }
+  }
+  return -1; // Not found
+}
+
+/**
+ * @param {string} id
+ * @returns {string}
+ */
+function shortenModelID(id) {
+  // e.g. "openai/gpt-4o" -> "gpt-4o"
+  const parts = id.split("/");
+  if (parts.length < 2) {
+    throw new Error(`Invalid model ID format: ${id}`);
+  }
+  return parts[1]; // Return the second part (the model name)
+}
+
+/**
+ * @param {string} name
+ * @returns {string}
+ */
+function shortenModelName(name) {
+  // e.g. "Google: Gemini 1.5 Pro" -> "Gemini 1.5 Pro"
+  const parts = name.split(": ");
+  if (parts.length < 2) {
+    return name;
+  }
+  return parts[1];
+}
+
 function genShort(models) {
   // convert to flat array
   let a = [];
   for (let m of models) {
     let id = m.id;
+    let providerID = findProviderID(id);
+    if (providerID < 0) {
+      throw new Error(`Unknown provider for model ${id}`);
+    }
     let name = m.name;
     let pricePrompt = m.price_prompt;
     let priceCompletion = m.price_completion;
-    a.push([id, name, pricePrompt, priceCompletion]);
+
+    id = shortenModelID(id);
+    name = shortenModelName(name);
+    a.push([id, providerID, name, pricePrompt, priceCompletion]);
   }
   let js = JSON.stringify(a, null, 2);
   let fpath = "./src/models-short.js";
   let s = `
+export const kProviderOpenAI = 0;
+export const kProviderAnthropic = 1;
+export const kProviderGoogle = 2;
+export const kProviderMetaLlama = 3;
+export const kProviderQwen = 4;
+export const kProviderXAI = 5;
+export const kProviderDeepSeek = 6;
+export const kProviderPerplexity = 7;
+//export const kProviderCohere = 8;
+//export const kProviderMistralAI = 9;
+
+export const providersInfo = [
+  ["openai", "OpenAI"],
+  ["anthropic", "Anthropic"],
+  ["google", "Google"],
+  ["meta-llama", "Meta Llama"],
+  ["qwen", "Qwen"],
+  ["x-ai", "xAI"],
+  ["deepseek", "DeepSeek"],
+  ["perplexity", "Perplexity"],
+  //  ["cohere", "Cohere"],
+  //  ["mistralai", "Mistral AI"],
+];
+
 export const kModelIDIdx = 0;
-export const kModelNameIdx = 1;
-export const kModelPricePromptIdx = 2;
-export const kModelPriceCompletionIdx = 3;
+export const kModelProviderIdx = 1;
+export const kModelNameIdx = 2;
+export const kModelPricePromptIdx = 3;
+export const kModelPriceCompletionIdx = 4;
 
 export const modelsShort = ${js};\n`;
   fs.writeFileSync(fpath, s);

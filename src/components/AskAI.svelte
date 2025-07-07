@@ -1,6 +1,7 @@
 <script>
   import { tick } from "svelte";
   import { focus } from "../actions";
+  import { kModelIDIdx, kModelNameIdx, modelsShort } from "../models-short";
   import { getSettings } from "../settings.svelte";
   import { len } from "../util";
   import AiModels from "./AiModels.svelte";
@@ -14,10 +15,22 @@
 
   let forceBadApiKey = false;
 
+  function findModelByName(name) {
+    for (let m of modelsShort) {
+      if (m[kModelIDIdx] == name) {
+        return m;
+      }
+    }
+    throw new Error("didn't find model with name " + name);
+  }
+
+  let initialModelID = "chatgpt-4o-latest";
   let questionText = $state(startText);
   let reqFinished = $state(false);
   let err = $state("");
-  let aiModel = "gpt-3.5-turbo";
+  let aiModel = $state(findModelByName(initialModelID));
+  let aiModelID = $derived(aiModel[kModelIDIdx]);
+  let aiModelName = $derived(aiModel[kModelNameIdx]);
   const maxTokens = 1000;
 
   async function askai() {
@@ -83,7 +96,7 @@
   let askAIDisabled = $derived(!canSendRequest || reqInProgress);
 
   function insertRsp() {
-    let s = "# Response from " + aiModel + "\n\n" + responseText + "\n";
+    let s = "# Response from " + aiModelName + "\n\n" + responseText + "\n";
     insertResponse(s);
     close();
   }
@@ -96,7 +109,7 @@
     }
 
     const requestBody = {
-      model: aiModel,
+      model: aiModelID,
       messages: [{ role: "user", content: prompt }],
       max_tokens: maxTokens,
       temperature: 0.7,
@@ -175,11 +188,12 @@
         }}
         class="hover:bg-gray-100 cursor-pointer px-1 py-1 relative"
       >
-        {aiModel}&nbsp;⏷
+        {aiModelName}&nbsp;⏷
         {#if showingModels}
           <AiModels
             selectModel={(model) => {
-              console.log("selectModel", model);
+              aiModel = model;
+              showingModels = false;
             }}
           ></AiModels>
         {/if}

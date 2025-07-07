@@ -1,8 +1,16 @@
 <script>
   import { focus } from "../actions";
   import { toggleNoteStarred } from "../metadata";
-  import { findMatchingItemsFn, len } from "../util";
-  import { kModelIDIdx, kModelNameIdx, modelsShort } from "./../models-short";
+  import { findMatchingItemsFn, humanPrice, len } from "../util";
+  import {
+    kModelIDIdx,
+    kModelNameIdx,
+    kModelPriceCompletionIdx,
+    kModelPricePromptIdx,
+    kModelProviderIdx,
+    modelsShort,
+    providersInfo,
+  } from "./../models-short";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
@@ -70,6 +78,8 @@
     items={models}
     onclick={(model, ev) => {
       console.log("clicked model:", model);
+      ev.preventDefault();
+      ev.stopPropagation();
       selectModel(model);
     }}
     {itemKey}
@@ -78,9 +88,16 @@
   >
     {#snippet renderItem(model, idx)}
       {@const name = model[kModelNameIdx]}
-      <div class="px-1 ml-4 grow self-end text-right max-w-[32ch] truncate">
+      {@const providerID = model[kModelProviderIdx]}
+      {@const providerName = providersInfo[providerID][1]}
+      {@const pricePrompt = humanPrice(model[kModelPricePromptIdx])}
+      {@const priceCompletion = humanPrice(model[kModelPriceCompletionIdx])}
+      <div class="">{providerName}</div>
+      <div class="px-1 ml-2 grow truncate text-right">
         {name}
       </div>
+      <div class="w-[6ch] text-right">{pricePrompt}</div>
+      <div class="w-[6ch] text-right mr-2">{priceCompletion}</div>
     {/snippet}
   </ListBox>
 </form>
