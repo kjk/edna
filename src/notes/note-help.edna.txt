@@ -26,6 +26,14 @@ Use:
 
 Use [keyboard shortcuts](#keyboard-shortcuts) to create blocks, move between blocks.
 
+Navigating between blocks with `Mod + B`:
+
+![Navigate between blocks](/help-blocks.png)
+
+Changing block language with `Mod + L`:
+
+![Change block language](/help-change-block-languge.png)
+
 ## No installation required
 
 Edna is a web-based application but can store notes on disk, like a desktop app (when using Chrome or Edge).
@@ -44,6 +52,10 @@ To acess more functionality:
 - top navigation bar
 - status bar
 
+Command palette with `Mod + Shift + K`:
+
+![Command Palette](/help-command-palette.png)
+
 ## Speed
 
 [Edna](https://edna.arslexis.io) is optimized for speed of writing, creating new notes, switching between notes.
@@ -57,21 +69,43 @@ Press `Mod + K` for note switcher and:
 - delete a note
 - assign a quick access `Alt + <n>` shortcut
 
+Note switcher with `Mod + K`:
+
+![Note switcher](/help-note-selector.png)
+
+## Multiple tabs
+
+We support multiple tabs:
+
+![Tabs](/help-multiple-tabs.png)
+
+To open a note in a new tab, press `Mod` when opening a note.
+
+## Minimize top navigation bar
+
+You can minimize / maxmize top navigation bar by pressing an icon in top right corner:
+
+![Minimize navigation bar](/help-minimize-nav-bar.png)
+
+When minimized, navigation bar is hidden by default and only shows when you move mouse or hover it over the bar.
+
+It also uses only as much space as needed for tabs and UI elements, not the whole width of window.
+
+The intent is to maximize amount of space dedicated to the editor.
+
 ## Context menu
 
 Press right mouse button for context menu.
 
-For native context menu do `Ctrl + right-click`. This is useful when spell checking to correct mis-spellings.
+Context menu with mouse right click:
+
+![Context menu](/help-context-menu.png)
+
+For native context menu do `Mod + right-click`. This is useful when spell checking to correct mis-spellings.
 
 Alternatively mouse over menu icon in top right corner.
 
-## Switch to recently opened note
-
-Press `Mod + H` to switch to a note from list of recently opened notes.
-
-Last 9 recently opened notes can be opened with `0` ... `9` shortcut.
-
-To switch to previous note: press `Mod + H` and `Enter`.
+![Context menu](/help-context-menu-2.png)
 
 ## Quick access shortcut
 
@@ -89,13 +123,19 @@ Default shortcuts are:
 
 Notes with quick access shortcut are shown at the top of note selector (`Mod + K`) and quick access UI (`Mod + H`)
 
+![Quick access shortcuts](/help-qas.png)
+
 ## Quick access UI for starred, recent notes
 
-To quickly open frequently accessed notes:
-- `Mod + H`
-- hover over ⏷ in top navigation bar
+Use `Mod + H`:
 
-You'll get a drop-down list with following notes:
+![History of opened files](/help-history.png)
+
+Alternatively mouse over ⏷ in top navigation bar:
+
+![History of opened files](/help-history-2.png)
+
+Drop-down list has:
 - notes that have quick access shortcut
 - starred notes
 - recently opened notes
@@ -148,6 +188,24 @@ Or: context menu: `Create New note`.
 
 `Alt + N` to create temporary scratch note. We'll pick a unique name `scratch-<n>`
 
+## Archive and unarchive note
+
+To keep the note but put it aside, archive it.
+
+Context menu: `This note` / `Archive`.
+
+Command `Archive note` in command palette (`Mod + Shift + K`).
+
+Open note selector with `Mod + K`, click archive icon:
+
+![Archive in note selector](/help-note-selector-archive.png)
+
+To open archive note, click `show archived` link in note selector:
+
+![Show archived](/help-show-archived.png)
+
+Archived notes show at the top. You can unarchive with an icon or open the note and use context menu `This note` / `Un-archive` or `Un-archive note` command.
+
 ## Delete a note
 
 Context menu: `This Note / Delete` or:
@@ -160,7 +218,18 @@ A `scratch` note cannot be deleted.
 
 ## Rename a note
 
-context menu: `This Note / Rename`
+Context menu: `This Note / Rename`
+
+`Rename current note` in command palette (`Mod + Shift + K`).
+
+![Rename note](/help-rename-note.png)
+
+∞∞∞markdown
+# Sidebar
+
+Click icon in top left corner to show and hide sidebar:
+
+![Sidebar](/help-sidebar.png)
 
 ∞∞∞markdown
 # Default notes
@@ -179,11 +248,25 @@ You can delete them (except the `scratch` note).
 
 `daily journal` is for daily notes. We auto-create a block for each day.
 ∞∞∞markdown
-# Search in notes
+# Search and replace
+
+Press `Mod + F` for search UI:
+
+![Search in note](/help-find.png)
+
+We support:
+- match case
+- match whole word
+- regular expression
+
+∞∞∞markdown
+# Search across notes
 
 To invoke full-text search in notes:
 - `Mod + Shift + F`
 - `Find in notes` in Command Palette (Mod + Shift + K)
+
+![Search in notes](/help-notes-search.png)
 
 The search algorightm is:
 - if you search for `foo,` it'll find all lines that have `foo`
@@ -201,20 +284,29 @@ It's optimized for the following workflow:
 - send the query to AI
 - optionally insert the response as a new block
 
-Use context menu `Ask AI` or `Ask AI` command in command palette (`Ctrl + Shift + K`).
+Use context menu `Ask AI` or `Ask AI` command in command palette (`Mod + Shift + K`).
 
-We open AI chat interface pre-populated with the content of current block.
+We open AI chat interface pre-populated with the content of selection or current block.
+
+![Ask AI](/help-ask-ai.png)
 
 You can edit your question and press `Ask AI` button to send the question and receive the response.
 
 Once you receive the response, you can insert it as new block.
 
+![Ask AI Response](/help-ask-ai-response.png)
+
 We support a lot of AI models. You can pick the model using selector in upper right corner.
+
+![Ask AI models](/help-ask-ai-pick-model.png)
 
 We don't charge for AI but AI providers do.
 
-You need to provide your own API key. We support:
+You need to provide your own API key. 
 
+![Ask AI enter key](/help-ask-ai-api-key.png)
+
+We support:
 - [OpenAI](openai.com) for ChatGPT etc.
 - [xAI](https://x.ai/) for Grok
 - [OpenRouter](https://openrouter.ai/) for all models (including OpenAI / xAI models)
@@ -229,7 +321,13 @@ Token is pretty much a word so think "number of words in the question or respons
 
 We show the prices per million input tokens and million output tokens on the right side of the model selector.
 
-Some models are free. They show 0 for the price. You can also type **free** in model selector to see free models.
+## Free models
+
+Some OpenRouter models are free. They show 0 for the price. You can also type **free** in model selector to see free models.
+
+![Ask AI free models](/help-ask-ai-free-models.png)
+
+You still need an OpenRouter API key to use free models.
 
 ## Getting OpenAI API key
 
@@ -592,7 +690,7 @@ time \* 2
 // Edna is great for storing code snippets
 // this is a javascript block
 // change type of block with `Mod + L`
-// or `Block: Change Language` command in command palette (`Mod + K`)
+// or `Block: Change Language` command in command palette (`Mod + Shift + K`)
 // you can format it with `Alt + Shift + F`
 let x = 5
 console.log("x is", x)

@@ -6,7 +6,7 @@ html {
     Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; */
   font-family: system-ui, sans-serif;
 
-  font-size: 11pt;
+  font-size: 13pt;
   line-height: 1.4;
 }
 
@@ -15,6 +15,21 @@ html {
   max-width: 692px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* img {
+  max-width: 100%;
+  height: auto;
+} */
+
+img {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 90vw;
+  max-width: 90vw; /* prevent it from being constrained */
+  margin-left: -45vw; /* offset to the left by half the viewport */
+  margin-right: -45vw; /* optional: ensures symmetrical layout */
 }
 
 pre {

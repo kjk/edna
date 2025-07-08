@@ -59,6 +59,10 @@ Ctrl + Shift + F       Search in all notes
 <li><code>Ctrl + A</code> and <code>Delete</code> to delete block (select block text and delete)</li>
 </ul>
 <p>Use <a href="#keyboard-shortcuts">keyboard shortcuts</a> to create blocks, move between blocks.</p>
+<p>Navigating between blocks with <code>Ctrl + B</code>:</p>
+<p><img src="/help-blocks.png" alt="Navigate between blocks"></p>
+<p>Changing block language with <code>Ctrl + L</code>:</p>
+<p><img src="/help-change-block-languge.png" alt="Change block language"></p>
 <h2 id="no-installation-required" tabindex="-1"><a class="header-anchor" href="#no-installation-required">No installation required</a></h2>
 <p>Edna is a web-based application but can store notes on disk, like a desktop app (when using Chrome or Edge).</p>
 <p>You can use it offline (without network connection) and for desktop-like experince you can install a desktop shortcut.</p>
@@ -72,6 +76,8 @@ Ctrl + Shift + F       Search in all notes
 <li>top navigation bar</li>
 <li>status bar</li>
 </ul>
+<p>Command palette with <code>Ctrl + Shift + K</code>:</p>
+<p><img src="/help-command-palette.png" alt="Command Palette"></p>
 <h2 id="speed" tabindex="-1"><a class="header-anchor" href="#speed">Speed</a></h2>
 <p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is optimized for speed of writing, creating new notes, switching between notes.</p>
 <p>Like in Notational Velocity, you can switch between notes, create and delete notes in the same note switcher UI.</p>
@@ -82,14 +88,25 @@ Ctrl + Shift + F       Search in all notes
 <li>delete a note</li>
 <li>assign a quick access <code>Alt + &lt;n&gt;</code> shortcut</li>
 </ul>
+<p>Note switcher with <code>Ctrl + K</code>:</p>
+<p><img src="/help-note-selector.png" alt="Note switcher"></p>
+<h2 id="multiple-tabs" tabindex="-1"><a class="header-anchor" href="#multiple-tabs">Multiple tabs</a></h2>
+<p>We support multiple tabs:</p>
+<p><img src="/help-multiple-tabs.png" alt="Tabs"></p>
+<p>To open a note in a new tab, press <code>Ctrl</code> when opening a note.</p>
+<h2 id="minimize-top-navigation-bar" tabindex="-1"><a class="header-anchor" href="#minimize-top-navigation-bar">Minimize top navigation bar</a></h2>
+<p>You can minimize / maxmize top navigation bar by pressing an icon in top right corner:</p>
+<p><img src="/help-minimize-nav-bar.png" alt="Minimize navigation bar"></p>
+<p>When minimized, navigation bar is hidden by default and only shows when you move mouse or hover it over the bar.</p>
+<p>It also uses only as much space as needed for tabs and UI elements, not the whole width of window.</p>
+<p>The intent is to maximize amount of space dedicated to the editor.</p>
 <h2 id="context-menu" tabindex="-1"><a class="header-anchor" href="#context-menu">Context menu</a></h2>
 <p>Press right mouse button for context menu.</p>
+<p>Context menu with mouse right click:</p>
+<p><img src="/help-context-menu.png" alt="Context menu"></p>
 <p>For native context menu do <code>Ctrl + right-click</code>. This is useful when spell checking to correct mis-spellings.</p>
 <p>Alternatively mouse over menu icon in top right corner.</p>
-<h2 id="switch-to-recently-opened-note" tabindex="-1"><a class="header-anchor" href="#switch-to-recently-opened-note">Switch to recently opened note</a></h2>
-<p>Press <code>Ctrl + H</code> to switch to a note from list of recently opened notes.</p>
-<p>Last 9 recently opened notes can be opened with <code>0</code> ... <code>9</code> shortcut.</p>
-<p>To switch to previous note: press <code>Ctrl + H</code> and <code>Enter</code>.</p>
+<p><img src="/help-context-menu-2.png" alt="Context menu"></p>
 <h2 id="quick-access-shortcut" tabindex="-1"><a class="header-anchor" href="#quick-access-shortcut">Quick access shortcut</a></h2>
 <p>You can assign <code>Alt + 1</code> to <code>Alt + 9</code> for quickly accessing notes:</p>
 <ul>
@@ -104,13 +121,13 @@ Ctrl + Shift + F       Search in all notes
 <li><code>Alt + 3</code> : inbox</li>
 </ul>
 <p>Notes with quick access shortcut are shown at the top of note selector (<code>Ctrl + K</code>) and quick access UI (<code>Ctrl + H</code>)</p>
+<p><img src="/help-qas.png" alt="Quick access shortcuts"></p>
 <h2 id="quick-access-ui-for-starred%2C-recent-notes" tabindex="-1"><a class="header-anchor" href="#quick-access-ui-for-starred%2C-recent-notes">Quick access UI for starred, recent notes</a></h2>
-<p>To quickly open frequently accessed notes:</p>
-<ul>
-<li><code>Ctrl + H</code></li>
-<li>hover over ⏷ in top navigation bar</li>
-</ul>
-<p>You'll get a drop-down list with following notes:</p>
+<p>Use <code>Ctrl + H</code>:</p>
+<p><img src="/help-history.png" alt="History of opened files"></p>
+<p>Alternatively mouse over ⏷ in top navigation bar:</p>
+<p><img src="/help-history-2.png" alt="History of opened files"></p>
+<p>Drop-down list has:</p>
 <ul>
 <li>notes that have quick access shortcut</li>
 <li>starred notes</li>
@@ -152,6 +169,15 @@ Ctrl + Shift + F       Search in all notes
 <p>Or: context menu: <code>Create New note</code>.</p>
 <h2 id="create-a-new-scratch-note" tabindex="-1"><a class="header-anchor" href="#create-a-new-scratch-note">Create a new scratch note</a></h2>
 <p><code>Alt + N</code> to create temporary scratch note. We'll pick a unique name <code>scratch-&lt;n&gt;</code></p>
+<h2 id="archive-and-unarchive-note" tabindex="-1"><a class="header-anchor" href="#archive-and-unarchive-note">Archive and unarchive note</a></h2>
+<p>To keep the note but put it aside, archive it.</p>
+<p>Context menu: <code>This note</code> / <code>Archive</code>.</p>
+<p>Command <code>Archive note</code> in command palette (<code>Ctrl + Shift + K</code>).</p>
+<p>Open note selector with <code>Ctrl + K</code>, click archive icon:</p>
+<p><img src="/help-note-selector-archive.png" alt="Archive in note selector"></p>
+<p>To open archive note, click <code>show archived</code> link in note selector:</p>
+<p><img src="/help-show-archived.png" alt="Show archived"></p>
+<p>Archived notes show at the top. You can unarchive with an icon or open the note and use context menu <code>This note</code> / <code>Un-archive</code> or <code>Un-archive note</code> command.</p>
 <h2 id="delete-a-note" tabindex="-1"><a class="header-anchor" href="#delete-a-note">Delete a note</a></h2>
 <p>Context menu: <code>This Note / Delete</code> or:</p>
 <ul>
@@ -161,7 +187,12 @@ Ctrl + Shift + F       Search in all notes
 </ul>
 <p>A <code>scratch</code> note cannot be deleted.</p>
 <h2 id="rename-a-note" tabindex="-1"><a class="header-anchor" href="#rename-a-note">Rename a note</a></h2>
-<p>context menu: <code>This Note / Rename</code></p>
+<p>Context menu: <code>This Note / Rename</code></p>
+<p><code>Rename current note</code> in command palette (<code>Ctrl + Shift + K</code>).</p>
+<p><img src="/help-rename-note.png" alt="Rename note"></p>
+<h1 id="sidebar" tabindex="-1"><a class="header-anchor" href="#sidebar">Sidebar</a></h1>
+<p>Click icon in top left corner to show and hide sidebar:</p>
+<p><img src="/help-sidebar.png" alt="Sidebar"></p>
 <h1 id="default-notes" tabindex="-1"><a class="header-anchor" href="#default-notes">Default notes</a></h1>
 <p>At first run we create 3 default notes:</p>
 <ul>
@@ -173,12 +204,22 @@ Ctrl + Shift + F       Search in all notes
 <p><code>scratch</code> note is meant for temporary notes.</p>
 <p><code>inbox</code> for storing things to process later e.g. links to YouTube videos to watch later or web pages to read later.</p>
 <p><code>daily journal</code> is for daily notes. We auto-create a block for each day.</p>
-<h1 id="search-in-notes" tabindex="-1"><a class="header-anchor" href="#search-in-notes">Search in notes</a></h1>
+<h1 id="search-and-replace" tabindex="-1"><a class="header-anchor" href="#search-and-replace">Search and replace</a></h1>
+<p>Press <code>Ctrl + F</code> for search UI:</p>
+<p><img src="/help-find.png" alt="Search in note"></p>
+<p>We support:</p>
+<ul>
+<li>match case</li>
+<li>match whole word</li>
+<li>regular expression</li>
+</ul>
+<h1 id="search-across-notes" tabindex="-1"><a class="header-anchor" href="#search-across-notes">Search across notes</a></h1>
 <p>To invoke full-text search in notes:</p>
 <ul>
 <li><code>Ctrl + Shift + F</code></li>
 <li><code>Find in notes</code> in Command Palette (Ctrl + Shift + K)</li>
 </ul>
+<p><img src="/help-notes-search.png" alt="Search in notes"></p>
 <p>The search algorightm is:</p>
 <ul>
 <li>if you search for <code>foo,</code> it'll find all lines that have <code>foo</code></li>
@@ -196,12 +237,17 @@ Ctrl + Shift + F       Search in all notes
 <li>optionally insert the response as a new block</li>
 </ul>
 <p>Use context menu <code>Ask AI</code> or <code>Ask AI</code> command in command palette (<code>Ctrl + Shift + K</code>).</p>
-<p>We open AI chat interface pre-populated with the content of current block.</p>
+<p>We open AI chat interface pre-populated with the content of selection or current block.</p>
+<p><img src="/help-ask-ai.png" alt="Ask AI"></p>
 <p>You can edit your question and press <code>Ask AI</code> button to send the question and receive the response.</p>
 <p>Once you receive the response, you can insert it as new block.</p>
+<p><img src="/help-ask-ai-response.png" alt="Ask AI Response"></p>
 <p>We support a lot of AI models. You can pick the model using selector in upper right corner.</p>
+<p><img src="/help-ask-ai-pick-model.png" alt="Ask AI models"></p>
 <p>We don't charge for AI but AI providers do.</p>
-<p>You need to provide your own API key. We support:</p>
+<p>You need to provide your own API key.</p>
+<p><img src="/help-ask-ai-api-key.png" alt="Ask AI enter key"></p>
+<p>We support:</p>
 <ul>
 <li><a href="openai.com" target="_blank">OpenAI</a> for ChatGPT etc.</li>
 <li><a href="https://x.ai/" target="_blank">xAI</a> for Grok</li>
@@ -212,7 +258,10 @@ Ctrl + Shift + F       Search in all notes
 <p>The charge per usage. There's a fee for the size of your question (input tokens) and size of the response (output tokens).</p>
 <p>Token is pretty much a word so think &quot;number of words in the question or response&quot;.</p>
 <p>We show the prices per million input tokens and million output tokens on the right side of the model selector.</p>
-<p>Some models are free. They show 0 for the price. You can also type <strong>free</strong> in model selector to see free models.</p>
+<h2 id="free-models" tabindex="-1"><a class="header-anchor" href="#free-models">Free models</a></h2>
+<p>Some OpenRouter models are free. They show 0 for the price. You can also type <strong>free</strong> in model selector to see free models.</p>
+<p><img src="/help-ask-ai-free-models.png" alt="Ask AI free models"></p>
+<p>You still need an OpenRouter API key to use free models.</p>
 <h2 id="getting-openai-api-key" tabindex="-1"><a class="header-anchor" href="#getting-openai-api-key">Getting OpenAI API key</a></h2>
 <p>Go to <a href="https://platform.openai.com/settings/organization/api-keys" target="_blank">OpenAI</a>.</p>
 <h2 id="getting-xai-(grok)-api-key" tabindex="-1"><a class="header-anchor" href="#getting-xai-(grok)-api-key">Getting xAI (Grok) API Key</a></h2>
@@ -450,7 +499,7 @@ async function main(input) {
 // Edna is great for storing code snippets
 // this is a javascript block
 // change type of block with `Ctrl + L`
-// or `Block: Change Language` command in command palette (`Ctrl + K`)
+// or `Block: Change Language` command in command palette (`Ctrl + Shift + K`)
 // you can format it with `Alt + Shift + F`
 let x = 5
 console.log(&quot;x is&quot;, x)
