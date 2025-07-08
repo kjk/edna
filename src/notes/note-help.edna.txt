@@ -39,7 +39,7 @@ UI is optimized for writing. Editor uses most of the space.
 To acess more functionality:
 
 - `Mod + Shift + K` for command palette
-- use [keyboard shortcuts](#keyboard-shortcuts))
+- use [keyboard shortcuts](#keyboard-shortcuts)
 - context menu (right-click)
 - top navigation bar
 - status bar
