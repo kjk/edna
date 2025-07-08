@@ -75,7 +75,7 @@
   });
 
   /** @type {HTMLElement} */
-  let ednaRef;
+  let ednaRef = $state(null);
 
   const colors = [
     "red",

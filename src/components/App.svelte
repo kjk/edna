@@ -242,7 +242,7 @@
   let userFunctions = $state([]); // note: $state() not needed
   let contextMenuPos = $state({ x: 0, y: 0 });
 
-  let askAIStartText = "";
+  let askAIStartText = $state("");
 
   // /** @type {import("../editor/editor").EdnaEditor} */
   // let ednaEditor = $state(null);
