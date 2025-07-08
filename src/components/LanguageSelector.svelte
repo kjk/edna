@@ -1,7 +1,12 @@
 <script>
   import { focus } from "../actions.js";
   import { kLanguages } from "../editor/languages.js";
-  import { findMatchingItems, len } from "../util.js";
+  import {
+    findMatchingItems,
+    hilightText,
+    len,
+    makeHilightRegExp,
+  } from "../util.js";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{
@@ -10,6 +15,7 @@
   let { selectLanguage } = $props();
 
   let filter = $state("");
+  let hiliRegExp = $derived(makeHilightRegExp(filter));
 
   function buildItems() {
     let n = len(kLanguages);
@@ -62,7 +68,8 @@
     onclick={(item) => selectLanguage(item.token)}
   >
     {#snippet renderItem(item)}
-      <div>{item.name}</div>
+      {@const hili = hilightText(item.name, hiliRegExp)}
+      <div>{@html hili}</div>
     {/snippet}
   </ListBox>
 </form>
