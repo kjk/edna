@@ -23,7 +23,19 @@
 
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
 
-  let noteInfos = $state(buildNoteInfos(appState.allNotes));
+  function localBuildNoteInfos(regular, archived) {
+    let notes = [...regular];
+    notes.push(...archived);
+    let res = buildNoteInfos(notes);
+    return res;
+  }
+  let noteInfos = $derived(
+    localBuildNoteInfos(
+      appState.regularNotes,
+      appState.showingArchived ? appState.archivedNotes : [],
+    ),
+  );
+
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
@@ -33,7 +45,10 @@
     // actions like re-assigning quick access shortcut do
     // not modify appState.noteNames so we have to force
     // rebuilding of items
-    noteInfos = buildNoteInfos(appState.allNotes);
+    noteInfos = localBuildNoteInfos(
+      appState.regularNotes,
+      appState.showingArchived ? appState.archivedNotes : [],
+    );
   }
 
   let sanitizedFilter = $derived.by(() => {
