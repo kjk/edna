@@ -569,12 +569,21 @@ export function arrayRemove(arr, item) {
     arr.splice(i, 1);
   }
 }
+
 /**
  * @param {KeyboardEvent} ev
  * @returns {boolean}
  */
 export function isKeyCtrlDelete(ev) {
   return (ev.key === "Delete" || ev.key === "Backspace") && ev.ctrlKey;
+}
+
+/**
+ * @param {KeyboardEvent} ev
+ * @returns {boolean}
+ */
+export function isKeyCtrlEnter(ev) {
+  return ev.key === "Enter" && ev.ctrlKey;
 }
 
 /**

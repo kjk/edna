@@ -122,7 +122,7 @@ select {
   /* font-size: 13px; */
   max-height: calc(100% - 4rem);
 
-  @apply text-sm;
+  @apply text-base;
   @apply bg-white;
   @apply dark:bg-gray-900 dark:text-gray-300;
 }
@@ -162,6 +162,8 @@ select {
 
 .button-outline {
   @apply px-4 py-1 rounded-lg border;
+  @apply cursor-pointer;
+
   @apply border-gray-950/20 disabled:border-gray-950/5;
   @apply outline-gray-950/50 disabled:outline-gray-950/5;
   @apply dark:border-gray-400 dark:disabled:border-gray-600;

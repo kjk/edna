@@ -1,6 +1,6 @@
 <script>
   import { tick } from "svelte";
-  import { focus } from "../actions";
+  import { focus, trapfocus } from "../actions";
   import {
     kModelIDIdx,
     kModelNameIdx,
@@ -10,7 +10,7 @@
     providersInfo,
   } from "../models-short";
   import { findModelByID, getSettings } from "../settings.svelte";
-  import { len } from "../util";
+  import { isKeyCtrlDelete, isKeyCtrlEnter, len } from "../util";
   import AiModels from "./AiModels.svelte";
 
   /** @type {{
@@ -48,11 +48,12 @@
   let settings = getSettings();
   let questionText = $state(startText);
   let reqFinished = $state(false);
+  let useOpenRouter = $state(false);
   let err = $state("");
   let forceShowingApiKey = $state(false);
   let aiModel = $derived(findModelByID(settings.aiModelID));
   let aiModelName = $derived(aiModel[kModelNameIdx]);
-  let apiProvider = $derived(apiProviderForModelID(aiModel));
+  let apiProvider = $derived(apiProviderForAiModel(aiModel, false));
   let needsOpenAPIKey = $derived(
     apiProvider == kApiProviderOpenAI &&
       (forceShowingApiKey || err || !looksValidOpenAIKey(settings.openAIKey)),
@@ -66,14 +67,17 @@
   //     (forceShowingApiKey || err || !looksValidGrokKey(settings.googleAIKey)),
   // );
   let needsOpenRouterAPIKey = $derived(
-    apiProvider == kApiProviderOpenRouter &&
+    (apiProvider == kApiProviderOpenRouter || useOpenRouter) &&
       (forceShowingApiKey || err || !looksValidGrokKey(settings.openRouterKey)),
   );
   let apiKey = $derived(pickApiKeyForProvider(apiProvider));
 
   const maxTokens = 1000;
 
-  function apiProviderForModelID(aiModel) {
+  function apiProviderForAiModel(aiModel, ignoreUserOpenRouter = false) {
+    if (!ignoreUserOpenRouter && useOpenRouter) {
+      return kApiProviderOpenRouter;
+    }
     let provider = aiModel[kModelProviderIdx];
     switch (provider) {
       case kProviderOpenAI:
@@ -158,9 +162,9 @@
   }
 
   // mine is 39 chars
-  function looksValidGoogleKey(s) {
-    return len(s) > 30;
-  }
+  // function looksValidGoogleKey(s) {
+  //   return len(s) > 30;
+  // }
 
   function looksValidKey(apiKey) {
     switch (apiProvider) {
@@ -257,6 +261,15 @@
     }
   }
 
+  /**
+   * @param {KeyboardEvent} ev
+   */
+  function onkeydown(ev) {
+    if (isKeyCtrlEnter(ev) && !askAIDisabled) {
+      askai();
+    }
+  }
+
   /** @type {HTMLElement} */
   let btnInsertRef;
 
@@ -264,32 +277,23 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div
+<form
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[80vh] w-[75vw] p-2"
+  use:trapfocus
+  class="selector z-20 absolute center-x-with-translate top-[1rem] flex flex-col max-h-[78vh] w-[75vw] p-2"
 >
   <div class="flex items-baseline">
     <div class="grow p-1 font-bold text-lg">Ask AI</div>
 
-    <button
-      onclick={(ev) => {
-        forceShowingApiKey = !forceShowingApiKey;
-        // console.warn("forceShowingApiKey:", forceShowingApiKey);
-        ev.preventDefault();
-        ev.stopPropagation();
-      }}
-      class="underline underline-offset-2 cursor-pointer hover:text-gray-900"
-      >{forceShowingApiKey ? "hide" : "show"} api key</button
-    >
-    <div class="flex text-sm ml-1 mt-2 items-baseline">
-      <div class="px-1 py-1">model:</div>
+    <div class="flex ml-1 mt-2 items-baseline">
+      <div class="px-1">model:</div>
       <button
         onclick={(ev) => {
           ev.preventDefault();
           ev.stopPropagation();
           showingModels = true;
         }}
-        class="hover:bg-gray-100 cursor-pointer px-1 py-1 relative"
+        class="hover:bg-gray-100 cursor-pointer px-1 relative"
       >
         {aiModelName}&nbsp;⏷
         {#if showingModels}
@@ -305,20 +309,11 @@
         {/if}
       </button>
     </div>
-    <div
-      class="flex flex-col text-xs justify-between ml-2 mr-3 mt-2 text-gray-500"
-    >
-      <a
-        target="_blank"
-        class="underline underline-offset-2 self-center"
-        href="help#quick-access-ui-for-starred%2C-recent-notes">?</a
-      >
-    </div>
   </div>
 
-  {#if needsOpenAPIKey}
-    <div class="flex py-1 text-sm items-center">
-      <div>OpenAI API Key:</div>
+  {#if needsOpenAPIKey && !useOpenRouter}
+    <div class="flex py-1 text-sm items-center ml-1">
+      <div class="w-[18ch]">OpenAI API Key:</div>
       <input
         use:focus
         bind:value={settings.openAIKey}
@@ -327,9 +322,9 @@
     </div>
   {/if}
 
-  {#if needsGrokAPIKey}
-    <div class="flex py-1 text-sm items-center">
-      <div>Grok API Key:</div>
+  {#if needsGrokAPIKey && !useOpenRouter}
+    <div class="flex py-1 text-sm items-center ml-1">
+      <div class="w-[18ch]">Grok API Key:</div>
       <input
         use:focus
         bind:value={settings.grokKey}
@@ -339,8 +334,8 @@
   {/if}
 
   {#if needsOpenRouterAPIKey}
-    <div class="flex py-1 text-sm items-center">
-      <div>OpenRouter API Key:</div>
+    <div class="flex py-1 text-sm items-center ml-1">
+      <div class="w-[18ch]">OpenRouter API Key:</div>
       <input
         use:focus
         bind:value={settings.openRouterKey}
@@ -352,7 +347,8 @@
   <textarea
     bind:value={questionText}
     use:focus
-    class="w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
+    {onkeydown}
+    class="mt-1 w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
   ></textarea>
   {#if len(responseText) > 0}
     <div
@@ -369,9 +365,36 @@
       {err}
     </div>
   {/if}
-  <div class="flex mt-2">
+  <div class="flex mt-2 items-center">
     {#if reqInProgress}
       <div class="ml-2 font-bold">thinking...</div>
+    {:else}
+      <a
+        tabindex="-1"
+        target="_blank"
+        class="ml-1 underline underline-offset-2"
+        href="help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
+      >
+      <button
+        tabindex="-1"
+        onclick={(ev) => {
+          forceShowingApiKey = !forceShowingApiKey;
+          // console.warn("forceShowingApiKey:", forceShowingApiKey);
+          ev.preventDefault();
+          ev.stopPropagation();
+        }}
+        class="ml-4 underline underline-offset-2 cursor-pointer hover:text-gray-900"
+        >{forceShowingApiKey ? "hide" : "show"} api key</button
+      >
+      {#if apiProviderForAiModel(aiModel, true) != kApiProviderOpenRouter}
+        <label
+          class="ml-4 flex select-none mt-1"
+          title="Use OpenRouter instead of Grok / OpenAI APIs"
+        >
+          <input tabindex="-1" type="checkbox" bind:checked={useOpenRouter} />
+          <div class="ml-1.5">Use OpenRouter</div>
+        </label>
+      {/if}
     {/if}
     <div class="grow"></div>
     <button
@@ -383,6 +406,8 @@
     <button onclick={askai} disabled={askAIDisabled} class="ml-2 button-outline"
       >Ask AI</button
     >
-    <button onclick={close} class="button-outline ml-2">Cancel</button>
+    <button onclick={close} class="button-outline ml-2"
+      >{#if reqFinished}Close{:else}Cancel{/if}</button
+    >
   </div>
-</div>
+</form>
