@@ -336,7 +336,9 @@
 
   {#if needsOpenAPIKey && !useOpenRouter}
     <div class="flex py-1 items-center ml-1">
-      <div>OpenAI API Key:</div>
+      <a class="link" target="_blank" href="/help#getting-openai-api-key"
+        >OpenAI API Key:</a
+      >
       <input
         use:focus
         bind:value={settings.openAIKey}
@@ -347,7 +349,9 @@
 
   {#if needsGrokAPIKey && !useOpenRouter}
     <div class="flex py-1 items-center ml-1">
-      <div>Grok API Key:</div>
+      <a class="link" target="_blank" href="/help#getting-xai-(grok)-api-key"
+        >Grok API Key:</a
+      >
       <input
         use:focus
         bind:value={settings.grokKey}
@@ -358,7 +362,9 @@
 
   {#if needsOpenRouterAPIKey}
     <div class="flex py-1 items-center ml-1">
-      <div>OpenRouter API Key:</div>
+      <a class="link" target="_blank" href="/help#getting-openrouter-api-key"
+        >OpenRouter API Key:</a
+      >
       <input
         use:focus
         bind:value={settings.openRouterKey}
