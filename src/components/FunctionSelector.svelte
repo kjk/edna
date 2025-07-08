@@ -2,7 +2,13 @@
   import { focus } from "../actions";
   import { getFunctionMeta, toggleFunctionStarred } from "../metadata";
   import { getBoopFunctions } from "../system-notes";
-  import { findMatchingItems, getAltChar, len } from "../util";
+  import {
+    findMatchingItems,
+    getAltChar,
+    hilightText,
+    len,
+    makeHilightRegExp,
+  } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
@@ -88,6 +94,7 @@
 
   let items = $state(buildItems());
   let filter = $state("");
+  let hiliRegExp = $derived(makeHilightRegExp(filter));
 
   /**
    * @returns {Item[]}
@@ -189,6 +196,7 @@
     onclick={(item) => emitRunFunction(item, false)}
   >
     {#snippet renderItem(item)}
+      {@const hili = hilightText(item.name, hiliRegExp)}
       <button
         class="ml-[-6px] cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
@@ -202,7 +210,7 @@
         )}
       </button>
       <div class="truncate ml-2">
-        {item.name}
+        {@html hili}
       </div>
     {/snippet}
   </ListBox>
