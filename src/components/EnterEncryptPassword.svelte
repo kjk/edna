@@ -77,8 +77,7 @@
     <a
       target="_blank"
       href="/help#encryption"
-      class="ml-1 text-lg underline underline-offset-2 text-blue-700"
-      >about encryption</a
+      class="ml-1 text-lg link text-blue-700">about encryption</a
     >
     <div class="grow"></div>
     <button

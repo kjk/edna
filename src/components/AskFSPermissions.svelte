@@ -1,12 +1,12 @@
 <script>
-  import {
-    dbGetDirHandle,
-    dbDelDirHandle,
-    pickAnotherDirectory,
-    setStorageFS,
-    preLoadAllNotes,
-  } from "../notes";
   import { requestHandlePermission } from "../fileutil";
+  import {
+    dbDelDirHandle,
+    dbGetDirHandle,
+    pickAnotherDirectory,
+    preLoadAllNotes,
+    setStorageFS,
+  } from "../notes";
   import { boot } from "../webapp-boot";
 
   let dirName = $state("");
@@ -74,7 +74,7 @@
         >Switch to storing notes in browser</button
       >
       <a
-        class="mt-4 self-center underline underline-offset-2"
+        class="mt-4 self-center link"
         target="_blank"
         href="/help#storing-notes-on-disk">learn more</a
       >

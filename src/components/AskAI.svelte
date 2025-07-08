@@ -10,7 +10,7 @@
     providersInfo,
   } from "../models-short";
   import { findModelByID, getSettings } from "../settings.svelte";
-  import { isKeyCtrlDelete, isKeyCtrlEnter, len } from "../util";
+  import { isKeyCtrlEnter, len } from "../util";
   import AiModels from "./AiModels.svelte";
 
   /** @type {{
@@ -286,11 +286,7 @@
 >
   <div class="flex items-center">
     <div class="p-1 font-bold text-lg">Ask AI</div>
-    <a
-      target="_blank"
-      class="ml-4 button-link"
-      href="help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
-    >
+    <a target="_blank" class="ml-4 link" href="/help#ask-ai">learn more</a>
     <button
       onclick={(ev) => {
         forceShowingApiKey = !forceShowingApiKey;
@@ -298,7 +294,7 @@
         ev.preventDefault();
         ev.stopPropagation();
       }}
-      class="ml-4 button-link hover:text-gray-900"
+      class="ml-4 link hover:text-gray-900"
       >{forceShowingApiKey ? "hide" : "show"} api key</button
     >
     {#if apiProviderForAiModel(aiModel, true) != kApiProviderOpenRouter}

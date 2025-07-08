@@ -321,8 +321,7 @@
             changeNo++; // make Enter redo the search
             searchInputRef.focus();
           }}
-          class="btn-link"
-          >exclude {len(appState.archivedNotes)} archived</button
+          class="link">exclude {len(appState.archivedNotes)} archived</button
         >
       {:else}
         <button
@@ -333,8 +332,7 @@
             changeNo++; // make Enter redo the search
             searchInputRef.focus();
           }}
-          class="btn-link"
-          >include {len(appState.archivedNotes)} archived</button
+          class="link">include {len(appState.archivedNotes)} archived</button
         >
       {/if}
     {/if}
@@ -342,7 +340,7 @@
     <div class="grow"></div>
     <div>Enter: start search</div>
     <div>Esc: dismiss</div>
-    <a href="/help#search-in-notes" target="_blank">learn more</a>
+    <a class="link" href="/help#search-in-notes" target="_blank">learn more</a>
   </div>
 </div>
 
@@ -353,14 +351,7 @@
     @apply bg-white px-2 py-1 border-1 border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;
   }
 
-  a {
-    @apply underline underline-offset-2;
-  }
   .btn-icon {
     @apply px-[6px] py-[2px] hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
-  }
-
-  .btn-link {
-    @apply underline underline-offset-2 cursor-pointer;
   }
 </style>

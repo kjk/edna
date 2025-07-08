@@ -188,8 +188,8 @@
     </div>
     <a
       target="_blank"
-      class="underline underline-offset-2 self-center"
-      href="help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
+      class="link self-center"
+      href="/help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
     >
   </div>
 </form>

@@ -160,7 +160,7 @@ select {
   @apply bg-yellow-200 dark:bg-yellow-800 font-semibold;
 }
 
-.button-link {
+.link {
   @apply cursor-pointer whitespace-nowrap underline underline-offset-2;
 }
 

@@ -44,7 +44,7 @@
       >Cancel</button
     >
     <!-- <a
-        class="mt-4 self-center underline underline-offset-2"
+        class="mt-4 self-center link"
         target="_blank"
         href="/help#storing-notes-on-disk">learn more</a
       > -->

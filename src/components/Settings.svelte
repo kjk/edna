@@ -236,9 +236,7 @@
 
   <div class="mt-2 mr-0.5 flex text-xs justify-end text-gray-400">
     Current Version: {appVersion}&nbsp;
-    <a href={gitURL} target="_blank" class="underline underline-offset-2"
-      >{gitHash}</a
-    >
+    <a href={gitURL} target="_blank" class="link">{gitHash}</a>
   </div>
   <div class="mt-0.5 mr-0.5 flex text-xs justify-end text-gray-400">
     Session: {getSessionDur()}

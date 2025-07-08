@@ -385,7 +385,7 @@
             ev.stopPropagation();
             toggleShowArchived();
           }}
-          class="underline underline-offset-2 cursor-pointer"
+          class="link"
         >
           {showHideTxt(appState.showingArchived)}
           {len(appState.archivedNotes)} archived
@@ -405,7 +405,7 @@
         ev.preventDefault();
         switchToCommandPalette();
       }}
-      class="underline underline-offset-2">command palette</button
+      class="link">command palette</button
     >
     <button
       onclick={(ev) => {
@@ -413,7 +413,7 @@
         switchToWideNoteSelector();
       }}
       title="switch to wide note selector"
-      class="underline underline-offset-2 cursor-pointer">wide</button
+      class="link">wide</button
     >
     <button
       onclick={(ev) => {
@@ -421,7 +421,7 @@
         toggleInfoPanelCollapsed();
       }}
       title="show help"
-      class="underline underline-offset-2 cursor-pointer"
+      class="link"
     >
       show help</button
     >
@@ -437,8 +437,7 @@
           switchToWideNoteSelector();
         }}
         title="switch to wide note selector"
-        class="underline underline-offset-2 mb-1 cursor-pointer text-right"
-        >wide</button
+        class="link mb-1 text-right">wide</button
       >
       <button
         onclick={(ev) => {
@@ -446,7 +445,7 @@
           toggleInfoPanelCollapsed();
         }}
         title="hide help"
-        class="underline underline-offset-2 cursor-pointer"
+        class="link"
       >
         hide help</button
       >
@@ -507,8 +506,7 @@
           ev.preventDefault();
           switchToCommandPalette();
         }}
-        class="underline underline-offset-2 cursor-pointer"
-        >command palette</button
+        class="link">command palette</button
       >
     </div>
   </div>

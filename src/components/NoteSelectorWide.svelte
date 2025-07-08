@@ -354,7 +354,7 @@
           ev.preventDefault();
           switchToRegularNoteSelector();
         }}
-        class="underline underline-offset-2 cursor-pointer"
+        class="link"
         title="switch to regualar note selector">regular</button
       >
     </div>
