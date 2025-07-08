@@ -83,8 +83,9 @@ Ctrl + Shift + F       Search in all notes
 <li>assign a quick access <code>Alt + &lt;n&gt;</code> shortcut</li>
 </ul>
 <h2 id="context-menu" tabindex="-1"><a class="header-anchor" href="#context-menu">Context menu</a></h2>
-<p>Right-click for context menu.</p>
+<p>Press right mouse button for context menu.</p>
 <p>For native context menu do <code>Ctrl + right-click</code>. This is useful when spell checking to correct mis-spellings.</p>
+<p>Alternatively mouse over menu icon in top right corner.</p>
 <h2 id="switch-to-recently-opened-note" tabindex="-1"><a class="header-anchor" href="#switch-to-recently-opened-note">Switch to recently opened note</a></h2>
 <p>Press <code>Ctrl + H</code> to switch to a note from list of recently opened notes.</p>
 <p>Last 9 recently opened notes can be opened with <code>0</code> ... <code>9</code> shortcut.</p>
@@ -184,6 +185,41 @@ Ctrl + Shift + F       Search in all notes
 <li>if you search for <code>foo bar</code>, it'll find all lines that have <code>foo</code> <strong>AND</strong> <code>bar</code></li>
 <li>if you want exact search: <code>&quot;foo bar&quot;</code></li>
 </ul>
+<h1 id="ask-ai" tabindex="-1"><a class="header-anchor" href="#ask-ai">Ask AI</a></h1>
+<p>We provide a basic functionality for asking.</p>
+<p>It's optimized for the following workflow:</p>
+<ul>
+<li>type your question in a block</li>
+<li>invoke <code>Ask AI</code> interface</li>
+<li>pick which AI model you'll send your query</li>
+<li>send the query to AI</li>
+<li>optionally insert the response as a new block</li>
+</ul>
+<p>Use context menu <code>Ask AI</code> or <code>Ask AI</code> command in command palette (<code>Ctrl + Shift + K</code>).</p>
+<p>We open AI chat interface pre-populated with the content of current block.</p>
+<p>You can edit your question and press <code>Ask AI</code> button to send the question and receive the response.</p>
+<p>Once you receive the response, you can insert it as new block.</p>
+<p>We support a lot of AI models. You can pick the model using selector in upper right corner.</p>
+<p>We don't charge for AI but AI providers do.</p>
+<p>You need to provide your own API key. We support:</p>
+<ul>
+<li><a href="openai.com" target="_blank">OpenAI</a> for ChatGPT etc.</li>
+<li><a href="https://x.ai/" target="_blank">xAI</a> for Grok</li>
+<li><a href="https://openrouter.ai/" target="_blank">OpenRouter</a> for all models (including OpenAI / xAI models)</li>
+</ul>
+<p>If you don't have API key, you need to get one. We recommend creating a unique api key for Edna.</p>
+<p>Different models have different prices charged by API providers (not us).</p>
+<p>The charge per usage. There's a fee for the size of your question (input tokens) and size of the response (output tokens).</p>
+<p>Token is pretty much a word so think &quot;number of words in the question or response&quot;.</p>
+<p>We show the prices per million input tokens and million output tokens on the right side of the model selector.</p>
+<p>Some models are free. They show 0 for the price. You can also type <strong>free</strong> in model selector to see free models.</p>
+<h2 id="getting-openai-api-key" tabindex="-1"><a class="header-anchor" href="#getting-openai-api-key">Getting OpenAI API key</a></h2>
+<p>Go to <a href="https://platform.openai.com/settings/organization/api-keys" target="_blank">OpenAI</a>.</p>
+<h2 id="getting-xai-(grok)-api-key" tabindex="-1"><a class="header-anchor" href="#getting-xai-(grok)-api-key">Getting xAI (Grok) API Key</a></h2>
+<p>Go to <a href="https://console.x.ai/" target="_blank">xAI</a>, click <code>API Keys</code> section in left sidebar</p>
+<h2 id="getting-openrouter-api-key" tabindex="-1"><a class="header-anchor" href="#getting-openrouter-api-key">Getting OpenRouter API Key</a></h2>
+<p>Go to <a href="https://openrouter.ai/settings/keys" target="_blank">OpenRouter</a>.</p>
+<p>OpenRouter supports lots of models for lots of providers.</p>
 <h1 id="storing-notes-on-disk" tabindex="-1"><a class="header-anchor" href="#storing-notes-on-disk">Storing notes on disk</a></h1>
 <p>By default notes are stored in the browser (localStorage).</p>
 <p>If your browser supports file system access (currently Chrome and Edge) you can store notes on disk.</p>

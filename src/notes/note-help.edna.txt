@@ -59,9 +59,11 @@ Press `Mod + K` for note switcher and:
 
 ## Context menu
 
-Right-click for context menu.
+Press right mouse button for context menu.
 
 For native context menu do `Ctrl + right-click`. This is useful when spell checking to correct mis-spellings.
+
+Alternatively mouse over menu icon in top right corner.
 
 ## Switch to recently opened note
 
@@ -187,7 +189,61 @@ The search algorightm is:
 - if you search for `foo,` it'll find all lines that have `foo`
 - if you search for `foo bar`, it'll find all lines that have `foo` **AND** `bar`
 - if you want exact search: `"foo bar"`
+∞∞∞markdown
+# Ask AI
 
+We provide a basic functionality for asking.
+
+It's optimized for the following workflow:
+- type your question in a block
+- invoke `Ask AI` interface
+- pick which AI model you'll send your query
+- send the query to AI
+- optionally insert the response as a new block
+
+Use context menu `Ask AI` or `Ask AI` command in command palette (`Ctrl + Shift + K`).
+
+We open AI chat interface pre-populated with the content of current block.
+
+You can edit your question and press `Ask AI` button to send the question and receive the response.
+
+Once you receive the response, you can insert it as new block.
+
+We support a lot of AI models. You can pick the model using selector in upper right corner.
+
+We don't charge for AI but AI providers do.
+
+You need to provide your own API key. We support:
+
+- [OpenAI](openai.com) for ChatGPT etc.
+- [xAI](https://x.ai/) for Grok
+- [OpenRouter](https://openrouter.ai/) for all models (including OpenAI / xAI models)
+
+If you don't have API key, you need to get one. We recommend creating a unique api key for Edna.
+
+Different models have different prices charged by API providers (not us).
+
+The charge per usage. There's a fee for the size of your question (input tokens) and size of the response (output tokens).
+
+Token is pretty much a word so think "number of words in the question or response".
+
+We show the prices per million input tokens and million output tokens on the right side of the model selector.
+
+Some models are free. They show 0 for the price. You can also type **free** in model selector to see free models.
+
+## Getting OpenAI API key
+
+Go to [OpenAI](https://platform.openai.com/settings/organization/api-keys).
+
+## Getting xAI (Grok) API Key
+
+Go to [xAI](https://console.x.ai/), click `API Keys` section in left sidebar
+
+## Getting OpenRouter API Key
+
+Go to [OpenRouter](https://openrouter.ai/settings/keys).
+
+OpenRouter supports lots of models for lots of providers.
 ∞∞∞markdown
 # Storing notes on disk
 
