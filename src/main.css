@@ -160,9 +160,13 @@ select {
   @apply bg-yellow-200 dark:bg-yellow-800 font-semibold;
 }
 
+.button-link {
+  @apply cursor-pointer whitespace-nowrap underline underline-offset-2;
+}
+
 .button-outline {
   @apply px-4 py-1 rounded-lg border;
-  @apply cursor-pointer;
+  @apply cursor-pointer whitespace-nowrap;
 
   @apply border-gray-950/20 disabled:border-gray-950/5;
   @apply outline-gray-950/50 disabled:outline-gray-950/5;

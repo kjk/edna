@@ -280,11 +280,35 @@
 <form
   tabindex="-1"
   use:trapfocus
-  class="selector z-20 absolute center-x-with-translate top-[1rem] flex flex-col max-h-[78vh] w-[75vw] p-2"
+  class="selector z-20 absolute center-x-with-translate top-[1rem] flex flex-col max-h-[78vh] w-[85vw] p-2"
 >
-  <div class="flex items-baseline">
-    <div class="grow p-1 font-bold text-lg">Ask AI</div>
-
+  <div class="flex items-center">
+    <div class="p-1 font-bold text-lg">Ask AI</div>
+    <a
+      target="_blank"
+      class="ml-4 button-link"
+      href="help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
+    >
+    <button
+      onclick={(ev) => {
+        forceShowingApiKey = !forceShowingApiKey;
+        // console.warn("forceShowingApiKey:", forceShowingApiKey);
+        ev.preventDefault();
+        ev.stopPropagation();
+      }}
+      class="ml-4 button-link hover:text-gray-900"
+      >{forceShowingApiKey ? "hide" : "show"} api key</button
+    >
+    {#if apiProviderForAiModel(aiModel, true) != kApiProviderOpenRouter}
+      <label
+        class="mt-1 ml-4 flex select-none whitespace-nowrap"
+        title="Use OpenRouter instead of Grok / OpenAI APIs"
+      >
+        <input type="checkbox" bind:checked={useOpenRouter} />
+        <div class="ml-1.5">Use OpenRouter</div>
+      </label>
+    {/if}
+    <div class="grow"></div>
     <div class="flex ml-1 mt-2 items-baseline">
       <div class="px-1">model:</div>
       <button
@@ -312,8 +336,8 @@
   </div>
 
   {#if needsOpenAPIKey && !useOpenRouter}
-    <div class="flex py-1 text-sm items-center ml-1">
-      <div class="w-[18ch]">OpenAI API Key:</div>
+    <div class="flex py-1 items-center ml-1">
+      <div>OpenAI API Key:</div>
       <input
         use:focus
         bind:value={settings.openAIKey}
@@ -323,8 +347,8 @@
   {/if}
 
   {#if needsGrokAPIKey && !useOpenRouter}
-    <div class="flex py-1 text-sm items-center ml-1">
-      <div class="w-[18ch]">Grok API Key:</div>
+    <div class="flex py-1 items-center ml-1">
+      <div>Grok API Key:</div>
       <input
         use:focus
         bind:value={settings.grokKey}
@@ -334,8 +358,8 @@
   {/if}
 
   {#if needsOpenRouterAPIKey}
-    <div class="flex py-1 text-sm items-center ml-1">
-      <div class="w-[18ch]">OpenRouter API Key:</div>
+    <div class="flex py-1 items-center ml-1">
+      <div>OpenRouter API Key:</div>
       <input
         use:focus
         bind:value={settings.openRouterKey}
@@ -368,34 +392,7 @@
   <div class="flex mt-2 items-center">
     {#if reqInProgress}
       <div class="ml-2 font-bold">thinking...</div>
-    {:else}
-      <a
-        tabindex="-1"
-        target="_blank"
-        class="ml-1 underline underline-offset-2"
-        href="help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
-      >
-      <button
-        tabindex="-1"
-        onclick={(ev) => {
-          forceShowingApiKey = !forceShowingApiKey;
-          // console.warn("forceShowingApiKey:", forceShowingApiKey);
-          ev.preventDefault();
-          ev.stopPropagation();
-        }}
-        class="ml-4 underline underline-offset-2 cursor-pointer hover:text-gray-900"
-        >{forceShowingApiKey ? "hide" : "show"} api key</button
-      >
-      {#if apiProviderForAiModel(aiModel, true) != kApiProviderOpenRouter}
-        <label
-          class="ml-4 flex select-none mt-1"
-          title="Use OpenRouter instead of Grok / OpenAI APIs"
-        >
-          <input tabindex="-1" type="checkbox" bind:checked={useOpenRouter} />
-          <div class="ml-1.5">Use OpenRouter</div>
-        </label>
-      {/if}
-    {/if}
+    {:else}{/if}
     <div class="grow"></div>
     <button
       bind:this={btnInsertRef}
