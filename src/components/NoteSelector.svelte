@@ -523,10 +523,10 @@
   {/if}
   <div class="relative">
     <input
-      type="text"
       use:focus
       bind:this={inputRef}
       bind:value={filter}
+      type="text"
       class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
     />
     <div class="absolute right-[0.5rem] top-[0.25rem] italic text-gray-400">

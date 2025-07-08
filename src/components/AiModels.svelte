@@ -1,8 +1,6 @@
 <script>
   import { clickOutside, focus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import { toggleNoteStarred } from "../metadata";
-  import { getSettings } from "../settings.svelte";
   import {
     arrayRemove,
     findMatchingItemsFn,
@@ -94,6 +92,18 @@
   function itemKey(item) {
     return item[kModelIDIdx];
   }
+
+  let modelsCountMsg = $derived.by(() => {
+    let n = len(models);
+    if (n === 0) {
+      return ""; // don't obscure user entering new, long note name
+    }
+    let nItems = len(modelsShort);
+    if (n === nItems) {
+      return `${nItems} models`;
+    }
+    return `${n} of ${nItems} models`;
+  });
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -103,7 +113,17 @@
   tabindex="-1"
   class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-[24px] border-gray-400 right-0 max-h-[50vh] min-w-[40ch]"
 >
-  <input bind:value={filter} use:focus class="px-1 py-0.5 mb-2 text-xs" />
+  <div class="relative">
+    <input
+      use:focus
+      bind:value={filter}
+      type="text"
+      class="px-1 py-0.5 mb-2 w-full text-xs"
+    />
+    <div class="absolute right-[0.5rem] top-[1px] italic text-gray-400">
+      {modelsCountMsg}
+    </div>
+  </div>
   <ListBox
     bind:this={listboxRef}
     items={models}
