@@ -1677,11 +1677,14 @@
   }
 
   function openAskAI() {
-    showingAskAI = true;
     let view = getEditorView();
     let b = getActiveNoteBlock(view.state);
-    let s = view.state.sliceDoc(b.content.from, b.content.to);
-    askAIStartText = s;
+    let { from, to } = b.content;
+    let { selectedText } = getCurrentSelection(view.state);
+    askAIStartText = selectedText
+      ? selectedText
+      : view.state.sliceDoc(from, to);
+    showingAskAI = true;
   }
 
   function openCommandPalette() {
