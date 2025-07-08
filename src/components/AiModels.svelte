@@ -72,6 +72,10 @@
    * @param {KeyboardEvent} ev
    */
   function onkeydown(ev) {
+    if (ev.key == "Escape") {
+      ev.stopPropagation();
+      close();
+    }
     listboxRef.onkeydown(ev, true);
   }
 

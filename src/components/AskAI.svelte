@@ -272,6 +272,8 @@
 
   /** @type {HTMLElement} */
   let btnInsertRef;
+  /** @type {HTMLElement} */
+  let textAreaRef;
 
   let showingModels = $state(false);
 </script>
@@ -310,7 +312,7 @@
     {/if}
     <div class="grow"></div>
     <div class="flex ml-1 mt-2 items-baseline">
-      <div class="px-1">model:</div>
+      <div class="px-1 font-bold">model:</div>
       <button
         onclick={(ev) => {
           ev.preventDefault();
@@ -324,6 +326,7 @@
           <AiModels
             close={() => {
               showingModels = false;
+              textAreaRef?.focus();
             }}
             selectModel={(model) => {
               settings.aiModelID = model[kModelIDIdx];
@@ -370,6 +373,7 @@
 
   <textarea
     bind:value={questionText}
+    bind:this={textAreaRef}
     use:focus
     {onkeydown}
     class="mt-1 w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
