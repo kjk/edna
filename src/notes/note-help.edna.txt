@@ -275,13 +275,13 @@ The search algorightm is:
 ∞∞∞markdown
 # Ask AI
 
-We provide a basic functionality for asking.
+We provide a basic functionality for asking AI/LLM a question and getting a response.
 
 It's optimized for the following workflow:
 - type your question in a block
-- invoke `Ask AI` interface
-- pick which AI model you'll send your query
-- send the query to AI
+- invoke `Ask AI` UI
+- pick AI model to which you'll send your query
+- send the query to AI / LLM and get a response
 - optionally insert the response as a new block
 
 Use context menu `Ask AI` or `Ask AI` command in command palette (`Mod + Shift + K`).
