@@ -1,6 +1,7 @@
 <script>
   import { tick } from "svelte";
   import { focus, trapfocus } from "../actions";
+  import { logAskAI } from "../log";
   import {
     kModelIDIdx,
     kModelNameIdx,
@@ -161,6 +162,19 @@
       reqInProgress = false;
     }
     if (err == "") {
+      let providerName = "unknown";
+      switch (apiProviderToUse) {
+        case kApiProviderOpenAI:
+          providerName = "openai";
+          break;
+        case kApiProviderXAi:
+          providerName = "xai";
+          break;
+        case kApiProviderOpenRouter:
+          providerName = "openrouter";
+          break;
+      }
+      logAskAI(aiModelName, providerName);
       tick().then(() => {
         btnInsertRef?.focus();
       });

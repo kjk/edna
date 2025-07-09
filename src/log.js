@@ -1,6 +1,6 @@
 import { getNotesCount } from "./notes";
 import { getSessionDurationInMs, getStats } from "./state";
-import { len, throwIf } from "./util";
+import { throwIf } from "./util";
 
 /**
  * @param {Object} o
@@ -41,6 +41,19 @@ export function logAppExit() {
     notesCount: getNotesCount,
     sessionDurMs: getSessionDurationInMs(),
     stats: getStats(),
+  };
+  logEvent(e);
+}
+
+/**
+ * @param {string} model
+ * @param {string} apiProvider
+ */
+export function logAskAI(model, apiProvider) {
+  let e = {
+    name: "askAI",
+    model: model,
+    apiProvider: apiProvider,
   };
   logEvent(e);
 }
