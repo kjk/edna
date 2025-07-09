@@ -135,6 +135,7 @@
 
   async function askai() {
     err = "";
+    responseText = "";
     let baseURL = getApiProviderBaseURL(apiProviderToUse);
     console.warn("askai: baseURL:", baseURL);
     try {
@@ -465,6 +466,7 @@
       <div class=" text-red-600 ml-2 whitespace-pre-line overflow-auto">
         Need a valid API key
       </div>
+      <a target="_blank" class="ml-2 link" href="/help#ask-ai">learn more</a>
     {/if}
     {#if reqInProgress}
       <div class="ml-2 font-bold">thinking...</div>
@@ -477,7 +479,7 @@
       >Insert response as block</button
     >
     <button onclick={askai} disabled={askAIDisabled} class="ml-2 button-outline"
-      >Ask AI</button
+      >{#if reqFinished}Ask AI Again{:else}Ask AI{/if}</button
     >
     <button onclick={close} class="button-outline ml-2"
       >{#if reqFinished}Close{:else}Cancel{/if}</button
