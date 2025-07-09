@@ -227,7 +227,7 @@ Context menu: `This Note / Rename`
 ∞∞∞markdown
 # Sidebar
 
-Click icon in top left corner to show and hide sidebar:
+Click icon in top left corner to show / hide sidebar:
 
 ![Sidebar](/help-sidebar.png)
 
@@ -250,7 +250,7 @@ You can delete them (except the `scratch` note).
 ∞∞∞markdown
 # Search and replace
 
-Press `Mod + F` for search UI:
+Press `Mod + F` for search / replace UI:
 
 ![Search in note](/help-find.png)
 
@@ -266,7 +266,7 @@ To invoke full-text search in notes:
 - `Mod + Shift + F`
 - `Find in notes` in Command Palette (Mod + Shift + K)
 
-![Search in notes](/help-notes-search.png)
+![Search in notes](/help-find-all-notes.png)
 
 The search algorightm is:
 - if you search for `foo,` it'll find all lines that have `foo`
@@ -275,7 +275,7 @@ The search algorightm is:
 ∞∞∞markdown
 # Ask AI
 
-We provide a basic functionality for asking AI/LLM a question and getting a response.
+Edna has a basic AI chat functionality. You can ask AI a question and get a response.
 
 It's optimized for the following workflow:
 - type your question in a block
@@ -284,52 +284,62 @@ It's optimized for the following workflow:
 - send the query to AI / LLM and get a response
 - optionally insert the response as a new block
 
-Use context menu `Ask AI` or `Ask AI` command in command palette (`Mod + Shift + K`).
+To invoke AI chat:
+- context menu `Ask AI`
+- `Ask AI` command in command palette (`Mod + Shift + K`)
 
-We open AI chat interface pre-populated with the content of selection or current block.
+The question is pre-populated with the content of selection or current block.
 
 ![Ask AI](/help-ask-ai.png)
 
-You can edit your question and press `Ask AI` button to send the question and receive the response.
+You can edit your question then click `Ask AI` button to send the question and receive the response.
 
 Once you receive the response, you can insert it as new block.
 
 ![Ask AI Response](/help-ask-ai-response.png)
 
-## AI Model Picker
+## API keys
 
-We support a lot of AI models. You can pick the model using selector in upper right corner.
+But first, you'll need to provide an API key.
 
-![Ask AI models](/help-ask-ai-pick-model.png)
-
-We don't charge for AI but AI providers do. We show the price for million input tokens and million output tokens on the right.
-
-You need to provide your own API key. 
+We don't charge for AI but AI providers do. 
 
 ![Ask AI enter key](/help-ask-ai-api-key.png)
 
 We support:
-- [OpenAI](openai.com) for ChatGPT etc.
-- [xAI](https://x.ai/) for Grok
-- [OpenRouter](https://openrouter.ai/) for all models (including OpenAI / xAI models)
+- [OpenAI](openai.com) for ChatGPT etc. Read how to [get OpenAI key](#getting-openai-api-key)
+- [xAI](https://x.ai/) for Grok. Read how to [get xAI key](#getting-xai-(grok)-api-key)
+- [OpenRouter](https://openrouter.ai/) for all models (including OpenAI / xAI models). Read how to [get OpenRouter key](#getting-openrouter-api-key)
 
-If you don't have API key, you need to get one. We recommend creating a unique api key for Edna.
+We recommend creating a unique API key for Edna.
 
-Different models have different prices charged by API providers (not us).
+If you provide both xAI/OpenAI API key and OpenRouter API key, we'll use xAI/OpenAI.
 
-The charge per usage. There's a fee for the size of your question (input tokens) and size of the response (output tokens).
+## AI Model Picker
+
+We support 169 AI models. You can pick the model using picker in upper right corner.
+
+![Ask AI models](/help-ask-ai-pick-model.png)
+
+We don't charge for AI but AI providers do.
+
+Different models have different prices charged by API providers.
+
+They charge per usage, not as a subscription. If you don't use the API, you are not charged.
+
+There's a fee for the size of your question (input tokens) and size of the response (output tokens).
 
 Token is pretty much a word so think "number of words in the question or response".
 
-We show the prices per million input tokens and million output tokens on the right side of the model selector.
+We show the prices per million input tokens and million output tokens on the right side of the model picker.
 
 ## Free models
 
-Some OpenRouter models are free. They show 0 for the price. You can also type **free** in model selector to see free models.
+Some OpenRouter models are free. They show 0 for the price. You can also type **free** in model picker to see free models.
 
 ![Ask AI free models](/help-ask-ai-free-models.png)
 
-You still need an OpenRouter API key to use free models.
+You still need an [OpenRouter API key](#getting-openrouter-api-key) and setup billing to use free models.
 
 ## Getting OpenAI API key
 
@@ -357,7 +367,7 @@ You can also use OpenRouter API key (they charge ~5% on top of xAI prices).
 
 ## Getting OpenRouter API Key
 
-To use majority of models you need to obtain API key from [OpenRouter](https://openrouter.ai/settings/keys).
+All models can be used via OpenRouter. You need to obtain API key from [OpenRouter](https://openrouter.ai/settings/keys).
 
 You need to create an account and setup billing. OpenRouter charges for usage of API calls so you don't pay if you don't use the API.
 
@@ -367,7 +377,7 @@ To make it easier to compare prices, we show the price for million input tokens 
 
 OpenRouter provides a unified interface for accessing models from many providers.
 
-They charge the provider's price plus ~5% to provide their service.
+They charge the provider's price plus around 5%.
 
 OpenRouter provides free models but you still need to have an API key.
 

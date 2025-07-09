@@ -191,7 +191,7 @@ Ctrl + Shift + F       Search in all notes
 <p><code>Rename current note</code> in command palette (<code>Ctrl + Shift + K</code>).</p>
 <p><img src="/help-rename-note.png" alt="Rename note"></p>
 <h1 id="sidebar" tabindex="-1"><a class="header-anchor" href="#sidebar">Sidebar</a></h1>
-<p>Click icon in top left corner to show and hide sidebar:</p>
+<p>Click icon in top left corner to show / hide sidebar:</p>
 <p><img src="/help-sidebar.png" alt="Sidebar"></p>
 <h1 id="default-notes" tabindex="-1"><a class="header-anchor" href="#default-notes">Default notes</a></h1>
 <p>At first run we create 3 default notes:</p>
@@ -205,7 +205,7 @@ Ctrl + Shift + F       Search in all notes
 <p><code>inbox</code> for storing things to process later e.g. links to YouTube videos to watch later or web pages to read later.</p>
 <p><code>daily journal</code> is for daily notes. We auto-create a block for each day.</p>
 <h1 id="search-and-replace" tabindex="-1"><a class="header-anchor" href="#search-and-replace">Search and replace</a></h1>
-<p>Press <code>Ctrl + F</code> for search UI:</p>
+<p>Press <code>Ctrl + F</code> for search / replace UI:</p>
 <p><img src="/help-find.png" alt="Search in note"></p>
 <p>We support:</p>
 <ul>
@@ -219,7 +219,7 @@ Ctrl + Shift + F       Search in all notes
 <li><code>Ctrl + Shift + F</code></li>
 <li><code>Find in notes</code> in Command Palette (Mod + Shift + K)</li>
 </ul>
-<p><img src="/help-notes-search.png" alt="Search in notes"></p>
+<p><img src="/help-find-all-notes.png" alt="Search in notes"></p>
 <p>The search algorightm is:</p>
 <ul>
 <li>if you search for <code>foo,</code> it'll find all lines that have <code>foo</code></li>
@@ -227,7 +227,7 @@ Ctrl + Shift + F       Search in all notes
 <li>if you want exact search: <code>&quot;foo bar&quot;</code></li>
 </ul>
 <h1 id="ask-ai" tabindex="-1"><a class="header-anchor" href="#ask-ai">Ask AI</a></h1>
-<p>We provide a basic functionality for asking AI/LLM a question and getting a response.</p>
+<p>Edna has a basic AI chat functionality. You can ask AI a question and get a response.</p>
 <p>It's optimized for the following workflow:</p>
 <ul>
 <li>type your question in a block</li>
@@ -236,33 +236,41 @@ Ctrl + Shift + F       Search in all notes
 <li>send the query to AI / LLM and get a response</li>
 <li>optionally insert the response as a new block</li>
 </ul>
-<p>Use context menu <code>Ask AI</code> or <code>Ask AI</code> command in command palette (<code>Ctrl + Shift + K</code>).</p>
-<p>We open AI chat interface pre-populated with the content of selection or current block.</p>
+<p>To invoke AI chat:</p>
+<ul>
+<li>context menu <code>Ask AI</code></li>
+<li><code>Ask AI</code> command in command palette (<code>Ctrl + Shift + K</code>)</li>
+</ul>
+<p>The question is pre-populated with the content of selection or current block.</p>
 <p><img src="/help-ask-ai.png" alt="Ask AI"></p>
-<p>You can edit your question and press <code>Ask AI</code> button to send the question and receive the response.</p>
+<p>You can edit your question then click <code>Ask AI</code> button to send the question and receive the response.</p>
 <p>Once you receive the response, you can insert it as new block.</p>
 <p><img src="/help-ask-ai-response.png" alt="Ask AI Response"></p>
-<h2 id="ai-model-picker" tabindex="-1"><a class="header-anchor" href="#ai-model-picker">AI Model Picker</a></h2>
-<p>We support a lot of AI models. You can pick the model using selector in upper right corner.</p>
-<p><img src="/help-ask-ai-pick-model.png" alt="Ask AI models"></p>
-<p>We don't charge for AI but AI providers do. We show the price for million input tokens and million output tokens on the right.</p>
-<p>You need to provide your own API key.</p>
+<h2 id="api-keys" tabindex="-1"><a class="header-anchor" href="#api-keys">API keys</a></h2>
+<p>But first, you'll need to provide an API key.</p>
+<p>We don't charge for AI but AI providers do.</p>
 <p><img src="/help-ask-ai-api-key.png" alt="Ask AI enter key"></p>
 <p>We support:</p>
 <ul>
-<li><a href="openai.com" target="_blank">OpenAI</a> for ChatGPT etc.</li>
-<li><a href="https://x.ai/" target="_blank">xAI</a> for Grok</li>
-<li><a href="https://openrouter.ai/" target="_blank">OpenRouter</a> for all models (including OpenAI / xAI models)</li>
+<li><a href="openai.com" target="_blank">OpenAI</a> for ChatGPT etc. Read how to <a href="#getting-openai-api-key">get OpenAI key</a></li>
+<li><a href="https://x.ai/" target="_blank">xAI</a> for Grok. Read how to <a href="#getting-xai-(grok)-api-key">get xAI key</a></li>
+<li><a href="https://openrouter.ai/" target="_blank">OpenRouter</a> for all models (including OpenAI / xAI models). Read how to <a href="#getting-openrouter-api-key">get OpenRouter key</a></li>
 </ul>
-<p>If you don't have API key, you need to get one. We recommend creating a unique api key for Edna.</p>
-<p>Different models have different prices charged by API providers (not us).</p>
-<p>The charge per usage. There's a fee for the size of your question (input tokens) and size of the response (output tokens).</p>
+<p>We recommend creating a unique API key for Edna.</p>
+<p>If you provide both xAI/OpenAI API key and OpenRouter API key, we'll use xAI/OpenAI.</p>
+<h2 id="ai-model-picker" tabindex="-1"><a class="header-anchor" href="#ai-model-picker">AI Model Picker</a></h2>
+<p>We support 169 AI models. You can pick the model using picker in upper right corner.</p>
+<p><img src="/help-ask-ai-pick-model.png" alt="Ask AI models"></p>
+<p>We don't charge for AI but AI providers do.</p>
+<p>Different models have different prices charged by API providers.</p>
+<p>They charge per usage, not as a subscription. If you don't use the API, you are not charged.</p>
+<p>There's a fee for the size of your question (input tokens) and size of the response (output tokens).</p>
 <p>Token is pretty much a word so think &quot;number of words in the question or response&quot;.</p>
-<p>We show the prices per million input tokens and million output tokens on the right side of the model selector.</p>
+<p>We show the prices per million input tokens and million output tokens on the right side of the model picker.</p>
 <h2 id="free-models" tabindex="-1"><a class="header-anchor" href="#free-models">Free models</a></h2>
-<p>Some OpenRouter models are free. They show 0 for the price. You can also type <strong>free</strong> in model selector to see free models.</p>
+<p>Some OpenRouter models are free. They show 0 for the price. You can also type <strong>free</strong> in model picker to see free models.</p>
 <p><img src="/help-ask-ai-free-models.png" alt="Ask AI free models"></p>
-<p>You still need an OpenRouter API key to use free models.</p>
+<p>You still need an <a href="#getting-openrouter-api-key">OpenRouter API key</a> and setup billing to use free models.</p>
 <h2 id="getting-openai-api-key" tabindex="-1"><a class="header-anchor" href="#getting-openai-api-key">Getting OpenAI API key</a></h2>
 <p>To use OpenAI models you need to obtain API key from <a href="https://platform.openai.com/settings/organization/api-keys" target="_blank">OpenAI</a>.</p>
 <p>You need to create an account and setup billing. OpenAI charges for usage of API calls so you don't pay if you don't use the API.</p>
@@ -276,12 +284,12 @@ Ctrl + Shift + F       Search in all notes
 <p>To make it easier to compare prices, we show the price for million input tokens and a million output tokens in <a href="#ai-model-picker">AI model picker</a>.</p>
 <p>You can also use OpenRouter API key (they charge ~5% on top of xAI prices).</p>
 <h2 id="getting-openrouter-api-key" tabindex="-1"><a class="header-anchor" href="#getting-openrouter-api-key">Getting OpenRouter API Key</a></h2>
-<p>To use majority of models you need to obtain API key from <a href="https://openrouter.ai/settings/keys" target="_blank">OpenRouter</a>.</p>
+<p>All models can be used via OpenRouter. You need to obtain API key from <a href="https://openrouter.ai/settings/keys" target="_blank">OpenRouter</a>.</p>
 <p>You need to create an account and setup billing. OpenRouter charges for usage of API calls so you don't pay if you don't use the API.</p>
 <p>They charge per input tokens and output tokens. A token is more or less a word.</p>
 <p>To make it easier to compare prices, we show the price for million input tokens and a million output tokens in <a href="#ai-model-picker">AI model picker</a>.</p>
 <p>OpenRouter provides a unified interface for accessing models from many providers.</p>
-<p>They charge the provider's price plus ~5% to provide their service.</p>
+<p>They charge the provider's price plus around 5%.</p>
 <p>OpenRouter provides free models but you still need to have an API key.</p>
 <h1 id="storing-notes-on-disk" tabindex="-1"><a class="header-anchor" href="#storing-notes-on-disk">Storing notes on disk</a></h1>
 <p>By default notes are stored in the browser (localStorage).</p>
