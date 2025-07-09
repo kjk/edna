@@ -48,12 +48,11 @@
   let settings = getSettings();
   let questionText = $state(startText);
   let reqFinished = $state(false);
-  let useOpenRouter = $state(false);
   let err = $state("");
   let forceShowingApiKey = $state(false);
   let aiModel = $derived(findModelByID(settings.aiModelID));
   let aiModelName = $derived(aiModel[kModelNameIdx]);
-  let apiProvider = $derived(apiProviderForAiModel(aiModel, false));
+  let apiProvider = $derived(apiProviderForAiModel(aiModel));
   let needsOpenAPIKey = $derived(
     apiProvider == kApiProviderOpenAI &&
       (forceShowingApiKey || err || !looksValidOpenAIKey(settings.openAIKey)),
@@ -67,17 +66,15 @@
   //     (forceShowingApiKey || err || !looksValidGrokKey(settings.googleAIKey)),
   // );
   let needsOpenRouterAPIKey = $derived(
-    (apiProvider == kApiProviderOpenRouter || useOpenRouter) &&
-      (forceShowingApiKey || err || !looksValidGrokKey(settings.openRouterKey)),
+    forceShowingApiKey ||
+      err ||
+      !looksValidOpenRouterKey(settings.openRouterKey),
   );
   let apiKey = $derived(pickApiKeyForProvider(apiProvider));
 
   const maxTokens = 1000;
 
-  function apiProviderForAiModel(aiModel, ignoreUserOpenRouter = false) {
-    if (!ignoreUserOpenRouter && useOpenRouter) {
-      return kApiProviderOpenRouter;
-    }
+  function apiProviderForAiModel(aiModel) {
     let provider = aiModel[kModelProviderIdx];
     switch (provider) {
       case kProviderOpenAI:
@@ -152,13 +149,30 @@
   }
 
   // heuristc. my openai keys start with "sk-proj-" and are 164 chars in length
+  /**
+   * @param {string} s
+   * @returns {boolean}
+   */
   function looksValidOpenAIKey(s) {
     return len(s) > 100;
   }
 
   // mine is 84 chars
+  /**
+   * @param {string} s
+   * @returns {boolean}
+   */
   function looksValidGrokKey(s) {
     return len(s) > 70;
+  }
+
+  // mine is 73 chars
+  /**
+   * @param {string} s
+   * @returns {boolean}
+   */
+  function looksValidOpenRouterKey(s) {
+    return len(s) > 50;
   }
 
   // mine is 39 chars
@@ -297,15 +311,6 @@
       class="ml-4 link hover:text-gray-900"
       >{forceShowingApiKey ? "hide" : "show"} api key</button
     >
-    {#if apiProviderForAiModel(aiModel, true) != kApiProviderOpenRouter}
-      <label
-        class="mt-1 ml-4 flex select-none whitespace-nowrap"
-        title="Use OpenRouter instead of Grok / OpenAI APIs"
-      >
-        <input type="checkbox" bind:checked={useOpenRouter} />
-        <div class="ml-1.5">Use OpenRouter</div>
-      </label>
-    {/if}
     <div class="grow"></div>
     <div class="flex ml-1 mt-2 items-baseline">
       <div class="px-1 font-bold">model:</div>
@@ -334,41 +339,68 @@
     </div>
   </div>
 
-  {#if needsOpenAPIKey && !useOpenRouter}
-    <div class="flex py-1 items-center ml-1">
-      <a class="link" target="_blank" href="/help#getting-openai-api-key"
-        >OpenAI API Key:</a
-      >
+  {#if needsOpenAPIKey}
+    <div class="flex flex-col gap-1.5 py-1 ml-1">
+      <div>
+        To use {aiModelName} you need OpenAI API Key:
+        <a class="link ml-2" target="_blank" href="/help#getting-openai-api-key"
+          >learn more</a
+        >
+      </div>
       <input
+        placeholder="Enter OpenAI API key"
         use:focus
         bind:value={settings.openAIKey}
-        class="ml-2 grow px-1 py-[1px]"
+        class="px-1 py-[1px]"
       />
     </div>
   {/if}
 
-  {#if needsGrokAPIKey && !useOpenRouter}
-    <div class="flex py-1 items-center ml-1">
-      <a class="link" target="_blank" href="/help#getting-xai-(grok)-api-key"
-        >Grok API Key:</a
-      >
+  {#if needsGrokAPIKey}
+    <div class="flex flex-col gap-1.5 py-1 ml-1">
+      <div>
+        To use {aiModelName} you need xAI API Key:
+        <a
+          class="link ml-2"
+          target="_blank"
+          href="/help#getting-xai-(grok)-api-key">learn more</a
+        >
+      </div>
       <input
+        placeholder="Enter xAI API key"
         use:focus
         bind:value={settings.grokKey}
-        class="ml-2 grow px-1 py-[1px]"
+        class="px-1 py-[1px]"
       />
     </div>
   {/if}
 
   {#if needsOpenRouterAPIKey}
-    <div class="flex py-1 items-center ml-1">
-      <a class="link" target="_blank" href="/help#getting-openrouter-api-key"
-        >OpenRouter API Key:</a
-      >
+    <div class="flex flex-col gap-1.5 py-1 ml-1">
+      {#if needsOpenAPIKey || needsGrokAPIKey}
+        <div>
+          Or OpenRouter API Key:
+          <a
+            class="link ml-2"
+            target="_blank"
+            href="/help#getting-openrouter-api-key">learn more</a
+          >
+        </div>
+      {:else}
+        <div>
+          To use {aiModelName} you need OpenRouter API Key:
+          <a
+            class="link ml-2"
+            target="_blank"
+            href="/help#getting-openrouter-api-key">learn more</a
+          >
+        </div>
+      {/if}
       <input
         use:focus
         bind:value={settings.openRouterKey}
-        class="ml-2 grow px-1 py-[1px]"
+        placeholder="Enter OpenRouter API key"
+        class="px-1 py-[1px]"
       />
     </div>
   {/if}

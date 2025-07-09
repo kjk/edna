@@ -32,8 +32,12 @@ export function getAltChar(platform) {
 function fixUpShortcuts(s, platform) {
   let modChar = getModChar(platform);
   let altChar = getAltChar(platform);
-  s = s.replace(/Alt/g, altChar);
-  s = s.replace(/Mod/g, modChar);
+  s = s.replace(/`([^`]*)`/g, (match, p1) => {
+    return "`" + p1.replace(/Alt/g, altChar) + "`";
+  });
+  s = s.replace(/`([^`]*)`/g, (match, p1) => {
+    return "`" + p1.replace(/Mod/g, modChar) + "`";
+  });
   return s;
 }
 

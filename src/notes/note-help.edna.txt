@@ -296,11 +296,13 @@ Once you receive the response, you can insert it as new block.
 
 ![Ask AI Response](/help-ask-ai-response.png)
 
+## AI Model Picker
+
 We support a lot of AI models. You can pick the model using selector in upper right corner.
 
 ![Ask AI models](/help-ask-ai-pick-model.png)
 
-We don't charge for AI but AI providers do.
+We don't charge for AI but AI providers do. We show the price for million input tokens and million output tokens on the right.
 
 You need to provide your own API key. 
 
@@ -331,17 +333,44 @@ You still need an OpenRouter API key to use free models.
 
 ## Getting OpenAI API key
 
-Go to [OpenAI](https://platform.openai.com/settings/organization/api-keys).
+To use OpenAI models you need to obtain API key from [OpenAI](https://platform.openai.com/settings/organization/api-keys).
+
+You need to create an account and setup billing. OpenAI charges for usage of API calls so you don't pay if you don't use the API.
+
+They charge per input tokens and output tokens. A token is more or less a word.
+
+To make it easier to compare prices, we show the price for million input tokens and a million output tokens in [AI model picker](#ai-model-picker).
+
+You can also use OpenRouter API key (they charge ~5% on top of OpenAI prices).
 
 ## Getting xAI (Grok) API Key
 
-Go to [xAI](https://console.x.ai/), click `API Keys` section in left sidebar
+To use xAI models you need to obtain API key from [xAI](https://console.x.ai/), click `API Keys` section in left sidebar
+
+You need to create an account and setup billing. xAI charges for usage of API calls so you don't pay if you don't use the API.
+
+They charge per input tokens and output tokens. A token is more or less a word.
+
+To make it easier to compare prices, we show the price for million input tokens and a million output tokens in [AI model picker](#ai-model-picker).
+
+You can also use OpenRouter API key (they charge ~5% on top of xAI prices).
 
 ## Getting OpenRouter API Key
 
-Go to [OpenRouter](https://openrouter.ai/settings/keys).
+To use majority of models you need to obtain API key from [OpenRouter](https://openrouter.ai/settings/keys).
 
-OpenRouter supports lots of models for lots of providers.
+You need to create an account and setup billing. OpenRouter charges for usage of API calls so you don't pay if you don't use the API.
+
+They charge per input tokens and output tokens. A token is more or less a word.
+
+To make it easier to compare prices, we show the price for million input tokens and a million output tokens in [AI model picker](#ai-model-picker).
+
+OpenRouter provides a unified interface for accessing models from many providers.
+
+They charge the provider's price plus ~5% to provide their service.
+
+OpenRouter provides free models but you still need to have an API key.
+
 ∞∞∞markdown
 # Storing notes on disk
 
