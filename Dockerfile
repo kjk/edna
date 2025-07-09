@@ -1,12 +1,11 @@
 FROM golang:1.24-alpine3.21
 
 RUN set -eux \
-    & apk add \
-        --no-cache \
-        nodejs \
-        yarn \
-        npm \
-        git
+  & apk add \
+  --no-cache \
+  nodejs \
+  npm \
+  git
 
 
 RUN mkdir /app

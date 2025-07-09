@@ -142,7 +142,9 @@ func reinstallPackages() {
 	if hasBun() {
 		u.RunLoggedInDirMust(".", "bun", "install")
 	} else {
-		u.RunLoggedInDirMust(".", "npm", "install")
+		// --force because npm complains about vite versions mismatch
+		// in various dependencies
+		u.RunLoggedInDirMust(".", "npm", "install", "--force")
 	}
 }
 
@@ -156,7 +158,11 @@ func rebuildFrontend() {
 	emptyFrontEndBuildDir()
 	logf("deleted frontend dist dir '%s'\n", frontEndBuildDir)
 	reinstallPackages()
-	u.RunLoggedInDirMust(".", "bun", "run", "build")
+	if hasBun() {
+		u.RunLoggedInDirMust(".", "bun", "run", "build")
+	} else {
+		u.RunLoggedInDirMust(".", "npm", "run", "build")
+	}
 }
 
 // get date and hash of current git checkin
