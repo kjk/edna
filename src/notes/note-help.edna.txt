@@ -351,6 +351,8 @@ They charge per input tokens and output tokens. A token is more or less a word.
 
 To make it easier to compare prices, we show the price for million input tokens and a million output tokens in [AI model picker](#ai-model-picker).
 
+API keys are separate from ChatGPT subscription. Confusing, I know, but I didn't make the rules.
+
 You can also use OpenRouter API key (they charge ~5% on top of OpenAI prices).
 
 ## Getting xAI (Grok) API Key
@@ -362,6 +364,8 @@ You need to create an account and setup billing. xAI charges for usage of API ca
 They charge per input tokens and output tokens. A token is more or less a word.
 
 To make it easier to compare prices, we show the price for million input tokens and a million output tokens in [AI model picker](#ai-model-picker).
+
+API keys are separate from Grok subscription. Confusing, I know, but I didn't make the rules.
 
 You can also use OpenRouter API key (they charge ~5% on top of xAI prices).
 
