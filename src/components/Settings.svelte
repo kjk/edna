@@ -205,7 +205,7 @@
     <input
       class="w-full mt-0.5 px-1 py-1"
       type="text"
-      bind:value={settings.grokKey}
+      bind:value={settings.xAIKey}
     />
   </label>
 

@@ -21,29 +21,50 @@
   let { close, startText, insertResponse } = $props();
 
   const kApiProviderOpenAI = 0;
-  const kApiProviderGrok = 1;
+  const kApiProviderXAi = 1;
   const kApiProviderOpenRouter = 2;
   // const kApiProviderAnthropic = 3;
   // const kApiProviderGoogle = 3;
 
-  function pickApiKeyForProvider(apiProvider) {
-    switch (apiProvider) {
-      case kApiProviderOpenAI:
-        return settings.openAIKey;
-      case kApiProviderGrok:
-        return settings.grokKey;
-      // case kApiProviderAnthropic:
-      //   return settings.anthropicKey;
-      case kApiProviderOpenRouter:
-        return settings.openRouterKey;
-      // case kApiProviderGoogle:
-      //   return settings.googleAIKey;
-      default:
-        throw new Error(`no api key for `);
+  /**
+   * @param {number} apiProvider
+   * @returns {{maybeValidApiKey, apiProviderToUse}}
+   */
+  function pickApiKeyForProvider(
+    apiProvider,
+    openAIKey,
+    xAIKey,
+    openRouterKey,
+  ) {
+    if (apiProvider == kApiProviderOpenAI) {
+      if (looksValidOpenAIKey(openAIKey)) {
+        return {
+          maybeValidApiKey: openAIKey,
+          apiProviderToUse: kApiProviderOpenAI,
+        };
+      }
     }
+    if (apiProvider == kApiProviderXAi) {
+      if (looksValidXAIkKey(xAIKey)) {
+        return {
+          maybeValidApiKey: xAIKey,
+          apiProviderToUse: kApiProviderXAi,
+        };
+      }
+    }
+    if (looksValidOpenRouterKey(openRouterKey)) {
+      return {
+        maybeValidApiKey: openRouterKey,
+        apiProviderToUse: kApiProviderOpenRouter,
+      };
+    }
+    return {
+      maybeValidApiKey: "",
+      apiProviderToUse: kApiProviderOpenRouter,
+    };
   }
 
-  let forceBadApiKey = false;
+  let forceBadApiKey = false; // for ad-hoc testing
 
   let settings = getSettings();
   let questionText = $state(startText);
@@ -53,24 +74,21 @@
   let aiModel = $derived(findModelByID(settings.aiModelID));
   let aiModelName = $derived(aiModel[kModelNameIdx]);
   let apiProvider = $derived(apiProviderForAiModel(aiModel));
-  let needsOpenAPIKey = $derived(
-    apiProvider == kApiProviderOpenAI &&
-      (forceShowingApiKey || err || !looksValidOpenAIKey(settings.openAIKey)),
+  let apiProviderOpenAI = $derived(apiProvider == kApiProviderOpenAI);
+  let apiProviderXAI = $derived(apiProvider == kApiProviderXAi);
+  let { maybeValidApiKey, apiProviderToUse } = $derived(
+    pickApiKeyForProvider(
+      apiProvider,
+      settings.openAIKey,
+      settings.xAIKey,
+      settings.openRouterKey,
+    ),
   );
-  let needsGrokAPIKey = $derived(
-    apiProvider == kApiProviderGrok &&
-      (forceShowingApiKey || err || !looksValidGrokKey(settings.grokKey)),
-  );
-  // let needsGoogleAPIKey = $derived(
-  //   apiProvider == kApiProviderGoogle &&
-  //     (forceShowingApiKey || err || !looksValidGrokKey(settings.googleAIKey)),
-  // );
-  let needsOpenRouterAPIKey = $derived(
-    forceShowingApiKey ||
-      err ||
-      !looksValidOpenRouterKey(settings.openRouterKey),
-  );
-  let apiKey = $derived(pickApiKeyForProvider(apiProvider));
+  let hasAPIKey = $derived(maybeValidApiKey != "");
+
+  $effect(() => {
+    console.warn("maybeValidAPIKey:", $state.snapshot(maybeValidApiKey));
+  });
 
   const maxTokens = 1000;
 
@@ -80,7 +98,7 @@
       case kProviderOpenAI:
         return kApiProviderOpenAI;
       case kProviderXAI:
-        return kApiProviderGrok;
+        return kApiProviderXAi;
       // case kProviderGoogle:
       //   return kApiProviderGoogle;
       default:
@@ -92,7 +110,7 @@
    * @type {[number, string][]}
    */
   const apiProviders = [
-    [kApiProviderGrok, "https://api.x.ai/v1/chat/completions"],
+    [kApiProviderXAi, "https://api.x.ai/v1/chat/completions"],
     [kApiProviderOpenAI, "https://api.openai.com/v1/chat/completions"],
     [kApiProviderOpenRouter, "https://openrouter.ai/api/v1/chat/completions"],
     // [
@@ -116,13 +134,13 @@
   }
 
   async function askai() {
-    // console.warn("askai");
     err = "";
-    let baseURL = getApiProviderBaseURL(apiProvider);
+    let baseURL = getApiProviderBaseURL(apiProviderToUse);
+    console.warn("askai: baseURL:", baseURL);
     try {
       reqFinished = false;
       reqInProgress = true;
-      await streamChatGPTResponse(questionText, apiKey, baseURL);
+      await streamChatGPTResponse(questionText, maybeValidApiKey, baseURL);
       // looks like a valid key, remember it
       reqFinished = true;
     } catch (e) {
@@ -154,7 +172,9 @@
    * @returns {boolean}
    */
   function looksValidOpenAIKey(s) {
-    return len(s) > 100;
+    // this might be fragile. the keys start with "sk-proj-" today but they
+    // can change it in the future
+    return s.startsWith("sk-proj-") && len(s) > 100;
   }
 
   // mine is 84 chars
@@ -162,8 +182,10 @@
    * @param {string} s
    * @returns {boolean}
    */
-  function looksValidGrokKey(s) {
-    return len(s) > 70;
+  function looksValidXAIkKey(s) {
+    // this might be fragile. the keys start with "xai-" today but they
+    // can change it in the future
+    return s.startsWith("xai-") && len(s) > 70;
   }
 
   // mine is 73 chars
@@ -172,34 +194,15 @@
    * @returns {boolean}
    */
   function looksValidOpenRouterKey(s) {
-    return len(s) > 50;
-  }
-
-  // mine is 39 chars
-  // function looksValidGoogleKey(s) {
-  //   return len(s) > 30;
-  // }
-
-  function looksValidKey(apiKey) {
-    switch (apiProvider) {
-      case kApiProviderOpenAI:
-        return looksValidOpenAIKey(apiKey);
-      case kApiProviderGrok:
-        return looksValidGrokKey(apiKey);
-      // case kApiProviderAnthropic:
-      //   return looksValidAnthropicKey(apiKey);
-      // case kApiProviderGoogle:
-      //   return looksValidGoogleKey(apiKey);
-    }
-    return true;
+    // this might be fragile. the keys start with "sk-or-" today but they
+    // can change it in the future
+    return s.startsWith("sk-or-") && len(s) > 50;
   }
 
   let responseText = $state("");
 
-  let canSendRequest = $derived(looksValidKey(apiKey));
-
   let reqInProgress = $state(false);
-  let askAIDisabled = $derived(!canSendRequest || reqInProgress);
+  let askAIDisabled = $derived(!hasAPIKey || reqInProgress);
 
   function insertRsp() {
     let s = "# Response from " + aiModelName + "\n\n" + responseText + "\n";
@@ -293,7 +296,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<form
+<div
   tabindex="-1"
   use:trapfocus
   class="selector z-20 absolute center-x-with-translate top-[1rem] flex flex-col max-h-[78vh] w-[85vw] p-2"
@@ -301,16 +304,18 @@
   <div class="flex items-center">
     <div class="p-1 font-bold text-lg">Ask AI</div>
     <a target="_blank" class="ml-4 link" href="/help#ask-ai">learn more</a>
-    <button
-      onclick={(ev) => {
-        forceShowingApiKey = !forceShowingApiKey;
-        // console.warn("forceShowingApiKey:", forceShowingApiKey);
-        ev.preventDefault();
-        ev.stopPropagation();
-      }}
-      class="ml-4 link hover:text-gray-900"
-      >{forceShowingApiKey ? "hide" : "show"} api key</button
-    >
+    {#if hasAPIKey}
+      <button
+        onclick={(ev) => {
+          forceShowingApiKey = !forceShowingApiKey;
+          // console.warn("forceShowingApiKey:", forceShowingApiKey);
+          ev.preventDefault();
+          ev.stopPropagation();
+        }}
+        class="ml-4 link hover:text-gray-900"
+        >{forceShowingApiKey ? "hide" : "show"} api key</button
+      >
+    {/if}
     <div class="grow"></div>
     <div class="flex ml-1 mt-2 items-baseline">
       <div class="px-1 font-bold">model:</div>
@@ -339,58 +344,86 @@
     </div>
   </div>
 
-  {#if needsOpenAPIKey}
-    <div class="flex flex-col gap-1.5 py-1 ml-1">
-      <div>
-        To use {aiModelName} you need OpenAI API Key:
-        <a class="link ml-2" target="_blank" href="/help#getting-openai-api-key"
-          >learn more</a
-        >
+  {#if forceShowingApiKey || !hasAPIKey}
+    {#if apiProviderOpenAI}
+      <div class="flex flex-col gap-1.5 py-1 ml-1">
+        <div class="flex">
+          <div class="grow">
+            To use {aiModelName} you need
+            <a class="link" target="_blank" href="/help#getting-openai-api-key"
+              >OpenAI API Key</a
+            >:
+          </div>
+          <a class="link" target="_blank" href="/help#getting-openai-api-key"
+            >learn more</a
+          >
+        </div>
+        <input
+          placeholder="Enter OpenAI API key"
+          use:focus
+          bind:value={settings.openAIKey}
+          class="px-1 py-[1px]"
+        />
       </div>
-      <input
-        placeholder="Enter OpenAI API key"
-        use:focus
-        bind:value={settings.openAIKey}
-        class="px-1 py-[1px]"
-      />
-    </div>
-  {/if}
+    {/if}
 
-  {#if needsGrokAPIKey}
-    <div class="flex flex-col gap-1.5 py-1 ml-1">
-      <div>
-        To use {aiModelName} you need xAI API Key:
-        <a
-          class="link ml-2"
-          target="_blank"
-          href="/help#getting-xai-(grok)-api-key">learn more</a
-        >
-      </div>
-      <input
-        placeholder="Enter xAI API key"
-        use:focus
-        bind:value={settings.grokKey}
-        class="px-1 py-[1px]"
-      />
-    </div>
-  {/if}
+    {#if apiProviderXAI}
+      <div class="flex flex-col gap-1.5 py-1 ml-1">
+        <div class="flex">
+          <div class="grow">
+            To use {aiModelName} you need
+            <a
+              class="link"
+              target="_blank"
+              href="/help#getting-xai-(grok)-api-key">xAI API Key</a
+            >
+            :
+          </div>
 
-  {#if needsOpenRouterAPIKey}
-    <div class="flex flex-col gap-1.5 py-1 ml-1">
-      {#if needsOpenAPIKey || needsGrokAPIKey}
-        <div>
-          Or OpenRouter API Key:
           <a
-            class="link ml-2"
+            class="link"
+            target="_blank"
+            href="/help#getting-xai-(grok)-api-key">learn more</a
+          >
+        </div>
+        <input
+          placeholder="Enter xAI API key"
+          use:focus
+          bind:value={settings.xAIKey}
+          class="px-1 py-[1px]"
+        />
+      </div>
+    {/if}
+
+    <div class="flex flex-col gap-1.5 py-1 ml-1">
+      {#if apiProviderOpenAI || apiProviderXAI}
+        <div class="flex">
+          <div class="grow">
+            Or <a
+              class="link"
+              target="_blank"
+              href="/help#getting-openrouter-api-key">OpenRouter API Key</a
+            >
+            :
+          </div>
+          <a
+            class="link"
             target="_blank"
             href="/help#getting-openrouter-api-key">learn more</a
           >
         </div>
       {:else}
-        <div>
-          To use {aiModelName} you need OpenRouter API Key:
+        <div class="flex">
+          <div class="grow">
+            To use {aiModelName} you need
+            <a
+              class="link"
+              target="_blank"
+              href="/help#getting-openrouter-api-key">OpenRouter API Key</a
+            >:
+          </div>
           <a
-            class="link ml-2"
+            class="link"
             target="_blank"
             href="/help#getting-openrouter-api-key">learn more</a
           >
@@ -428,6 +461,11 @@
     </div>
   {/if}
   <div class="flex mt-2 items-center">
+    {#if !hasAPIKey}
+      <div class=" text-red-600 ml-2 whitespace-pre-line overflow-auto">
+        Need a valid API key
+      </div>
+    {/if}
     {#if reqInProgress}
       <div class="ml-2 font-bold">thinking...</div>
     {:else}{/if}
@@ -445,4 +483,4 @@
       >{#if reqFinished}Close{:else}Cancel{/if}</button
     >
   </div>
-</form>
+</div>
