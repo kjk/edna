@@ -301,7 +301,7 @@
       bind:this={endaMascotImgRef}
     >
       <img class="" alt="Edna mascot" src="/edna-mascot.jpg" />
-      <div class="self-center">Hi! I'm Edna!</div>
+      <div class="self-center bg-white">Hi! I'm Edna!</div>
     </div>
     <button
       onclick={() => (settings.alwaysShowTopNav = false)}
