@@ -139,7 +139,7 @@ function getHelp(platform) {
   lines = replaceJSBlock(lines);
   lines = removeLineStartingWith(lines, "∞∞∞markdown");
   lines = removeLineStartingWith(lines, "This is a help note");
-  lines = removeLineStartingWith(lines, "To see help in HTML");
+  lines = removeLineStartingWith(lines, "To see help in");
   lines = collapseMultipleEmptyLines(lines);
   helpRaw = lines.join("\n");
 

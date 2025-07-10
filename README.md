@@ -2,7 +2,7 @@
 
 [Edna](https://edna.arslexis.io) is a note taking app with superpowers.
 
-Integrated AI chat, blocks, markdown, plain text, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more).
+Integrated AI chat, blocks, markdown, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more), command palette, programmability.
 
 To learn more, see https://edna.arslexis.io/help
 

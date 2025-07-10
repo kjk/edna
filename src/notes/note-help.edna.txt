@@ -2,11 +2,13 @@
 ∞∞∞markdown
 # Welcome to Edna
 
-[Edna](https://edna.arslexis.io) is a note taking app with superpowers. Integrated AI chat, blocks, markdown, plain text, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more).
+[Edna](https://edna.arslexis.io) is a note taking app with [super powers](#super-powers).
+
+Integrated AI chat, blocks, markdown, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more), command palette, programmability.
 
 This is a help note. To switch to a different note, press `Mod + K`.
 
-To see help in HTML, press `Help` at the bottom right or visit https://edna.arslexis.io/help
+To see help in a separate web page visit https://edna.arslexis.io/help
 ∞∞∞markdown
 # Keyboard shortcuts
 
@@ -40,7 +42,7 @@ Edna is a web-based application but can store notes on disk, like a desktop app 
 
 You can use it offline (without network connection) and for desktop-like experince you can install a desktop shortcut.
 
-## Miminalist UI, lots of functionality
+## Lots of functionality, minimalist UI
 
 UI is optimized for writing. Editor uses most of the space.
 
@@ -52,9 +54,13 @@ To acess more functionality:
 - top navigation bar
 - status bar
 
-Command palette with `Mod + Shift + K`:
+## Command palette
+
+Open command palette with `Mod + Shift + K`:
 
 ![Command Palette](/help-command-palette.png)
+
+Quickly access all the functionality, find commands with partial name match.
 
 ## Speed
 
@@ -125,7 +131,7 @@ Notes with quick access shortcut are shown at the top of note selector (`Mod + K
 
 ![Quick access shortcuts](/help-qas.png)
 
-## Quick access UI for starred, recent notes
+## Open starred, recent notes
 
 Use `Mod + H`:
 
@@ -760,9 +766,97 @@ You can back them up, store in git repositories, write scripts to process them.
 
 They are not locked in a proprietary Edna format.
 ∞∞∞markdown
+# Super-powers
+
+What makes Edna different from other note taking applications?
+
+## Blocks
+
+Notes can be sub-divided into blocks.
+
+Each block has a type (markdown, text, JavaScript and 40+ programming languages) which dictates syntax highlighting.
+
+Blocks can be folded so that you an focus on the block you're currently editing.
+
+You can quickly navigate between blocks with `Ctrl + B`.
+
+## Scratch note
+
+Scratch note is one of 3 special notes.
+
+It's meant for things that are not permanent.
+
+Quickly switch to Scratch note with `Alt + 1`, jot your temporary note, delete when no longer needed.
+
+## Lots of features yet minimalistic UI
+
+Writing is Edna's core functionality so I strive to use maxium of screen space for the editor.
+
+At the same time Edna is packed with functionality accessible via several paths:
+* context menu
+* [command palette](#command-palette) (`Ctrl + Shift + K`)
+* navigation bar at the top
+  * toggling sidebar
+  * menu drop-down
+  * help drop-down
+  * tabs
+  * open note trigger
+  * drop-down with frequently accessed notes (those with quick access shortcut, starred and recently opened)
+  * minimize / maximize navigation bar
+* status bar at the bottom
+  * toggling spell-checking
+  * changing language of a block
+  * execute JavaScript code
+  * format block
+
+## Fast to use
+
+I use Edna daily and efficiency is important to me.
+
+Switching between notes, executing commands etc. are accessible via keyboard shortcuts or mouse.
+
+## Quick access shortcut
+
+For the fastest way to switch between notes, you can assign [quick access shortcut](#quick-access-shortcut) (`Alt + <n>`) to notes you work on frequently.
+
+### Keyboard shortcuts
+
+Lots of [keyboard shortcuts](#keyboard-shortcuts).
+
+### Command Palette
+
+[Command palette](#command-palette) allows quick access to all functionality (`Ctrl + Shift + K`).
+
+## AI chat built in
+
+You're already in the editor. It's silly to switch to a different app just to send a question to AI.
+
+[Ask AI](#ask-ai) chat UI pre-populates question from selection or current block and allows to insert the response as a new block.
+
+We support virtually any AI provider.
+
+We aim to support 80% of AI use cases, not replicate the advanced features of specilized AI apps.
+
+## Programmability
+
+You can write and [run JavaScript functions](#run-javascript-functions-over-content) that take content, transform it and insert the result back into the note.
+
+# Daily journal
+
+The intent of `daily journal` note (`Alt + 2`) is to record things you do. We auto-create a new markdown block for each day.
+
+# Inbox
+
+The intent of `inbox` note (`Alt + 3`) is to jot things you want to process in short term future, like a link to an article you want to read or a link to a video you want to watch.
+
+# Encryption
+
+You can [encrypt notes](#encryption) with a password. Even Mossad agents won't be able to crack them.
+
+∞∞∞markdown
 # How I use Edna
 
-Edna is flexible and you should find your own way of using it.
+Edna is flexible and you will find your own way of using it.
 
 I use Edna daily::
 
@@ -772,7 +866,7 @@ I use Edna daily::
 - I have a note for each project I work on
 - I have a note for each programming language / technology I use. I keep code snippets and notes about it
 - I have `ideas` note for jotting down ideas
-- I have `investing` note for keeping track of various stock investment ideas
+- I have `investing` note for keeping track of stock investment ideas
 ∞∞∞markdown
 # Open source
 

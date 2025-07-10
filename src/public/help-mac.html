@@ -14,7 +14,8 @@
   <body>
     <div class="content">
   <h1 id="welcome-to-edna" tabindex="-1"><a class="header-anchor" href="#welcome-to-edna">Welcome to Edna</a></h1>
-<p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is a note taking app with superpowers. Integrated AI chat, blocks, markdown, plain text, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more).</p>
+<p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is a note taking app with <a href="#super-powers">super powers</a>.</p>
+<p>Integrated AI chat, blocks, markdown, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more), command palette, programmability.</p>
 <h1 id="keyboard-shortcuts" tabindex="-1"><a class="header-anchor" href="#keyboard-shortcuts">Keyboard shortcuts</a></h1>
 <pre><code>⌘ + K               Open, create or delete a note
 ⌘ + P               
@@ -65,7 +66,7 @@
 <h2 id="no-installation-required" tabindex="-1"><a class="header-anchor" href="#no-installation-required">No installation required</a></h2>
 <p>Edna is a web-based application but can store notes on disk, like a desktop app (when using Chrome or Edge).</p>
 <p>You can use it offline (without network connection) and for desktop-like experince you can install a desktop shortcut.</p>
-<h2 id="miminalist-ui%2C-lots-of-functionality" tabindex="-1"><a class="header-anchor" href="#miminalist-ui%2C-lots-of-functionality">Miminalist UI, lots of functionality</a></h2>
+<h2 id="lots-of-functionality%2C-minimalist-ui" tabindex="-1"><a class="header-anchor" href="#lots-of-functionality%2C-minimalist-ui">Lots of functionality, minimalist UI</a></h2>
 <p>UI is optimized for writing. Editor uses most of the space.</p>
 <p>To acess more functionality:</p>
 <ul>
@@ -75,8 +76,10 @@
 <li>top navigation bar</li>
 <li>status bar</li>
 </ul>
-<p>Command palette with <code>⌘ + Shift + K</code>:</p>
+<h2 id="command-palette" tabindex="-1"><a class="header-anchor" href="#command-palette">Command palette</a></h2>
+<p>Open command palette with <code>⌘ + Shift + K</code>:</p>
 <p><img src="/help-command-palette.png" alt="Command Palette"></p>
+<p>Quickly access all the functionality, find commands with partial name match.</p>
 <h2 id="speed" tabindex="-1"><a class="header-anchor" href="#speed">Speed</a></h2>
 <p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is optimized for speed of writing, creating new notes, switching between notes.</p>
 <p>Like in Notational Velocity, you can switch between notes, create and delete notes in the same note switcher UI.</p>
@@ -121,7 +124,7 @@
 </ul>
 <p>Notes with quick access shortcut are shown at the top of note selector (<code>⌘ + K</code>) and quick access UI (<code>⌘ + H</code>)</p>
 <p><img src="/help-qas.png" alt="Quick access shortcuts"></p>
-<h2 id="quick-access-ui-for-starred%2C-recent-notes" tabindex="-1"><a class="header-anchor" href="#quick-access-ui-for-starred%2C-recent-notes">Quick access UI for starred, recent notes</a></h2>
+<h2 id="open-starred%2C-recent-notes" tabindex="-1"><a class="header-anchor" href="#open-starred%2C-recent-notes">Open starred, recent notes</a></h2>
 <p>Use <code>⌘ + H</code>:</p>
 <p><img src="/help-history.png" alt="History of opened files"></p>
 <p>Alternatively mouse over ⏷ in top navigation bar:</p>
@@ -538,8 +541,67 @@ console.log(&quot;x is&quot;, x)
 <p>You can edit the notes in any text editor (just be mindful of the above block markers).</p>
 <p>You can back them up, store in git repositories, write scripts to process them.</p>
 <p>They are not locked in a proprietary Edna format.</p>
+<h1 id="super-powers" tabindex="-1"><a class="header-anchor" href="#super-powers">Super-powers</a></h1>
+<p>What makes Edna different from other note taking applications?</p>
+<h2 id="blocks" tabindex="-1"><a class="header-anchor" href="#blocks">Blocks</a></h2>
+<p>Notes can be sub-divided into blocks.</p>
+<p>Each block has a type (markdown, text, JavaScript and 40+ programming languages) which dictates syntax highlighting.</p>
+<p>Blocks can be folded so that you an focus on the block you're currently editing.</p>
+<p>You can quickly navigate between blocks with <code>Ctrl + B</code>.</p>
+<h2 id="scratch-note" tabindex="-1"><a class="header-anchor" href="#scratch-note">Scratch note</a></h2>
+<p>Scratch note is one of 3 special notes.</p>
+<p>It's meant for things that are not permanent.</p>
+<p>Quickly switch to Scratch note with <code>⌥ + 1</code>, jot your temporary note, delete when no longer needed.</p>
+<h2 id="lots-of-features-yet-minimalistic-ui" tabindex="-1"><a class="header-anchor" href="#lots-of-features-yet-minimalistic-ui">Lots of features yet minimalistic UI</a></h2>
+<p>Writing is Edna's core functionality so I strive to use maxium of screen space for the editor.</p>
+<p>At the same time Edna is packed with functionality accessible via several paths:</p>
+<ul>
+<li>context menu</li>
+<li><a href="#command-palette">command palette</a> (<code>Ctrl + Shift + K</code>)</li>
+<li>navigation bar at the top
+<ul>
+<li>toggling sidebar</li>
+<li>menu drop-down</li>
+<li>help drop-down</li>
+<li>tabs</li>
+<li>open note trigger</li>
+<li>drop-down with frequently accessed notes (those with quick access shortcut, starred and recently opened)</li>
+<li>minimize / maximize navigation bar</li>
+</ul>
+</li>
+<li>status bar at the bottom
+<ul>
+<li>toggling spell-checking</li>
+<li>changing language of a block</li>
+<li>execute JavaScript code</li>
+<li>format block</li>
+</ul>
+</li>
+</ul>
+<h2 id="fast-to-use" tabindex="-1"><a class="header-anchor" href="#fast-to-use">Fast to use</a></h2>
+<p>I use Edna daily and efficiency is important to me.</p>
+<p>Switching between notes, executing commands etc. are accessible via keyboard shortcuts or mouse.</p>
+<h2 id="quick-access-shortcut-1" tabindex="-1"><a class="header-anchor" href="#quick-access-shortcut-1">Quick access shortcut</a></h2>
+<p>For the fastest way to switch between notes, you can assign <a href="#quick-access-shortcut">quick access shortcut</a> (<code>⌥ + &lt;n&gt;</code>) to notes you work on frequently.</p>
+<h3 id="keyboard-shortcuts-1" tabindex="-1"><a class="header-anchor" href="#keyboard-shortcuts-1">Keyboard shortcuts</a></h3>
+<p>Lots of <a href="#keyboard-shortcuts">keyboard shortcuts</a>.</p>
+<h3 id="command-palette-1" tabindex="-1"><a class="header-anchor" href="#command-palette-1">Command Palette</a></h3>
+<p><a href="#command-palette">Command palette</a> allows quick access to all functionality (<code>Ctrl + Shift + K</code>).</p>
+<h2 id="ai-chat-built-in" tabindex="-1"><a class="header-anchor" href="#ai-chat-built-in">AI chat built in</a></h2>
+<p>You're already in the editor. It's silly to switch to a different app just to send a question to AI.</p>
+<p><a href="#ask-ai">Ask AI</a> chat UI pre-populates question from selection or current block and allows to insert the response as a new block.</p>
+<p>We support virtually any AI provider.</p>
+<p>We aim to support 80% of AI use cases, not replicate the advanced features of specilized AI apps.</p>
+<h2 id="programmability" tabindex="-1"><a class="header-anchor" href="#programmability">Programmability</a></h2>
+<p>You can write and <a href="#run-javascript-functions-over-content">run JavaScript functions</a> that take content, transform it and insert the result back into the note.</p>
+<h1 id="daily-journal" tabindex="-1"><a class="header-anchor" href="#daily-journal">Daily journal</a></h1>
+<p>The intent of <code>daily journal</code> note (<code>⌥ + 2</code>) is to record things you do. We auto-create a new markdown block for each day.</p>
+<h1 id="inbox" tabindex="-1"><a class="header-anchor" href="#inbox">Inbox</a></h1>
+<p>The intent of <code>inbox</code> note (<code>⌥ + 3</code>) is to jot things you want to process in short term future, like a link to an article you want to read or a link to a video you want to watch.</p>
+<h1 id="encryption-1" tabindex="-1"><a class="header-anchor" href="#encryption-1">Encryption</a></h1>
+<p>You can <a href="#encryption">encrypt notes</a> with a password. Even Mossad agents won't be able to crack them.</p>
 <h1 id="how-i-use-edna" tabindex="-1"><a class="header-anchor" href="#how-i-use-edna">How I use Edna</a></h1>
-<p>Edna is flexible and you should find your own way of using it.</p>
+<p>Edna is flexible and you will find your own way of using it.</p>
 <p>I use Edna daily::</p>
 <ul>
 <li>I use <code>scratch</code> note for temporary notes</li>
@@ -548,7 +610,7 @@ console.log(&quot;x is&quot;, x)
 <li>I have a note for each project I work on</li>
 <li>I have a note for each programming language / technology I use. I keep code snippets and notes about it</li>
 <li>I have <code>ideas</code> note for jotting down ideas</li>
-<li>I have <code>investing</code> note for keeping track of various stock investment ideas</li>
+<li>I have <code>investing</code> note for keeping track of stock investment ideas</li>
 </ul>
 <h1 id="open-source" tabindex="-1"><a class="header-anchor" href="#open-source">Open source</a></h1>
 <p><a href="https://edna.arslexis.io" target="_blank">Edna</a> is open source: <a href="https://github.com/kjk/edna" target="_blank">https://github.com/kjk/edna</a></p>
