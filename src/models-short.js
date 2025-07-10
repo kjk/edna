@@ -31,6 +31,20 @@ export const kModelPriceCompletionIdx = 4;
 
 export const modelsShort = [
   [
+    "grok-4",
+    5,
+    "Grok 4",
+    0.000003,
+    0.000015
+  ],
+  [
+    "gemma-3n-e2b-it:free",
+    2,
+    "Gemma 3n 2B (free)",
+    0,
+    0
+  ],
+  [
     "gemini-2.5-flash-lite-preview-06-17",
     2,
     "Gemini 2.5 Flash Lite Preview 06-17",
@@ -169,6 +183,13 @@ export const modelsShort = [
     "Gemini 2.5 Pro Preview 05-06",
     0.00000125,
     0.00001
+  ],
+  [
+    "qwen3-4b:free",
+    4,
+    "Qwen3 4B (free)",
+    0,
+    0
   ],
   [
     "deepseek-prover-v2",
@@ -780,20 +801,6 @@ export const modelsShort = [
     1.5e-7
   ],
   [
-    "claude-3.5-haiku-20241022:beta",
-    1,
-    "Claude 3.5 Haiku (2024-10-22) (self-moderated)",
-    8e-7,
-    0.000004
-  ],
-  [
-    "claude-3.5-haiku-20241022",
-    1,
-    "Claude 3.5 Haiku (2024-10-22)",
-    8e-7,
-    0.000004
-  ],
-  [
     "claude-3.5-haiku:beta",
     1,
     "Claude 3.5 Haiku (self-moderated)",
@@ -804,6 +811,20 @@ export const modelsShort = [
     "claude-3.5-haiku",
     1,
     "Claude 3.5 Haiku",
+    8e-7,
+    0.000004
+  ],
+  [
+    "claude-3.5-haiku-20241022:beta",
+    1,
+    "Claude 3.5 Haiku (2024-10-22) (self-moderated)",
+    8e-7,
+    0.000004
+  ],
+  [
+    "claude-3.5-haiku-20241022",
+    1,
+    "Claude 3.5 Haiku (2024-10-22)",
     8e-7,
     0.000004
   ],
@@ -836,6 +857,27 @@ export const modelsShort = [
     1.5e-7
   ],
   [
+    "llama-3.2-90b-vision-instruct",
+    3,
+    "Llama 3.2 90B Vision Instruct",
+    0.0000012,
+    0.0000012
+  ],
+  [
+    "llama-3.2-3b-instruct:free",
+    3,
+    "Llama 3.2 3B Instruct (free)",
+    0,
+    0
+  ],
+  [
+    "llama-3.2-3b-instruct",
+    3,
+    "Llama 3.2 3B Instruct",
+    3e-9,
+    6e-9
+  ],
+  [
     "llama-3.2-11b-vision-instruct:free",
     3,
     "Llama 3.2 11B Vision Instruct (free)",
@@ -855,20 +897,6 @@ export const modelsShort = [
     "Llama 3.2 1B Instruct",
     5e-9,
     1e-8
-  ],
-  [
-    "llama-3.2-90b-vision-instruct",
-    3,
-    "Llama 3.2 90B Vision Instruct",
-    0.0000012,
-    0.0000012
-  ],
-  [
-    "llama-3.2-3b-instruct",
-    3,
-    "Llama 3.2 3B Instruct",
-    3e-9,
-    6e-9
   ],
   [
     "qwen-2.5-72b-instruct:free",
@@ -899,18 +927,18 @@ export const modelsShort = [
     0.00006
   ],
   [
-    "o1-mini-2024-09-12",
-    0,
-    "o1-mini (2024-09-12)",
-    0.0000011,
-    0.0000044
-  ],
-  [
     "o1-preview",
     0,
     "o1-preview",
     0.000015,
     0.00006
+  ],
+  [
+    "o1-mini-2024-09-12",
+    0,
+    "o1-mini (2024-09-12)",
+    0.0000011,
+    0.0000044
   ],
   [
     "qwen-2.5-vl-7b-instruct",
@@ -941,11 +969,11 @@ export const modelsShort = [
     0.000002
   ],
   [
-    "llama-3.1-70b-instruct",
+    "llama-3.1-405b-instruct:free",
     3,
-    "Llama 3.1 70B Instruct",
-    1e-7,
-    2.8e-7
+    "Llama 3.1 405B Instruct (free)",
+    0,
+    0
   ],
   [
     "llama-3.1-405b-instruct",
@@ -960,6 +988,13 @@ export const modelsShort = [
     "Llama 3.1 8B Instruct",
     1.5e-8,
     2e-8
+  ],
+  [
+    "llama-3.1-70b-instruct",
+    3,
+    "Llama 3.1 70B Instruct",
+    1e-7,
+    2.8e-7
   ],
   [
     "gpt-4o-mini-2024-07-18",
@@ -1025,11 +1060,11 @@ export const modelsShort = [
     3e-7
   ],
   [
-    "llama-guard-2-8b",
-    3,
-    "LlamaGuard 2 8B",
-    2e-7,
-    2e-7
+    "gpt-4o-2024-05-13",
+    0,
+    "GPT-4o (2024-05-13)",
+    0.000005,
+    0.000015
   ],
   [
     "gpt-4o",
@@ -1046,11 +1081,11 @@ export const modelsShort = [
     0.000018
   ],
   [
-    "gpt-4o-2024-05-13",
-    0,
-    "GPT-4o (2024-05-13)",
-    0.000005,
-    0.000015
+    "llama-guard-2-8b",
+    3,
+    "LlamaGuard 2 8B",
+    2e-7,
+    2e-7
   ],
   [
     "llama-3-8b-instruct",
@@ -1067,18 +1102,18 @@ export const modelsShort = [
     4e-7
   ],
   [
-    "gpt-4-turbo",
-    0,
-    "GPT-4 Turbo",
-    0.00001,
-    0.00003
-  ],
-  [
     "gemini-pro-1.5",
     2,
     "Gemini 1.5 Pro",
     0.00000125,
     0.000005
+  ],
+  [
+    "gpt-4-turbo",
+    0,
+    "GPT-4 Turbo",
+    0.00001,
+    0.00003
   ],
   [
     "claude-3-haiku:beta",
@@ -1095,20 +1130,6 @@ export const modelsShort = [
     0.00000125
   ],
   [
-    "claude-3-sonnet:beta",
-    1,
-    "Claude 3 Sonnet (self-moderated)",
-    0.000003,
-    0.000015
-  ],
-  [
-    "claude-3-sonnet",
-    1,
-    "Claude 3 Sonnet",
-    0.000003,
-    0.000015
-  ],
-  [
     "claude-3-opus:beta",
     1,
     "Claude 3 Opus (self-moderated)",
@@ -1123,11 +1144,18 @@ export const modelsShort = [
     0.000075
   ],
   [
-    "gpt-3.5-turbo-0613",
-    0,
-    "GPT-3.5 Turbo (older v0613)",
-    0.000001,
-    0.000002
+    "claude-3-sonnet:beta",
+    1,
+    "Claude 3 Sonnet (self-moderated)",
+    0.000003,
+    0.000015
+  ],
+  [
+    "claude-3-sonnet",
+    1,
+    "Claude 3 Sonnet",
+    0.000003,
+    0.000015
   ],
   [
     "gpt-4-turbo-preview",
@@ -1137,18 +1165,11 @@ export const modelsShort = [
     0.00003
   ],
   [
-    "claude-2:beta",
-    1,
-    "Claude v2 (self-moderated)",
-    0.000008,
-    0.000024
-  ],
-  [
-    "claude-2",
-    1,
-    "Claude v2",
-    0.000008,
-    0.000024
+    "gpt-3.5-turbo-0613",
+    0,
+    "GPT-3.5 Turbo (older v0613)",
+    0.000001,
+    0.000002
   ],
   [
     "claude-2.1:beta",
@@ -1161,6 +1182,20 @@ export const modelsShort = [
     "claude-2.1",
     1,
     "Claude v2.1",
+    0.000008,
+    0.000024
+  ],
+  [
+    "claude-2:beta",
+    1,
+    "Claude v2 (self-moderated)",
+    0.000008,
+    0.000024
+  ],
+  [
+    "claude-2",
+    1,
+    "Claude v2",
     0.000008,
     0.000024
   ],
@@ -1200,16 +1235,16 @@ export const modelsShort = [
     0.000024
   ],
   [
-    "gpt-4",
+    "gpt-4-0314",
     0,
-    "GPT-4",
+    "GPT-4 (older v0314)",
     0.00003,
     0.00006
   ],
   [
-    "gpt-4-0314",
+    "gpt-4",
     0,
-    "GPT-4 (older v0314)",
+    "GPT-4",
     0.00003,
     0.00006
   ]

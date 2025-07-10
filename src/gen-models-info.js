@@ -46,9 +46,28 @@ const providersInfo = [
 
 const whitelistedProviders = providersInfo.map((p) => p[0]);
 
+const modelsFilePath = "./data/open_router_models.json";
+
+async function downloadModelsJSON(force = false) {
+  if (force && fs.existsSync(modelsFilePath)) {
+    fs.unlinkSync(modelsFilePath);
+  }
+  const url = "https://openrouter.ai/api/v1/models";
+  const options = { method: "GET" };
+  try {
+    const response = await fetch(url, options);
+    const data = await response.json();
+    await Bun.write(modelsFilePath, JSON.stringify(data, null, 2));
+    console.log(
+      `Downloaded models JSON from https://api.openrouter.ai/v1/models to ${modelsFilePath}`,
+    );
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 function parseModelsJSON() {
-  let fpath = "./src/open_router_models.json";
-  let s = fs.readFileSync(fpath, "utf8");
+  let s = fs.readFileSync(modelsFilePath, "utf8");
   let json = JSON.parse(s);
   let models = json.data;
   console.log("Found " + models.length + " models");
@@ -165,7 +184,8 @@ export const modelsShort = ${js};\n`;
   console.log("Wrote " + fpath + " with " + a.length + " models");
 }
 
-function doit() {
+async function doit() {
+  await downloadModelsJSON(true);
   let models = parseModelsJSON();
   console.log("\n");
   printSummary(models);
