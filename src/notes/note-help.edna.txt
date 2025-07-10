@@ -2,7 +2,7 @@
 ∞∞∞markdown
 # Welcome to Edna
 
-[Edna](https://edna.arslexis.io) is a note taking app for developers and power users. A cross between Obsidian and Notational Velocity.
+[Edna](https://edna.arslexis.io) is a note taking app with superpowers. Integrated AI chat, blocks, markdown, plain text, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more).
 
 This is a help note. To switch to a different note, press `Mod + K`.
 
