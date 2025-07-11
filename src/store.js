@@ -109,10 +109,10 @@ export async function storeLoadLatestNoteContent(noteId) {
   return content;
 }
 
+// convert falsy values to undefined so that JSON serialization
+// doesn't include them, making the JSON smaller and easier to read
 function toUndef(v) {
-  if (!v) {
-    return undefined;
-  }
+  return v ? v : undefined;
 }
 
 export class Note {

@@ -275,7 +275,7 @@
       let note = selectedNote;
       if (note) {
         reassignNoteShortcut(note.name, altN);
-        //.then(updateNoteInfos);
+        inputRef.focus();
         return;
       }
     }
