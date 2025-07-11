@@ -4,7 +4,7 @@ import {
   findNoteByName,
 } from "./appstate.svelte";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
-import { reassignNoteShortcut, renameNoteInMetadata } from "./metadata";
+import { reassignNoteShortcut, saveNoteMetadata } from "./metadata";
 import { nanoid } from "./nanoid";
 import { getSettings } from "./settings.svelte";
 import {
@@ -363,10 +363,9 @@ export async function deleteNote(name) {
  * @param {string} content
  */
 export async function renameNote(oldName, newName, content) {
-  await createNoteWithName(newName, content);
-  // update metadata and history before deleteNote() because it'll
-  // remove from history and metadata
-  await renameNoteInMetadata(oldName, newName);
+  let note = findNoteByName(oldName);
+  note.name = newName;
+  await saveNoteMetadata(note);
   renameNoteInHistory(oldName, newName);
   let settings = getSettings();
   let idx = settings.tabs.indexOf(oldName);

@@ -15,9 +15,32 @@ export class AppendStoreRecord {
   }
 }
 
+/**
+ *
+ * @param {FileSystemFileHandle} fileHandle
+ * @param {number} offset
+ * @param {number} length
+ * @returns {Promise<Uint8Array>}
+ */
+async function readFileSegment(fileHandle, offset, length) {
+  try {
+    const file = await fileHandle.getFile();
+    const slice = file.slice(offset, offset + length);
+    const data = await slice.arrayBuffer();
+    return new Uint8Array(data);
+  } catch (error) {
+    console.error("Error reading file segment:", error);
+    throw error;
+  }
+}
+
 export class AppendStore {
   /** @type {AppendStoreRecord[]} */
   records = [];
+  /** @type {FileSystemFileHandle} */
+  indexHandle;
+  /** @type {FileSystemFileHandle} */
+  dataHandle;
 
   static async create(fileNamePrefix = "appendStore") {
     const indexFileName = `${fileNamePrefix}_index.txt`;
@@ -119,21 +142,8 @@ export class AppendStore {
     if (offset < 0 || size <= 0) {
       throw new Error("Invalid offset or size");
     }
-    const dataFile = await this.dataHandle.getFile();
-    if (offset + size > dataFile.size) {
-      throw new Error("Read exceeds data file size");
-    }
-    const dataReadable = await this.dataHandle.createReadable();
-    const reader = dataReadable.getReader();
-    await reader.seek(offset);
-    const { value, done } = await reader.read(size);
-    if (done) {
-      throw new Error("Read operation reached end of file unexpectedly");
-    }
-    if (value.length !== size) {
-      throw new Error("Read operation did not return expected size");
-    }
-    return value;
+    let d = await readFileSegment(this.dataHandle, offset, size);
+    return d;
   }
 
   async readString(offset, size) {

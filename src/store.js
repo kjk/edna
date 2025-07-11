@@ -132,13 +132,13 @@ export class Note {
   getMetadata() {
     // by using toUndef() we make JSON-serialized version
     // smaller and easier to read
-    return $state.snapshot({
+    return {
       id: this.id,
       name: this.name,
       isArchived: toUndef(this.isArchived),
       isStarred: toUndef(this.isStarred),
       altShortcut: toUndef(this.altShortcut),
-    });
+    };
   }
 
   // reverse of getMetadata()

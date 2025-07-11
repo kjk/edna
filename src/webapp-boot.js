@@ -29,7 +29,6 @@ export async function boot() {
   appState.allNotes = await openStore();
   appStateUpdateAfterNotesChange();
 
-  debugger;
   await createDefaultNotes(appState.allNotes);
   await loadAppMetadata(); // pre-load
 

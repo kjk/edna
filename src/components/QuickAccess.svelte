@@ -1,8 +1,9 @@
 <script>
   import { focus } from "../actions";
-  import { appState } from "../appstate.svelte";
+  import { appState, findNoteByName } from "../appstate.svelte";
   import { toggleNoteStarred } from "../metadata";
   import { getSettings } from "../settings.svelte";
+  import { Note } from "../store";
   import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
@@ -28,12 +29,13 @@
 
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
   /**
-   * @param {string[]} starred
+   * @param {Note[]} starred
+   * @param {Note[]} withShortcuts
    * @param {string[]} history
    * @returns {NoteInfo[]}
    */
   function buildQuickAccessNotes(starred, withShortcuts, history) {
-    /** @type {string[]} */
+    /** @type {Note[]} */
     let notes = [...starred, ...withShortcuts];
     // remove duplicate names in notes
     notes = [...new Set(notes)];
@@ -46,7 +48,8 @@
 
     // history can repeat the names
     for (let noteName of history) {
-      let item = buildNoteInfo(noteName);
+      let note = findNoteByName(noteName);
+      let item = buildNoteInfo(note);
       item.altShortcut = 0;
       res.push(item);
     }

@@ -58,13 +58,12 @@
   let lastKey = 0;
 
   /**
-   * @param {string} name
+   * @param {Note} note
    * @returns {NoteInfo}
    */
-  export function buildNoteInfo(name) {
+  export function buildNoteInfo(note) {
     let isArchived = false;
     let isStarred = false;
-    let note = findNoteByName(name);
     if (note) {
       isStarred = note.isStarred;
       isArchived = note.isArchived;
@@ -72,8 +71,8 @@
     /** @type {NoteInfo} */
     let item = {
       key: lastKey,
-      name: name,
-      nameLC: name.toLowerCase(),
+      name: note.name,
+      nameLC: note.name.toLowerCase(),
       isStarred: isStarred,
       isArchived: isArchived,
       ref: null,
@@ -87,15 +86,15 @@
   }
 
   /**
-   * @param {string[]} noteNames
+   * @param {Note[]} notes
    * @returns {NoteInfo[]}
    */
-  export function buildNoteInfos(noteNames) {
+  export function buildNoteInfos(notes) {
     // console.log("buildItems, notes", noteInfos)
     /** @type {NoteInfo[]} */
-    let res = Array(len(noteNames));
-    for (let i = 0; i < len(noteNames); i++) {
-      let name = noteNames[i];
+    let res = Array(len(notes));
+    for (let i = 0; i < len(notes); i++) {
+      let name = notes[i];
       let item = buildNoteInfo(name);
       res[i] = item;
     }
@@ -119,6 +118,7 @@
     isSystemNoteName,
     sanitizeNoteName,
   } from "../notes";
+  import { Note } from "../store";
   import {
     findMatchingItems,
     getAltChar,
@@ -155,6 +155,10 @@
     forMoveBlock = false,
   } = $props();
 
+  /**
+   * @param {Note[]} regular
+   * @param {Note[]} archived
+   */
   function localBuildNoteInfos(regular, archived) {
     let notes = [...regular];
     notes.push(...archived);
