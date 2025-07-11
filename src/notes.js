@@ -1,32 +1,6 @@
-import { tick } from "svelte";
-import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
 import { appState, findNoteByName, Note } from "./appstate.svelte";
-import {
-  clearModalMessage,
-  showModalMessageHTML,
-} from "./components/ModalMessage.svelte";
-import { fromFileName, isValidFileName, toFileName } from "./filenamify";
-import {
-  blobFromUint8Array,
-  fsDeleteFile,
-  fsFileHandleReadTextFile,
-  fsFileHandleWriteText,
-  fsReadBinaryFile,
-  fsReadTextFile,
-  fsRenameFile,
-  fsWriteBlob,
-  fsWriteTextFile,
-  openDirPicker,
-  readDir,
-} from "./fileutil";
-import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
-import {
-  kMetadataName,
-  loadNotesMetadata,
-  reassignNoteShortcut,
-  renameNoteInMetadata,
-} from "./metadata";
+import { reassignNoteShortcut, renameNoteInMetadata } from "./metadata";
 import { nanoid } from "./nanoid";
 import { getSettings } from "./settings.svelte";
 import {
@@ -49,7 +23,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { len, removeDuplicates, throwIf, trimSuffix } from "./util";
+import { len, throwIf } from "./util";
 
 const kLSPassowrdKey = "elaris-password";
 
@@ -62,37 +36,6 @@ function rememberPassword(pwd) {
 
 function removePassword() {
   localStorage.removeItem(kLSPassowrdKey);
-}
-
-/**
- * @returns {string}
- */
-function getPasswordHash() {
-  let pwd = localStorage.getItem(kLSPassowrdKey);
-  if (!pwd) {
-    return null;
-  }
-  let pwdHash = saltPassword(pwd);
-  return pwdHash;
-}
-
-/**
- * @param {string} msg
- * @returns {Promise<string>}
- */
-async function getPasswordHashMust(msg) {
-  let pwdHash = getPasswordHash();
-  let simulateNoPassword = false;
-  if (simulateNoPassword) {
-    pwdHash = null;
-  }
-  if (pwdHash) {
-    return pwdHash;
-  }
-  let pwd = await getPasswordFromUser(msg);
-  // TODO: we don't know yet if password is correct, maybe move this somewhere else
-  rememberPassword(pwd);
-  return saltPassword(pwd);
 }
 
 export const kScratchNoteName = "scratch";
@@ -325,9 +268,14 @@ export async function appendToNote(name, content) {
  * @returns {Promise<string>}
  */
 export async function createNewScratchNote() {
-  let noteNames = await loadNoteNames();
   // generate a unique "scratch-${N}" note name
-  let scratchName = pickUniqueName("scratch", noteNames);
+  let scratchNames = [];
+  for (let note of appState.allNotes) {
+    if (note.name.startsWith("scratch")) {
+      scratchNames.push(note.name);
+    }
+  }
+  let scratchName = pickUniqueName("scratch", scratchNames);
   await createNoteWithName(scratchName);
   return scratchName;
 }
@@ -376,108 +324,11 @@ export async function loadNote(name) {
 }
 
 /**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} name
- * @returns {Promise<string>}
- */
-async function readMaybeEncryptedNoteFS(dh, name) {
-  let path = notePathFromNameFS(name);
-  if (!isEncryptedEdnaFile(path)) {
-    let res = await fsReadTextFile(dh, path);
-    return res;
-  }
-  let res = await readEncryptedFS(dh, path);
-  return res;
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} fileName
- * @returns {Promise<string>}
- */
-async function readEncryptedFS(dh, fileName) {
-  let msg = "";
-  while (true) {
-    let pwdHash = await getPasswordHashMust(msg);
-    let d = await fsReadBinaryFile(dh, fileName);
-    let s = null;
-    try {
-      s = decryptBlobAsString({ key: pwdHash, cipherblob: d });
-    } catch (e) {
-      console.log(e);
-      s = null;
-    }
-    if (s !== null) {
-      return s;
-    }
-    let pwd = localStorage.getItem(kLSPassowrdKey);
-    if (!pwd) {
-      msg = "Please enter password to decrypt files";
-    } else {
-      msg = `Password '${pwd}' is not correct. Please enter valid password.`;
-    }
-    // password was likely incorrect so remove it so that getPasswordHashMust()
-    // asks the user
-    removePassword();
-  }
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} name
- * @param {string} content
- * @returns {Promise<void>}
- */
-async function writeMaybeEncryptedFS(dh, name, content) {
-  let path = notePathFromNameFS(name);
-  if (!isEncryptedNote(name)) {
-    await fsWriteTextFile(dh, path, content);
-    return;
-  }
-  let pwdHash = await getPasswordHashMust("");
-  throwIf(!pwdHash, "needs password");
-  await writeEncryptedFS(dh, pwdHash, path, content);
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} pwdHash
- * @param {string} fileName
- * @param {string} s
- * @returns {Promise<void>}
- */
-async function writeEncryptedFS(dh, pwdHash, fileName, s) {
-  let d = encryptStringAsBlob({ key: pwdHash, plaintext: s });
-  let blob = blobFromUint8Array(d);
-  await fsWriteBlob(dh, fileName, blob);
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} name
- * @param {string} content
- */
-export async function writeNoteFS(dh, name, content) {
-  let isEncr = isUsingEncryption();
-  const path = notePathFromNameFS(name, isEncr);
-  if (!isEncr) {
-    await fsWriteTextFile(dh, path, content);
-    return;
-  }
-  let pwdHash = await getPasswordHashMust("");
-  await writeEncryptedFS(dh, pwdHash, path, content);
-}
-
-/**
  * @param {string} name
  * @returns {boolean}
  */
 export function canDeleteNote(name) {
   if (name === kScratchNoteName) {
-    return false;
-  }
-  let openedNote = getOpenedNote(name);
-  if (openedNote) {
     return false;
   }
   return !isSystemNoteName(name);
@@ -491,10 +342,6 @@ export function isNoteTrashable(name) {
   if (name === kScratchNoteName) {
     return false;
   }
-  let openedNote = getOpenedNote(name);
-  if (openedNote) {
-    return false;
-  }
   return !isSystemNoteName(name);
 }
 
@@ -506,25 +353,6 @@ export function isNoteArchivable(name) {
   return isNoteTrashable(name);
 }
 
-/* I've seen loadNoteNames() fail. I assume that's because of doing directory read
-right after deleting a file, so retry it after a tick */
-async function loadNoteNamesMoreRobust() {
-  try {
-    await loadNoteNames();
-  } catch (e) {
-    console.error("loadNoteNames", e);
-    tick().then(() => {
-      loadNoteNames()
-        .then(() => {
-          console.log("loadNoteNames retry succeeded");
-        })
-        .catch((e) => {
-          console.error("loadNoteNames", e);
-        });
-    });
-  }
-}
-
 /**
  * @param {string} name
  */
@@ -533,7 +361,6 @@ export async function deleteNote(name) {
   storeMarkNoteDeleted(note.id);
   incNoteDeleteCount();
   removeNoteFromHistory(name);
-  await loadNoteNamesMoreRobust();
 }
 
 /**
@@ -556,156 +383,6 @@ export async function renameNote(oldName, newName, content) {
 }
 
 /**
- * @param {string} noteName
- * @param {string[]} diskNoteNames
- * @param {FileSystemDirectoryHandle} dh
- */
-async function migrateNote(noteName, diskNoteNames, dh) {
-  let name = noteName;
-  /** @type {string} */
-  let noteInfoOnDisk;
-  for (let ni of diskNoteNames) {
-    if (ni === name) {
-      noteInfoOnDisk = ni;
-      break;
-    }
-  }
-  let content = loadNoteLS(noteName);
-  if (!noteInfoOnDisk) {
-    // didn't find a note with the same name so create
-    let fileName = notePathFromNameFS(name);
-    await fsWriteTextFile(dh, fileName, content);
-    console.log(
-      "migrateNote: created new note",
-      fileName,
-      "from note with name",
-      name,
-    );
-    return;
-  }
-  let path = notePathFromNameFS(name);
-  let diskContent = await fsReadTextFile(dh, path);
-  if (content === diskContent) {
-    console.log("migrateNote: same content, skipping", noteName);
-    return;
-  }
-  // if the content is different, create a new note with a different name
-  let newName = pickUniqueName(name, diskNoteNames);
-  let fileName = notePathFromName(newName);
-  await fsWriteTextFile(dh, fileName, content);
-  console.log(
-    "migrateNote: created new note",
-    fileName,
-    "because of different content with",
-    name,
-  );
-}
-
-// when notes are stored on disk, they can be stored on replicated online
-// storage like OneDrive
-// just in case we pre-load them to force downloading them to local drive
-// to make future access faster
-/**
- * @returns {Promise<number>}
- */
-export async function preLoadAllNotes() {
-  let dh = getStorageFS();
-  if (dh === null) {
-    return;
-  }
-  let n = 0;
-  forEachNoteFileFS(dh, async (fileName, noteName, isEncr) => {
-    n++;
-    // no need to await, the read can happen whenever
-    fsReadBinaryFile(dh, fileName);
-  });
-  return n;
-}
-
-/**
- * @param {string} lsKeyName
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} fileName
- */
-async function moveLSToFS(lsKeyName, dh, fileName) {
-  console.log("moveLSToFS:", lsKeyName, fileName, dh.name);
-  let s = localStorage.getItem(lsKeyName);
-  if (s === null) {
-    return;
-  }
-  await fsWriteTextFile(dh, fileName, s);
-  localStorage.removeItem(lsKeyName);
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- */
-export async function switchToStoringNotesOnDisk(dh) {
-  console.log("switchToStoringNotesOnDisk");
-  let res = await loadNoteNamesFS(dh);
-  let diskNoteNames = res[0];
-
-  // migrate notes
-  let latestNoteNames = appState.allNotes;
-  for (let name of latestNoteNames) {
-    if (isSystemNoteName(name)) {
-      continue;
-    }
-    let openedNote = getOpenedNote(name);
-    if (openedNote) {
-      continue;
-    }
-    migrateNote(name, diskNoteNames, dh);
-  }
-  // remove migrated notes
-  for (let name of latestNoteNames) {
-    if (isSystemNoteName(name)) {
-      continue;
-    }
-    let openedNote = getOpenedNote(name);
-    if (openedNote) {
-      continue;
-    }
-    let key = notePathFromNameLS(name);
-    localStorage.removeItem(key);
-  }
-
-  await moveLSToFS(kMetadataName, dh, kMetadataName);
-
-  storageFS = dh;
-  // save in indexedDb so that it persists across sessions
-  await dbSetDirHandle(dh);
-  let noteNames = await loadNoteNames();
-  openedNotes = []; // can't guarantee names will be unique
-
-  // migrate settings, update currentNoteName
-  let settings = getSettings();
-  let name = settings.currentNoteName;
-  if (!noteNames.includes(name)) {
-    settings.currentNoteName = kScratchNoteName;
-  }
-  return noteNames;
-}
-
-/**
- * @returns {Promise<boolean>}
- */
-export async function pickAnotherDirectory() {
-  try {
-    let newDh = await openDirPicker(true);
-    if (!newDh) {
-      return false;
-    }
-    await dbSetDirHandle(newDh);
-    openedNotes = []; // can't guarantee names will be unique
-    return true;
-  } catch (e) {
-    console.error("pickAnotherDirectory", e);
-  }
-  return false;
-}
-
-/**
  * @param {string} name
  * @returns {string}
  */
@@ -719,101 +396,4 @@ export function sanitizeNoteName(name) {
  */
 export function getNotesCount() {
   return len(appState.allNotes);
-}
-
-/**
- * @returns {boolean}
- */
-export function isUsingEncryption() {
-  let dh = getStorageFS();
-  if (!dh) {
-    // no encryption for local storage
-    return false;
-  }
-  let pwdHash = getPasswordHash();
-  if (pwdHash) {
-    return true;
-  }
-  return len(encryptedNoteNames) > 0;
-}
-
-// salt for hashing the password. not sure if it helps security wise
-// but it's the best we can do. We can't generate unique salts for
-// each password
-const kEdnaSalt = "dbd71826401a4fca6c360f065a281063";
-
-async function encryptNoteFS(dh, oldFileName, pwdHash) {
-  if (isEncryptedEdnaFile(oldFileName)) {
-    console.log("encryptNoteFS:", oldFileName, "already encrypted");
-    return;
-  }
-  console.log("encryptNoteFS:", oldFileName);
-  let s = await fsReadTextFile(dh, oldFileName);
-  let newFileName = trimSuffix(oldFileName, kEdnaFileExt);
-  newFileName += kEdnaEncrFileExt;
-  await writeEncryptedFS(dh, pwdHash, newFileName, s);
-  await dh.removeEntry(oldFileName);
-}
-
-async function decryptNoteFS(dh, oldFileName) {
-  if (!isEncryptedEdnaFile(oldFileName)) {
-    console.log("encryptNoteFS:", oldFileName, "already decrypted");
-    return;
-  }
-  console.log("decryptNoteFS:", oldFileName);
-  let s = await readEncryptedFS(dh, oldFileName);
-  let newFileName = trimSuffix(oldFileName, kEdnaEncrFileExt);
-  newFileName += kEdnaFileExt;
-  await fsWriteTextFile(dh, newFileName, s);
-  await dh.removeEntry(oldFileName);
-}
-
-/**
- * @param {string} pwd
- * @returns {string}
- */
-function saltPassword(pwd) {
-  let pwdHash = hash({ key: pwd, salt: kEdnaSalt });
-  return pwdHash;
-}
-
-/**
- * @param {string} pwd
- */
-export async function encryptAllNotes(pwd) {
-  let dh = getStorageFS();
-  throwIf(!db, "no encryption for local storage notes");
-
-  rememberPassword(pwd);
-
-  let pwdHash = saltPassword(pwd);
-  await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-    if (isEncr) {
-      return;
-    }
-    let msg = `Encrypting <b>${name}</b>`;
-    showModalMessageHTML(msg, 0);
-    await encryptNoteFS(dh, fileName, pwdHash);
-  });
-  clearModalMessage();
-
-  await loadNoteNames();
-}
-
-export async function decryptAllNotes() {
-  let dh = getStorageFS();
-  throwIf(!db, "no decryption for local storage notes");
-
-  await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-    if (!isEncr) {
-      return;
-    }
-    let msg = `Decrypting <b>${name}</b>`;
-    showModalMessageHTML(msg, 0);
-    await decryptNoteFS(dh, fileName);
-  });
-  clearModalMessage();
-
-  removePassword();
-  await loadNoteNames();
 }
