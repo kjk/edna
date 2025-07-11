@@ -1,8 +1,11 @@
 import "./main.css";
 import { mount, unmount } from "svelte";
-import { appState, findNoteByName } from "./appstate.svelte";
+import {
+  appState,
+  appStateUpdateAfterNotesChange,
+  findNoteByName,
+} from "./appstate.svelte";
 import App from "./components/App.svelte";
-import { updateAfterNoteStateChange } from "./globals";
 import { loadAppMetadata } from "./metadata";
 import {
   createDefaultNotes,
@@ -23,12 +26,11 @@ export async function boot() {
   console.log("booting");
   // await testFuncs();
   getSettings();
-  debugger;
-  let notes = await openStore();
-  appState.allNotes = notes;
-  updateAfterNoteStateChange();
+  appState.allNotes = await openStore();
+  appStateUpdateAfterNotesChange();
 
-  await createDefaultNotes(notes);
+  debugger;
+  await createDefaultNotes(appState.allNotes);
   await loadAppMetadata(); // pre-load
 
   let settings = getSettings();

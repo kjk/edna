@@ -180,10 +180,10 @@ export function notesFromStoreLog(records) {
       let noteId = rec.meta;
       m.delete(noteId);
     } else if (rec.kind === kStoreKindNoteContent) {
-      let note = m.get(rec.meta.split(":")[0]);
-      if (note) {
-        note.versionIds.push(rec.meta); // add version id
-      }
+      let verId = rec.meta; // verId is noteId:verId
+      let noteId = rec.meta.split("-")[0];
+      let note = m.get(noteId);
+      note.versionIds.push(verId);
     }
   }
   for (let note of m.values()) {
