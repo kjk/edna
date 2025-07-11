@@ -17,6 +17,7 @@
 }} GlobalFuncs
 */
 
+import { appStateUpdateAfterNotesChange } from "./appstate.svelte";
 import { formatDurationShort } from "./util";
 
 let sessionStart = performance.now();
@@ -94,6 +95,12 @@ export function focusEditor() {
 }
 
 export function updateAfterNoteStateChange() {
+  if (!globalFunctions) {
+    // is called from boot(), before App.Svelte has a chance
+    // to register global functions
+    appStateUpdateAfterNotesChange();
+    return;
+  }
   globalFunctions?.updateAfterNoteStateChange();
 }
 

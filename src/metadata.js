@@ -65,20 +65,6 @@ export async function saveNoteMetadata(note) {
 }
 
 /**
- * @param {string} oldName
- * @param {string} newName
- */
-export async function renameNoteInMetadata(oldName, newName) {
-  let note = findNoteByName(oldName);
-  if (!note) {
-    console.warn("renameNoteInMetadata: note not found:", oldName);
-    return;
-  }
-  note.name = newName;
-  saveNoteMetadata(note);
-}
-
-/**
  * @param {string} name
  * @param {string} altShortcut - "0" ... "9"
  */

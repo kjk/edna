@@ -1,8 +1,5 @@
-import {
-  appState,
-  appStateUpdateAfterNotesChange,
-  findNoteByName,
-} from "./appstate.svelte";
+import { appState, findNoteByName } from "./appstate.svelte";
+import { updateAfterNoteStateChange } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import { reassignNoteShortcut, saveNoteMetadata } from "./metadata";
 import { nanoid } from "./nanoid";
@@ -234,7 +231,7 @@ export async function createNoteWithName(name, content = null) {
     console.log("created note", name);
   }
   appState.allNotes.push(note);
-  appStateUpdateAfterNotesChange();
+  updateAfterNoteStateChange();
 }
 
 /*
