@@ -11,8 +11,6 @@
 
   let newName = $state("");
 
-  let sanitizedNewName = $derived(sanitizeNoteName(newName));
-
   let canCreate = $derived.by(() => {
     let name = sanitizeNoteName(newName);
     if (name === "") {
@@ -77,9 +75,11 @@
     {/if}
   </div>
   <div class="flex justify-end mt-2">
-    <button onclick={onclose} class="mr-4 button-outline">Cancel</button>
-    <button onclick={() => emitCreate()} disabled={!canCreate} class=""
-      >Create</button
+    <button
+      onclick={() => emitCreate()}
+      disabled={!canCreate}
+      class="button-outline">Create</button
     >
+    <button onclick={onclose} class="ml-2 button-outline">Cancel</button>
   </div>
 </div>
