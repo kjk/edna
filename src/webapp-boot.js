@@ -1,20 +1,16 @@
 import "./main.css";
 import { mount, unmount } from "svelte";
+import { appState, findNoteByName } from "./appstate.svelte";
 import App from "./components/App.svelte";
-import AskFSPermissions from "./components/AskFSPermissions.svelte";
-import { hasHandlePermission } from "./fileutil";
-import { loadNotesMetadata, upgradeMetadata } from "./metadata";
+import { updateAfterNoteStateChange } from "./globals";
+import { loadAppMetadata } from "./metadata";
 import {
   createDefaultNotes,
-  dbGetDirHandle,
-  ensureValidNoteNamesFS,
   isSystemNoteName,
   kScratchNoteName,
-  loadNoteNames,
-  preLoadAllNotes,
-  setStorageFS,
 } from "./notes";
 import { getSettings } from "./settings.svelte";
+import { openStore } from "./store";
 import { isDev } from "./util";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
@@ -25,37 +21,15 @@ let appSvelte;
 
 export async function boot() {
   console.log("booting");
-
   // await testFuncs();
-
   getSettings();
+  debugger;
+  let notes = await openStore();
+  appState.allNotes = notes;
+  updateAfterNoteStateChange();
 
-  let dh = await dbGetDirHandle();
-  if (dh) {
-    console.log("storing data in the file system");
-    let ok = await hasHandlePermission(dh, true);
-    if (!ok) {
-      console.log("no permission to write files in directory", dh.name);
-      setStorageFS(null);
-      const args = {
-        target: document.getElementById("app"),
-      };
-      appSvelte = mount(AskFSPermissions, args);
-      return;
-    }
-  } else {
-    console.log("storing data in localStorage");
-  }
-
-  if (dh) {
-    // TODO: can probably remove
-    await ensureValidNoteNamesFS(dh);
-  }
-  await upgradeMetadata();
-
-  let noteNames = await loadNoteNames();
-  let nCreated = await createDefaultNotes(noteNames);
-  await loadNotesMetadata(); // pre-load
+  await createDefaultNotes(notes);
+  await loadAppMetadata(); // pre-load
 
   let settings = getSettings();
   // console.log("settings:", settings);
@@ -69,11 +43,6 @@ export async function boot() {
   nameFromURLHash = decodeURIComponent(nameFromURLHash);
   let nameFromSettings = settings.currentNoteName;
 
-  // re-do because could have created default notes
-  if (nCreated > 0) {
-    noteNames = await loadNoteNames();
-  }
-
   /**
    * @param {string} name
    * @returns {boolean}
@@ -82,7 +51,11 @@ export async function boot() {
     if (!name) {
       return false;
     }
-    return noteNames.includes(name) || isSystemNoteName(name);
+    let note = findNoteByName(name);
+    if (note) {
+      return true;
+    }
+    return isSystemNoteName(name);
   }
 
   // need to do this twice to make sure hashName takes precedence over settings.currentNoteName
@@ -133,9 +106,6 @@ export async function boot() {
 
 boot().then(() => {
   console.log("finished booting");
-  preLoadAllNotes().then((n) => {
-    console.log(`finished pre-loading ${n} notes`);
-  });
 });
 
 if (isDev) {

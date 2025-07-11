@@ -13,7 +13,6 @@
   smartRun: () => void,
   focusEditor: () => void,
   getPassword: (msg: string) => Promise<string>,
-  requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>,
   updateAfterNoteStateChange: () => void,
 }} GlobalFuncs
 */
@@ -106,11 +105,4 @@ export async function getPasswordFromUser(msg) {
   let pwd = await globalFunctions.getPassword(msg);
   console.log("got password:", pwd);
   return pwd;
-}
-
-export async function requestFileWritePermission(fh) {
-  let ok = await globalFunctions.requestFileWritePermission(fh);
-  console.log("ok:", ok);
-  // TODO: check permissions
-  return ok;
 }

@@ -1,7 +1,11 @@
-import { findNoteByName, getNotes, Note } from "./appstate.svelte";
-import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
+import { findNoteByName, getNotes } from "./appstate.svelte";
 import { updateAfterNoteStateChange } from "./globals";
-import { readAppMeta, storeWriteAppMeta, storeWriteNoteMeta } from "./store";
+import {
+  Note,
+  readAppMeta,
+  storeWriteAppMeta,
+  storeWriteNoteMeta,
+} from "./store";
 
 export const kMetadataName = "__metadata.edna.json";
 
@@ -37,8 +41,8 @@ function saveAppMetadata() {
 /**
  * @returns {Promise<Metadata>}
  */
-export async function loadNotesMetadata() {
-  console.log("loadNotesMetadata: started");
+export async function loadAppMetadata() {
+  console.log("loadAppMetadata: started");
   let s = await readAppMeta();
   if (!s) {
     return {
@@ -47,7 +51,7 @@ export async function loadNotesMetadata() {
     };
   }
   metadata = JSON.parse(s);
-  console.log("loadNotesMetadata: finished", metadata);
+  console.log("loadAppMetadata: finished", metadata);
   return metadata;
 }
 

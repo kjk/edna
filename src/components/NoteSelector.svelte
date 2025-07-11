@@ -64,10 +64,10 @@
   export function buildNoteInfo(name) {
     let isArchived = false;
     let isStarred = false;
-    let m = getNoteMeta(name, false);
-    if (m) {
-      isStarred = m.isStarred;
-      isArchived = m.isArchived;
+    let note = findNoteByName(name);
+    if (note) {
+      isStarred = note.isStarred;
+      isArchived = note.isArchived;
     }
     /** @type {NoteInfo} */
     let item = {
@@ -79,7 +79,7 @@
       ref: null,
     };
     lastKey++;
-    let n = parseInt(m?.altShortcut);
+    let n = parseInt(note?.altShortcut);
     if (n >= 1 && n <= 9) {
       item.altShortcut = n;
     }
@@ -106,10 +106,9 @@
 
 <script>
   import { focus } from "../actions";
-  import { appState } from "../appstate.svelte";
+  import { appState, findNoteByName } from "../appstate.svelte";
   import {
     archiveNote,
-    getNoteMeta,
     isNoteArchived,
     reassignNoteShortcut,
     toggleNoteStarred,
@@ -364,8 +363,8 @@
 
   function noteCls(noteInfo) {
     let name = noteInfo.name;
-    let m = getNoteMeta(name);
-    let isArchived = m && m.isArchived;
+    let note = findNoteByName(name);
+    let isArchived = note && note.isArchived;
     if (isSystemNoteName(name) || isArchived) {
       return "italic";
     }

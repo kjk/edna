@@ -1,23 +1,14 @@
 import { AppendStore, AppendStoreRecord } from "./appendstore";
-import { len } from "./util";
-
-/** @type {AppendStore} */
-let store;
-
-export async function openStore() {
-  if (store) {
-    return store; // already opened
-  }
-  store = await AppendStore.create("notes_store");
-  console.log(`notes_store has ${store.records.length} records`);
-  return store;
-}
+import { len, throwIf } from "./util";
 
 const kStoreKinewCreateNote = "note-create";
 const kStoreKindNoteMeta = "note-meta";
 const kStoreKindDeleteNote = "note-delete";
 const kStoreKindNoteContent = "note-content";
 const kStoreKindAppMeta = "app-meta";
+
+/** @type {AppendStore} */
+let store;
 
 /**
  * @param {string} noteId
@@ -48,7 +39,6 @@ export function storeFindLatestNoteContentVersionRec(noteId) {
  * @param {Object} m
  */
 export async function storeWriteNoteMeta(m) {
-  let store = await openStore();
   // we expect m to be small so storing in index as meta
   let meta = JSON.stringify(m);
   await store.write(null, kStoreKindNoteMeta, meta);
@@ -58,7 +48,6 @@ export async function storeWriteNoteMeta(m) {
  * @param {Object} m
  */
 export async function storeWriteAppMeta(m) {
-  let store = await openStore();
   let meta = JSON.stringify(m);
   await store.write(meta, kStoreKindAppMeta, null);
 }
@@ -74,7 +63,6 @@ function getLastRecordOfKind(store, kind) {
 }
 
 export async function readAppMeta() {
-  let store = await openStore();
   let rec = getLastRecordOfKind(store, kStoreKindAppMeta);
   if (!rec) {
     return null; // no app metadata
@@ -87,18 +75,16 @@ export async function readAppMeta() {
  * @param {string} noteId
  */
 export async function storeMarkNoteDeleted(noteId) {
-  let store = await openStore();
   await store.write(null, kStoreKindDeleteNote, noteId);
 }
 
 /**
  * @param {string} noteId
- * @param {Object} meta
+ * @param {string} name
  */
-export async function storeCreateNote(noteId, meta) {
-  let store = await openStore();
-  let metaStr = JSON.stringify(meta);
-  await store.write(metaStr, kStoreKinewCreateNote, noteId);
+export async function storeCreateNote(noteId, name) {
+  let meta = `${noteId}:${name}`;
+  await store.write(null, kStoreKinewCreateNote, meta);
 }
 
 /**
@@ -106,7 +92,6 @@ export async function storeCreateNote(noteId, meta) {
  * @param {string} content
  */
 export async function storeWriteContent(verId, content) {
-  let store = await openStore();
   await store.write(content, kStoreKindNoteContent, verId);
 }
 
@@ -115,7 +100,6 @@ export async function storeWriteContent(verId, content) {
  * @returns {Promise<string>}
  */
 export async function storeLoadLatestNoteContent(noteId) {
-  let store = await openStore();
   let rec = storeFindLatestNoteContentVersionRec(noteId);
   if (!rec) {
     return null; // no content found
@@ -123,4 +107,97 @@ export async function storeLoadLatestNoteContent(noteId) {
   let { offset, size } = rec;
   let content = await store.readString(offset, size);
   return content;
+}
+
+function toUndef(v) {
+  if (!v) {
+    return undefined;
+  }
+}
+
+export class Note {
+  /** @type {string} */
+  id;
+  /** @type {string} */
+  name;
+  /** @type {string[]} */
+  versionIds = [];
+  /** @type {boolean} */
+  isArchived;
+  /** @type {boolean} */
+  isStarred;
+  /** @type {string}  */
+  altShortcut;
+
+  getMetadata() {
+    // by using toUndef() we make JSON-serialized version
+    // smaller and easier to read
+    return $state.snapshot({
+      id: this.id,
+      name: this.name,
+      isArchived: toUndef(this.isArchived),
+      isStarred: toUndef(this.isStarred),
+      altShortcut: toUndef(this.altShortcut),
+    });
+  }
+
+  // reverse of getMetadata()
+  // note that if a field in m is missing, it's false / undefined
+  applyMetadata(m) {
+    throwIf(this.id != m.id, "id mismatch");
+    this.name = m.name;
+    this.isArchived = m.isArchived;
+    this.isStarred = m.isStarred;
+    this.altShortcut = m.altShortcut;
+  }
+
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+  }
+}
+
+/**
+ * @param {AppendStoreRecord[]} records
+ * @returns {Note[]}
+ */
+export function notesFromStoreLog(records) {
+  let res = [];
+  let m = new Map();
+  for (let rec of records) {
+    if (rec.kind === kStoreKinewCreateNote) {
+      // meta is "noteId:name"
+      let idx = rec.meta.indexOf(":");
+      let noteId = rec.meta.substring(0, idx);
+      let name = rec.meta.substring(idx + 1);
+      let note = new Note(noteId, name);
+      m.set(note.id, note);
+    } else if (rec.kind === kStoreKindNoteMeta) {
+      let meta = JSON.parse(rec.meta);
+      let note = m.get(meta.id);
+      note.applyMetadata(meta);
+    } else if (rec.kind === kStoreKindDeleteNote) {
+      let noteId = rec.meta;
+      m.delete(noteId);
+    } else if (rec.kind === kStoreKindNoteContent) {
+      let note = m.get(rec.meta.split(":")[0]);
+      if (note) {
+        note.versionIds.push(rec.meta); // add version id
+      }
+    }
+  }
+  for (let note of m.values()) {
+    res.push(note);
+  }
+  return res;
+}
+
+/**
+ * @returns {Promise<Note[]>}
+ */
+export async function openStore() {
+  throwIf(store != undefined, "store already opened");
+  store = await AppendStore.create("notes_store");
+  console.log(`notes_store has ${store.records.length} records`);
+  return notesFromStoreLog(store.records);
 }

@@ -12,7 +12,11 @@
     searchPanelOpen,
   } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
-  import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
+  import {
+    appState,
+    appStateUpdateAfterNotesChange,
+    findNoteByName,
+  } from "../appstate.svelte";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
   import {
     getActiveNoteBlock,
@@ -78,8 +82,6 @@
   } from "../Menu.svelte";
   import {
     archiveNote,
-    getNoteMeta,
-    getNotesMetadata,
     isNoteArchived,
     toggleNoteStarred,
     unArchiveNote,
@@ -92,18 +94,11 @@
     createIfNotExists,
     createNewScratchNote,
     createNoteWithName,
-    dbDelDirHandle,
-    debugRemoveLocalStorageNotes,
-    decryptAllNotes,
     deleteNote,
-    encryptAllNotes,
-    getStorageFS,
     isNoteArchivable,
     isSystemNoteName,
-    isUsingEncryption,
     kBuiltInFunctionsNoteName,
     kDailyJournalNoteName,
-    kEdnaFileExt,
     kHelpSystemNoteName,
     kMyFunctionsNoteName,
     kReleaseNotesSystemNoteName,
@@ -112,11 +107,7 @@
     kWelcomeSystemNoteName,
     loadNoteIfExists,
     noteExists,
-    pickAnotherDirectory,
-    preLoadAllNotes,
-    rememberOpenedNote,
     renameNote,
-    switchToStoringNotesOnDisk,
   } from "../notes";
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
@@ -135,9 +126,7 @@
     trimPrefix,
     trimSuffix,
   } from "../util";
-  import { boot } from "../webapp-boot";
   import AskAI from "./AskAI.svelte";
-  import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
@@ -192,7 +181,6 @@
   let showingFindInNotes = $state(false);
   let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
-  let showingAskFileWritePermissions = $state(false);
   let showingAskAI = $state(false);
 
   let isShowingDialog = $derived.by(() => {
@@ -210,8 +198,7 @@
       showingBlockSelector ||
       showingFindInNotes ||
       showingDecryptPassword ||
-      showingEncryptPassword ||
-      showingAskFileWritePermissions
+      showingEncryptPassword
     );
   });
 
@@ -282,7 +269,6 @@
     smartRun: smartRun,
     focusEditor: focusEditor,
     getPassword: getPassword,
-    requestFileWritePermission: requestFileWritePermission,
   };
   setGlobalFuncs(gf);
 
@@ -379,7 +365,7 @@
       let altN = isAltNumEvent(ev);
       // console.log("onKeyDown: ev:", ev, "altN:", altN);
       if (altN) {
-        let notes = getNotesMetadata();
+        let notes = appState.regularNotes;
         for (let note of notes) {
           if (note.altShortcut == altN && note.name !== noteName) {
             // console.log("onKeyDown: opening note: ", o.name, " altN:", altN, " e:", e)
@@ -401,26 +387,6 @@
         ev.preventDefault();
       }
     }
-  }
-
-  async function storeNotesOnDisk() {
-    let dh = await openDirPicker(true);
-    if (!dh) {
-      return;
-    }
-    // TODO: await getEditor().saveCurrentNote() ?
-    await switchToStoringNotesOnDisk(dh);
-    let settings = getSettings();
-    await openNote(settings.currentNoteName, true);
-  }
-
-  async function pickAnotherDirectory2() {
-    let ok = await pickAnotherDirectory();
-    if (!ok) {
-      return;
-    }
-    await boot();
-    await preLoadAllNotes();
   }
 
   let closeDecryptPassword = $state(null);
@@ -446,35 +412,6 @@
     });
   }
 
-  /** @type {FileSystemFileHandle} */
-  let fileWritePermissionsFileHandle = $state(null);
-  /** @type {(boolean) => void} */
-  let askFileWritePermissionsClose = $state(null);
-
-  /**
-   * @param {FileSystemFileHandle} fh
-   * @returns {Promise<boolean>}
-   */
-  async function requestFileWritePermission(fh) {
-    if (hasHandlePermission(fh, true)) {
-      console.log(
-        "requestFileWritePermission: already have write permissions to",
-        fh,
-      );
-      return true;
-    }
-    fileWritePermissionsFileHandle = fh;
-    showingAskFileWritePermissions = true;
-    clearModalMessage();
-    return new Promise((resolve, reject) => {
-      askFileWritePermissionsClose = (ok) => {
-        console.log("requestFileWritePermission: ok", ok);
-        showingAskFileWritePermissions = false;
-        resolve(ok);
-      };
-    });
-  }
-
   let showingEncryptPassword = $state(false);
   function openEncryptPassword() {
     showingEncryptPassword = true;
@@ -489,52 +426,11 @@
   function onEncryptPassword(pwd) {
     console.log("got encryption password:", pwd);
     closeEncryptPassword();
-    encryptAllNotes(pwd);
+    // encryptAllNotes(pwd);
   }
 
   function exportNotesToZipFile() {
     exportNotesToZip();
-  }
-
-  async function openNoteFromDisk() {
-    if (!supportsFileSystem()) {
-      return;
-    }
-    let opts = {
-      types: [
-        {
-          description: "Edna notes",
-          accept: {
-            "application/text": [".edna.txt"],
-          },
-        },
-      ],
-      excludeAcceptAllOption: true,
-      multiple: true,
-    };
-    let fileHandles = [];
-    try {
-      // @ts-ignore
-      fileHandles = await window.showOpenFilePicker(opts);
-    } catch (e) {
-      console.log(e);
-      return;
-    }
-    let noteToOpen = null;
-    for (let fh of fileHandles) {
-      console.log("fh:", fh);
-      let noteName = rememberOpenedNote(fh);
-      if (noteName === null || noteName === "") {
-        continue;
-      }
-      // will open the first selected note
-      if (noteToOpen === null) {
-        noteToOpen = noteName;
-      }
-    }
-    if (noteToOpen) {
-      openNote(noteToOpen);
-    }
   }
 
   /**
@@ -576,7 +472,7 @@
 
   async function exportCurrentNote() {
     let settings = getSettings();
-    let fileName = toFileName(settings.currentNoteName) + kEdnaFileExt;
+    let fileName = toFileName(settings.currentNoteName) + ".edna.txt";
     let editor = getEditor();
     let s = editor.getContent();
     console.log("exportCurrentNote:", fileName);
@@ -594,12 +490,6 @@
     // TODO: add a way to undo creation of the note
     showToast(`Created scratch note '${name}'`);
     logNoteOp("noteCreate");
-  }
-
-  async function switchToBrowserStorage() {
-    console.log("switchToBrowserStorage(): deleting dir handle");
-    await dbDelDirHandle();
-    await boot();
   }
 
   /**
@@ -1005,8 +895,8 @@
   function buildMenuDef() {
     // let starAction = "Star";
     let starAction = "Add to favorites";
-    let meta = getNoteMeta(noteName);
-    if (meta && meta.isStarred) {
+    let note = findNoteByName(noteName);
+    if (note && note.isStarred) {
       //starAction = "Un-star";
       starAction = "Remove from favorites";
     }
@@ -1066,17 +956,7 @@
       ["Help", kCmdRunHelp],
     ];
 
-    let dh = getStorageFS();
-    let currStorage = "Current store: browser (local storage)";
-    if (dh) {
-      currStorage = `Current store: directory ${dh.name}`;
-    }
     const menuStorage = [
-      [currStorage, kMenuIdJustText],
-      ["Move notes from browser to directory", kCmdMoveNotesToDirectory],
-      ["Switch to browser (local storage)", kCmdSwitchToLocalStorage],
-      ["Switch to notes in a directory", kCmdSwitchToNotesInDir],
-      kMenuSeparator,
       ["Export all notes to .zip file", kCmdExportNotes],
       kMenuSeparator,
       ["Help: storage", kCmdShowStorageHelp],
@@ -1109,10 +989,6 @@
       ["Run code", menuRun],
       ["Notes storage", menuStorage],
     ];
-    if (dh) {
-      // encryption only for files stored on disk
-      contextMenu.push(["Encryption", menuEncrypt]);
-    }
     contextMenu.push(
       ["Settings", kCmdSettings],
       ["Help", menuHelp],
@@ -1199,9 +1075,8 @@
     // console.log("s:", s, "mid:", mid);
     // note: this is called for each menu item so should be fast
     let lang = getLanguage(language);
-    let dh = getStorageFS();
     // console.log("dh:", dh);
-    let hasFS = supportsFileSystem();
+    let hasFS = false;
     let view = getEditorView();
     let readOnly = isReadOnly(view);
     let hasSel = hasSelection();
@@ -1268,19 +1143,16 @@
       //   return kMenuStatusDisabled;
       // }
     } else if (mid === kCmdMoveNotesToDirectory) {
-      if (dh) {
-        // currently using directory
-        return kMenuStatusRemoved;
-      }
+      // currently using directory
+      return kMenuStatusRemoved;
     } else if (mid == kCmdSwitchToLocalStorage) {
-      if (dh === null) {
-        // currently using local storage
-        return kMenuStatusRemoved;
-      }
+      return kMenuStatusRemoved;
     } else if (mid === kCmdEncryptNotes) {
-      return isUsingEncryption() ? kMenuStatusDisabled : kMenuStatusNormal;
+      // return isUsingEncryption() ? kMenuStatusDisabled : kMenuStatusNormal;
+      return kMenuStatusRemoved;
     } else if (mid === kCmdDecryptNotes) {
-      return isUsingEncryption() ? kMenuStatusNormal : kMenuStatusDisabled;
+      // return isUsingEncryption() ? kMenuStatusNormal : kMenuStatusDisabled;
+      return kMenuStatusRemoved;
     } else if (mid === kCmdRenameCurrentNote) {
       if (noteName === kScratchNoteName) {
         return kMenuStatusDisabled;
@@ -1469,7 +1341,7 @@
         deleteBlock(ednaEditor)(view);
       });
     } else if (cmdId === kCmdOpenNoteFromDisk) {
-      openNoteFromDisk();
+      // openNoteFromDisk();
     } else if (cmdId === kCmdAskAI) {
       openAskAI();
     } else if (cmdId === kCmdToggleSpellChecking) {
@@ -1492,11 +1364,11 @@
     } else if (cmdId == kCmdShowWelcomeDevNote) {
       openNote(kWelcomeDevSystemNoteName);
     } else if (cmdId === kCmdMoveNotesToDirectory) {
-      storeNotesOnDisk();
+      // storeNotesOnDisk();
     } else if (cmdId === kCmdSwitchToNotesInDir) {
-      await pickAnotherDirectory2();
+      // await pickAnotherDirectory2();
     } else if (cmdId === kCmdSwitchToLocalStorage) {
-      await switchToBrowserStorage();
+      // await switchToBrowserStorage();
     } else if (cmdId === kCmdExportNotes) {
       exportNotesToZipFile();
     } else if (cmdId === kCmdExportCurrentNote) {
@@ -1510,7 +1382,7 @@
     } else if (cmdId === kCmdEncryptNotes) {
       openEncryptPassword();
     } else if (cmdId === kCmdDecryptNotes) {
-      decryptAllNotes();
+      // decryptAllNotes();
     } else if (cmdId === kCmdEncryptionHelp) {
       showHTMLHelp("#encryption");
     } else if (cmdId === kCmdOpenRecent) {
@@ -1547,7 +1419,7 @@
 
   async function openCustomFunctionsNote() {
     let content = getMyFunctionsNote();
-    await createIfNotExists(kMyFunctionsNoteName, content);
+    await createIfNotExists(kMyFunctionsNoteName, content, null);
     await openNote(kMyFunctionsNoteName);
   }
 
@@ -1598,8 +1470,8 @@
     }
     if (id === kCmdNoteToggleStarred) {
       let starAction = "Add current note to favorites";
-      let meta = getNoteMeta(noteName);
-      if (meta && meta.isStarred) {
+      let note = findNoteByName(noteName);
+      if (note && note.isStarred) {
         //starAction = "Un-star";
         starAction = "Remove current note from favorites";
       }
@@ -2171,10 +2043,8 @@
   // debug functions to be called from dev tools console as:
   // window.edna.debug.clearLocalStorage etc.
   // @ts-ignore
-  window.edna = {
-    debug: {
-      removeLocalStorageNotes: debugRemoveLocalStorageNotes,
-    },
+  window.elaris = {
+    debug: {},
   };
 </script>
 
@@ -2359,15 +2229,6 @@
       msg={showingDecryptMessage}
       onpassword={onDecryptPassword}
     ></EnterDecryptPassword>
-  </Overlay>
-{/if}
-
-{#if showingAskFileWritePermissions}
-  <Overlay noCloseOnEsc={true} blur={true}>
-    <AskFileWritePermissions
-      fileHandle={fileWritePermissionsFileHandle}
-      close={askFileWritePermissionsClose}
-    ></AskFileWritePermissions>
   </Overlay>
 {/if}
 

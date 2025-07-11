@@ -1,8 +1,7 @@
 <script>
-  import { appState } from "../appstate.svelte.js";
+  import { appState, findNoteByName } from "../appstate.svelte.js";
   import { focusEditor, openNoteSelector } from "../globals.js";
   import Menu from "../Menu.svelte";
-  import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
   import { isSystemNoteName } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
@@ -46,9 +45,9 @@
    * @returns {string}
    */
   function getNameWithShortcut(noteName) {
-    let m = getNoteMeta(noteName);
-    if (m && m.altShortcut) {
-      return `${noteName}  (${altChar} + ${m.altShortcut})`;
+    let note = findNoteByName(noteName);
+    if (note && note.altShortcut) {
+      return `${noteName}  (${altChar} + ${note.altShortcut})`;
     }
     return noteName;
   }
@@ -138,8 +137,8 @@
   }
 
   function noteCls(name) {
-    let m = getNoteMeta(name);
-    let isArchived = m && m.isArchived;
+    let note = findNoteByName(name);
+    let isArchived = note && note.isArchived;
     if (isSystemNoteName(name) || isArchived) {
       return "italic";
     }

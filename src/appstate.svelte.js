@@ -1,40 +1,5 @@
-function toUndef(v) {
-  if (!v) {
-    return undefined;
-  }
-}
-
-export class Note {
-  /** @type {string} */
-  id;
-  /** @type {string} */
-  name;
-  /** @type {string[]} */
-  versionIds = [];
-  /** @type {boolean} */
-  isArchived;
-  /** @type {boolean} */
-  isStarred;
-  /** @type {string}  */
-  altShortcut;
-
-  getMetadata() {
-    // by using toUndef() we make JSON-serialized version
-    // smaller and easier to read
-    return $state.snapshot({
-      id: this.id,
-      name: this.name,
-      isArchived: toUndef(this.isArchived),
-      isStarred: toUndef(this.isStarred),
-      altShortcut: toUndef(this.altShortcut),
-    });
-  }
-
-  constructor(id, name) {
-    this.id = id;
-    this.name = name;
-  }
-}
+import { AppendStoreRecord } from "./appendstore";
+import { Note } from "./store";
 
 class AppState {
   /* regular, arhived, deleted notes */

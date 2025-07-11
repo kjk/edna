@@ -13,7 +13,6 @@ import {
   EditorView,
   lineNumbers,
 } from "@codemirror/view";
-import { getNoteMeta, saveNotesMetadata } from "../metadata.js";
 import { loadNote, saveNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { len, objectEqualDeep } from "../util.js";
@@ -218,8 +217,9 @@ export class EdnaEditor {
       // Set cursor positions
       // We use requestAnimationFrame to avoid a race condition causing the scrollIntoView to sometimes not work
       requestAnimationFrame(() => {
-        let noteMeta = getNoteMeta(this.noteName, false);
-        let savedSelection = noteMeta?.selection;
+        // let noteMeta = getNoteMeta(this.noteName, false);
+        // let savedSelection = noteMeta?.selection;
+        let savedSelection = null;
         // TODO: validate selection?
         if (savedSelection) {
           // console.log("setContent: restoring selection:", savedSelection);
@@ -252,48 +252,47 @@ export class EdnaEditor {
           });
         }
 
-        let ranges = noteMeta?.foldedRanges || [];
-        if (len(ranges) > 0) {
-          // console.log("setContent: restoring folded ranges:", ranges);
-          try {
-            this.view.dispatch({
-              effects: ranges.map((range) => foldEffect.of(range)),
-            });
-          } catch (e) {
-            console.error("setContent: error restoring folded ranges:", e);
-            // if we fail to restore folded ranges, just clear them
-            unfoldEverything(this)(this.view);
-          }
-        }
+        // let ranges = noteMeta?.foldedRanges || [];
+        // if (len(ranges) > 0) {
+        //   try {
+        //     this.view.dispatch({
+        //       effects: ranges.map((range) => foldEffect.of(range)),
+        //     });
+        //   } catch (e) {
+        //     console.error("setContent: error restoring folded ranges:", e);
+        //     // if we fail to restore folded ranges, just clear them
+        //     unfoldEverything(this)(this.view);
+        //   }
+        // }
         resolve();
       });
     });
   }
 
   async saveFoldedState() {
-    let meta = getNoteMeta(this.noteName, true);
-    let didChange = false;
-    let foldedRanges = getFoldedRanges(this.view);
-    if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
-      didChange = true;
-      meta.foldedRanges = foldedRanges;
-    }
-    let selection = this.view.state.selection.toJSON();
-    if (!objectEqualDeep(meta.selection, selection)) {
-      didChange = true;
-      meta.selection = selection;
-    }
-    if (!didChange) {
-      // console.log("saveFoldedState: skipping save, no changes");
-      return;
-    }
-    // console.log(
-    //   "saveFoldedState: saving selection:",
-    //   meta.selection,
-    //   "folededState:",
-    //   foldedRanges,
-    // );
-    await saveNotesMetadata();
+    // let meta = getNoteMeta(this.noteName, true);
+    // let didChange = false;
+    // let foldedRanges = getFoldedRanges(this.view);
+    // if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
+    //   didChange = true;
+    //   meta.foldedRanges = foldedRanges;
+    // }
+    // let selection = this.view.state.selection.toJSON();
+    // if (!objectEqualDeep(meta.selection, selection)) {
+    //   didChange = true;
+    //   meta.selection = selection;
+    // }
+    // if (!didChange) {
+    //   // console.log("saveFoldedState: skipping save, no changes");
+    //   return;
+    // }
+    // // console.log(
+    // //   "saveFoldedState: saving selection:",
+    // //   meta.selection,
+    // //   "folededState:",
+    // //   foldedRanges,
+    // // );
+    // await saveNotesMetadata();
   }
 
   getBlocks() {

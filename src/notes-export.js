@@ -1,13 +1,7 @@
 import { appState } from "./appstate.svelte";
 import { blobFromUint8Array, fsReadBinaryFile, readDir } from "./fileutil";
-import { kMetadataName, loadNotesMetadata } from "./metadata";
-import {
-  forEachNoteFileFS,
-  getStorageFS,
-  loadNote,
-  loadNoteNames,
-  notePathFromNameFS,
-} from "./notes";
+import { kMetadataName, loadAppMetadata } from "./metadata";
+import { loadNote } from "./notes";
 import { kSettingsPath } from "./settings.svelte";
 import { formatDateYYYYMMDD, len, throwIf } from "./util";
 
@@ -45,53 +39,21 @@ export async function exportUnencryptedNotesToZipBlob() {
   let libZip = await import("@zip.js/zip.js");
   let blobWriter = new libZip.BlobWriter("application/zip");
   let zipWriter = new libZip.ZipWriter(blobWriter);
-  let noteNames = await loadNoteNames();
-  for (let name of noteNames) {
-    let s = await loadNote(name);
+  for (let note of appState.regularNotes) {
+    let s = await loadNote(note.name);
     // always use un-encrypted file extension
-    let fileName = notePathFromNameFS(name, false);
-    await addTextFile(libZip, zipWriter, fileName, s);
+    debugger;
+    // let fileName = notePathFromNameFS(name, false);
+    // await addTextFile(libZip, zipWriter, fileName, s);
   }
   {
-    let meta = await loadNotesMetadata();
+    let meta = await loadAppMetadata();
     let s = JSON.stringify(meta, null, 2);
     await addTextFile(libZip, zipWriter, kMetadataName, s);
   }
   {
     // note: note sure if I should export this
     let s = JSON.stringify(appState.settings, null, 2);
-    await addTextFile(libZip, zipWriter, kSettingsPath, s);
-  }
-  let blob = await zipWriter.close();
-  return blob;
-}
-
-/**
- * packs all notes, possibly encrypted, into a .zip blob
- * only works for file system
- * @returns {Promise<Blob>}
- */
-export async function exportRawNotesToZipBlob() {
-  console.log("exportRawNotesToZipBlob");
-  let dh = getStorageFS();
-  throwIf(!dh, "only supported for a file system");
-  let libZip = await import("@zip.js/zip.js");
-  let blobWriter = new libZip.BlobWriter("application/zip");
-  let zipWriter = new libZip.ZipWriter(blobWriter);
-  await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-    let d = await fsReadBinaryFile(dh, fileName);
-    let blob = blobFromUint8Array(d);
-    await addBinaryBlob(libZip, zipWriter, fileName, blob);
-  });
-  {
-    let meta = await loadNotesMetadata();
-    let s = JSON.stringify(meta, null, 2);
-    await addTextFile(libZip, zipWriter, kMetadataName, s);
-  }
-  {
-    // note: note sure if I should export this
-    let settings = appState.settings;
-    let s = JSON.stringify(settings, null, 2);
     await addTextFile(libZip, zipWriter, kSettingsPath, s);
   }
   let blob = await zipWriter.close();

@@ -1,16 +1,17 @@
-import { appState, findNoteByName, Note } from "./appstate.svelte";
+import { appState, findNoteByName } from "./appstate.svelte";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import { reassignNoteShortcut, renameNoteInMetadata } from "./metadata";
 import { nanoid } from "./nanoid";
 import { getSettings } from "./settings.svelte";
 import {
-  getStats,
   incNoteCreateCount,
   incNoteDeleteCount,
   incNoteSaveCount,
 } from "./state";
 import {
+  Note,
   storeCreateNote,
+  storeLoadLatestNoteContent,
   storeMarkNoteDeleted,
   storeWriteContent,
 } from "./store";
@@ -90,13 +91,14 @@ export const blockHdrPHP = "\n∞∞∞php\n";
 /**
  * @param {string} name
  * @param {string} content
+ * @param {Note[]} existingNotes
  * @returns {Promise<number>}
  */
 export async function createIfNotExists(name, content, existingNotes) {
   if (!existingNotes) {
     existingNotes = appState.allNotes;
   }
-  if (existingNotes.includes(name)) {
+  if (existingNotes.find((n) => n.name == name)) {
     console.log(`note ${name} already exists`);
     return 0;
   }
@@ -105,18 +107,14 @@ export async function createIfNotExists(name, content, existingNotes) {
 }
 
 /**
- * @param {string[]} existingNotes
+ * @param {Note[]} existingNotes
  * @returns {Promise<number>}
  */
 export async function createDefaultNotes(existingNotes) {
-  let isFirstRun = getStats().appOpenCount < 2;
+  let isFirstRun = len(existingNotes) == 0;
   console.log(
     `isFirstRun: ${isFirstRun}, len(existingNotes): ${len(existingNotes)}`,
   );
-  if (len(existingNotes) == 0) {
-    // scenario: moved notes to disk and switched back to local storage
-    isFirstRun = true;
-  }
 
   let welcomeNote = getWelcomeNote();
 
@@ -229,9 +227,7 @@ export async function saveNote(name, content) {
 export async function createNoteWithName(name, content = null) {
   content = fixUpNoteContent(content);
   let noteId = genRandomNoteID();
-  await storeCreateNote(noteId, {
-    name: name,
-  });
+  await storeCreateNote(noteId, name);
   let note = new Note(noteId, name);
   if (content) {
     let verId = makeRandomContentID(noteId);
@@ -319,7 +315,8 @@ export async function loadNote(name) {
     res = getSystemNoteContent(name);
     return res;
   }
-
+  let note = findNoteByName(name);
+  res = await storeLoadLatestNoteContent(note.id);
   return fixUpNoteContent(res);
 }
 
