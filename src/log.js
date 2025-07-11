@@ -1,5 +1,5 @@
 import { getNotesCount } from "./notes";
-import { getSessionDurationInMs, getStats } from "./state";
+import { getSessionDurationInMs } from "./state";
 import { throwIf } from "./util";
 
 /**
@@ -30,7 +30,6 @@ export function logAppOpen() {
   let e = {
     name: "appOpen",
     notesCount: notesCount,
-    stats: getStats(),
   };
   logEvent(e);
 }
@@ -40,7 +39,6 @@ export function logAppExit() {
     name: "appExit",
     notesCount: getNotesCount,
     sessionDurMs: getSessionDurationInMs(),
-    stats: getStats(),
   };
   logEvent(e);
 }
