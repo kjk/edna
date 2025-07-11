@@ -1,7 +1,6 @@
 <script>
   import { focus } from "../actions";
-  import { appState } from "../appstate.svelte";
-  import { sanitizeNoteName } from "../notes";
+  import { noteExists, sanitizeNoteName } from "../notes";
 
   /** @type { {
     onclose: () => void,
@@ -11,15 +10,12 @@
 
   let newName = $state("");
 
-  let sanitizedNewName = $derived(sanitizeNoteName(newName));
-
   let canCreate = $derived.by(() => {
     let name = sanitizeNoteName(newName);
     if (name === "") {
       return false;
     }
-    let noteNames = appState.allNotes;
-    return !noteNames.includes(name);
+    return !noteExists(name);
   });
 
   let renameError = $derived.by(() => {
@@ -28,8 +24,7 @@
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = appState.allNotes;
-    if (noteNames.includes(name)) {
+    if (noteExists(name)) {
       console.log("already exists");
       return `note <span class="font-bold">${name}</span> already exists`;
     }
@@ -77,9 +72,11 @@
     {/if}
   </div>
   <div class="flex justify-end mt-2">
-    <button onclick={onclose} class="mr-4 button-outline">Cancel</button>
-    <button onclick={() => emitCreate()} disabled={!canCreate} class=""
-      >Create</button
+    <button
+      onclick={() => emitCreate()}
+      disabled={!canCreate}
+      class="button-outline">Create</button
     >
+    <button onclick={onclose} class="button-outline ml-2">Cancel</button>
   </div>
 </div>
