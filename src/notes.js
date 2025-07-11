@@ -1,11 +1,10 @@
 import { tick } from "svelte";
 import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
-import { appState } from "./appstate.svelte";
+import { appState, findNoteByName } from "./appstate.svelte";
 import {
   clearModalMessage,
   showModalMessageHTML,
 } from "./components/ModalMessage.svelte";
-import { KV } from "./dbutil";
 import { fromFileName, isValidFileName, toFileName } from "./filenamify";
 import {
   blobFromUint8Array,
@@ -26,9 +25,9 @@ import {
   kMetadataName,
   loadNotesMetadata,
   reassignNoteShortcut,
-  removeNoteFromMetadata,
   renameNoteInMetadata,
 } from "./metadata";
+import { nanoid } from "./nanoid";
 import { getSettings } from "./settings.svelte";
 import {
   getStats,
@@ -36,6 +35,7 @@ import {
   incNoteDeleteCount,
   incNoteSaveCount,
 } from "./state";
+import { storeMarkNoteDeleted } from "./store";
 import {
   getBuiltInFunctionsNote,
   getHelp,
@@ -45,42 +45,9 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import {
-  formatDateYYYYMMDDDay,
-  len,
-  removeDuplicates,
-  throwIf,
-  trimSuffix,
-} from "./util";
+import { len, removeDuplicates, throwIf, trimSuffix } from "./util";
 
-// is set if we store notes on disk, null if in localStorage
-/** @type {FileSystemDirectoryHandle | null} */
-let storageFS = null;
-
-/**
- * if we're storing notes on disk, returns dir handle
- * returns null if we're storing in localStorage
- * @returns {FileSystemDirectoryHandle | null}
- */
-export function getStorageFS() {
-  // console.log("getStorageFS:", storageFS);
-  return storageFS;
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- */
-export function setStorageFS(dh) {
-  console.log("setStorageFS:", dh);
-  storageFS = dh;
-}
-
-// some things, like FilesystemDirectoryHandle, we need to store in indexedDb
-const db = new KV("edna", "keyval");
-
-const kStorageDirHandleKey = "storageDirHandle";
-
-const kLSPassowrdKey = "edna-password";
+const kLSPassowrdKey = "elaris-password";
 
 /**
  * @param {string} pwd
@@ -124,92 +91,10 @@ async function getPasswordHashMust(msg) {
   return saltPassword(pwd);
 }
 
-/**
- * @returns {Promise<FileSystemDirectoryHandle>}
- */
-export async function dbGetDirHandle() {
-  let dh = await db.get(kStorageDirHandleKey);
-  setStorageFS(dh ? dh : null);
-  return storageFS;
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- */
-export async function dbSetDirHandle(dh) {
-  await db.set(kStorageDirHandleKey, dh);
-  storageFS = dh;
-}
-
-export async function dbDelDirHandle() {
-  await db.del(kStorageDirHandleKey);
-  storageFS = null;
-}
-
-export const kEdnaFileExt = ".edna.txt";
-const kEdnaEncrFileExt = ".encr.edna.txt";
-
-function isEncryptedEdnaFile(fileName) {
-  return fileName.endsWith(kEdnaEncrFileExt);
-}
-/**
- * @param {string} fileName
- * @returns {boolean}
- */
-function isEdnaFile(fileName) {
-  return fileName.endsWith(kEdnaFileExt);
-}
-
-/**
- * @param {string} name
- * @returns {string}
- */
-function trimEdnaExt(name) {
-  let s = trimSuffix(name, kEdnaEncrFileExt);
-  s = trimSuffix(s, kEdnaFileExt);
-  throwIf(s === name); // assumes we chacked before calling
-  return s;
-}
-
-/**
- * @param {string} name
- * @param {boolean} [isEncr]
- * @returns {string}
- */
-export function notePathFromNameFS(name, isEncr = undefined) {
-  if (isEncr === undefined) {
-    isEncr = isEncryptedNote(name);
-  }
-  let ext = isEncr ? kEdnaEncrFileExt : kEdnaFileExt;
-  name = toFileName(name + ext); // note: must happen after isEncryptedNote() check
-  return name;
-}
-
-const kLSKeyPrefix = "note:";
-// TODO: we're not encrypting notes in local storage. maybe we never will
-const kLSKeyEncrPrefix = "note.encr:";
-
-function notePathFromNameLS(name) {
-  let isEncr = isEncryptedNote(name);
-  if (isEncr) {
-    return kLSKeyEncrPrefix + name;
-  }
-  return kLSKeyPrefix + name;
-}
-
-export function notePathFromName(name) {
-  let dh = getStorageFS();
-  if (dh) {
-    return notePathFromNameFS(name);
-  } else {
-    return notePathFromNameLS(name);
-  }
-}
-
 export const kScratchNoteName = "scratch";
 export const kDailyJournalNoteName = "daily journal";
 export const kInboxNoteName = "inbox";
-export const kMyFunctionsNoteName = "edna: my functions";
+export const kMyFunctionsNoteName = "elaris: my functions";
 
 export const kHelpSystemNoteName = "system:help";
 export const kReleaseNotesSystemNoteName = "system:Release Notes";
@@ -231,6 +116,23 @@ const systemNotes = [
  */
 export function isSystemNoteName(name) {
   return systemNotes.includes(name);
+}
+
+const kNoteIDLength = 6; // was 8 at some point
+const kNoteCotentIDLength = 4;
+/**
+ * @returns {string}
+ */
+export function genRandomNoteID() {
+  return nanoid(kNoteIDLength);
+}
+
+/**
+ * @param {string} noteID
+ * @returns {string}
+ */
+function makeRandomContentID(noteID) {
+  return noteID + "-" + nanoid(kNoteCotentIDLength);
 }
 
 export const blockHdrPlainText = "\n∞∞∞text-a\n";
@@ -292,68 +194,11 @@ export async function createDefaultNotes(existingNotes) {
     await loadNoteNames();
   }
   if (isFirstRun) {
-    await loadNotesMetadata(); // must pre-load to make them available
     reassignNoteShortcut(kScratchNoteName, "1");
     reassignNoteShortcut(kDailyJournalNoteName, "2");
     reassignNoteShortcut(kInboxNoteName, "3");
   }
   return nCreated;
-}
-
-/**
- * @returns {string[]}
- */
-function getLSKeys() {
-  let nKeys = localStorage.length;
-  let keys = [];
-  for (let i = 0; i < nKeys; i++) {
-    const key = localStorage.key(i);
-    keys.push(key);
-  }
-  return keys;
-}
-
-export function debugRemoveLocalStorageNotes() {
-  let keys = getLSKeys();
-  for (let key of keys) {
-    let isEncr = key.startsWith(kLSKeyEncrPrefix);
-    let isRegular = key.startsWith(kLSKeyPrefix);
-    if (isEncr || isRegular) {
-      localStorage.removeItem(key);
-      console.log(`removed ${key}`);
-    }
-  }
-  localStorage.removeItem(kMetadataName);
-}
-
-/**
- * @returns {string[][]}
- */
-function loadNoteNamesLS() {
-  /**
-   * @param {string} notePath
-   * @returns {string}
-   */
-  function getNoteNameLS(notePath) {
-    const i = notePath.indexOf(":");
-    return notePath.substring(i + 1);
-  }
-
-  let allNotes = [];
-  let encryptedNotes = [];
-  let keys = getLSKeys();
-  for (let key of keys) {
-    let isEncr = key.startsWith(kLSKeyEncrPrefix);
-    let isRegular = key.startsWith(kLSKeyPrefix);
-    if (isEncr || isRegular) {
-      let name = getNoteNameLS(key);
-      allNotes.push(name);
-      if (isEncr) {
-        encryptedNotes.push(name);
-      }
-    }
-  }
-  return [allNotes, encryptedNotes];
 }
 
 /** @type {string[]} */
@@ -938,17 +783,10 @@ async function loadNoteNamesMoreRobust() {
  * @param {string} name
  */
 export async function deleteNote(name) {
-  let dh = getStorageFS();
-  if (!dh) {
-    let key = notePathFromName(name);
-    localStorage.removeItem(key);
-  } else {
-    let fileName = notePathFromNameFS(name);
-    await fsDeleteFile(dh, fileName);
-  }
+  let note = findNoteByName(name);
+  storeMarkNoteDeleted(note.id);
   incNoteDeleteCount();
   removeNoteFromHistory(name);
-  await removeNoteFromMetadata(name);
   await loadNoteNamesMoreRobust();
 }
 

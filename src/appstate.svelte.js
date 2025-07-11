@@ -1,21 +1,55 @@
-import { getNoteMeta } from "./metadata";
+function toUndef(v) {
+  if (!v) {
+    return undefined;
+  }
+}
+
+export class Note {
+  /** @type {string} */
+  id;
+  /** @type {string} */
+  name;
+  /** @type {string[]} */
+  versionIds;
+  /** @type {boolean} */
+  isArchived = false;
+  /** @type {boolean} */
+  isStarred = false;
+  /** @type {string}  */
+  altShortcut = undefined;
+
+  getMetadata() {
+    // by using toUndef() we make JSON-serialized version
+    // smaller and easier to read
+    return $state.snapshot({
+      id: this.id,
+      name: this.name,
+      isArchived: toUndef(this.isArchived),
+      isStarred: toUndef(this.isStarred),
+      altShortcut: toUndef(this.altShortcut),
+    });
+  }
+
+  constructor() {}
+}
 
 class AppState {
   /* regular, arhived, deleted notes */
-  /** @type {string[]} */
+  /** @type {Note[]} */
   allNotes = $state([]);
 
   /* regular notes, not archived or deleted */
-  /** @type {string[]} */
-  regularNotes = $derived(calcRegular(this.allNotes));
+  /** @type {Note[]} */
+  regularNotes = $state([]);
 
-  /** @type {string[]} */
-  archivedNotes = $derived(calcArchived(this.allNotes));
+  /** @type {Note[]} */
+  archivedNotes = $state([]);
 
-  /** @type {string[]} */
-  starredNotes = $derived(calcStarred(this.allNotes)); // starred notes
-  /** @type {string[]} */
-  withShortcuts = $derived(callcWithShortcuts(this.allNotes)); // notes with shortcuts
+  /** @type {Note[]} */
+  starredNotes = $state([]);
+  /** @type {Note[]} */
+  withShortcuts = $state([]);
+
   noteSelectorInfoCollapsed = $state(false);
 
   isDirty = $state(false);
@@ -40,58 +74,26 @@ class AppState {
   forceNewTab = false;
 }
 
-/**
- * @param {string[]} noteNames
- * @returns {string[]}
- */
-function calcRegular(noteNames) {
-  /** @type {string[]} */
-  let res = [];
-  for (let name of noteNames) {
-    let m = getNoteMeta(name, false);
-    if (m && m.isArchived) {
-      continue;
-    }
-    res.push(name);
-  }
-  return res;
-}
-
-/** @returns {string[]} */
-function calcWithBoolKey(noteNames, key) {
-  /** @type {string[]} */
-  let res = [];
-  for (let name of noteNames) {
-    let m = getNoteMeta(name, false);
-    if (m && m[key]) {
-      res.push(name);
-    }
-  }
-  return res;
-}
-
-/** @returns {string[]} */
-function calcStarred(noteNames) {
-  return calcWithBoolKey(noteNames, "isStarred");
-}
-
-/** @returns {string[]} */
-function calcArchived(noteNames) {
-  return calcWithBoolKey(noteNames, "isArchived");
-}
-
-/** @returns {string[]} */
-function callcWithShortcuts(noteNames) {
-  // altShortcut is string not bool but it still works
-  return calcWithBoolKey(noteNames, "altShortcut");
-}
-
+// TODO: maybe convert to $effect() on appState.notes
 export function appStateUpdateAfterNotesChange() {
-  let all = appState.allNotes;
-  appState.regularNotes = calcRegular(all);
-  appState.archivedNotes = calcArchived(all);
-  appState.starredNotes = calcStarred(all);
-  appState.withShortcuts = callcWithShortcuts(all);
+  appState.regularNotes = [];
+  appState.archivedNotes = [];
+  appState.starredNotes = [];
+  appState.withShortcuts = [];
+  for (let note of appState.allNotes) {
+    if (note.isArchived) {
+      appState.archivedNotes.push(note);
+    } else {
+      appState.regularNotes.push(note);
+    }
+    if (note.isStarred) {
+      appState.starredNotes.push(note);
+    }
+    if (note.altShortcut) {
+      appState.withShortcuts.push(note);
+    }
+  }
+
   // console.log(
   //   "appStateUpdateAfterNotesChange: regular:",
   //   appState.regularNotes.length,
@@ -107,3 +109,14 @@ export function appStateUpdateAfterNotesChange() {
 }
 
 export const appState = new AppState();
+export function getNotes() {
+  return appState.allNotes;
+}
+
+/**
+ * @param {string} name
+ * @returns {Note}
+ */
+export function findNoteByName(name) {
+  return appState.allNotes.find((n) => n.name === name);
+}

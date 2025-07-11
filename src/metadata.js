@@ -1,18 +1,9 @@
-import { tick } from "svelte";
+import { findNoteByName, getNotes, Note } from "./appstate.svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
-import { getStorageFS } from "./notes";
+import { readAppMeta, storeWriteAppMeta, storeWriteNoteMeta } from "./store";
 
 export const kMetadataName = "__metadata.edna.json";
-
-/** @typedef {{
-    name: string,
-    altShortcut?: string,
-    isStarred?: boolean,
-    isArchived?: boolean,
-    foldedRanges?: { from: number, to: number }[],
-    selection? : any,
-}} NoteMetadata */
 
 /** @typedef {{
     name: string,
@@ -21,7 +12,6 @@ export const kMetadataName = "__metadata.edna.json";
 
 /** @typedef {{
   ver: number,
-  notes: NoteMetadata[],
   functions: FunctionMetadata[],
 }} Metadata */
 
@@ -33,14 +23,6 @@ export function getMetadata() {
 }
 
 /**
- * @returns {NoteMetadata[]}
- */
-export function getNotesMetadata() {
-  metadata.notes = metadata.notes || [];
-  return metadata.notes;
-}
-
-/**
  * @returns {FunctionMetadata[]}
  */
 function getFunctionsMetadata() {
@@ -48,86 +30,34 @@ function getFunctionsMetadata() {
   return metadata.functions;
 }
 
+function saveAppMetadata() {
+  return storeWriteAppMeta(metadata);
+}
+
 /**
  * @returns {Promise<Metadata>}
  */
 export async function loadNotesMetadata() {
   console.log("loadNotesMetadata: started");
-  let dh = getStorageFS();
-  let s;
-  if (!dh) {
-    s = localStorage.getItem(kMetadataName);
-  } else {
-    try {
-      s = await fsReadTextFile(dh, kMetadataName);
-    } catch (e) {
-      // it's ok if doesn't exist
-      console.log("loadNotesMetadata: no metadata file", e);
-      s = "[]";
-    }
+  let s = await readAppMeta();
+  if (!s) {
+    return {
+      ver: 1,
+      functions: [],
+    };
   }
-  s = s || "[]";
   metadata = JSON.parse(s);
   console.log("loadNotesMetadata: finished", metadata);
   return metadata;
 }
 
 /**
- * @param {Metadata} m
+ * @param {Note} note
  */
-export async function saveNotesMetadata(m = metadata) {
-  let s = JSON.stringify(m, null, 2);
-  let dh = getStorageFS();
-  if (dh) {
-    try {
-      await fsWriteTextFile(dh, kMetadataName, s);
-    } catch (e) {
-      console.log("fsWriteTextFile failed with:", e);
-    }
-  } else {
-    localStorage.setItem(kMetadataName, s);
-  }
-  metadata = m;
-  return m;
-}
-
-/**
- * can return null if there is no metadata
- * @param {string} name
- * @param {boolean} createIfNotExists
- * @returns {NoteMetadata}
- */
-export function getNoteMeta(name, createIfNotExists = false) {
-  // console.log("getNoteMeta:", name);
-  let notes = getNotesMetadata();
-  for (let m of notes) {
-    if (m.name === name) {
-      return m;
-    }
-  }
-  if (!createIfNotExists) {
-    return null;
-  }
-  let m = {
-    name: name,
-  };
-  notes.push(m);
-  return m;
-}
-
-/**
- * @param {string} name
- */
-export async function removeNoteFromMetadata(name) {
-  let notes = getNotesMetadata();
-  let newNotes = [];
-  for (let m of notes) {
-    if (m.name !== name) {
-      newNotes.push(m);
-    }
-  }
-  metadata.notes = newNotes;
-  await saveNotesMetadata();
+export async function saveNoteMetadata(note) {
+  let m = note.getMetadata();
+  console.log("saveNoteMetadata:", m);
+  await storeWriteNoteMeta(m);
 }
 
 /**
@@ -135,14 +65,13 @@ export async function removeNoteFromMetadata(name) {
  * @param {string} newName
  */
 export async function renameNoteInMetadata(oldName, newName) {
-  let notes = getNotesMetadata();
-  for (let o of notes) {
-    if (o.name === oldName) {
-      o.name = newName;
-      break;
-    }
+  let note = findNoteByName(oldName);
+  if (!note) {
+    console.warn("renameNoteInMetadata: note not found:", oldName);
+    return;
   }
-  await saveNotesMetadata();
+  note.name = newName;
+  saveNoteMetadata(note);
 }
 
 /**
@@ -151,25 +80,26 @@ export async function renameNoteInMetadata(oldName, newName) {
  */
 export async function reassignNoteShortcut(name, altShortcut) {
   console.log("reassignNoteShortcut:", name, altShortcut);
-  let notes = getNotesMetadata();
-  for (let o of notes) {
-    if (o.altShortcut !== altShortcut) {
+  let notes = getNotes();
+  for (let note of notes) {
+    if (note.name === name) {
+      // same note: remove shortcut
+      if (note.altShortcut === altShortcut) {
+        // already assigned
+        note.altShortcut = "";
+        console.log("reassignNoteShortcut: removing shortcut from", name);
+      } else {
+        note.altShortcut = altShortcut;
+      }
+      await saveNoteMetadata(note);
       continue;
     }
-    if (o.name === name) {
-      // same note: just remove shortcut
-      delete o.altShortcut;
-      let res = await saveNotesMetadata();
-      return res;
-    } else {
-      // a different note: remove shortcut and then assign to the new note
-      delete o.altShortcut;
+    if (note.altShortcut === altShortcut) {
+      // a different note: remove shortcut
+      note.altShortcut = "";
+      await saveNoteMetadata(note);
     }
   }
-
-  let meta = getNoteMeta(name, true);
-  meta.altShortcut = altShortcut;
-  await saveNotesMetadata();
   updateAfterNoteStateChange();
 }
 
@@ -177,9 +107,9 @@ export async function reassignNoteShortcut(name, altShortcut) {
  * @param {string} name
  */
 export async function archiveNote(name) {
-  let m = getNoteMeta(name, true);
-  m.isArchived = true;
-  await saveNotesMetadata();
+  let note = findNoteByName(name);
+  note.isArchived = true;
+  await saveNoteMetadata(note);
   updateAfterNoteStateChange();
 }
 
@@ -187,9 +117,9 @@ export async function archiveNote(name) {
  * @param {string} name
  */
 export async function unArchiveNote(name) {
-  let m = getNoteMeta(name, true);
-  m.isArchived = false;
-  await saveNotesMetadata();
+  let note = findNoteByName(name);
+  note.isArchived = false;
+  await saveNoteMetadata(note);
   updateAfterNoteStateChange();
 }
 
@@ -198,11 +128,11 @@ export async function unArchiveNote(name) {
  * @returns {Promise<boolean>}
  */
 export async function toggleNoteStarred(name) {
-  let meta = getNoteMeta(name, true);
-  meta.isStarred = !meta.isStarred;
-  await saveNotesMetadata();
+  let note = findNoteByName(name);
+  note.isStarred = !note.isStarred;
+  await saveNoteMetadata(note);
   updateAfterNoteStateChange();
-  return meta.isStarred;
+  return note.isStarred;
 }
 
 /**
@@ -210,11 +140,8 @@ export async function toggleNoteStarred(name) {
  * @returns {boolean}
  */
 export function isNoteArchived(name) {
-  let meta = getNoteMeta(name);
-  if (!meta) {
-    return false;
-  }
-  return meta.isArchived === true;
+  let note = findNoteByName(name);
+  return note ? note.isArchived : false;
 }
 
 /**
@@ -247,32 +174,6 @@ export function getFunctionMeta(name, createIfNotExists = false) {
 export async function toggleFunctionStarred(name) {
   let m = getFunctionMeta(name, true);
   m.isStarred = !m.isStarred;
-  await saveNotesMetadata();
+  await saveAppMetadata();
   return m.isStarred;
-}
-
-export function printMetaInfo() {
-  let notes = getNotesMetadata();
-  console.log("Notes metadata:");
-  for (let m of notes) {
-    if (m.isArchived) {
-      console.log(`  ${m.name} isArchived: ${m.isArchived}`);
-    }
-  }
-}
-
-// TODO: temporary
-export async function upgradeMetadata() {
-  let meta = await loadNotesMetadata();
-  if (!Array.isArray(meta)) {
-    console.log("upgradeMetadata: already upgraded:", meta);
-    return;
-  }
-  let newMeta = {
-    ver: 1,
-    notes: meta,
-    functions: [],
-  };
-  console.log("upgradeMetadata: new meta:", newMeta);
-  await saveNotesMetadata(newMeta);
 }

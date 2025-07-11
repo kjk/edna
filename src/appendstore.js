@@ -16,6 +16,9 @@ export class AppendStoreRecord {
 }
 
 export class AppendStore {
+  /** @type {AppendStoreRecord[]} */
+  records = [];
+
   static async create(fileNamePrefix = "appendStore") {
     const indexFileName = `${fileNamePrefix}_index.txt`;
     const dataFileName = `${fileNamePrefix}_data.bin`;
@@ -26,13 +29,14 @@ export class AppendStore {
     const dataHandle = await root.getFileHandle(dataFileName, { create: true });
     let res = new AppendStore(indexHandle, dataHandle);
     res.records = await res._readIndex();
+    return res;
   }
 
   constructor(indexHandle, dataHandle) {
     this.indexHandle = indexHandle;
     this.dataHandle = dataHandle;
     this.utf8Encoder = new TextEncoder();
-    this.records = [];
+    this.utf8Decoder = new TextDecoder();
   }
 
   /**
@@ -110,10 +114,36 @@ export class AppendStore {
     logDur(startTime, `AppendStore.write`);
   }
 
+  async readData(offset, size) {
+    if (offset < 0 || size <= 0) {
+      throw new Error("Invalid offset or size");
+    }
+    const dataFile = await this.dataHandle.getFile();
+    if (offset + size > dataFile.size) {
+      throw new Error("Read exceeds data file size");
+    }
+    const dataReadable = await this.dataHandle.createReadable();
+    const reader = dataReadable.getReader();
+    await reader.seek(offset);
+    const { value, done } = await reader.read(size);
+    if (done) {
+      throw new Error("Read operation reached end of file unexpectedly");
+    }
+    if (value.length !== size) {
+      throw new Error("Read operation did not return expected size");
+    }
+    return value;
+  }
+
+  async readString(offset, size) {
+    const bytes = await this.readData(offset, size);
+    return this.utf8Decoder.decode(bytes);
+  }
+
   async _readIndex() {
     const file = await this.indexHandle.getFile();
     const buffer = await file.arrayBuffer();
-    const text = new TextDecoder().decode(buffer);
+    const text = this.utf8Decoder.decode(buffer);
     const lines = text.split("\n").filter((line) => line.trim() !== "");
 
     const records = [];
