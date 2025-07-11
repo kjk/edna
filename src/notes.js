@@ -1,6 +1,6 @@
 import { tick } from "svelte";
 import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
-import { appState, findNoteByName } from "./appstate.svelte";
+import { appState, findNoteByName, Note } from "./appstate.svelte";
 import {
   clearModalMessage,
   showModalMessageHTML,
@@ -35,7 +35,11 @@ import {
   incNoteDeleteCount,
   incNoteSaveCount,
 } from "./state";
-import { storeMarkNoteDeleted } from "./store";
+import {
+  storeCreateNote,
+  storeMarkNoteDeleted,
+  storeWriteContent,
+} from "./store";
 import {
   getBuiltInFunctionsNote,
   getHelp,
@@ -190,206 +194,12 @@ export async function createDefaultNotes(existingNotes) {
       existingNotes,
     );
   }
-  if (nCreated > 0) {
-    await loadNoteNames();
-  }
   if (isFirstRun) {
     reassignNoteShortcut(kScratchNoteName, "1");
     reassignNoteShortcut(kDailyJournalNoteName, "2");
     reassignNoteShortcut(kInboxNoteName, "3");
   }
   return nCreated;
-}
-
-/** @type {string[]} */
-let encryptedNoteNames = [];
-
-/** @typedef {{
-  handle: FileSystemFileHandle,
-  fileName: string,
-  noteName: string,
-}} OpenedNote */
-
-// list of notes opened from disk. They are not part of the workspace, will be forgotten
-// on app reload. Their names are their full fileNames which helps to ensure that
-// their names don't conflict with notes in the workspace
-// TODO: maybe add some unique prefix to the name (like `system:` for system notes?)
-/** @type {OpenedNote[]} */
-let openedNotes = [];
-
-/**
- *
- * @param {string} noteName
- * @returns {OpenedNote}
- */
-function getOpenedNote(noteName) {
-  for (let i of openedNotes) {
-    if (i.noteName === noteName) {
-      return i;
-    }
-  }
-  return null;
-}
-
-/**
- * @param {string} noteName
- */
-export function unrememberOpenedNote(noteName) {
-  openedNotes = openedNotes.filter(
-    (openedNote) => openedNote.noteName !== noteName,
-  );
-  appState.allNotes = appState.allNotes.filter((name) => name != noteName);
-}
-
-/**
- * @param {FileSystemFileHandle} fh
- * @returns string
- */
-export function rememberOpenedNote(fh) {
-  if (fh.name.endsWith(kEdnaEncrFileExt)) {
-    // we don't support encrypted notes
-    return null;
-  }
-  let noteName = noteNameFromFileNameFS(fh.name);
-  if (!noteName) {
-    return null;
-  }
-
-  // ensure name is unique
-  // TODO: should clear when switching workspaces because the uniqueness
-  // will no longer be guaranteed
-  // note: could solve that by using unique IDs for files and returning
-  // NoteInfo[] that contains info about note, including id and using
-  // ids to identify notes
-  let baseNoteName = noteName;
-  let n = 1;
-  while (appState.allNotes.includes(noteName)) {
-    noteName = baseNoteName + `-${n}`;
-    n++;
-  }
-  let opened = {
-    handle: fh,
-    fileName: fh.name,
-    noteName: noteName,
-  };
-  openedNotes.push(opened);
-  appState.allNotes.push(noteName);
-  return noteName;
-}
-
-/**
- * returns null if not a valid name
- * @param {string} fileName
- * @returns {string}
- */
-export function noteNameFromFileNameFS(fileName) {
-  // throwIf(!isValidFileName(fileName));
-  if (!isValidFileName) {
-    return null;
-  }
-  let encodedName = trimEdnaExt(fileName);
-  let name = fromFileName(encodedName);
-  return name;
-}
-
-/**
- * we might have non-escaped file names if:
- * - those are notes created before our escaping scheme
- * - user renmaed the note on disk
- * @param {FileSystemDirectoryHandle} dh
- * @returns {Promise<void>}
- */
-export async function ensureValidNoteNamesFS(dh) {
-  let fsEntries = await readDir(dh);
-  for (let e of fsEntries.dirEntries) {
-    if (e.isDir) {
-      continue;
-    }
-    let oldName = e.name;
-    if (!isEdnaFile(oldName)) {
-      continue;
-    }
-    if (isValidFileName(oldName)) {
-      continue;
-    }
-    let newName = toFileName(oldName);
-    // note: if newName already exists, it'll be over-written
-    fsRenameFile(dh, newName, oldName);
-    console.log(`renamed '${oldName}' => '${newName}`);
-  }
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {(fileName, noteName, isEncr) => Promise<void>} fn
- */
-export async function forEachNoteFileFS(dh, fn) {
-  let fsEntries = await readDir(dh);
-  // console.log("files", fsEntries);
-  for (let e of fsEntries.dirEntries) {
-    if (e.isDir) {
-      continue;
-    }
-    let fileName = e.name;
-    if (!isEdnaFile(fileName)) {
-      continue;
-    }
-    if (!isValidFileName(fileName)) {
-      continue;
-    }
-    let name = noteNameFromFileNameFS(fileName);
-    // filter out empty names, can be created maliciously or due to a bug
-    if (name === null || name === "") {
-      continue;
-    }
-    let isEncr = fileName.endsWith(kEdnaEncrFileExt);
-    await fn(fileName, name, isEncr);
-  }
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @returns {Promise<string[][]>}
- */
-async function loadNoteNamesFS(dh) {
-  /** @type {string[]} */
-  let all = [];
-  /** @type {string[]} */
-  let encrypted = [];
-  await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-    // console.log("loadNoteNamesFS:", fileName);
-    all.push(name);
-    if (isEncr) {
-      encrypted.push(name);
-    }
-  });
-  // console.log("loadNoteNamesFS() res:", res);
-  return [all, encrypted];
-}
-
-/**
- * after creating / deleting / renaming a note we need to update
- * cached latestNoteNames
- * @returns {Promise<string[]>}
- */
-export async function loadNoteNames() {
-  console.log("loadNoteNames");
-  let dh = getStorageFS();
-  /** @type {string[][]} */
-  let res = [];
-  if (!dh) {
-    res = loadNoteNamesLS();
-  } else {
-    res = await loadNoteNamesFS(dh);
-  }
-
-  // TODO: got a case where I had both foo.edna.txt and foo.encr.edna.txt which caused
-  // duplicate names which cased note selector to fail due to duplicate key
-  // don't quite know how this happened but it could be done maliciously
-  appState.allNotes = removeDuplicates(res[0]);
-  encryptedNoteNames = removeDuplicates(res[1]);
-  // console.log("loadNoteNames() res:", res);
-  return appState.allNotes;
 }
 
 export function startsWithBlockHeader(s) {
@@ -460,27 +270,10 @@ export async function saveNote(name, content) {
     console.log("skipped saving system note", name);
     return;
   }
-  let openedNote = getOpenedNote(name);
-  if (openedNote) {
-    let fh = openedNote.handle;
-    let ok = await requestFileWritePermission(fh);
-    if (!ok) {
-      return;
-    }
-    console.log("saveNote: ok:", ok);
-    await fsFileHandleWriteText(fh, content);
-    appState.isDirty = false;
-    incNoteSaveCount();
-    return;
-  }
-
-  let dh = getStorageFS();
-  if (!dh) {
-    let path = notePathFromNameLS(name);
-    localStorage.setItem(path, content);
-  } else {
-    await writeMaybeEncryptedFS(dh, name, content);
-  }
+  let note = findNoteByName(name);
+  let verId = makeRandomContentID(note.id);
+  await storeWriteContent(verId, content || "");
+  note.versionIds.push(verId);
   appState.isDirty = false;
   incNoteSaveCount();
 }
@@ -491,26 +284,19 @@ export async function saveNote(name, content) {
  * @returns {Promise<void>}
  */
 export async function createNoteWithName(name, content = null) {
-  let dh = getStorageFS();
   content = fixUpNoteContent(content);
-  if (!dh) {
-    const path = notePathFromName(name);
-    // TODO: should it happen that note already exists?
-    if (localStorage.getItem(path) == null) {
-      localStorage.setItem(path, content);
-      console.log("created note", name);
-      incNoteCreateCount();
-    } else {
-      console.log("note already exists", name);
-    }
-    await loadNoteNames();
-    return;
+  let noteId = genRandomNoteID();
+  await storeCreateNote(noteId, {
+    name: name,
+  });
+  let note = new Note(noteId, name);
+  if (content) {
+    let verId = makeRandomContentID(noteId);
+    await storeWriteContent(verId, content);
+    note.versionIds.push(verId);
+    console.log("created note", name);
   }
-
-  // TODO: check if exists
-  await writeNoteFS(dh, name, content);
   incNoteCreateCount();
-  await loadNoteNames();
 }
 
 /*
@@ -523,32 +309,15 @@ export async function appendToNote(name, content) {
     !startsWithBlockHeader(content),
     "content must start with block header ~~~",
   );
-
-  let dh = getStorageFS();
-  if (!dh) {
-    let path = notePathFromName(name);
-    let v = localStorage.getItem(path);
-    if (v === null) {
-      console.log("created new ls note", name, path);
-      incNoteCreateCount();
-    } else {
-      console.log("appended to existing ls note", name, path);
-      incNoteSaveCount();
-    }
-    let newContent = (v || "") + content;
-    localStorage.setItem(path, newContent);
-    return;
-  }
-
-  let newContent = content;
+  let currContent = "";
   if (noteExists(name)) {
-    let oldContent = await loadNote(name);
-    newContent = oldContent + content;
+    currContent = await loadNote(name);
     incNoteSaveCount();
   } else {
     incNoteCreateCount();
   }
-  await writeMaybeEncryptedFS(dh, name, newContent);
+  let newContent = currContent + content;
+  await storeWriteContent(makeRandomContentID(name), newContent);
 }
 
 /**
@@ -563,30 +332,20 @@ export async function createNewScratchNote() {
   return scratchName;
 }
 
-function isEncryptedNote(name) {
-  let res = encryptedNoteNames.includes(name);
-  return res;
-}
-
-/**
- * @param {string} name
- * @returns {string}
- */
-function loadNoteLS(name) {
-  let key = kLSKeyPrefix + name;
-  if (isEncryptedNote(name)) {
-    key = kLSKeyEncrPrefix + name;
-  }
-  return localStorage.getItem(key);
-}
-
 /**
  * @param {string} name
  * @returns {boolean}
  */
 export function noteExists(name) {
-  let notes = appState.allNotes;
-  return notes.includes(name) || isSystemNoteName(name);
+  for (let note of appState.allNotes) {
+    if (note.name === name) {
+      return true;
+    }
+  }
+  if (isSystemNoteName(name)) {
+    return true; // system notes always exist
+  }
+  return false;
 }
 
 /**
@@ -610,22 +369,9 @@ export async function loadNote(name) {
   let res;
   if (isSystemNoteName(name)) {
     res = getSystemNoteContent(name);
-  } else {
-    let openedNote = getOpenedNote(name);
-    if (openedNote) {
-      res = await fsFileHandleReadTextFile(openedNote.handle);
-    } else {
-      let dh = getStorageFS();
-      if (!dh) {
-        res = loadNoteLS(name);
-      } else {
-        res = await readMaybeEncryptedNoteFS(dh, name);
-      }
-    }
+    return res;
   }
-  if (res === null) {
-    return null;
-  }
+
   return fixUpNoteContent(res);
 }
 

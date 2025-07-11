@@ -46,8 +46,6 @@ export class AppendStore {
     // Get high-precision UTC time in milliseconds
     const timeInMs = Math.round(performance.timeOrigin + performance.now());
     // Get current offset (size of data file)
-    const dataFile = await this.dataHandle.getFile();
-    const offset = dataFile.size;
     let bytes;
     let size = 0;
     if (data) {
@@ -60,11 +58,14 @@ export class AppendStore {
       }
       size = bytes.length;
     }
-    let rec = new AppendStoreRecord(offset, size, timeInMs, kind, meta);
     if (size === 0) {
       // it's ok for data to be empty
+      let rec = new AppendStoreRecord(0, 0, timeInMs, kind, meta);
       return rec;
     }
+    const dataFile = await this.dataHandle.getFile();
+    const offset = dataFile.size;
+    let rec = new AppendStoreRecord(offset, size, timeInMs, kind, meta);
     // Append to data file
     const dataWritable = await this.dataHandle.createWritable({
       keepExistingData: true,
@@ -136,6 +137,10 @@ export class AppendStore {
   }
 
   async readString(offset, size) {
+    // if we write empty string, data size is 0
+    if (size == 0) {
+      return "";
+    }
     const bytes = await this.readData(offset, size);
     return this.utf8Decoder.decode(bytes);
   }

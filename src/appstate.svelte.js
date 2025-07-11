@@ -10,13 +10,13 @@ export class Note {
   /** @type {string} */
   name;
   /** @type {string[]} */
-  versionIds;
+  versionIds = [];
   /** @type {boolean} */
-  isArchived = false;
+  isArchived;
   /** @type {boolean} */
-  isStarred = false;
+  isStarred;
   /** @type {string}  */
-  altShortcut = undefined;
+  altShortcut;
 
   getMetadata() {
     // by using toUndef() we make JSON-serialized version
@@ -30,7 +30,10 @@ export class Note {
     });
   }
 
-  constructor() {}
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+  }
 }
 
 class AppState {
