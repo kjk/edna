@@ -5,7 +5,7 @@ Welcome to Edna - a note taking app for developers and power users.
 To learn more: https://edna.arslexis.io/help (or right-click for context menu and use `Help` / `Show help`).
 
 This is a scratch note. Feel free to delete the content and use it for temporary notes.
-∞∞∞markdown
+∞∞∞text
 # Keyboard shortcuts
 
 {{keyHelp}}

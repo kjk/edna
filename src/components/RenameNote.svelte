@@ -1,7 +1,7 @@
 <script>
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import { sanitizeNoteName } from "../notes";
+  import { isSystemNoteName, sanitizeNoteName } from "../notes";
 
   /** @type { {
     onclose: () => void,
@@ -19,6 +19,9 @@
   let canRename = $derived.by(() => {
     let name = sanitizedNewName;
     if (name === "" || name === oldName) {
+      return false;
+    }
+    if (isSystemNoteName(name)) {
       return false;
     }
     let noteNames = appState.allNotes;

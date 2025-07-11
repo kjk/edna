@@ -95,7 +95,7 @@ export function focusEditor() {
 }
 
 export function updateAfterNoteStateChange() {
-  globalFunctions.updateAfterNoteStateChange();
+  globalFunctions?.updateAfterNoteStateChange();
 }
 
 /**

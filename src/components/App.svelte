@@ -1012,7 +1012,7 @@
     }
 
     const menuNote = [
-      ["Close", kCmdCloseCurrentTab],
+      ["Close tab", kCmdCloseCurrentTab],
       ["Rename", kCmdRenameCurrentNote],
       [starAction, kCmdNoteToggleStarred],
       ["Archive", kCmdArchiveCurrentNote],
@@ -1283,6 +1283,9 @@
       return isUsingEncryption() ? kMenuStatusNormal : kMenuStatusDisabled;
     } else if (mid === kCmdRenameCurrentNote) {
       if (noteName === kScratchNoteName) {
+        return kMenuStatusDisabled;
+      }
+      if (isSystemNoteName(noteName)) {
         return kMenuStatusDisabled;
       }
     } else if (

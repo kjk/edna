@@ -9,7 +9,7 @@ Integrated AI chat, blocks, markdown, syntax highlighting for 40+ languages (Jav
 This is a help note. To switch to a different note, press `Mod + K`.
 
 To see help in a separate web page visit https://edna.arslexis.io/help
-∞∞∞markdown
+∞∞∞text
 # Keyboard shortcuts
 
 {{keyHelp}}

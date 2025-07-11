@@ -85,9 +85,20 @@ export let kDefaultFontFamily = platform.isMac ? "Menlo" : "Cascadia Code";
 
 // TODO: not sure mobile should be so big. Looked big on iPhone
 export const isMobileDevice = window.matchMedia("(max-width: 600px)").matches;
-export let kDefaultFontSize = isMobileDevice ? 16 : 12;
-
+// heynote has 12 but Hack at 12 looks like Consolas at 14
+export let kDefaultFontSize = isMobileDevice ? 16 : 14;
+console.log("kDefaultFontSize:", kDefaultFontSize);
 export const kSettingsPath = "settings.json";
+
+function validateFontSize(fontSize) {
+  if (!fontSize) {
+    return kDefaultFontSize;
+  }
+  if (fontSize < 8) {
+    return 8;
+  }
+  return fontSize;
+}
 
 function validateTabSize(tabSize) {
   if (tabSize < 1) {
@@ -157,6 +168,8 @@ export function getSettings() {
   let settings = new Settings(settingsRaw);
   settings.tabSize = validateTabSize(settings.tabSize || 2);
   settings.aiModelID = validateAiModelID(settings.aiModelID);
+  settings.fontSize = validateFontSize(settings.fontSize);
+  settings.fontFamily = settings.fontFamily || kDefaultFontFamily;
   settings.starredModels = removeUnknownAiModels(settings.starredModels || []);
 
   // console.log("getSettings: settings:", app
