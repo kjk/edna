@@ -17,9 +17,9 @@ import (
 
 // variables to customize
 var (
-	projectName       = "edna"
-	domain            = "edna.arslexis.io"
-	httpPort          = 9325
+	projectName       = "Elaris"
+	domain            = "elaris.arslexis.io"
+	httpPort          = 9339
 	frontEndBuildDir  = "dist"
 	wantedProdSecrets = []string{"LOGTASTIC_API_KEY"}
 )

@@ -294,7 +294,7 @@
       }}
       href="/help"
       target="_blank"
-      >Edna
+      >Elaris
     </a>
     <div
       class="flex-col absolute z-30 top-[2rem] right-[1rem] {ednaMascotImgCls}"
