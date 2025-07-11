@@ -1102,6 +1102,7 @@
     const contextMenu = [
       ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
       ["Open note\tMod + K", kCmdOpenNote],
+      ["New note", kCmdCreateNewNote],
       ["Ask AI", kCmdAskAI],
       // ["Find\tMod + Q", kCmdOpenFind],
       ["This note", menuNote],
