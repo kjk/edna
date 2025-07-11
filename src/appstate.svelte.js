@@ -1,4 +1,3 @@
-import { AppendStoreRecord } from "./appendstore";
 import { Note } from "./store";
 
 class AppState {

@@ -4,7 +4,7 @@
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
-  import { loadNote } from "../notes";
+  import { loadNoteContent } from "../notes";
   import {
     hilightText,
     isWholeWord,
@@ -74,7 +74,7 @@
     while (len(notesToSearch) > 0) {
       noteBeingSearched = notesToSearch[0];
       notesToSearch.splice(0, 1);
-      let s = await loadNote(noteBeingSearched);
+      let s = await loadNoteContent(noteBeingSearched);
       if (!matchCase) {
         s = s.toLowerCase();
       }

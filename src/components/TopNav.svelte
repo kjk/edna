@@ -74,12 +74,7 @@
   });
 
   /** @type {HTMLElement} */
-  let ednaRef = $state(null);
-
-  /** @type {HTMLElement} */
-  let endaMascotImgRef = $state(null);
-
-  let ednaMascotImgCls = $state("hidden");
+  let elarisRef = $state(null);
 
   const colors = [
     "red",
@@ -274,34 +269,25 @@
   {#if settings.alwaysShowTopNav}
     <div class="grow"></div>
     <a
-      bind:this={ednaRef}
+      bind:this={elarisRef}
       class="edna mr-2 font-bold text-slate-600 dark:text-slate-200"
       onmouseenter={() => {
-        ednaMascotImgCls = "flex";
         if (!startColor) {
-          startColor = ednaRef.style.color;
+          startColor = elarisRef.style.color;
         }
         colorChangeInterval = setInterval(() => {
-          ednaRef.style.color = colors[colorIndex];
+          elarisRef.style.color = colors[colorIndex];
           colorIndex = (colorIndex + 1) % colors.length;
         }, 300); // Change color every 500 milliseconds
       }}
       onmouseleave={() => {
         clearInterval(colorChangeInterval);
-        ednaRef.style.color = startColor;
-        ednaMascotImgCls = "hidden";
+        elarisRef.style.color = startColor;
       }}
       href="/help"
       target="_blank"
       >Elaris
     </a>
-    <div
-      class="flex-col absolute z-30 top-[2rem] right-[1rem] {ednaMascotImgCls}"
-      bind:this={endaMascotImgRef}
-    >
-      <img class="" alt="Edna mascot" src="/edna-mascot.jpg" />
-      <div class="self-center bg-white">Hi! I'm Edna!</div>
-    </div>
     <button
       onclick={() => (settings.alwaysShowTopNav = false)}
       class="clickable-icon"

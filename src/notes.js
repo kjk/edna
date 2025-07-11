@@ -249,7 +249,7 @@ export async function appendToNote(name, content) {
   );
   let note = findNoteByName(name);
   if (note) {
-    let currContent = await loadNote(name);
+    let currContent = await loadNoteContent(name);
     let newContent = currContent + content;
     await storeWriteContent(makeRandomContentID(note.id), newContent);
     return;
@@ -294,11 +294,11 @@ export function noteExists(name) {
  * @param {string} name
  * @returns {Promise<string>}
  */
-export async function loadNoteIfExists(name) {
+export async function loadNoteContentIfExists(name) {
   if (!noteExists(name)) {
     return null;
   }
-  return await loadNote(name);
+  return await loadNoteContent(name);
 }
 
 /**
@@ -306,7 +306,7 @@ export async function loadNoteIfExists(name) {
  * @param {string} name
  * @returns {Promise<string>}
  */
-export async function loadNote(name) {
+export async function loadNoteContent(name) {
   // console.log("loadNote:", name);
   let res;
   if (isSystemNoteName(name)) {

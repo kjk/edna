@@ -128,6 +128,8 @@ export class Note {
   isStarred;
   /** @type {string}  */
   altShortcut;
+  selection;
+  foldedRanges;
 
   getMetadata() {
     // by using toUndef() we make JSON-serialized version
@@ -138,6 +140,8 @@ export class Note {
       isArchived: toUndef(this.isArchived),
       isStarred: toUndef(this.isStarred),
       altShortcut: toUndef(this.altShortcut),
+      selection: this.selection,
+      foldedRanges: this.foldedRanges,
     };
   }
 
@@ -149,6 +153,8 @@ export class Note {
     this.isArchived = m.isArchived;
     this.isStarred = m.isStarred;
     this.altShortcut = m.altShortcut;
+    this.selection = m.selection;
+    this.foldedRanges = m.foldedRanges;
   }
 
   constructor(id, name) {

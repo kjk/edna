@@ -105,7 +105,7 @@
     kScratchNoteName,
     kWelcomeDevSystemNoteName,
     kWelcomeSystemNoteName,
-    loadNoteIfExists,
+    loadNoteContentIfExists,
     noteExists,
     renameNote,
   } from "../notes";
@@ -618,7 +618,7 @@
       runFunctionOnSelection = false;
       functionContext = "content of current block";
     }
-    let userFunctionsStr = await loadNoteIfExists(kMyFunctionsNoteName);
+    let userFunctionsStr = await loadNoteContentIfExists(kMyFunctionsNoteName);
     if (!userFunctionsStr) {
       userFunctions = [];
     } else {

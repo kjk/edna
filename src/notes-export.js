@@ -1,7 +1,7 @@
 import { appState } from "./appstate.svelte";
 import { blobFromUint8Array, fsReadBinaryFile, readDir } from "./fileutil";
 import { kMetadataName, loadAppMetadata } from "./metadata";
-import { loadNote } from "./notes";
+import { loadNoteContent } from "./notes";
 import { kSettingsPath } from "./settings.svelte";
 import { formatDateYYYYMMDD, len, throwIf } from "./util";
 
@@ -40,7 +40,7 @@ export async function exportUnencryptedNotesToZipBlob() {
   let blobWriter = new libZip.BlobWriter("application/zip");
   let zipWriter = new libZip.ZipWriter(blobWriter);
   for (let note of appState.regularNotes) {
-    let s = await loadNote(note.name);
+    let s = await loadNoteContent(note.name);
     // always use un-encrypted file extension
     debugger;
     // let fileName = notePathFromNameFS(name, false);

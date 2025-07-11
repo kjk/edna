@@ -13,7 +13,9 @@ import {
   EditorView,
   lineNumbers,
 } from "@codemirror/view";
-import { loadNote, saveNote } from "../notes.js";
+import { findNoteByName } from "../appstate.svelte.js";
+import { saveNoteMetadata } from "../metadata.js";
+import { loadNoteContent, saveNote } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { len, objectEqualDeep } from "../util.js";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation.js";
@@ -188,7 +190,7 @@ export class EdnaEditor {
     this.noteName = noteName;
     this.setReadOnly(true);
     // TODO: show a message
-    const content = await loadNote(noteName);
+    const content = await loadNoteContent(noteName);
     this.diskContent = content;
     await this.setContent(content);
     this.contentLoaded = true;
@@ -217,9 +219,8 @@ export class EdnaEditor {
       // Set cursor positions
       // We use requestAnimationFrame to avoid a race condition causing the scrollIntoView to sometimes not work
       requestAnimationFrame(() => {
-        // let noteMeta = getNoteMeta(this.noteName, false);
-        // let savedSelection = noteMeta?.selection;
-        let savedSelection = null;
+        let note = findNoteByName(this.noteName);
+        let savedSelection = note.selection;
         // TODO: validate selection?
         if (savedSelection) {
           // console.log("setContent: restoring selection:", savedSelection);
@@ -237,62 +238,54 @@ export class EdnaEditor {
             });
           }
         } else {
-          let pos = 0;
-          // not sure if this magic is a good idea: for all notes we
-          // put initial cursor at the beginning except for scratch notes
-          // where we put it at the end
-          // this could be confusing for users
-          if (this.noteName.startsWith("scratch")) {
-            pos = this.view.state.doc.length;
-          }
           // console.log("setContent: setting pos:", pos);
           this.view.dispatch({
-            selection: EditorSelection.single(pos),
+            selection: EditorSelection.single(0),
             scrollIntoView: true,
           });
         }
 
-        // let ranges = noteMeta?.foldedRanges || [];
-        // if (len(ranges) > 0) {
-        //   try {
-        //     this.view.dispatch({
-        //       effects: ranges.map((range) => foldEffect.of(range)),
-        //     });
-        //   } catch (e) {
-        //     console.error("setContent: error restoring folded ranges:", e);
-        //     // if we fail to restore folded ranges, just clear them
-        //     unfoldEverything(this)(this.view);
-        //   }
-        // }
+        let ranges = note.foldedRanges || [];
+        if (len(ranges) > 0) {
+          try {
+            this.view.dispatch({
+              effects: ranges.map((range) => foldEffect.of(range)),
+            });
+          } catch (e) {
+            console.error("setContent: error restoring folded ranges:", e);
+            // if we fail to restore folded ranges, just clear them
+            unfoldEverything(this)(this.view);
+          }
+        }
         resolve();
       });
     });
   }
 
   async saveFoldedState() {
-    // let meta = getNoteMeta(this.noteName, true);
-    // let didChange = false;
-    // let foldedRanges = getFoldedRanges(this.view);
-    // if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
-    //   didChange = true;
-    //   meta.foldedRanges = foldedRanges;
-    // }
-    // let selection = this.view.state.selection.toJSON();
-    // if (!objectEqualDeep(meta.selection, selection)) {
-    //   didChange = true;
-    //   meta.selection = selection;
-    // }
-    // if (!didChange) {
-    //   // console.log("saveFoldedState: skipping save, no changes");
-    //   return;
-    // }
-    // // console.log(
-    // //   "saveFoldedState: saving selection:",
-    // //   meta.selection,
-    // //   "folededState:",
-    // //   foldedRanges,
-    // // );
-    // await saveNotesMetadata();
+    let note = findNoteByName(this.noteName);
+    let didChange = false;
+    let foldedRanges = getFoldedRanges(this.view);
+    if (!objectEqualDeep(note.foldedRanges, foldedRanges)) {
+      didChange = true;
+      note.foldedRanges = foldedRanges;
+    }
+    let selection = this.view.state.selection.toJSON();
+    if (!objectEqualDeep(note.selection, selection)) {
+      didChange = true;
+      note.selection = selection;
+    }
+    if (!didChange) {
+      // console.log("saveFoldedState: skipping save, no changes");
+      return;
+    }
+    // console.log(
+    //   "saveFoldedState: saving selection:",
+    //   meta.selection,
+    //   "folededState:",
+    //   foldedRanges,
+    // );
+    await saveNoteMetadata(note);
   }
 
   getBlocks() {
