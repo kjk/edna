@@ -1,13 +1,12 @@
-import { appState, findNoteByName } from "./appstate.svelte";
+import {
+  appState,
+  appStateUpdateAfterNotesChange,
+  findNoteByName,
+} from "./appstate.svelte";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import { reassignNoteShortcut, renameNoteInMetadata } from "./metadata";
 import { nanoid } from "./nanoid";
 import { getSettings } from "./settings.svelte";
-import {
-  incNoteCreateCount,
-  incNoteDeleteCount,
-  incNoteSaveCount,
-} from "./state";
 import {
   Note,
   storeCreateNote,
@@ -216,7 +215,6 @@ export async function saveNote(name, content) {
   await storeWriteContent(verId, content || "");
   note.versionIds.push(verId);
   appState.isDirty = false;
-  incNoteSaveCount();
 }
 
 /**
@@ -235,7 +233,8 @@ export async function createNoteWithName(name, content = null) {
     note.versionIds.push(verId);
     console.log("created note", name);
   }
-  incNoteCreateCount();
+  appState.allNotes.push(note);
+  appStateUpdateAfterNotesChange();
 }
 
 /*
@@ -248,15 +247,14 @@ export async function appendToNote(name, content) {
     !startsWithBlockHeader(content),
     "content must start with block header ~~~",
   );
-  let currContent = "";
-  if (noteExists(name)) {
-    currContent = await loadNote(name);
-    incNoteSaveCount();
-  } else {
-    incNoteCreateCount();
+  let note = findNoteByName(name);
+  if (note) {
+    let currContent = await loadNote(name);
+    let newContent = currContent + content;
+    await storeWriteContent(makeRandomContentID(note.id), newContent);
+    return;
   }
-  let newContent = currContent + content;
-  await storeWriteContent(makeRandomContentID(name), newContent);
+  await createNoteWithName(name, content);
 }
 
 /**
@@ -356,7 +354,6 @@ export function isNoteArchivable(name) {
 export async function deleteNote(name) {
   let note = findNoteByName(name);
   storeMarkNoteDeleted(note.id);
-  incNoteDeleteCount();
   removeNoteFromHistory(name);
 }
 
