@@ -601,3 +601,15 @@ export function humanPrice(price) {
   }
   return res;
 }
+
+/**
+ * @param {number} startTime
+ * @param {string} prefix
+ * @returns {string}
+ */
+export function logDur(startTime, prefix = "") {
+  const endTime = performance.now();
+  const dur = (endTime - startTime).toFixed(2);
+  console.log(`${prefix} took ${dur} ms`);
+  return dur;
+}
