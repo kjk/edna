@@ -91,7 +91,7 @@
     console.warn("maybeValidAPIKey:", $state.snapshot(maybeValidApiKey));
   });
 
-  const maxTokens = 1000;
+  const maxTokens = 10000;
 
   function apiProviderForAiModel(aiModel) {
     let provider = aiModel[kModelProviderIdx];
@@ -243,7 +243,6 @@
       model: modelID,
       messages: [{ role: "user", content: prompt }],
       max_tokens: maxTokens,
-      temperature: 0.7,
       stream: true,
     };
 
