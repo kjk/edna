@@ -77,11 +77,6 @@
   /** @type {HTMLElement} */
   let ednaRef = $state(null);
 
-  /** @type {HTMLElement} */
-  let endaMascotImgRef = $state(null);
-
-  let ednaMascotImgCls = $state("hidden");
-
   const colors = [
     "red",
     "orange",
@@ -278,7 +273,6 @@
       bind:this={ednaRef}
       class="edna mr-2 font-bold text-slate-600 dark:text-slate-200"
       onmouseenter={() => {
-        ednaMascotImgCls = "flex";
         if (!startColor) {
           startColor = ednaRef.style.color;
         }
@@ -290,19 +284,11 @@
       onmouseleave={() => {
         clearInterval(colorChangeInterval);
         ednaRef.style.color = startColor;
-        ednaMascotImgCls = "hidden";
       }}
       href="/help"
       target="_blank"
       >Edna
     </a>
-    <div
-      class="flex-col absolute z-30 top-[2rem] right-[1rem] {ednaMascotImgCls}"
-      bind:this={endaMascotImgRef}
-    >
-      <img class="" alt="Edna mascot" src="/edna-mascot.jpg" />
-      <div class="self-center bg-white">Hi! I'm Edna!</div>
-    </div>
     <button
       onclick={() => (settings.alwaysShowTopNav = false)}
       class="clickable-icon"
