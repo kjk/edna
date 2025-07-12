@@ -1,4 +1,5 @@
 import "./main.css";
+import "./markdown-anti-tailwind.css";
 import { mount, unmount } from "svelte";
 import { appState, findNoteByName } from "./appstate.svelte";
 import App from "./components/App.svelte";

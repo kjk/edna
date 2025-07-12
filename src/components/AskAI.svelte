@@ -1,5 +1,7 @@
 <script>
   import { tick } from "svelte";
+  import markdownIt from "markdown-it";
+  import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";
   import {
@@ -21,6 +23,7 @@
 }}*/
   let { close, startText, insertResponse } = $props();
 
+  let outputMarkdownToHTML = true;
   const kApiProviderOpenAI = 0;
   const kApiProviderXAi = 1;
   const kApiProviderOpenRouter = 2;
@@ -145,6 +148,9 @@
       await streamChatGPTResponse(questionText, maybeValidApiKey, baseURL);
       // looks like a valid key, remember it
       reqFinished = true;
+
+      let html = mdToHTML(responseText);
+      console.log(html);
     } catch (e) {
       console.error(e);
       console.error(e.cause ? e.cause : "");
@@ -290,6 +296,62 @@
         }
       }
     }
+  }
+
+  /**
+   * @param {markdownIt} md
+   */
+  function addTargetBlank(md) {
+    // Remember old renderer, if overridden, or proxy to default renderer
+    var defaultRender =
+      md.renderer.rules.link_open ||
+      function (tokens, idx, options, env, self) {
+        return self.renderToken(tokens, idx, options);
+      };
+
+    md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+      // If you are using linkify to automatically detect links, you might want to
+      // check if it's an external link here. You can do so based on tokens[idx].href
+
+      // Add target="_blank" to links except the internal #foo links
+      let token = tokens[idx];
+      // console.log("token:", token);
+      // console.log("token.attrs:", token.attrs);
+      let aidx = token.attrIndex("href");
+      let uri = token.attrs[aidx][1];
+      if (uri.startsWith("#")) {
+        // console.log("skipping uri: ", uri);
+        return defaultRender(tokens, idx, options, env, self);
+      }
+      aidx = token.attrIndex("target");
+      if (aidx < 0) {
+        token.attrPush(["target", "_blank"]); // add new attribute
+      } else {
+        token.attrs[aidx][1] = "_blank"; // replace existing attribute
+      }
+      // console.log("added to uri: ", uri);
+      // pass token to default renderer.
+      return defaultRender(tokens, idx, options, env, self);
+    };
+  }
+
+  /**
+   * @param {string} md
+   * @returns {string}
+   */
+  function mdToHTML(md) {
+    let mdIt = markdownIt({
+      linkify: true,
+    });
+    mdIt.use(addTargetBlank);
+    mdIt.use(markdownItAnchor, {
+      // Here you can pass options to markdown-it-anchor
+      // For example, setting the permalink option:
+      permalink: markdownItAnchor.permalink.headerLink(),
+    });
+
+    let html = mdIt.render(md);
+    return html;
   }
 
   /**
@@ -460,12 +522,21 @@
     class="mt-1 w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
   ></textarea>
   {#if len(responseText) > 0}
-    <div
-      tabindex="-1"
-      class="mt-2 font-mono whitespace-pre-wrap h-auto w-full overflow-auto border border-gray-950/20 outline-gray-950/20 p-1.5"
-    >
-      {responseText}
-    </div>
+    {#if outputMarkdownToHTML}
+      <div
+        tabindex="-1"
+        class="markdown-body mt-2 h-auto w-full overflow-auto border border-gray-950/20 outline-gray-950/20 p-1.5"
+      >
+        {@html mdToHTML(responseText)}
+      </div>
+    {:else}
+      <div
+        tabindex="-1"
+        class="mt-2 font-mono whitespace-pre-wrap h-auto w-full overflow-auto border border-gray-950/20 outline-gray-950/20 p-1.5"
+      >
+        {responseText}
+      </div>
+    {/if}
   {/if}
   {#if err}
     <div
