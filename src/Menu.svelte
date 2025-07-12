@@ -109,7 +109,7 @@
    menuItemStatus?: (mi: MenuItemDef) => number,
    onmenucmd: (cmd: number) => void,
 }}*/
-  let { menuDef: menuDef, pos, menuItemStatus = null, onmenucmd } = $props();
+  let { menuDef, pos, menuItemStatus = null, onmenucmd } = $props();
 
   /**
    * @param {MenuItemDef} mid

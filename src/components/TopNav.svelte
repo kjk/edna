@@ -6,6 +6,7 @@
   import { isSystemNoteName } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { getAltChar, len } from "../util.js";
+  import GitHub from "./GitHub.svelte";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
     IconMdiArrowCollapseLeft,
@@ -245,9 +246,16 @@
       </div>
     {/if}
 
+    <a
+      title="LogIn with GitHub to access notes from any computer"
+      href="/auth/ghlogin"
+      class="relative flex items-center mr-4 font-bold text-slate-600 dark:text-slate-200 clickable-icon"
+      ><GitHub class="mt-[1px]" />
+      <div class="ml-1.5">login</div></a
+    >
+
     <button
       title="Login to access notes from any computer"
-      class="mr-4 font-bold text-slate-600 dark:text-slate-200 clickable-icon"
       onclick={() => {
         startLogin();
       }}
