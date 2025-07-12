@@ -53,6 +53,10 @@ const secretsDev = `# secrets for dev mode
 # COOKIE_ENCR_KEY=2780ffc17eec2d85960473c407ee37c0249db93e4586ec52e3ef9e153ba61e72
 `
 
+var (
+	secretGitHub = ""
+)
+
 func getSecrets() []byte {
 	// in production deployment secrets are embedded in binary as secretsEnv
 	if len(secretsEnv) > 0 {
@@ -111,6 +115,11 @@ func loadSecrets() {
 	// 	axiomApiToken = ""
 	// 	pirschClientSecret = ""
 	// }
+
+	getEnv("GITHUB_SECRET_PROD", &secretGitHub, 40, true)
+	if isDev() {
+		getEnv("GITHUB_SECRET_LOCAL", &secretGitHub, 40, true)
+	}
 
 	// when running locally, don't
 	if false && flgRunDev {

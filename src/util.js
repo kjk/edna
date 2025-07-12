@@ -628,3 +628,26 @@ export function browserDownloadBlob(blob, name) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * @param {string} key
+ */
+export function getLocalStorageAsJSON(key) {
+  // console.log("getLocalStorageAsJSON:", key);
+  const v = localStorage.getItem(key);
+  if (v) {
+    // console.log("  v:", v);
+    return JSON.parse(v);
+  }
+  return null;
+}
+
+/**
+ * @param {string} key
+ * @param {*} js
+ */
+export function setLocalStorageFromJSON(key, js) {
+  const s = JSON.stringify(js);
+  // console.log("setLocalStorageFromJSON:", key, "size:", len(s));
+  localStorage.setItem(key, s);
+}

@@ -17,11 +17,11 @@ import (
 
 // variables to customize
 var (
-	projectName       = "Elaris"
+	projectName       = "elaris"
 	domain            = "elaris.arslexis.io"
 	httpPort          = 9339
 	frontEndBuildDir  = "dist"
-	wantedProdSecrets = []string{"LOGTASTIC_API_KEY"}
+	wantedProdSecrets = []string{"LOGTASTIC_API_KEY", "GITHUB_SECRET_PROD", "GITHUB_SECRET_LOCAL"}
 )
 
 // stuff that is derived from the above
