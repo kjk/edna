@@ -39,6 +39,8 @@ class AppState {
   settings = $state(undefined); // user settings
 
   forceNewTab = false;
+
+  isOffline = $state(!navigator.onLine);
 }
 
 // TODO: maybe convert to $effect() on appState.notes
@@ -76,6 +78,20 @@ export function appStateUpdateAfterNotesChange() {
 }
 
 export const appState = new AppState();
+
+$effect.root(() => {
+  $effect(() => {
+    const goOnline = () => (appState.isOffline = false);
+    const goOffline = () => (appState.isOffline = true);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  });
+});
+
 export function getNotes() {
   return appState.allNotes;
 }

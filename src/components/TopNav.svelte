@@ -236,6 +236,15 @@
   </div>
   {#if settings.alwaysShowTopNav}
     <div class="grow"></div>
+    {#if appState.isOffline}
+      <div
+        class="text-red-600 font-bold mr-2"
+        title="Currently offline, no connection to the internet"
+      >
+        Offline
+      </div>
+    {/if}
+
     <button
       title="Login to access notes from any computer"
       class="mr-4 font-bold text-slate-600 dark:text-slate-200 clickable-icon"
