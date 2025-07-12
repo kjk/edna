@@ -1,7 +1,7 @@
 <script>
   import { focus } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
-  import { toggleNoteStarred } from "../metadata";
+  import { toggleNoteStarred } from "../notes";
   import { getSettings } from "../settings.svelte";
   import { Note } from "../store";
   import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";

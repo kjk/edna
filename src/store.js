@@ -5,7 +5,6 @@ const kStoreKinewCreateNote = "note-create";
 const kStoreKindNoteMeta = "note-meta";
 const kStoreKindDeleteNote = "note-delete";
 const kStoreKindNoteContent = "note-content";
-const kStoreKindAppMeta = "app-meta";
 
 /** @type {AppendStore} */
 let store;
@@ -45,30 +44,18 @@ export async function storeWriteNoteMeta(m) {
 }
 
 /**
- * @param {Object} m
+ * @param {string} fileName
+ * @param {string} s
  */
-export async function storeWriteAppMeta(m) {
-  let meta = JSON.stringify(m);
-  await store.write(meta, kStoreKindAppMeta, null);
+export async function storeWriteFileString(fileName, s) {
+  localStorage.setItem(fileName, s);
 }
 
-function getLastRecordOfKind(store, kind) {
-  let lastRecord = null;
-  for (let record of store.records) {
-    if (record.kind === kind) {
-      lastRecord = record; // we expect only one app meta record
-    }
-  }
-  return lastRecord;
-}
-
-export async function readAppMeta() {
-  let rec = getLastRecordOfKind(store, kStoreKindAppMeta);
-  if (!rec) {
-    return null; // no app metadata
-  }
-  let meta = await store.readString(rec.offset, rec.length);
-  return meta;
+/**
+ * @returns {Promise<string>}
+ */
+export async function storeReadFileAsString(fileName) {
+  return localStorage.getItem(fileName) || "";
 }
 
 /**
@@ -128,8 +115,6 @@ export class Note {
   isStarred;
   /** @type {string}  */
   altShortcut;
-  selection;
-  foldedRanges;
 
   getMetadata() {
     // by using toUndef() we make JSON-serialized version
@@ -140,8 +125,6 @@ export class Note {
       isArchived: toUndef(this.isArchived),
       isStarred: toUndef(this.isStarred),
       altShortcut: toUndef(this.altShortcut),
-      selection: this.selection,
-      foldedRanges: this.foldedRanges,
     };
   }
 
@@ -153,8 +136,6 @@ export class Note {
     this.isArchived = m.isArchived;
     this.isStarred = m.isStarred;
     this.altShortcut = m.altShortcut;
-    this.selection = m.selection;
-    this.foldedRanges = m.foldedRanges;
   }
 
   constructor(id, name) {

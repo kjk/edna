@@ -1,8 +1,12 @@
 <script>
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
-  import { isSystemNoteName, sanitizeNoteName } from "../notes";
+  import {
+    isSystemNoteName,
+    reassignNoteShortcut,
+    sanitizeNoteName,
+    toggleNoteStarred,
+  } from "../notes";
   import {
     findMatchingItems,
     getAltChar,

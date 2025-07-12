@@ -1,7 +1,6 @@
-import { appState, findNoteByName } from "./appstate.svelte";
+import { appState, findNoteByName, getNotes } from "./appstate.svelte";
 import { updateAfterNoteStateChange } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
-import { reassignNoteShortcut, saveNoteMetadata } from "./metadata";
 import { nanoid } from "./nanoid";
 import { getSettings } from "./settings.svelte";
 import {
@@ -10,6 +9,7 @@ import {
   storeLoadLatestNoteContent,
   storeMarkNoteDeleted,
   storeWriteContent,
+  storeWriteNoteMeta,
 } from "./store";
 import {
   getBuiltInFunctionsNote,
@@ -386,4 +386,83 @@ export function sanitizeNoteName(name) {
  */
 export function getNotesCount() {
   return len(appState.allNotes);
+}
+
+/**
+ * @param {string} name
+ * @param {string} altShortcut - "0" ... "9"
+ */
+export async function reassignNoteShortcut(name, altShortcut) {
+  console.log("reassignNoteShortcut:", name, altShortcut);
+  let notes = getNotes();
+  for (let note of notes) {
+    if (note.name === name) {
+      // same note: remove shortcut
+      if (note.altShortcut === altShortcut) {
+        // already assigned
+        note.altShortcut = "";
+        console.log("reassignNoteShortcut: removing shortcut from", name);
+      } else {
+        note.altShortcut = altShortcut;
+      }
+      await saveNoteMetadata(note);
+      continue;
+    }
+    if (note.altShortcut === altShortcut) {
+      // a different note: remove shortcut
+      note.altShortcut = "";
+      await saveNoteMetadata(note);
+    }
+  }
+  updateAfterNoteStateChange();
+}
+
+/**
+ * @param {string} name
+ */
+export async function archiveNote(name) {
+  let note = findNoteByName(name);
+  note.isArchived = true;
+  await saveNoteMetadata(note);
+  updateAfterNoteStateChange();
+}
+
+/**
+ * @param {string} name
+ */
+export async function unArchiveNote(name) {
+  let note = findNoteByName(name);
+  note.isArchived = false;
+  await saveNoteMetadata(note);
+  updateAfterNoteStateChange();
+}
+
+/**
+ * @param {string} name
+ * @returns {Promise<boolean>}
+ */
+export async function toggleNoteStarred(name) {
+  let note = findNoteByName(name);
+  note.isStarred = !note.isStarred;
+  await saveNoteMetadata(note);
+  updateAfterNoteStateChange();
+  return note.isStarred;
+}
+
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isNoteArchived(name) {
+  let note = findNoteByName(name);
+  return note ? note.isArchived : false;
+}
+
+/**
+ * @param {Note} note
+ */
+export async function saveNoteMetadata(note) {
+  let m = note.getMetadata();
+  console.log("saveNoteMetadata:", m);
+  await storeWriteNoteMeta(m);
 }

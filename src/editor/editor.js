@@ -14,8 +14,8 @@ import {
   lineNumbers,
 } from "@codemirror/view";
 import { findNoteByName } from "../appstate.svelte.js";
-import { saveNoteMetadata } from "../metadata.js";
-import { loadNoteContent, saveNote } from "../notes.js";
+import { getMetadata, saveAppMetadata } from "../metadata.js";
+import { loadNoteContent, saveNote, saveNoteMetadata } from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { len, objectEqualDeep } from "../util.js";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation.js";
@@ -219,44 +219,7 @@ export class EdnaEditor {
       // Set cursor positions
       // We use requestAnimationFrame to avoid a race condition causing the scrollIntoView to sometimes not work
       requestAnimationFrame(() => {
-        let note = findNoteByName(this.noteName);
-        let savedSelection = note.selection;
-        // TODO: validate selection?
-        if (savedSelection) {
-          // console.log("setContent: restoring selection:", savedSelection);
-          try {
-            this.view.dispatch({
-              selection: EditorSelection.fromJSON(savedSelection),
-              scrollIntoView: true,
-            });
-          } catch (e) {
-            // console.error("setContent: error restoring selection:", e);
-            // if we fail to restore selection, just put cursor at the beginning
-            this.view.dispatch({
-              selection: EditorSelection.single(0),
-              scrollIntoView: true,
-            });
-          }
-        } else {
-          // console.log("setContent: setting pos:", pos);
-          this.view.dispatch({
-            selection: EditorSelection.single(0),
-            scrollIntoView: true,
-          });
-        }
-
-        let ranges = note.foldedRanges || [];
-        if (len(ranges) > 0) {
-          try {
-            this.view.dispatch({
-              effects: ranges.map((range) => foldEffect.of(range)),
-            });
-          } catch (e) {
-            console.error("setContent: error restoring folded ranges:", e);
-            // if we fail to restore folded ranges, just clear them
-            unfoldEverything(this)(this.view);
-          }
-        }
+        this.restoreSelectionAndRanges();
         resolve();
       });
     });
@@ -264,16 +227,22 @@ export class EdnaEditor {
 
   async saveFoldedState() {
     let note = findNoteByName(this.noteName);
+    let meta = getMetadata();
+    let noteMeta = meta.notes[note.id];
+    if (!noteMeta) {
+      meta.notes[note.id] = {};
+      noteMeta = meta.notes[note.id];
+    }
     let didChange = false;
     let foldedRanges = getFoldedRanges(this.view);
-    if (!objectEqualDeep(note.foldedRanges, foldedRanges)) {
+    if (!objectEqualDeep(noteMeta.foldedRanges, foldedRanges)) {
       didChange = true;
-      note.foldedRanges = foldedRanges;
+      noteMeta.foldedRanges = foldedRanges;
     }
     let selection = this.view.state.selection.toJSON();
-    if (!objectEqualDeep(note.selection, selection)) {
+    if (!objectEqualDeep(noteMeta.selection, selection)) {
       didChange = true;
-      note.selection = selection;
+      noteMeta.selection = selection;
     }
     if (!didChange) {
       // console.log("saveFoldedState: skipping save, no changes");
@@ -285,7 +254,53 @@ export class EdnaEditor {
     //   "folededState:",
     //   foldedRanges,
     // );
-    await saveNoteMetadata(note);
+    await saveAppMetadata();
+  }
+
+  restoreSelectionAndRanges() {
+    let note = findNoteByName(this.noteName);
+    let meta = getMetadata();
+    let noteMeta = meta.notes[note.id];
+    if (!noteMeta) {
+      return;
+    }
+    let savedSelection = noteMeta.selection;
+    // TODO: validate selection?
+    if (savedSelection) {
+      // console.log("setContent: restoring selection:", savedSelection);
+      try {
+        this.view.dispatch({
+          selection: EditorSelection.fromJSON(savedSelection),
+          scrollIntoView: true,
+        });
+      } catch (e) {
+        // console.error("setContent: error restoring selection:", e);
+        // if we fail to restore selection, just put cursor at the beginning
+        this.view.dispatch({
+          selection: EditorSelection.single(0),
+          scrollIntoView: true,
+        });
+      }
+    } else {
+      // console.log("setContent: setting pos:", pos);
+      this.view.dispatch({
+        selection: EditorSelection.single(0),
+        scrollIntoView: true,
+      });
+    }
+
+    let ranges = noteMeta.foldedRanges || [];
+    if (len(ranges) > 0) {
+      try {
+        this.view.dispatch({
+          effects: ranges.map((range) => foldEffect.of(range)),
+        });
+      } catch (e) {
+        console.error("setContent: error restoring folded ranges:", e);
+        // if we fail to restore folded ranges, just clear them
+        unfoldEverything(this)(this.view);
+      }
+    }
   }
 
   getBlocks() {

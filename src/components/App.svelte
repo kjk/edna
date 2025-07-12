@@ -63,12 +63,7 @@
     langSupportsRun,
   } from "../editor/languages";
   import { toFileName } from "../filenamify";
-  import {
-    fsFileHandleWriteBlob,
-    hasHandlePermission,
-    openDirPicker,
-    supportsFileSystem,
-  } from "../fileutil";
+  import { fsFileHandleWriteBlob, supportsFileSystem } from "../fileutil";
   import { parseUserFunctions, runBoopFunction } from "../functions";
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
@@ -80,15 +75,10 @@
     kMenuStatusNormal,
     kMenuStatusRemoved,
   } from "../Menu.svelte";
-  import {
-    archiveNote,
-    isNoteArchived,
-    toggleNoteStarred,
-    unArchiveNote,
-  } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
   import {
     appendToNote,
+    archiveNote,
     blockHdrMarkdown,
     canDeleteNote,
     createIfNotExists,
@@ -96,6 +86,7 @@
     createNoteWithName,
     deleteNote,
     isNoteArchivable,
+    isNoteArchived,
     isSystemNoteName,
     kBuiltInFunctionsNoteName,
     kDailyJournalNoteName,
@@ -108,13 +99,16 @@
     loadNoteContentIfExists,
     noteExists,
     renameNote,
+    toggleNoteStarred,
+    unArchiveNote,
   } from "../notes";
-  import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
+  import { exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import { getSettings } from "../settings.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,
+    browserDownloadBlob,
     formatDateYYYYMMDDDay,
     getClipboardText,
     isAltNumEvent,

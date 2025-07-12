@@ -22,12 +22,13 @@ let appSvelte;
 export async function boot() {
   console.log("booting");
   // await testFuncs();
+
   getSettings();
   appState.allNotes = await openStore();
   updateAfterNoteStateChange();
+  await loadAppMetadata(); // pre-load
 
   await createDefaultNotes(appState.allNotes);
-  await loadAppMetadata(); // pre-load
 
   let settings = getSettings();
   // console.log("settings:", settings);

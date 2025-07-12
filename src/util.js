@@ -613,3 +613,18 @@ export function logDur(startTime, prefix = "") {
   console.log(`${prefix} took ${dur} ms`);
   return dur;
 }
+
+/**
+ * @param {Blob} blob
+ * @param {string} name
+ */
+export function browserDownloadBlob(blob, name) {
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

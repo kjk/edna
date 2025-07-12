@@ -108,15 +108,13 @@
   import { appState, findNoteByName } from "../appstate.svelte";
   import {
     archiveNote,
+    isNoteArchivable,
     isNoteArchived,
+    isSystemNoteName,
     reassignNoteShortcut,
+    sanitizeNoteName,
     toggleNoteStarred,
     unArchiveNote,
-  } from "../metadata";
-  import {
-    isNoteArchivable,
-    isSystemNoteName,
-    sanitizeNoteName,
   } from "../notes";
   import { Note } from "../store";
   import {
