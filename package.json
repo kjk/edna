@@ -62,6 +62,7 @@
     "@replit/codemirror-lang-svelte": "^6.0.0",
     "@zip.js/zip.js": "^2.7.63",
     "debounce": "^2.2.0",
+    "highlight.js": "^11.11.1",
     "idb": "^8.0.3",
     "kiss-crypto": "^0.3.4",
     "overlayscrollbars": "^2.11.4",

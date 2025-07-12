@@ -1,5 +1,6 @@
 <script>
   import { tick } from "svelte";
+  import hljs from "highlight.js";
   import markdownIt from "markdown-it";
   import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
@@ -90,10 +91,6 @@
   );
   let hasAPIKey = $derived(maybeValidApiKey != "");
 
-  $effect(() => {
-    console.warn("maybeValidAPIKey:", $state.snapshot(maybeValidApiKey));
-  });
-
   const maxTokens = 10000;
 
   function apiProviderForAiModel(aiModel) {
@@ -141,16 +138,12 @@
     err = "";
     responseText = "";
     let baseURL = getApiProviderBaseURL(apiProviderToUse);
-    console.warn("askai: baseURL:", baseURL);
     try {
       reqFinished = false;
       reqInProgress = true;
       await streamChatGPTResponse(questionText, maybeValidApiKey, baseURL);
       // looks like a valid key, remember it
       reqFinished = true;
-
-      let html = mdToHTML(responseText);
-      console.log(html);
     } catch (e) {
       console.error(e);
       console.error(e.cause ? e.cause : "");
@@ -342,11 +335,18 @@
   function mdToHTML(md) {
     let mdIt = markdownIt({
       linkify: true,
+      highlight: function (str, lang) {
+        try {
+          if (lang && hljs && hljs.getLanguage(lang)) {
+            return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+          }
+        } catch (__) {}
+        // fallback: escape HTML
+        return `<pre class="hljs"><code>${mdIt.utils.escapeHtml(str)}</code></pre>`;
+      },
     });
     mdIt.use(addTargetBlank);
     mdIt.use(markdownItAnchor, {
-      // Here you can pass options to markdown-it-anchor
-      // For example, setting the permalink option:
       permalink: markdownItAnchor.permalink.headerLink(),
     });
 
