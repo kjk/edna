@@ -1022,12 +1022,13 @@
     "Archive note",
     kCmdUnArchiveCurrentNote,
     "Un-archive note",
+    kCmdCreateNewNote,
+    "Create New Note",
   ];
 
   /** @type {MenuItemDef[]} */
   const commandPaletteAdditions = [
     ["Create New Scratch Note", kCmdCreateScratchNote],
-    ["Create New Note", kCmdCreateNewNote],
     ["Open recent note", kCmdOpenRecent],
     ["Open note in new tab", kCmdOpenNoteInNewTab],
     ["Toggle Sidebar", kCmdToggleSidebar],
