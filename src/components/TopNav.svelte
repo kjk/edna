@@ -73,41 +73,6 @@
     return "invisible fixed top-0 z-10 right-0";
   });
 
-  /** @type {HTMLElement} */
-  let elarisRef = $state(null);
-
-  const colors = [
-    "red",
-    "orange",
-    "green",
-    "blue",
-    "indigo",
-    "violet", // original rainbow colors
-    "darkred",
-    "darkorange",
-    "gold",
-    "forestgreen",
-    "royalblue",
-    "purple",
-    "deeppink",
-    "crimson",
-    "teal",
-    "navy",
-    "darkgreen",
-    "darkcyan",
-    "mediumvioletred",
-    "darkslateblue",
-    "firebrick",
-    "orchid",
-    "mediumspringgreen",
-    "darkmagenta",
-    "darkolivegreen",
-    "saddlebrown",
-  ];
-  let colorIndex = 0;
-  let colorChangeInterval;
-  let startColor;
-
   let showingHelp = $state(false);
 
   function openURLOrNote(url) {
@@ -139,10 +104,13 @@
     }
     return "";
   }
+  function startLogin() {
+    console.warn("startLogin NYI");
+  }
 </script>
 
 <div
-  class="flex bg-gray-200 text-sm px-1 select-none text-gray-900 dark:bg-gray-500 dark:text-gray-300 items-center {cls} hover:visible {klass}"
+  class="flex bg-sky-200! text-sm px-1 select-none text-gray-900 dark:bg-gray-500 dark:text-gray-300 items-center {cls} hover:visible {klass}"
 >
   {#if settings.showSidebar}
     <button
@@ -213,7 +181,7 @@
         {@const isSelected = noteName == settings.currentNoteName}
         {@const cls = isSelected
           ? "bg-white hover:bg-white! dark:bg-gray-800 dark:hover:bg-gray-800!"
-          : "bg-gray-200 dark:bg-gray-500! hover:bg-gray-100 cursor-pointer"}
+          : "bg-sky-200 dark:bg-gray-500! hover:bg-sky-100! cursor-pointer"}
         {@const noteNameCls = noteCls(noteName)}
         <button
           class="truncate justify-between whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 align-baseline clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 items-center {cls}"
@@ -268,22 +236,17 @@
   </div>
   {#if settings.alwaysShowTopNav}
     <div class="grow"></div>
+    <button
+      title="Login to access notes from any computer"
+      class="mr-4 font-bold text-slate-600 dark:text-slate-200 clickable-icon"
+      onclick={() => {
+        startLogin();
+      }}
+      >Login
+    </button>
+
     <a
-      bind:this={elarisRef}
-      class="edna mr-2 font-bold text-slate-600 dark:text-slate-200"
-      onmouseenter={() => {
-        if (!startColor) {
-          startColor = elarisRef.style.color;
-        }
-        colorChangeInterval = setInterval(() => {
-          elarisRef.style.color = colors[colorIndex];
-          colorIndex = (colorIndex + 1) % colors.length;
-        }, 300); // Change color every 500 milliseconds
-      }}
-      onmouseleave={() => {
-        clearInterval(colorChangeInterval);
-        elarisRef.style.color = startColor;
-      }}
+      class="mr-1 font-bold text-slate-600 dark:text-slate-200"
       href="/help"
       target="_blank"
       >Elaris
@@ -313,7 +276,7 @@
     @apply cursor-pointer px-2 py-1;
 
     &:hover {
-      @apply bg-gray-100 dark:bg-gray-500;
+      @apply bg-sky-100 dark:bg-gray-500;
     }
   }
 </style>
