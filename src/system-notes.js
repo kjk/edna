@@ -1,15 +1,15 @@
 import { len, platformName } from "./util.js";
 
-import dailyJournalRaw from "./notes/note-daily-journal.edna.txt?raw";
+import dailyJournalRaw from "./notes/note-daily-journal.elaris.txt?raw";
 import { fixUpNoteContent } from "./notes.js";
-import helpRaw from "./notes/note-help.edna.txt?raw";
-import inboxRaw from "./notes/note-inbox.edna.txt?raw";
-import scratchDevRaw from "./notes/note-scratch-dev.edna.txt?raw";
-import scratchRaw from "./notes/note-scratch.edna.txt?raw";
+import helpRaw from "./notes/note-help.elaris.txt?raw";
+import inboxRaw from "./notes/note-inbox.elaris.txt?raw";
+import scratchDevRaw from "./notes/note-scratch-dev.elaris.txt?raw";
+import scratchRaw from "./notes/note-scratch.elaris.txt?raw";
 import { fixUpShortcuts, keyHelpStr } from "./key-helper.js";
-import releaseNotesRaw from "./notes/note-release-notes.edna.txt?raw";
+import releaseNotesRaw from "./notes/note-release-notes.elaris.txt?raw";
 import builtInFunctionsRaw from "./notes/note-built-in-functions.js?raw";
-import myFunctionsRaw from "./notes/note-custom-functions.edna.txt?raw";
+import myFunctionsRaw from "./notes/note-custom-functions.elaris.txt?raw";
 
 import { parseBuiltInFunctions } from "./functions.js";
 
@@ -22,7 +22,7 @@ export function getHelp(platform = platformName) {
   help = help.replace("{{keyHelp}}", keyHelp);
   // links are for generated html under /help
   // when showing as note, it's just noise
-  help = help.replaceAll("[Edna](https://edna.arslexis.io)", "Edna");
+  help = help.replaceAll("[Elaris](https://elaris.arslexis.io)", "Elaris");
   return fixUpNoteContent(help);
 }
 
@@ -31,15 +31,15 @@ export const blockHdrJavaScript = "\n∞∞∞javascript\n";
 const blockHdrMarkdown = "\n∞∞∞markdown\n"; // avoid circular deps
 let builtInHdr =
   blockHdrMarkdown +
-  `# Edna bundled JavaScript function
+  `# Elaris bundled JavaScript function
 
-Below are JavaScript functions included with Edna.
+Below are JavaScript functions included with Elaris.
 
 You can run them on current block content with "Run function with this block" command.
 
 You can write your own functions.
 
-To learn more see http://edna.arslexis.io/help#running-code
+To learn more see http://elaris.arslexis.io/help#running-code
 `;
 
 /**

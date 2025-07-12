@@ -184,8 +184,8 @@ func Main() {
 	}
 
 	if GitCommitHash != "" {
-		uriBase := "https://github.com/kjk/edna/commit/"
-		logf("edna.arslexis.io, build: %s (%s)\n", GitCommitHash, uriBase+GitCommitHash)
+		uriBase := "https://github.com/kjk/elaris/commit/"
+		logf("elaris.arslexis.io, build: %s (%s)\n", GitCommitHash, uriBase+GitCommitHash)
 	}
 
 	if flgUpdateGoDeps {

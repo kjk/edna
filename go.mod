@@ -1,4 +1,4 @@
-module edna
+module elaris
 
 go 1.24.3
 

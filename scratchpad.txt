@@ -1,4 +1,4 @@
-Idea for backing up notes: when saving, save as ${name}-${currTimeMsEncoded}.edna.txt and ${name}-${name}.edna.txt
+Idea for backing up notes: when saving, save as ${name}-${currTimeMsEncoded}.elaris.txt and ${name}-${name}.elaris.txt
 
 ${currTimeEncoded} is integer as milliseconds since epoch base32-encoded as a sortable string.
 

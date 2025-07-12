@@ -472,7 +472,7 @@
 
   async function exportCurrentNote() {
     let settings = getSettings();
-    let fileName = toFileName(settings.currentNoteName) + ".edna.txt";
+    let fileName = toFileName(settings.currentNoteName) + ".elaris.txt";
     let editor = getEditor();
     let s = editor.getContent();
     console.log("exportCurrentNote:", fileName);
@@ -1138,7 +1138,7 @@
         return kMenuStatusDisabled;
       }
       // it would be nice to check clipboard for empty text but that triggers clipboard
-      // permissions dialog https://github.com/kjk/edna/issues/81
+      // permissions dialog https://github.com/kjk/elaris/issues/81
       // if (!mostRecentHasClipboardText) {
       //   return kMenuStatusDisabled;
       // }

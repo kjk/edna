@@ -11,7 +11,7 @@ export function rememberEditor(editor) {
   editors.push(editor);
   // TODO: this is for tests
   // @ts-ignore
-  window.ednaCurrentEditor = editor;
+  window.elarisCurrentEditor = editor;
 }
 
 export function findEditorByView(view) {

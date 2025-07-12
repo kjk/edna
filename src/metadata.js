@@ -7,7 +7,7 @@ import {
   storeWriteNoteMeta,
 } from "./store";
 
-export const kMetadataName = "__metadata.edna.json";
+export const kMetadataName = "__metadata.elaris.json";
 
 /** @typedef {{
     name: string,

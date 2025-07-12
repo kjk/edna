@@ -1,47 +1,47 @@
-# Edna
+# Elaris
 
-[Edna](https://edna.arslexis.io) is a note taking app with superpowers.
+[Elaris](https://elaris.arslexis.io) is a note taking app with superpowers.
 
 Integrated AI chat, blocks, markdown, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more), command palette, programmability.
 
-To learn more, see https://edna.arslexis.io/help
+To learn more, see https://elaris.arslexis.io/help
 
 ## Compiling and running for yourself
 
 You need Go and [bun](https://bun.sh/)
 
 - `go run . -build-frontend`
-- `go build -o edna .` (on Windows, `-o edna.exe`)
+- `go build -o elaris .` (on Windows, `-o Elaris.exe`)
 
-This generates a stand-alone `edna` binary that can run on Windows desktop, Mac desktop or Linux server.
+This generates a stand-alone `elaris` binary that can run on Windows desktop, Mac desktop or Linux server.
 
-To run: `./edna -run-prod`
+To run: `./elaris -run-prod`
 
-Edna runs on port `9325` so visit http://localhost:9325'
+Elaris runs on port `9325` so visit http://localhost:9325'
 
 ## Development or production in docker:
 
 ### Build
 
 ```
-docker build -t edna .
+docker build -t elaris .
 ```
 
 ### Run Production
 
 ```
-docker run -p 80:9325 edna -run-prod
+docker run -p 80:9325 elaris -run-prod
 ```
 
 ### Run development frontend
 
 ```
-docker run -v ${PWD}/src:/app/src -p 8080:3035 edna -run-dev
+docker run -v ${PWD}/src:/app/src -p 8080:3035 elaris -run-dev
 ```
 
 ## Credits
 
-Edna started as a fork of Heynote but I've added many features since:
+Elaris started as a fork of Heynote but I've added many features since:
 
 - ability to have multiple notes, so that it can be used as a note taking app in addition to being a scratchpad
 - made it a web app, with ability to store notes on disk

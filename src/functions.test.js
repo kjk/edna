@@ -40,7 +40,7 @@ test("parseBuiltInFunctiosn", async () => {
 
 test("parseCustomFunctions", async () => {
   let jsRaw = await Bun.file(
-    "./src/notes/note-custom-functions.edna.txt",
+    "./src/notes/note-custom-functions.elaris.txt",
   ).text();
   let res = parseUserFunctions(jsRaw);
   expect(len(res)).toBe(1);

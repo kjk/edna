@@ -1,8 +1,8 @@
 
 ∞∞∞markdown
-Welcome to Edna - a note taking app for developers and power users.
+Welcome to Elaris - a note taking app for developers and power users.
 
-To learn more: https://edna.arslexis.io/help (or right-click for context menu and use `Help` / `Show help`).
+To learn more: https://elaris.arslexis.io/help (or right-click for context menu and use `Help` / `Show help`).
 
 This is a scratch note. Feel free to delete the content and use it for temporary notes.
 ∞∞∞text
@@ -44,7 +44,7 @@ In supported browsers (Chrome, Edge, Brave) you can store notes on disk.
 
 To share notes between computers, you can store notes on shared file system like DropBox, One Drive, Google Drive etc.
 
-Read more at https://edna.arslexis.io/help#storing-notes-on-disk
+Read more at https://elaris.arslexis.io/help#storing-notes-on-disk
 ∞∞∞math
 This is a Math block. Lines are evaluated as math expressions with result rendered at end of line right.
 
@@ -62,12 +62,12 @@ time * 2
 ∞∞∞markdown
 In Markdown blocks, lists with [x] and [ ] are rendered as checkboxes:
 
-- [ ] Try out Edna
+- [ ] Try out Elaris
 - [ ] Do laundry
 ∞∞∞markdown
 # Programmability
 
-Learn more at https://edna.arslexis.io/help#running-code
+Learn more at https://elaris.arslexis.io/help#running-code
 
 If current block is Go or JavaScript block, you can run it:
 

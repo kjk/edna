@@ -5,7 +5,7 @@ import markdownItAnchor from "markdown-it-anchor";
 import { keyHelpStr } from "./key-helper.js";
 
 console.log(
-  "Generating html-win.html and html-mac.html from note-help.edna.txt",
+  "Generating html-win.html and html-mac.html from note-help.elaris.txt",
 );
 
 /**
@@ -131,7 +131,7 @@ function collapseMultipleEmptyLines(lines) {
  * @returns {string}
  */
 function getHelp(platform) {
-  let path = "./src/notes/note-help.edna.txt";
+  let path = "./src/notes/note-help.elaris.txt";
   let helpRaw = fs.readFileSync(path, "utf8");
 
   let lines = helpRaw.split("\n");
@@ -148,8 +148,8 @@ function getHelp(platform) {
 
   let help = fixUpShortcuts(helpRaw, platform);
   help = help.replace("{{keyHelp}}", keyHelp);
-  // link Edna to website
-  // help = help.replace(/Edna/g, "[Edna](https://edna.arslexis.io)");
+  // link Elaris to website
+  // help = help.replace(/Elaris/g, "[Elaris](https://elaris.arslexis.io)");
   return help;
 }
 
@@ -174,7 +174,7 @@ let htmlStart = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
     <meta name="color-scheme" content="light dark">
-    <title>Edna Help</title>
+    <title>Elaris Help</title>
     <link rel="stylesheet" href="help.css">
   </head>
   <body>

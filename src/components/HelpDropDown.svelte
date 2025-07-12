@@ -28,7 +28,7 @@
     },
     {
       name: "GitHub",
-      key: "https://github.com/kjk/edna",
+      key: "https://github.com/kjk/elaris",
     },
     {
       name: "Contact Me",

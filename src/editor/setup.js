@@ -88,7 +88,7 @@ as desired.
 */
 
 function getDefaultKeymap() {
-  // https://github.com/kjk/edna/issues/87
+  // https://github.com/kjk/elaris/issues/87
   // remove "Mod-Shift-k" which is "delete line" but we use it
   // for "open command palette"
   let keymap = defaultKeymap;

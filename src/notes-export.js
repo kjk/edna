@@ -62,7 +62,7 @@ export async function exportUnencryptedNotesToZipBlob() {
 
 export async function exportNotesToZip() {
   let blob = await exportUnencryptedNotesToZipBlob();
-  let name = "edna.notes.export-" + formatDateYYYYMMDD() + ".zip";
+  let name = "elaris.notes.export-" + formatDateYYYYMMDD() + ".zip";
   browserDownloadBlob(blob, name);
 }
 
@@ -71,7 +71,7 @@ export async function exportNotesToZip() {
  * @returns {boolean}
  */
 function isBackupFile(fileName) {
-  if (!fileName.startsWith("edna.backup.")) {
+  if (!fileName.startsWith("elaris.backup.")) {
     return false;
   }
   return fileName.endsWith(".zip");

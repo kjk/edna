@@ -4,15 +4,15 @@
 
 You can write your own JavaScript functions to run with the content of block or selection.
 
-To learn more: http://edna.arslexis.io/help#write-your-own-functions
+To learn more: http://elaris.arslexis.io/help#write-your-own-functions
 
-This special note named `edna: my functions` contains your custom functions.
+This special note named `elaris: my functions` contains your custom functions.
 
 Each function is a JavaScript block.
 
 Below is a block with a simple function to use as a template.
 
-Share your functions with others at https://github.com/kjk/edna/discussions/categories/share-javascript-functions
+Share your functions with others at https://github.com/kjk/elaris/discussions/categories/share-javascript-functions
 ∞∞∞javascript
 /**
 {

@@ -9,6 +9,6 @@ yarn.lock
 bun.lockb
 package-lock.json
 secrets.env
-edna-*
+elaris-*
 data/
 dist/

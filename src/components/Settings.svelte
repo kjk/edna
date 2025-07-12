@@ -46,7 +46,7 @@
   let defaultFontSize = $state(kDefaultFontSize);
   let appVersion = getVersion();
   let gitHash = getGitHash();
-  let gitURL = "https://github.com/kjk/edna/commit/" + gitHash;
+  let gitURL = "https://github.com/kjk/elaris/commit/" + gitHash;
 
   let fontSizes = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
   $effect(() => {

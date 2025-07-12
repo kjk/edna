@@ -171,7 +171,7 @@
         run function with {context}
       </div>
       <a
-        href="https://edna.arslexis.io/help#running-code"
+        href="https://elaris.arslexis.io/help#running-code"
         target="_blank"
         class="link ml-2">help</a
       >

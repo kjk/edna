@@ -1,6 +1,6 @@
 {
-  "name": "Edna",
-  "short_name": "Edna",
+  "name": "Elaris",
+  "short_name": "Elaris",
   "description": "A note taking app with supre powers",
   "icons": [
     {
@@ -12,12 +12,12 @@
   "start_url": "/",
   "screenshots": [
     {
-      "src": "https://edna.arslexis.io/pwa-shot-800x600.png",
+      "src": "https://elaris.arslexis.io/pwa-shot-800x600.png",
       "type": "image/png",
       "sizes": "800x600"
     },
     {
-      "src": "https://edna.arslexis.io/pwa-shot-1200x900.png",
+      "src": "https://elaris.arslexis.io/pwa-shot-1200x900.png",
       "type": "image/png",
       "sizes": "1200x900"
     }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"edna/server"
+	"elaris/server"
 	"embed"
 )
 

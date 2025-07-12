@@ -1,24 +1,24 @@
 
 ∞∞∞markdown
-# Welcome to Edna
+# Welcome to Elaris
 
-[Edna](https://edna.arslexis.io) is a note taking app with [super powers](#super-powers).
+[Elaris](https://elaris.arslexis.io) is a note taking app with [super powers](#super-powers).
 
 Integrated AI chat, blocks, markdown, syntax highlighting for 40+ languages (JavaScript, Python, C++, Go, Java, C#, Ruby and more), command palette, programmability.
 
 This is a help note. To switch to a different note, press `Mod + K`.
 
-To see help in a separate web page visit https://edna.arslexis.io/help
+To see help in a separate web page visit https://elaris.arslexis.io/help
 ∞∞∞text
 # Keyboard shortcuts
 
 {{keyHelp}}
 ∞∞∞markdown
-# Why Edna?
+# Why Elaris?
 
 ## Notes and blocks
 
-In Edna a note is divided into blocks. Each block has a type: markdown, plain text, math block, JavaScript code, Go code etc.
+In Elaris a note is divided into blocks. Each block has a type: markdown, plain text, math block, JavaScript code, Go code etc.
 
 Use:
 
@@ -38,7 +38,7 @@ Changing block language with `Mod + L`:
 
 ## No installation required
 
-Edna is a web-based application but can store notes on disk, like a desktop app (when using Chrome or Edge).
+Elaris is a web-based application but can store notes on disk, like a desktop app (when using Chrome or Edge).
 
 You can use it offline (without network connection) and for desktop-like experince you can install a desktop shortcut.
 
@@ -64,7 +64,7 @@ Quickly access all the functionality, find commands with partial name match.
 
 ## Speed
 
-[Edna](https://edna.arslexis.io) is optimized for speed of writing, creating new notes, switching between notes.
+[Elaris](https://elaris.arslexis.io) is optimized for speed of writing, creating new notes, switching between notes.
 
 Like in Notational Velocity, you can switch between notes, create and delete notes in the same note switcher UI.
 
@@ -281,7 +281,7 @@ The search algorightm is:
 ∞∞∞markdown
 # Ask AI
 
-Edna has a basic AI chat functionality. You can ask AI a question and get a response.
+Elaris has a basic AI chat functionality. You can ask AI a question and get a response.
 
 It's optimized for the following workflow:
 - type your question in a block
@@ -317,7 +317,7 @@ We support:
 - [xAI](https://x.ai/) for Grok. Read how to [get xAI key](#getting-xai-(grok)-api-key)
 - [OpenRouter](https://openrouter.ai/) for all models (including OpenAI / xAI models). Read how to [get OpenRouter key](#getting-openrouter-api-key)
 
-We recommend creating a unique API key for Edna.
+We recommend creating a unique API key for Elaris.
 
 If you provide both xAI/OpenAI API key and OpenRouter API key, we'll use xAI/OpenAI.
 
@@ -402,7 +402,7 @@ You can do one time export from localStorage to a directory on disk:
 
 - context menu: `Notes storage / Move notes from browser to directory`
 - pick a directory on disk
-- we save notes on disk as `${name}.edna.txt` files in chosen directory and delete notes in localStorage
+- we save notes on disk as `${name}.elaris.txt` files in chosen directory and delete notes in localStorage
 
 You can have multiple directories with notes. Think of each directory with notes as a separate Workspace.
 
@@ -593,7 +593,7 @@ You can write custom JavaScript functions that operate on text (content of the b
 
 For example you can write a function that sorts lines of text.
 
-To write custom functions create a special `edna: my functions` note:
+To write custom functions create a special `elaris: my functions` note:
 
 - context menu: `Run`, `Create your own functions`
 - command palette: `Create your own functions`
@@ -690,7 +690,7 @@ then inspect the `m` object in console to see available functions.
 
 ## Share your JavaScript functions with others
 
-Share your functions with other via https://github.com/kjk/edna/discussions/categories/share-javascript-functions
+Share your functions with other via https://github.com/kjk/elaris/discussions/categories/share-javascript-functions
 
 ## Smart Run
 
@@ -704,21 +704,21 @@ Use `Alt + Shift + R` to force `Run function with block content` command.
 ∞∞∞markdown
 # Exporting notes to a .zip file
 
-Edna files are just text files with `.edna.txt` extension.
+Elaris files are just text files with `.elaris.txt` extension.
 
 You can export all the notes to a .zip file.
 
 Context menu: `Export notes to zip file` menu.
 
-We pack all the notes into a .zip file and initiate auto-download as `edna.notes.export-YYYY-MM-DD.zip` file to browser's downloads directory.
+We pack all the notes into a .zip file and initiate auto-download as `elaris.notes.export-YYYY-MM-DD.zip` file to browser's downloads directory.
 
-You can then e.g. restore the notes by unzipping it to a directory and opening that directory in Edna with `Notes storage` / `Switch to notes in a directory` context menu.
+You can then e.g. restore the notes by unzipping it to a directory and opening that directory in Elaris with `Notes storage` / `Switch to notes in a directory` context menu.
 ∞∞∞markdown
 # Lists with TODO items
 
 In Markdown blocks, lists with [x] and [ ] are rendered as checkboxes:
 
-- [ ] Try out Edna
+- [ ] Try out Elaris
 - [ ] Do laundry
 ∞∞∞math
 This is a Math block. Lines are evaluated as math expressions.
@@ -736,7 +736,7 @@ time \* 2
 1 EUR in USD
 ∞∞∞javascript
 // code blocks
-// Edna is great for storing code snippets
+// Elaris is great for storing code snippets
 // this is a javascript block
 // change type of block with `Mod + L`
 // or `Block: Change Language` command in command palette (`Mod + Shift + K`)
@@ -752,7 +752,7 @@ Notes are stored on your computer: in the browser (local storage) or on disk.
 
 For additional security, you can [encrypt notes](#encryption) with a password.
 
-The code is [open source](https://github.com/kjk/edna) so you can audit it.
+The code is [open source](https://github.com/kjk/elaris) so you can audit it.
 ∞∞∞markdown
 # No lock in
 
@@ -764,11 +764,11 @@ You can edit the notes in any text editor (just be mindful of the above block ma
 
 You can back them up, store in git repositories, write scripts to process them.
 
-They are not locked in a proprietary Edna format.
+They are not locked in a proprietary Elaris format.
 ∞∞∞markdown
 # Super-powers
 
-What makes Edna different from other note taking applications?
+What makes Elaris different from other note taking applications?
 
 ## Blocks
 
@@ -790,9 +790,9 @@ Quickly switch to Scratch note with `Alt + 1`, jot your temporary note, delete w
 
 ## Lots of features yet minimalistic UI
 
-Writing is Edna's core functionality so I strive to use maxium of screen space for the editor.
+Writing is Elaris's core functionality so I strive to use maxium of screen space for the editor.
 
-At the same time Edna is packed with functionality accessible via several paths:
+At the same time Elaris is packed with functionality accessible via several paths:
 * context menu
 * [command palette](#command-palette) (`Ctrl + Shift + K`)
 * navigation bar at the top
@@ -811,7 +811,7 @@ At the same time Edna is packed with functionality accessible via several paths:
 
 ## Fast to use
 
-I use Edna daily and efficiency is important to me.
+I use Elaris daily and efficiency is important to me.
 
 Switching between notes, executing commands etc. are accessible via keyboard shortcuts or mouse.
 
@@ -854,11 +854,11 @@ The intent of `inbox` note (`Alt + 3`) is to jot things you want to process in s
 You can [encrypt notes](#encryption) with a password. Even Mossad agents won't be able to crack them.
 
 ∞∞∞markdown
-# How I use Edna
+# How I use Elaris
 
-Edna is flexible and you will find your own way of using it.
+Elaris is flexible and you will find your own way of using it.
 
-I use Edna daily::
+I use Elaris daily::
 
 - I use `scratch` note for temporary notes
 - I use `daily journal` for keeping track of what I do
@@ -870,9 +870,9 @@ I use Edna daily::
 ∞∞∞markdown
 # Open source
 
-[Edna](https://edna.arslexis.io) is open source: https://github.com/kjk/edna
+[Elaris](https://elaris.arslexis.io) is open source: https://github.com/kjk/elaris
 
-To report a bug or request a feature: https://github.com/kjk/edna/issues
+To report a bug or request a feature: https://github.com/kjk/elaris/issues
 ∞∞∞markdown
 # Contact
 
@@ -882,12 +882,12 @@ You can find more software by [me](https://blog.kowalczyk.info/) on https://arsl
 ∞∞∞markdown
 # Credits
 
-Edna is a fork of [Heynote](https://github.com/heyman/heynote) with the following differences:
+Elaris is a fork of [Heynote](https://github.com/heyman/heynote) with the following differences:
 
 - web first (no desktop apps)
 - multiple notes
 - ability to access notes on multiple devices by storing them on folder managed by Dropbox / One Drive / Google Drive
 
-There's a spirit of Notational Velocity and Simplenote in Edna in how it allows quickly creating notes and switching between them.
+There's a spirit of Notational Velocity and Simplenote in Elaris in how it allows quickly creating notes and switching between them.
 
-Edna is built on [CodeMirror](https://codemirror.net/), [Svelte 5](https://svelte.dev/), [Math.js](https://mathjs.org/), [Prettier](https://prettier.io/).
+Elaris is built on [CodeMirror](https://codemirror.net/), [Svelte 5](https://svelte.dev/), [Math.js](https://mathjs.org/), [Prettier](https://prettier.io/).
