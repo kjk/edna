@@ -256,7 +256,7 @@
             src={appState.user.avatar_url}
             width="20"
             height="20"
-            alt="kjk"
+            alt="User avatar"
           />
         {/if}
         <div class="text-sm">{appState.user.login}</div>
