@@ -1,6 +1,13 @@
-import { get, writable } from "svelte/store";
-import { error, log } from "./log.js";
-import { getLocalStorageAsJSON, setLocalStorageFromJSON } from "./util.js";
+import { appState } from "./appstate.svelte";
+import { error, log } from "./log";
+import { getLocalStorageAsJSON, setLocalStorageFromJSON } from "./util";
+
+/** @typedef {{
+  user: string;
+  email: string;
+  login: string;
+  avatar_url?: string;
+}} UserInfo */
 
 // TODO: must distinguish between offline (was lgged in but cannot reach server)
 // and not logged in
@@ -9,16 +16,8 @@ import { getLocalStorageAsJSON, setLocalStorageFromJSON } from "./util.js";
 const keyUserInfo = "elaris:user-info";
 
 const um = getLocalStorageAsJSON(keyUserInfo);
-// console.log("store: um:", um);
-export const userInfo = writable(um);
-
-export function getUserLogin() {
-  const v = get(userInfo);
-  if (!v) {
-    return "";
-  }
-  return v.login;
-}
+appState.user = um || null; // set initial value
+console.log("initial user info:", appState.user);
 
 function storeUserInfo(v) {
   if (v === null) {
@@ -28,7 +27,7 @@ function storeUserInfo(v) {
   } else {
     setLocalStorageFromJSON(keyUserInfo, v);
   }
-  userInfo.set(v);
+  appState.user = v;
 }
 
 function clearUserInfo() {
@@ -62,12 +61,11 @@ async function handleStorageChanged(e) {
 
 window.addEventListener("storage", handleStorageChanged);
 
-export function logout() {
-  storeUserInfo(null);
-}
-
 // returns user info if logged in, null if not logged in
 
+/**
+ * @returns {Promise<UserInfo|null>}
+ */
 export async function getLoggedUser() {
   let user = null;
   try {

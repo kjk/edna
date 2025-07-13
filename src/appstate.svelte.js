@@ -1,6 +1,11 @@
 import { Note } from "./store";
 
+/** @typedef {import("./login.js").UserInfo} UserInfo */
+
 class AppState {
+  /** @type {UserInfo} */
+  user;
+
   /* regular, arhived, deleted notes */
   /** @type {Note[]} */
   allNotes = $state([]);
