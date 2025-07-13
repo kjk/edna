@@ -15,6 +15,7 @@ class TocItem {
   text = "";
   hLevel = 0;
   nesting = 0;
+  /** @type {HTMLElement} */
   element;
 }
 
@@ -22,16 +23,17 @@ function buildTocItems() {
   let allHdrs = getAllHeaders();
   let res = [];
   for (let el of allHdrs) {
+    let hel = /** @type {HTMLElement} */ (el);
     /** @type {string} */
-    let text = el.innerText.trim();
+    let text = hel.innerText.trim();
     text = removeHash(text);
     text = text.trim();
-    let hLevel = parseInt(el.tagName[1]);
+    let hLevel = parseInt(hel.tagName[1]);
     let h = new TocItem();
     h.text = text;
     h.hLevel = hLevel;
     h.nesting = 0;
-    h.element = el;
+    h.element = hel;
     res.push(h);
   }
   return res;
@@ -65,7 +67,7 @@ function genTocList(items) {
   let n = 0;
   for (let h of items) {
     let s = t;
-    s = s.replace("{n}", n);
+    s = s.replace("{n}", `${n}`);
     let ind = "toc-ind-" + h.nesting;
     s = s.replace("{ind}", ind);
     s = s.replace("{text}", h.text);
@@ -166,7 +168,46 @@ function updateClosestToc() {
   }
 }
 
-window.addEventListener("scroll", updateClosestToc);
+function makeImagesZoomable() {
+  const images = Array.from(document.getElementsByTagName("img"));
+  for (let img of images) {
+    img.style.cursor = "pointer";
+    img.addEventListener("click", () => {
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.top = "0";
+      overlay.style.left = "0";
+      overlay.style.width = "100%";
+      overlay.style.height = "100%";
+      overlay.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+      overlay.style.display = "flex";
+      overlay.style.justifyContent = "center";
+      overlay.style.alignItems = "center";
+      overlay.style.zIndex = "9999";
 
-genToc();
-updateClosestToc();
+      const zoomImg = document.createElement("img");
+      zoomImg.src = img.src;
+      zoomImg.alt = img.alt || "";
+      zoomImg.style.cursor = "pointer";
+      zoomImg.style.maxWidth = "97%";
+      zoomImg.style.maxHeight = "97%";
+      zoomImg.style.width = "auto";
+      zoomImg.style.height = "auto";
+      zoomImg.style.left = "0";
+      zoomImg.style.right = "0";
+      overlay.appendChild(zoomImg);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener("click", () => {
+        overlay.remove();
+      });
+    });
+  }
+}
+
+window.addEventListener("scroll", updateClosestToc);
+window.addEventListener("DOMContentLoaded", () => {
+  genToc();
+  updateClosestToc();
+  makeImagesZoomable();
+});
