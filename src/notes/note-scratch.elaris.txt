@@ -1,6 +1,6 @@
 
 ∞∞∞markdown
-Welcome to Elaris - a note taking app for developers and power users.
+Welcome to Elaris - a note taking app with super powers.
 
 To learn more: https://elaris.arslexis.io/help (or right-click for context menu and use `Help` / `Show help`).
 
@@ -14,9 +14,9 @@ This is a scratch note. Feel free to delete the content and use it for temporary
 
 Notes consist of blocks. Each block has a type:
 * markdown
-* plain text
 * code block (JavaScript, Go and 30+ other programming languages)
 * math block
+* plain text
 
 Mod + L to change the type of block
 Mod + B to navigate between blocks
