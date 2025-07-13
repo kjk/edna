@@ -159,43 +159,49 @@ export class AppendStore {
     const file = await this.indexHandle.getFile();
     const buffer = await file.arrayBuffer();
     const text = this.utf8Decoder.decode(buffer);
-    const lines = text.split("\n").filter((line) => line.trim() !== "");
-
-    const records = [];
-    for (let line of lines) {
-      let rest = line.trim();
-      const offsetEnd = rest.indexOf(" ");
-      if (offsetEnd === -1) continue;
-      const offset = parseInt(rest.slice(0, offsetEnd), 10);
-
-      rest = rest.slice(offsetEnd + 1);
-      const sizeEnd = rest.indexOf(" ");
-      if (sizeEnd === -1) continue;
-      const size = parseInt(rest.slice(0, sizeEnd), 10);
-
-      rest = rest.slice(sizeEnd + 1);
-      const timeEnd = rest.indexOf(" ");
-      if (timeEnd === -1) continue;
-      const time = parseFloat(rest.slice(0, timeEnd));
-
-      rest = rest.slice(timeEnd + 1);
-      const kindEnd = rest.indexOf(" ");
-      let kind, meta;
-      if (kindEnd === -1) {
-        kind = rest;
-        meta = null;
-      } else {
-        kind = rest.slice(0, kindEnd);
-        meta = rest.slice(kindEnd + 1);
-      }
-
-      if (isNaN(offset) || isNaN(size) || isNaN(time)) {
-        continue;
-      }
-
-      records.push(new AppendStoreRecord(offset, size, time, kind, meta));
-    }
-
+    let records = parseIndex(text);
     return records;
   }
+}
+
+/**
+ * @param {string} s
+ * @returns {AppendStoreRecord[]}
+ */
+function parseIndex(s) {
+  const lines = s.split("\n").filter((line) => line.trim() !== "");
+
+  const records = [];
+  for (let line of lines) {
+    let rest = line.trim();
+    const offsetEnd = rest.indexOf(" ");
+    if (offsetEnd === -1) continue;
+    const offset = parseInt(rest.slice(0, offsetEnd), 10);
+
+    rest = rest.slice(offsetEnd + 1);
+    const sizeEnd = rest.indexOf(" ");
+    if (sizeEnd === -1) continue;
+    const size = parseInt(rest.slice(0, sizeEnd), 10);
+
+    rest = rest.slice(sizeEnd + 1);
+    const timeEnd = rest.indexOf(" ");
+    if (timeEnd === -1) continue;
+    const time = parseFloat(rest.slice(0, timeEnd));
+
+    rest = rest.slice(timeEnd + 1);
+    const kindEnd = rest.indexOf(" ");
+    let kind, meta;
+    if (kindEnd === -1) {
+      kind = rest;
+      meta = null;
+    } else {
+      kind = rest.slice(0, kindEnd);
+      meta = rest.slice(kindEnd + 1);
+    }
+    if (isNaN(offset) || isNaN(size) || isNaN(time)) {
+      continue;
+    }
+    records.push(new AppendStoreRecord(offset, size, time, kind, meta));
+  }
+  return records;
 }

@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 
 	"github.com/kjk/common/u"
@@ -29,22 +28,6 @@ func ctx() context.Context {
 
 func push[S ~[]E, E any](s *S, els ...E) {
 	*s = append(*s, els...)
-}
-
-func copyFilesRecurMust(srcDir, dstDir string) {
-	logf("copyFilesRecurMust('%s', '%s')\n", srcDir, dstDir)
-	srcDirLen := len(srcDir)
-	nCopied := 0
-	onFile := func(path string, de fs.DirEntry) (bool, error) {
-		dstPath := filepath.Join(dstDir, path[srcDirLen:])
-		err := u.CopyFile(dstPath, path)
-		panicIfErr(err)
-		//logf("copied '%s' to '%s'\n", path, dstPath)
-		nCopied++
-		return false, nil
-	}
-	u.IterDir(srcDir, onFile)
-	logf("copied %d files\n", nCopied)
 }
 
 func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {

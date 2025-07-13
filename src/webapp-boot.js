@@ -13,7 +13,7 @@ import {
   kScratchNoteName,
 } from "./notes";
 import { getSettings } from "./settings.svelte";
-import { openStore } from "./store";
+import { maybeUploadAppendStoreZip, openStore } from "./store";
 import { isDev } from "./util";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
@@ -79,13 +79,15 @@ export async function boot() {
   // await testFuncs();
 
   getSettings();
-  appState.allNotes = await openStore();
-  updateAfterNoteStateChange();
-  await loadAppMetadata(); // pre-load
-
   let user = await getLoggedUser();
   console.log("user:", user);
   appState.user = user;
+  if (user) {
+    await maybeUploadAppendStoreZip();
+  }
+  appState.allNotes = await openStore();
+  updateAfterNoteStateChange();
+  await loadAppMetadata(); // pre-load
 
   await createDefaultNotes(appState.allNotes);
 
