@@ -246,17 +246,9 @@
       </div>
     {/if}
 
-    {#if !appState.user}
-      <a
-        title="LogIn with GitHub to access notes from any computer"
-        href="/auth/ghlogin"
-        class="relative flex items-center mr-4 font-bold text-slate-600 dark:text-slate-200 clickable-icon"
-        ><GitHub class="mt-[1px]" />
-        <div class="ml-1.5">login</div></a
-      >
-    {:else}
+    {#if appState.user}
       <div
-        class="relative group flex items-center gap-x-2 hover:bg-gray-100 cursor-pointer px-2 ml-2 py-1"
+        class="clickable-icon relative group flex items-center gap-x-2 px-2 mr-1.5 py-1"
       >
         {#if appState.user.avatar_url}
           <img
@@ -280,6 +272,14 @@
           </div>
         </div>
       </div>
+    {:else}
+      <a
+        title="LogIn with GitHub to access notes from any computer"
+        href="/auth/ghlogin"
+        class="relative flex items-center mr-4 font-bold text-slate-600 dark:text-slate-200 clickable-icon"
+        ><GitHub class="mt-[1px]" />
+        <div class="ml-1.5">login</div></a
+      >
     {/if}
 
     <a

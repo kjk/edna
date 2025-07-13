@@ -2043,11 +2043,6 @@
   window.elaris = {
     debug: {},
   };
-
-  onMount(async () => {
-    let user = await getLoggedUser();
-    log("user:", user);
-  });
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->

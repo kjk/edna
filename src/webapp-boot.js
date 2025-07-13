@@ -5,6 +5,7 @@ import { mount, unmount } from "svelte";
 import { appState, findNoteByName } from "./appstate.svelte";
 import App from "./components/App.svelte";
 import { updateAfterNoteStateChange } from "./globals";
+import { getLoggedUser } from "./login";
 import { loadAppMetadata } from "./metadata";
 import {
   createDefaultNotes,
@@ -29,6 +30,10 @@ export async function boot() {
   appState.allNotes = await openStore();
   updateAfterNoteStateChange();
   await loadAppMetadata(); // pre-load
+
+  let user = await getLoggedUser();
+  console.log("user:", user);
+  appState.user = user;
 
   await createDefaultNotes(appState.allNotes);
 
