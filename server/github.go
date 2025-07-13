@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/kjk/common/u"
@@ -61,12 +60,6 @@ type GitHubUser struct {
 		PrivateRepos  int    `json:"private_repos"`
 		Collaborators int    `json:"collaborators"`
 	} `json:"plan"`
-}
-
-func getGitHubTokenFromRequest(r *http.Request) string {
-	auth := r.Header.Get("Authorization")
-	token := strings.TrimPrefix(auth, "token ")
-	return token
 }
 
 // JSONRequest represents a JSON request

@@ -29,35 +29,36 @@ func getLoggedUser(r *http.Request, w http.ResponseWriter) (*UserInfo, error) {
 		return nil, fmt.Errorf("user not logged in (no cookie)")
 	}
 	email := cookie.Email
+
 	var userInfo *UserInfo
 	getOrCreateUser := func(u *UserInfo, i int) error {
-		if u == nil {
-			userInfo = &UserInfo{
-				Email: cookie.Email,
-				User:  cookie.User,
-			}
-
-			dataDir := getDataDirMust()
-			// TODO: must escape email to avoid chars not allowed in file names
-			dataDir = filepath.Join(dataDir, email)
-			userInfo.Store = &appendstore.Store{
-				DataDir:       dataDir,
-				IndexFileName: "index.txt",
-				DataFileName:  "data.bin",
-			}
-			err := appendstore.OpenStore(userInfo.Store)
-			if err != nil {
-				logf("getLoggedUser(): failed to open store for user %s, err: %s\n", email, err)
-				return err
-			}
-			users = append(users, userInfo)
+		if u != nil {
+			userInfo = u
 			return nil
 		}
+		userInfo = &UserInfo{
+			Email: cookie.Email,
+			User:  cookie.User,
+		}
 
+		dataDir := getDataDirMust()
+		// TODO: must escape email to avoid chars not allowed in file names
+		dataDir = filepath.Join(dataDir, email)
+		userInfo.Store = &appendstore.Store{
+			DataDir:       dataDir,
+			IndexFileName: "index.txt",
+			DataFileName:  "data.bin",
+		}
+		err := appendstore.OpenStore(userInfo.Store)
+		if err != nil {
+			logf("getLoggedUser(): failed to open store for user %s, err: %s\n", email, err)
+			return err
+		}
+		users = append(users, userInfo)
 		userInfo = u
 		return nil
 	}
-	findUserByEmailLocked(email, getOrCreateUser)
+	doUserOpByEmail(email, getOrCreateUser)
 	return userInfo, nil
 }
 

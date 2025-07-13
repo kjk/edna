@@ -7,14 +7,6 @@ import (
 	"github.com/kjk/common/u"
 )
 
-// only logs locally so no need to worry about recursive logging calls
-func logfLocal(s string, args ...interface{}) {
-	if len(args) > 0 {
-		s = fmt.Sprintf(s, args...)
-	}
-	fmt.Print(s)
-}
-
 func logf(s string, args ...interface{}) {
 	if len(args) > 0 {
 		s = fmt.Sprintf(s, args...)
