@@ -440,10 +440,11 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			return
 		}
 
-		if strings.HasPrefix(uri, "/api/goplay/") {
-			handleGoPlayground(w, r)
+		if strings.HasPrefix(uri, "/api/store/") {
+			handleStore(w, r)
 			return
 		}
+
 		if strings.HasPrefix(uri, "/event") {
 			logtastic.HandleEvent(w, r)
 			return
@@ -456,11 +457,6 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			filePath := path.Join(serveOpts.DirPrefix, file)
 			ok := hutil.TryServeFileFromFS(w, r, serveOpts, filePath)
 			panicIf(!ok)
-			return
-		}
-
-		if strings.HasPrefix(uri, "/api/store/") {
-			handleStore(w, r)
 			return
 		}
 
