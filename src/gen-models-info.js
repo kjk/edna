@@ -28,8 +28,8 @@ export const kProviderQwen = 4;
 export const kProviderXAI = 5;
 export const kProviderDeepSeek = 6;
 export const kProviderPerplexity = 7;
-//export const kProviderCohere = 8;
-//export const kProviderMistralAI = 9;
+export const kProviderMoonshotAI = 8;
+export const kProviderMistralAI = 9;
 
 const providersInfo = [
   ["openai", "OpenAI"],
@@ -40,8 +40,8 @@ const providersInfo = [
   ["x-ai", "xAI"],
   ["deepseek", "DeepSeek"],
   ["perplexity", "Perplexity"],
-  //  ["cohere", "Cohere"],
-  //  ["mistralai", "Mistral AI"],
+  ["moonshotai", "Moonshot AI"],
+  ["mistralai", "Mistral AI"],
 ];
 
 const whitelistedProviders = providersInfo.map((p) => p[0]);

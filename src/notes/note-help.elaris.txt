@@ -306,7 +306,7 @@ Once you receive the response, you can insert it as new block.
 
 ## API keys
 
-But first, you'll need to provide an API key.
+To use AI features you need to provide an API key.
 
 We don't charge for AI but AI providers do. 
 
