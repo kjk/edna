@@ -3,7 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -123,7 +123,7 @@ func (r *JSONRequest) Get() error {
 		return nil
 	}
 	defer u.CloseNoError(resp.Body)
-	r.Body, r.Err = ioutil.ReadAll(resp.Body)
+	r.Body, r.Err = io.ReadAll(resp.Body)
 	if r.Err != nil {
 		return r.Err
 	}

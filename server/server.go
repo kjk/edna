@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"embed"
-	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
