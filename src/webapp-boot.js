@@ -22,8 +22,60 @@ import { isDev } from "./util";
 
 let appSvelte;
 
+function resetApp() {
+  console.log("unmounting app");
+  unmount(appSvelte);
+  console.log("clearing localStorage");
+  localStorage.clear();
+  console.log("reloading");
+  window.location.reload();
+}
+
+async function deleteBrowserStorage() {
+  const root = await navigator.storage.getDirectory();
+  // @ts-ignore
+  for await (const name of root.keys()) {
+    await root.removeEntry(name, { recursive: true });
+  }
+  console.log("OPFS cleared.");
+}
+
+async function listBrowserStorage() {
+  try {
+    const root = await navigator.storage.getDirectory();
+    console.log("OPFS Root Contents:");
+
+    // @ts-ignore
+    for await (const [name, handle] of root.entries()) {
+      if (handle.kind === "file") {
+        let f = await handle.getFile();
+        console.log(
+          `File: ${name}, size: ${f.size} bytes, modified: ${f.lastModifiedDate}`,
+        );
+      } else if (handle.kind === "directory") {
+        console.log(`Directory: ${name}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error accessing OPFS:", error);
+  }
+}
+
+function setupWindowDebug() {
+  if (!isDev) {
+    return;
+  }
+  // for ad-hoc use by me during development and debugging
+  globalThis.debug = {
+    listBrowserStorage: listBrowserStorage,
+    deleteBrowserStorage: deleteBrowserStorage,
+    resetApp: resetApp,
+  };
+}
+
 export async function boot() {
   console.log("booting");
+  setupWindowDebug();
   // await testFuncs();
 
   getSettings();
@@ -113,15 +165,3 @@ export async function boot() {
 boot().then(() => {
   console.log("finished booting");
 });
-
-if (isDev) {
-  // @ts-ignore
-  window.resetApp = function () {
-    console.log("unmounting app");
-    unmount(appSvelte);
-    console.log("clearing localStorage");
-    localStorage.clear();
-    console.log("reloading");
-    window.location.reload();
-  };
-}
