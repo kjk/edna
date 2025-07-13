@@ -115,39 +115,6 @@ function isBackupFile(fileName) {
   return fileName.endsWith(".zip");
 }
 
-const kMaxBackupFiles = 14;
-/**
- * @param {FileSystemDirectoryHandle} dhBackup
- */
-async function deleteOldBackups(dhBackup) {
-  let fsEntries = await readDir(dhBackup);
-  // console.log("files", fsEntries);
-
-  let backupFiles = [];
-  for (let e of fsEntries.dirEntries) {
-    if (e.isDir) {
-      continue;
-    }
-    if (!isBackupFile(e.name)) {
-      continue;
-    }
-    backupFiles.push(e.name);
-  }
-  let nFiles = len(backupFiles);
-  if (nFiles <= kMaxBackupFiles) {
-    console.log(
-      `not deleting old backups because ${nFiles} backup files is less than ${kMaxBackupFiles}`,
-    );
-    return;
-  }
-  backupFiles.sort();
-  for (let i = kMaxBackupFiles; i < nFiles; i++) {
-    let fileName = backupFiles[i];
-    await dhBackup.removeEntry(fileName);
-    console.log(`deleted ${fileName} backup file`);
-  }
-}
-
 /**
  * @param {Blob} blob
  * @param {string} name
