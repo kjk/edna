@@ -30,27 +30,26 @@
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
 
-  function modelNameFn(model) {
-    return model[kModelNameIdx].toLowerCase();
-  }
-
   let filter = $state("");
   let forceUpdate = $state(0);
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let sanitizedFilter = $derived(filter.trim());
-  let models = $derived(
-    buildModels(modelsShort, sanitizedFilter, modelNameFn, forceUpdate),
-  );
+  let models = $derived(buildModels(modelsShort, sanitizedFilter, forceUpdate));
 
   /**
    * @param {any[]} items
    * @param {string} filter
-   * @param {(item) => any} itemKeyFn
    * @param {any} ignore
    * @return {any[]}
    */
-  function buildModels(items, filter, itemKeyFn, ignore) {
-    let res = findMatchingItemsFn(items, filter, itemKeyFn);
+  function buildModels(items, filter, ignore) {
+    function modelNameFn(model) {
+      let name = model[kModelNameIdx];
+      let provider = providersInfo[model[kModelProviderIdx]];
+      return (provider + " " + name).toLowerCase();
+    }
+
+    let res = findMatchingItemsFn(items, filter, modelNameFn);
     res.sort((a, b) => {
       const aStarred = appState.settings.starredModels.includes(a[kModelIDIdx]);
       const bStarred = appState.settings.starredModels.includes(b[kModelIDIdx]);
@@ -70,9 +69,17 @@
    * @param {KeyboardEvent} ev
    */
   function onkeydown(ev) {
-    if (ev.key == "Escape") {
+    if (ev.code === "Escape") {
       ev.stopPropagation();
       close();
+      return;
+    }
+
+    // hack: space closes the drop-down
+    if (ev.code === "Space") {
+      ev.preventDefault();
+      filter += " ";
+      return;
     }
     listboxRef.onkeydown(ev, true);
   }
@@ -144,7 +151,8 @@
       {@const pricePrompt = humanPrice(model[kModelPricePromptIdx])}
       {@const priceCompletion = humanPrice(model[kModelPriceCompletionIdx])}
       {@const isStarred = appState.settings.starredModels.includes(modelID)}
-      {@const hili = hilightText(name, hiliRegExp)}
+      {@const nameHili = hilightText(name, hiliRegExp)}
+      {@const providerHili = hilightText(providerName, hiliRegExp)}
 
       <button
         tabindex="-1"
@@ -159,10 +167,10 @@
       </button>
 
       <div class="ml-2 min-w-[10ch] whitespace-nowrap text-left">
-        {providerName}
+        {@html providerHili}
       </div>
       <div class="px-1 ml-4 grow truncate text-left min-w-[32ch]">
-        {@html hili}
+        {@html nameHili}
       </div>
       <div class="w-[6ch] text-right">{pricePrompt}</div>
       <div class="w-[6ch] text-right mr-2">{priceCompletion}</div>
