@@ -254,14 +254,6 @@
       <div class="ml-1.5">login</div></a
     >
 
-    <button
-      title="Login to access notes from any computer"
-      onclick={() => {
-        startLogin();
-      }}
-      >Login
-    </button>
-
     <a
       class="mr-1 font-bold text-slate-600 dark:text-slate-200"
       href="/help"

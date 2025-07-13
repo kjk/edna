@@ -632,10 +632,16 @@ func startLogtastic() {
 	}
 	logtastic.BuildHash = GitCommitHash
 	logtastic.LogDir = getLogsDirMust()
-	if flgRunProd {
-		logtastic.Server = "l.arslexis.io"
-	} else {
+	if isDev() || u.IsWinOrMac() {
+		err := logtastic.CheckServerAlive("127.0.0.1:9327")
+		if err != nil {
+			logf("startLogtastic: failed to connect to logtastic server, error: %s\n", err)
+			logtastic.ApiKey = ""
+			return
+		}
 		logtastic.Server = "127.0.0.1:9327"
+	} else {
+		logtastic.Server = "l.arslexis.io"
 	}
 	logf("logtatistic server: %s\n", logtastic.Server)
 }

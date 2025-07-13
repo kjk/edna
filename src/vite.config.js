@@ -82,7 +82,7 @@ export default defineConfig({
   },
 
   server: {
-    // must be same as proxyURLStr in runServerDev
+    // must be same as proxyURLStr in server.go
     port: 3035,
   },
 });

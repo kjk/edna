@@ -120,12 +120,6 @@ func loadSecrets() {
 	if isDev() {
 		getEnv("GITHUB_SECRET_LOCAL", &secretGitHub, 40, true)
 	}
-
-	// when running locally, don't
-	if false && flgRunDev {
-		logfLocal("loadSecrets: clearing logtasticApiKey\n")
-		logtastic.ApiKey = ""
-	}
 }
 
 var (
