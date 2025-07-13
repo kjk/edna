@@ -550,7 +550,7 @@
       <div class=" text-red-600 ml-2 whitespace-pre-line overflow-auto">
         Need a valid API key
       </div>
-      <a target="_blank" class="ml-2 link" href="/help#ask-ai">learn more</a>
+      <a target="_blank" class="ml-2 link" href="/help#api-keys">learn more</a>
     {/if}
     {#if reqInProgress}
       <div class="ml-2 font-bold">thinking...</div>
