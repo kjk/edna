@@ -41,3 +41,8 @@ func verifyPOSTRequest(w http.ResponseWriter, r *http.Request) bool {
 	}
 	return true
 }
+
+// 304: not modified
+func serve304(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotModified)
+}

@@ -167,7 +167,7 @@ func notesFromStoreLog(records []*appendstore.Record) ([]*NoteInfo, error) {
 			ni := &NoteInfo{
 				id:        id,
 				name:      name,
-				createdAt: rec.Timestamp,
+				createdAt: rec.TimestampMs,
 			}
 			notes[id] = ni
 
@@ -181,7 +181,7 @@ func notesFromStoreLog(records []*appendstore.Record) ([]*NoteInfo, error) {
 			}
 			note := notes[noteMeta.Id]
 			applyMetadata(note, &noteMeta)
-			note.modifiedAt = rec.Timestamp
+			note.modifiedAt = rec.TimestampMs
 		case kStoreKindDeleteNote:
 			noteId := rec.Meta
 			delete(notes, noteId)
@@ -200,25 +200,60 @@ func notesFromStoreLog(records []*appendstore.Record) ([]*NoteInfo, error) {
 	return result, nil
 }
 
+const kNoteFlagIsStarred = 0x01
+const kNoteFlagIsArchived = 0x02
+
 func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
-	rsp := &GetNotesResponse{
-		Ver: "1",
+	lastChangeIDReq := 0
+	r.ParseForm()
+	v := r.Form.Get("lastChangeID")
+	if v != "" {
+		var err error
+		lastChangeIDReq, err = strconv.Atoi(v)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("invalid lastChangeID: %s", v), http.StatusBadRequest)
+			return
+		}
 	}
 	recs := userInfo.Store.Records()
-	rsp.LastChangeID = len(recs)
+	rsp := &GetNotesResponse{
+		Ver:          "1",
+		LastChangeID: len(recs),
+	}
+	if lastChangeIDReq >= rsp.LastChangeID {
+		// no changes since last request
+		serve304(w, r)
+		return
+	}
+
 	notes, err := notesFromStoreLog(recs)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to get notes: %s", err), http.StatusInternalServerError)
 		return
 	}
 	notesCompact := make([][]interface{}, len(notes))
+
 	for i, ni := range notes {
-		notesCompact[i] = []interface{}{
+		// [id, name, flags, altShortcut, createdAt, lastModifiedAt, versionIds...],
+		flags := 0
+		if ni.isStarred {
+			flags |= kNoteFlagIsStarred
+		}
+		if ni.isArchived {
+			flags |= kNoteFlagIsArchived
+		}
+		nc := []interface{}{
 			ni.id,
 			ni.name,
+			flags,
+			ni.altShortcut,
 			ni.createdAt,
 			ni.modifiedAt,
 		}
+		for _, verId := range ni.versionIds {
+			nc = append(nc, verId)
+		}
+		notesCompact[i] = nc
 	}
 	serveJSONOK(w, r, rsp)
 }

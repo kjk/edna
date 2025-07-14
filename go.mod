@@ -7,7 +7,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/felixge/httpsnoop v1.0.4
 	github.com/gorilla/securecookie v1.1.2
-	github.com/kjk/common v0.0.0-20250713110029-b9b74797616f
+	github.com/kjk/common v0.0.0-20250714123134-a2dd9444f726
 	github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481
 	github.com/klauspost/compress v1.18.0
 	github.com/melbahja/goph v1.4.0
@@ -20,7 +20,7 @@ require (
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
+	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/minio/crc64nvme v1.0.2 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
