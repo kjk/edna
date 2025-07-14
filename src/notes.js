@@ -439,7 +439,7 @@ export function rememberOpenedNote(fh) {
  */
 export function noteNameFromFileNameFS(fileName) {
   // throwIf(!isValidFileName(fileName));
-  if (!isValidFileName) {
+  if (!isValidFileName(fileName)) {
     return null;
   }
   let encodedName = trimEdnaExt(fileName);
