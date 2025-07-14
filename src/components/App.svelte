@@ -2181,7 +2181,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="fixed inset-0 grid w-screen max-h-screen h-screen grid-cols-[auto_1fr] grid-rows-[1fr_auto]"
+  class="fixed inset-0 grid w-screen max-h-screen h-screen grid-cols-[auto_1fr] grid-rows-[auto_1fr]"
   {oncontextmenu}
 >
   {#if settings.alwaysShowTopNav}
