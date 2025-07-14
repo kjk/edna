@@ -131,14 +131,27 @@ export function notesFromStoreLog(records) {
     } else if (rec.kind === kStoreKindNoteMeta) {
       let meta = JSON.parse(rec.meta);
       let note = m.get(meta.id);
+      if (!note) {
+        console.warn("kStoreKindNoteMeta: no notefor meta record:", meta);
+        continue;
+      }
       note.applyMetadata(meta);
     } else if (rec.kind === kStoreKindDeleteNote) {
       let noteId = rec.meta;
+      let note = m.get(noteId);
+      if (!note) {
+        console.warn("kStoreKindDeleteNote: no note for meta:", rec.meta);
+        continue;
+      }
       m.delete(noteId);
     } else if (rec.kind === kStoreKindNoteContent) {
       let verId = rec.meta; // verId is noteId:verId
       let noteId = noteIdFromContentId(verId);
       let note = m.get(noteId);
+      if (!note) {
+        console.warn("kStoreKindNoteContent: no note for meta:", verId);
+        continue;
+      }
       note.versionIds.push(verId);
     }
   }

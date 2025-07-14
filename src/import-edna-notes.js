@@ -6,7 +6,9 @@ import {
 import { fromFileName, isValidFileName } from "./filenamify";
 import {
   createNoteWithUniqueName,
+  loadNoteContent,
   maybeSaveNoteSelectionAndFoldedRanges,
+  reassignNoteShortcut,
   saveNote,
   saveNoteMetadata,
 } from "./notes";
@@ -91,7 +93,7 @@ export async function importEdnaNotesFromZipFile() {
     }
     let encodedName = trimEdnaExt(fileName);
     let name = fromFileName(encodedName);
-    return name;
+    return name.trim();
   }
 
   for (let e of entries) {
@@ -105,6 +107,14 @@ export async function importEdnaNotesFromZipFile() {
     let textWriter = new libZip.TextWriter();
     await e.getData(textWriter);
     let content = await textWriter.getData();
+    let note = findNoteByName(name);
+    if (note) {
+      let existingContent = await loadNoteContent(name);
+      if (existingContent === content) {
+        console.warn(`Skipping ${name}, already exists`);
+        continue;
+      }
+    }
     let realName = await createNoteWithUniqueName(name);
     await saveNote(realName, content);
     console.log(
@@ -114,7 +124,7 @@ export async function importEdnaNotesFromZipFile() {
     if (!m) {
       continue;
     }
-    let note = findNoteByName(realName);
+    note = findNoteByName(realName);
     let saveMeta = false;
     if (m.isArchived) {
       note.isArchived = true;
@@ -124,12 +134,11 @@ export async function importEdnaNotesFromZipFile() {
       note.isStarred = true;
       saveMeta = true;
     }
-    if (m.altShortcut) {
-      note.altShortcut = m.altShortcut;
-      saveMeta = true;
-    }
     if (saveMeta) {
       await saveNoteMetadata(note);
+    }
+    if (m.altShortcut) {
+      await reassignNoteShortcut(realName, m.altShortcut);
     }
     await maybeSaveNoteSelectionAndFoldedRanges(
       note,
