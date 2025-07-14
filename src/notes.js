@@ -2,13 +2,13 @@ import { appState, findNoteByName, getNotes } from "./appstate.svelte";
 import { updateAfterNoteStateChange } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import { nanoid } from "./nanoid";
+import { Note } from "./note";
 import { getSettings } from "./settings.svelte";
 import {
-  Note,
   storeCreateNote,
   storeDeleteNote,
   storeLoadLatestNoteContent,
-  storeWriteContent,
+  storeWriteNoteContent,
   storeWriteNoteMeta,
 } from "./store";
 import {
@@ -209,7 +209,7 @@ export async function saveNote(name, content) {
   }
   let note = findNoteByName(name);
   let verId = makeRandomContentID(note.id);
-  await storeWriteContent(verId, content || "");
+  await storeWriteNoteContent(verId, content || "");
   note.versionIds.push(verId);
   appState.isDirty = false;
 }
@@ -226,7 +226,7 @@ export async function createNoteWithName(name, content = null) {
   let note = new Note(noteId, name);
   if (content) {
     let verId = makeRandomContentID(noteId);
-    await storeWriteContent(verId, content);
+    await storeWriteNoteContent(verId, content);
     note.versionIds.push(verId);
     console.log("created note", name);
   }
@@ -248,7 +248,7 @@ export async function appendToNote(name, content) {
   if (note) {
     let currContent = await loadNoteContent(name);
     let newContent = currContent + content;
-    await storeWriteContent(makeRandomContentID(note.id), newContent);
+    await storeWriteNoteContent(makeRandomContentID(note.id), newContent);
     return;
   }
   await createNoteWithName(name, content);

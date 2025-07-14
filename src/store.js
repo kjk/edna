@@ -1,118 +1,10 @@
-import { AppendStore, AppendStoreRecord } from "./appendstore";
-import { len, throwIf } from "./util";
+import { AppendStore } from "./appendstore";
+import { Note } from "./note";
+import { BackendStore } from "./store-backend";
+import { LocalStore, notesFromStoreLog } from "./store-local";
+import { throwIf } from "./util";
 
-const kStoreKinewCreateNote = "note-create";
-const kStoreKindNoteMeta = "note-meta";
-const kStoreKindDeleteNote = "note-delete";
-const kStoreKindNoteContent = "note-content";
-
-/**
- * @param {AppendStoreRecord[]} records
- * @param {string} noteId
- * @returns {AppendStoreRecord|null}
- */
-function apstoreFindLatestNoteContentVersionRec(records, noteId) {
-  let idx = len(records) - 1;
-  let rec;
-  // look for last note-content or note-delete
-  while (idx >= 0) {
-    rec = records[idx];
-    if (rec.kind === kStoreKindDeleteNote) {
-      if (rec.meta == noteId) {
-        return null;
-      }
-    } else if (rec.kind == kStoreKindNoteContent) {
-      if (rec.meta.startsWith(noteId)) {
-        return rec;
-      }
-    }
-    idx--;
-    continue;
-  }
-  return null;
-}
-
-class LocalStore {
-  /** @type {AppendStore} */
-  store;
-
-  /**
-   * @param {AppendStore} apstore
-   */
-  constructor(apstore) {
-    this.store = apstore;
-  }
-
-  /**
-   * @param {string} noteId
-   * @returns
-   */
-  async loadLatestNoteContent(noteId) {
-    let store = this.store;
-    let rec = apstoreFindLatestNoteContentVersionRec(store.records, noteId);
-    if (!rec) {
-      return null; // no content found
-    }
-    let { offset, size } = rec;
-    let content = await store.readString(offset, size);
-    return content;
-  }
-
-  /**
-   * @param {string} verId
-   * @param {string} content
-   */
-  async writeContent(verId, content) {
-    let store = this.store;
-    let meta = verId;
-    await store.appendRecord(content, kStoreKindNoteContent, meta);
-  }
-
-  /**
-   * @param {Object} m
-   */
-  async writeNoteMeta(m) {
-    let store = this.store;
-    // we expect m to be small so storing in index as meta
-    let meta = JSON.stringify(m);
-    await store.appendRecord(null, kStoreKindNoteMeta, meta);
-  }
-
-  /**
-   * @param {string} fileName
-   * @param {string} s
-   */
-  async writeStringToFile(fileName, s) {
-    localStorage.setItem(fileName, s);
-  }
-
-  /**
-   * @param {string} fileName
-   * @returns {Promise<string>}
-   */
-  async storeReadFileAsString(fileName) {
-    return localStorage.getItem(fileName) || "";
-  }
-  /**
-   * @param {string} noteId
-   */
-  async storeDeleteNote(noteId) {
-    let store = this.store;
-    await store.appendRecord(null, kStoreKindDeleteNote, noteId);
-  }
-
-  /**
-   * @param {string} noteId
-   * @param {string} name
-   */
-  async createNote(noteId, name) {
-    let store = this.store;
-    let meta = `${noteId}:${name}`;
-    await store.appendRecord(null, kStoreKinewCreateNote, meta);
-  }
-}
-
-/** @type { LocalStore } */
+/** @type { LocalStore | BackendStore } */
 let store;
 
 /**
@@ -135,14 +27,14 @@ export async function storeWriteStringToFile(fileName, s) {
  * @returns {Promise<string>}
  */
 export async function storeReadFileAsString(fileName) {
-  return store.storeReadFileAsString(fileName);
+  return store.readFileAsString(fileName);
 }
 
 /**
  * @param {string} noteId
  */
 export async function storeDeleteNote(noteId) {
-  await store.storeDeleteNote(noteId);
+  await store.deleteNote(noteId);
 }
 
 /**
@@ -157,8 +49,8 @@ export async function storeCreateNote(noteId, name) {
  * @param {string} verId
  * @param {string} content
  */
-export async function storeWriteContent(verId, content) {
-  await store.writeContent(verId, content);
+export async function storeWriteNoteContent(verId, content) {
+  await store.writeNoteContent(verId, content);
 }
 
 /**
@@ -167,89 +59,6 @@ export async function storeWriteContent(verId, content) {
  */
 export async function storeLoadLatestNoteContent(noteId) {
   let res = await store.loadLatestNoteContent(noteId);
-  return res;
-}
-
-// convert falsy values to undefined so that JSON serialization
-// doesn't include them, making the JSON smaller and easier to read
-function toUndef(v) {
-  return v ? v : undefined;
-}
-
-export class Note {
-  /** @type {string} */
-  id;
-  /** @type {string} */
-  name;
-  /** @type {string[]} */
-  versionIds = [];
-  /** @type {boolean} */
-  isArchived;
-  /** @type {boolean} */
-  isStarred;
-  /** @type {string}  */
-  altShortcut;
-
-  getMetadata() {
-    // by using toUndef() we make JSON-serialized version
-    // smaller and easier to read
-    return {
-      id: this.id,
-      name: this.name,
-      isArchived: toUndef(this.isArchived),
-      isStarred: toUndef(this.isStarred),
-      altShortcut: toUndef(this.altShortcut),
-    };
-  }
-
-  // reverse of getMetadata()
-  // note that if a field in m is missing, it's false / undefined
-  applyMetadata(m) {
-    throwIf(this.id != m.id, "id mismatch");
-    this.name = m.name;
-    this.isArchived = m.isArchived;
-    this.isStarred = m.isStarred;
-    this.altShortcut = m.altShortcut;
-  }
-
-  constructor(id, name) {
-    this.id = id;
-    this.name = name;
-  }
-}
-
-/**
- * @param {AppendStoreRecord[]} records
- * @returns {Note[]}
- */
-export function notesFromStoreLog(records) {
-  let res = [];
-  let m = new Map();
-  for (let rec of records) {
-    if (rec.kind === kStoreKinewCreateNote) {
-      // meta is "noteId:name"
-      let idx = rec.meta.indexOf(":");
-      let noteId = rec.meta.substring(0, idx);
-      let name = rec.meta.substring(idx + 1);
-      let note = new Note(noteId, name);
-      m.set(note.id, note);
-    } else if (rec.kind === kStoreKindNoteMeta) {
-      let meta = JSON.parse(rec.meta);
-      let note = m.get(meta.id);
-      note.applyMetadata(meta);
-    } else if (rec.kind === kStoreKindDeleteNote) {
-      let noteId = rec.meta;
-      m.delete(noteId);
-    } else if (rec.kind === kStoreKindNoteContent) {
-      let verId = rec.meta; // verId is noteId:verId
-      let noteId = rec.meta.split("-")[0];
-      let note = m.get(noteId);
-      note.versionIds.push(verId);
-    }
-  }
-  for (let note of m.values()) {
-    res.push(note);
-  }
   return res;
 }
 
