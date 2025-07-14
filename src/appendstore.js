@@ -104,7 +104,7 @@ export class AppendStore {
    * @param {string} kind
    * @param {string} meta
    */
-  async write(data, kind, meta = null) {
+  async appendRecord(data, kind, meta = null) {
     const startTime = performance.now();
     if (!kind || kind.includes(" ") || kind.includes("\n")) {
       throw new Error(
@@ -138,20 +138,16 @@ export class AppendStore {
     logDur(startTime, `AppendStore.write`);
   }
 
-  async readData(offset, size) {
-    if (offset < 0 || size <= 0) {
-      throw new Error("Invalid offset or size");
-    }
-    let d = await readFileSegment(this.dataHandle, offset, size);
-    return d;
-  }
-
   async readString(offset, size) {
+    if (offset < 0 || size < 0) {
+      throw new Error(`Invalid offset '${offset}' or size '${size}`);
+    }
+
     // if we write empty string, data size is 0
     if (size == 0) {
       return "";
     }
-    const bytes = await this.readData(offset, size);
+    let bytes = await readFileSegment(this.dataHandle, offset, size);
     return this.utf8Decoder.decode(bytes);
   }
 

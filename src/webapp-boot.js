@@ -13,7 +13,7 @@ import {
   kScratchNoteName,
 } from "./notes";
 import { getSettings } from "./settings.svelte";
-import { maybeUploadAppendStoreZip, openStore } from "./store";
+import { maybeUploadAppendStoreZip, openLocalStore } from "./store";
 import { isDev } from "./util";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
@@ -85,7 +85,7 @@ export async function boot() {
   if (user) {
     await maybeUploadAppendStoreZip();
   }
-  appState.allNotes = await openStore();
+  appState.allNotes = await openLocalStore();
   updateAfterNoteStateChange();
   await loadAppMetadata(); // pre-load
 

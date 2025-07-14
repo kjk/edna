@@ -3,8 +3,8 @@ import { updateAfterNoteStateChange } from "./globals";
 import {
   Note,
   storeReadFileAsString,
-  storeWriteFileString,
   storeWriteNoteMeta,
+  storeWriteStringToFile,
 } from "./store";
 
 export const kMetadataName = "__metadata.elaris.json";
@@ -42,7 +42,7 @@ function getFunctionsMetadata() {
 
 export async function saveAppMetadata() {
   let s = JSON.stringify(metadata, null, 2);
-  await storeWriteFileString(kMetadataName, s);
+  await storeWriteStringToFile(kMetadataName, s);
 }
 
 /**

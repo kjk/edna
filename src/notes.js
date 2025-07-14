@@ -6,8 +6,8 @@ import { getSettings } from "./settings.svelte";
 import {
   Note,
   storeCreateNote,
+  storeDeleteNote,
   storeLoadLatestNoteContent,
-  storeMarkNoteDeleted,
   storeWriteContent,
   storeWriteNoteMeta,
 } from "./store";
@@ -350,7 +350,7 @@ export function isNoteArchivable(name) {
  */
 export async function deleteNote(name) {
   let note = findNoteByName(name);
-  storeMarkNoteDeleted(note.id);
+  storeDeleteNote(note.id);
   removeNoteFromHistory(name);
 }
 

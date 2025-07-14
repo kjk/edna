@@ -6,19 +6,17 @@ const kStoreKindNoteMeta = "note-meta";
 const kStoreKindDeleteNote = "note-delete";
 const kStoreKindNoteContent = "note-content";
 
-/** @type {AppendStore} */
-let store;
-
 /**
+ * @param {AppendStoreRecord[]} records
  * @param {string} noteId
  * @returns {AppendStoreRecord|null}
  */
-export function storeFindLatestNoteContentVersionRec(noteId) {
-  let idx = len(store.records) - 1;
+function apstoreFindLatestNoteContentVersionRec(records, noteId) {
+  let idx = len(records) - 1;
   let rec;
   // look for last note-content or note-delete
   while (idx >= 0) {
-    rec = store.records[idx];
+    rec = records[idx];
     if (rec.kind === kStoreKindDeleteNote) {
       if (rec.meta == noteId) {
         return null;
@@ -34,35 +32,117 @@ export function storeFindLatestNoteContentVersionRec(noteId) {
   return null;
 }
 
+class LocalStore {
+  /** @type {AppendStore} */
+  store;
+
+  /**
+   * @param {AppendStore} apstore
+   */
+  constructor(apstore) {
+    this.store = apstore;
+  }
+
+  /**
+   * @param {string} noteId
+   * @returns
+   */
+  async loadLatestNoteContent(noteId) {
+    let store = this.store;
+    let rec = apstoreFindLatestNoteContentVersionRec(store.records, noteId);
+    if (!rec) {
+      return null; // no content found
+    }
+    let { offset, size } = rec;
+    let content = await store.readString(offset, size);
+    return content;
+  }
+
+  /**
+   * @param {string} verId
+   * @param {string} content
+   */
+  async writeContent(verId, content) {
+    let store = this.store;
+    let meta = verId;
+    await store.appendRecord(content, kStoreKindNoteContent, meta);
+  }
+
+  /**
+   * @param {Object} m
+   */
+  async writeNoteMeta(m) {
+    let store = this.store;
+    // we expect m to be small so storing in index as meta
+    let meta = JSON.stringify(m);
+    await store.appendRecord(null, kStoreKindNoteMeta, meta);
+  }
+
+  /**
+   * @param {string} fileName
+   * @param {string} s
+   */
+  async writeStringToFile(fileName, s) {
+    localStorage.setItem(fileName, s);
+  }
+
+  /**
+   * @param {string} fileName
+   * @returns {Promise<string>}
+   */
+  async storeReadFileAsString(fileName) {
+    return localStorage.getItem(fileName) || "";
+  }
+  /**
+   * @param {string} noteId
+   */
+  async storeDeleteNote(noteId) {
+    let store = this.store;
+    await store.appendRecord(null, kStoreKindDeleteNote, noteId);
+  }
+
+  /**
+   * @param {string} noteId
+   * @param {string} name
+   */
+  async createNote(noteId, name) {
+    let store = this.store;
+    let meta = `${noteId}:${name}`;
+    await store.appendRecord(null, kStoreKinewCreateNote, meta);
+  }
+}
+
+/** @type { LocalStore } */
+let store;
+
 /**
  * @param {Object} m
  */
 export async function storeWriteNoteMeta(m) {
-  // we expect m to be small so storing in index as meta
-  let meta = JSON.stringify(m);
-  await store.write(null, kStoreKindNoteMeta, meta);
+  await store.writeNoteMeta(m);
 }
 
 /**
  * @param {string} fileName
  * @param {string} s
  */
-export async function storeWriteFileString(fileName, s) {
-  localStorage.setItem(fileName, s);
+export async function storeWriteStringToFile(fileName, s) {
+  await store.writeStringToFile(fileName, s);
 }
 
 /**
+ * @param {string} fileName
  * @returns {Promise<string>}
  */
 export async function storeReadFileAsString(fileName) {
-  return localStorage.getItem(fileName) || "";
+  return store.storeReadFileAsString(fileName);
 }
 
 /**
  * @param {string} noteId
  */
-export async function storeMarkNoteDeleted(noteId) {
-  await store.write(null, kStoreKindDeleteNote, noteId);
+export async function storeDeleteNote(noteId) {
+  await store.storeDeleteNote(noteId);
 }
 
 /**
@@ -70,8 +150,7 @@ export async function storeMarkNoteDeleted(noteId) {
  * @param {string} name
  */
 export async function storeCreateNote(noteId, name) {
-  let meta = `${noteId}:${name}`;
-  await store.write(null, kStoreKinewCreateNote, meta);
+  store.createNote(noteId, name);
 }
 
 /**
@@ -79,7 +158,7 @@ export async function storeCreateNote(noteId, name) {
  * @param {string} content
  */
 export async function storeWriteContent(verId, content) {
-  await store.write(content, kStoreKindNoteContent, verId);
+  await store.writeContent(verId, content);
 }
 
 /**
@@ -87,13 +166,8 @@ export async function storeWriteContent(verId, content) {
  * @returns {Promise<string>}
  */
 export async function storeLoadLatestNoteContent(noteId) {
-  let rec = storeFindLatestNoteContentVersionRec(noteId);
-  if (!rec) {
-    return null; // no content found
-  }
-  let { offset, size } = rec;
-  let content = await store.readString(offset, size);
-  return content;
+  let res = await store.loadLatestNoteContent(noteId);
+  return res;
 }
 
 // convert falsy values to undefined so that JSON serialization
@@ -182,11 +256,12 @@ export function notesFromStoreLog(records) {
 /**
  * @returns {Promise<Note[]>}
  */
-export async function openStore() {
+export async function openLocalStore() {
   throwIf(store != undefined, "store already opened");
-  store = await AppendStore.create("notes_store");
-  console.log(`notes_store has ${store.records.length} records`);
-  return notesFromStoreLog(store.records);
+  let apstore = await AppendStore.create("notes_store");
+  console.log(`notes_store has ${apstore.records.length} records`);
+  store = new LocalStore(apstore);
+  return notesFromStoreLog(apstore.records);
 }
 
 /**
