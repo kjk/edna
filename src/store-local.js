@@ -160,3 +160,10 @@ export function notesFromStoreLog(records) {
   }
   return res;
 }
+
+export async function createLocalStore() {
+  let apstore = await AppendStore.create("notes_store");
+  console.log(`notes_store has ${apstore.records.length} records`);
+  let store = new LocalStore(apstore);
+  return store;
+}

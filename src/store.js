@@ -1,7 +1,7 @@
 import { AppendStore } from "./appendstore";
 import { Note } from "./note";
 import { BackendStore } from "./store-backend";
-import { LocalStore, notesFromStoreLog } from "./store-local";
+import { createLocalStore, LocalStore, notesFromStoreLog } from "./store-local";
 import { throwIf } from "./util";
 
 /** @type { LocalStore | BackendStore } */
@@ -67,8 +67,9 @@ export async function storeLoadLatestNoteContent(noteId) {
  */
 export async function openLocalStore() {
   throwIf(store != undefined, "store already opened");
-  let apstore = await AppendStore.create("notes_store");
-  console.log(`notes_store has ${apstore.records.length} records`);
-  store = new LocalStore(apstore);
-  return notesFromStoreLog(apstore.records);
+  let localStore = await createLocalStore();
+  store = localStore;
+  return notesFromStoreLog(localStore.store.records);
 }
+
+export function openBackendStore() {}
