@@ -7,14 +7,19 @@ import App from "./components/App.svelte";
 import { updateAfterNoteStateChange } from "./globals";
 import { getLoggedUser } from "./login";
 import { loadAppMetadata } from "./metadata";
+import { Note } from "./note";
 import {
-  createDefaultNotes,
+  createIfNotExists,
   isSystemNoteName,
+  kDailyJournalNoteName,
+  kInboxNoteName,
   kScratchNoteName,
+  reassignNoteShortcut,
 } from "./notes";
 import { getSettings } from "./settings.svelte";
-import { maybeUploadAppendStoreZip, openLocalStore } from "./store";
-import { isDev } from "./util";
+import { maybeMigrateNotesLocalToBackend, openLocalStore } from "./store";
+import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
+import { isDev, len } from "./util";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
 
@@ -27,8 +32,10 @@ function resetApp() {
   unmount(appSvelte);
   console.log("clearing localStorage");
   localStorage.clear();
-  console.log("reloading");
-  window.location.reload();
+  deleteBrowserStorage().then(() => {
+    console.log("reloading");
+    window.location.reload();
+  });
 }
 
 async function deleteBrowserStorage() {
@@ -36,8 +43,9 @@ async function deleteBrowserStorage() {
   // @ts-ignore
   for await (const name of root.keys()) {
     await root.removeEntry(name, { recursive: true });
+    console.log(`Deleted entry: ${name}`);
   }
-  console.log("OPFS cleared.");
+  console.log("Browser storage cleared.");
 }
 
 async function listBrowserStorage() {
@@ -73,6 +81,55 @@ function setupWindowDebug() {
   };
 }
 
+/**
+ * @param {Note[]} existingNotes
+ * @returns {Promise<string[]>}
+ */
+async function createDefaultNotes(existingNotes) {
+  let isFirstRun = len(existingNotes) == 0;
+  console.log(
+    `isFirstRun: ${isFirstRun}, len(existingNotes): ${len(existingNotes)}`,
+  );
+
+  let welcomeNote = getWelcomeNote();
+
+  let createdNotes = [];
+
+  let didCreate = await createIfNotExists(
+    kScratchNoteName,
+    welcomeNote,
+    existingNotes,
+  );
+  if (didCreate) {
+    createdNotes.push(kScratchNoteName);
+  }
+
+  // scratch note must always exist but the user can delete inbox / daily journal notes
+  if (isFirstRun) {
+    let inbox = getInboxNote();
+    didCreate = await createIfNotExists(kInboxNoteName, inbox, existingNotes);
+    if (didCreate) {
+      createdNotes.push(kInboxNoteName);
+    }
+    // re-create those notes if the user hasn't deleted them
+    let journal = getJournalNote();
+    didCreate = await createIfNotExists(
+      kDailyJournalNoteName,
+      journal,
+      existingNotes,
+    );
+    if (didCreate) {
+      createdNotes.push(kDailyJournalNoteName);
+    }
+  }
+  if (isFirstRun) {
+    reassignNoteShortcut(kScratchNoteName, "1");
+    reassignNoteShortcut(kDailyJournalNoteName, "2");
+    reassignNoteShortcut(kInboxNoteName, "3");
+  }
+  return createdNotes;
+}
+
 export async function boot() {
   console.log("booting");
   setupWindowDebug();
@@ -83,14 +140,14 @@ export async function boot() {
   console.log("user:", user);
   appState.user = user;
   if (user) {
-    await maybeUploadAppendStoreZip();
+    await maybeMigrateNotesLocalToBackend();
   }
   appState.allNotes = await openLocalStore();
   updateAfterNoteStateChange();
   await loadAppMetadata(); // pre-load
 
-  await createDefaultNotes(appState.allNotes);
-
+  let createdNotes = await createDefaultNotes(appState.allNotes);
+  console.log("createdNotes:", createdNotes);
   let settings = getSettings();
   // console.log("settings:", settings);
 
@@ -146,6 +203,11 @@ export async function boot() {
       console.warn(`removing tab ${noteName} becase no note of that name`);
       settings.tabs.splice(i, 1);
     }
+  }
+
+  // if newly created notes, add them to the tabs
+  for (let noteName of createdNotes) {
+    settings.addTab(noteName);
   }
 
   console.log("mounting App");

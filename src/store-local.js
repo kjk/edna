@@ -1,5 +1,5 @@
 import { AppendStore, AppendStoreRecord } from "./appendstore";
-import { Note } from "./note";
+import { Note, noteIdFromContentId } from "./note";
 import { len } from "./util";
 
 const kStoreKinewCreateNote = "note-create";
@@ -137,7 +137,7 @@ export function notesFromStoreLog(records) {
       m.delete(noteId);
     } else if (rec.kind === kStoreKindNoteContent) {
       let verId = rec.meta; // verId is noteId:verId
-      let noteId = rec.meta.split("-")[0];
+      let noteId = noteIdFromContentId(verId);
       let note = m.get(noteId);
       note.versionIds.push(verId);
     }

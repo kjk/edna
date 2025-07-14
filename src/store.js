@@ -119,8 +119,7 @@ export async function getAppendStoreZip(indexFileName, dataFileName) {
   return blob;
 }
 
-export async function maybeUploadAppendStoreZip() {
-  debugger;
+export async function maybeMigrateNotesLocalToBackend() {
   let indexFileName = "notes_store_index.txt";
   let dataFileName = "notes_store_data.bin";
   let blob = await getAppendStoreZip(indexFileName, dataFileName);

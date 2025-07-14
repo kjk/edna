@@ -2,7 +2,7 @@ import { appState, findNoteByName, getNotes } from "./appstate.svelte";
 import { updateAfterNoteStateChange } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import { nanoid } from "./nanoid";
-import { Note } from "./note";
+import { mkRandomContentId, mkRandomNoteId, Note } from "./note";
 import { getSettings } from "./settings.svelte";
 import {
   storeCreateNote,
@@ -62,23 +62,6 @@ export function isSystemNoteName(name) {
   return systemNotes.includes(name);
 }
 
-const kNoteIDLength = 6; // was 8 at some point
-const kNoteCotentIDLength = 4;
-/**
- * @returns {string}
- */
-export function genRandomNoteID() {
-  return nanoid(kNoteIDLength);
-}
-
-/**
- * @param {string} noteID
- * @returns {string}
- */
-function makeRandomContentID(noteID) {
-  return noteID + "-" + nanoid(kNoteCotentIDLength);
-}
-
 export const blockHdrPlainText = "\n∞∞∞text-a\n";
 export const blockHdrMarkdown = "\n∞∞∞markdown\n";
 
@@ -86,7 +69,7 @@ export const blockHdrMarkdown = "\n∞∞∞markdown\n";
  * @param {string} name
  * @param {string} content
  * @param {Note[]} existingNotes
- * @returns {Promise<number>}
+ * @returns {Promise<boolean>}
  */
 export async function createIfNotExists(name, content, existingNotes) {
   if (!existingNotes) {
@@ -94,47 +77,10 @@ export async function createIfNotExists(name, content, existingNotes) {
   }
   if (existingNotes.find((n) => n.name == name)) {
     console.log(`note ${name} already exists`);
-    return 0;
+    return false;
   }
   await createNoteWithName(name, content);
-  return 1;
-}
-
-/**
- * @param {Note[]} existingNotes
- * @returns {Promise<number>}
- */
-export async function createDefaultNotes(existingNotes) {
-  let isFirstRun = len(existingNotes) == 0;
-  console.log(
-    `isFirstRun: ${isFirstRun}, len(existingNotes): ${len(existingNotes)}`,
-  );
-
-  let welcomeNote = getWelcomeNote();
-
-  let nCreated = await createIfNotExists(
-    kScratchNoteName,
-    welcomeNote,
-    existingNotes,
-  );
-  // scratch note must always exist but the user can delete inbox / daily journal notes
-  if (isFirstRun) {
-    let inbox = getInboxNote();
-    nCreated += await createIfNotExists(kInboxNoteName, inbox, existingNotes);
-    // re-create those notes if the user hasn't deleted them
-    let journal = getJournalNote();
-    nCreated += await createIfNotExists(
-      kDailyJournalNoteName,
-      journal,
-      existingNotes,
-    );
-  }
-  if (isFirstRun) {
-    reassignNoteShortcut(kScratchNoteName, "1");
-    reassignNoteShortcut(kDailyJournalNoteName, "2");
-    reassignNoteShortcut(kInboxNoteName, "3");
-  }
-  return nCreated;
+  return true;
 }
 
 export function startsWithBlockHeader(s) {
@@ -206,7 +152,7 @@ export async function saveNote(name, content) {
     return;
   }
   let note = findNoteByName(name);
-  let verId = makeRandomContentID(note.id);
+  let verId = mkRandomContentId(note.id);
   await storeWriteNoteContent(verId, content || "");
   note.versionIds.push(verId);
   appState.isDirty = false;
@@ -219,11 +165,11 @@ export async function saveNote(name, content) {
  */
 export async function createNoteWithName(name, content = null) {
   content = fixUpNoteContent(content);
-  let noteId = genRandomNoteID();
+  let noteId = mkRandomNoteId();
   await storeCreateNote(noteId, name);
   let note = new Note(noteId, name);
   if (content) {
-    let verId = makeRandomContentID(noteId);
+    let verId = mkRandomContentId(noteId);
     await storeWriteNoteContent(verId, content);
     note.versionIds.push(verId);
     console.log("created note", name);
@@ -246,7 +192,7 @@ export async function appendToNote(name, content) {
   if (note) {
     let currContent = await loadNoteContent(name);
     let newContent = currContent + content;
-    await storeWriteNoteContent(makeRandomContentID(note.id), newContent);
+    await storeWriteNoteContent(mkRandomContentId(note.id), newContent);
     return;
   }
   await createNoteWithName(name, content);

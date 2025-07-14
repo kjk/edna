@@ -1,6 +1,6 @@
-import { Note } from "./store";
-
 /** @typedef {import("./login.js").UserInfo} UserInfo */
+
+import { Note } from "./note.js";
 
 class AppState {
   /** @type {UserInfo} */

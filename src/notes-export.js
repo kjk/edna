@@ -41,7 +41,6 @@ export async function exportUnencryptedNotesToZipBlob() {
   for (let note of appState.regularNotes) {
     let s = await loadNoteContent(note.name);
     // always use un-encrypted file extension
-    debugger;
     // let fileName = notePathFromNameFS(name, false);
     // await addTextFile(libZip, zipWriter, fileName, s);
   }

@@ -1,3 +1,4 @@
+import { nanoid } from "./nanoid";
 import { throwIf } from "./util";
 
 // convert falsy values to undefined so that JSON serialization
@@ -46,4 +47,30 @@ export class Note {
     this.id = id;
     this.name = name;
   }
+}
+
+const kNoteIdLen = 4;
+const kNoteCotentIdLen = 4;
+
+/**
+ * @returns {string}
+ */
+export function mkRandomNoteId() {
+  return nanoid(kNoteIdLen);
+}
+
+/**
+ * @param {string} noteID
+ * @returns {string}
+ */
+export function mkRandomContentId(noteID) {
+  return noteID + ":" + nanoid(kNoteCotentIdLen);
+}
+
+export function noteIdFromContentId(verId) {
+  let idx = verId.indexOf(":");
+  if (idx < 0) {
+    throw new Error("invalid contentId: " + verId);
+  }
+  return verId.substring(0, idx);
 }

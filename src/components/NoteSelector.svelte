@@ -106,6 +106,7 @@
 <script>
   import { focus } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
+  import { Note } from "../note";
   import {
     archiveNote,
     isNoteArchivable,
@@ -116,7 +117,6 @@
     toggleNoteStarred,
     unArchiveNote,
   } from "../notes";
-  import { Note } from "../store";
   import {
     findMatchingItems,
     getAltChar,

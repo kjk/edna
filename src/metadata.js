@@ -1,11 +1,4 @@
-import { findNoteByName, getNotes } from "./appstate.svelte";
-import { updateAfterNoteStateChange } from "./globals";
-import {
-  Note,
-  storeReadFileAsString,
-  storeWriteNoteMeta,
-  storeWriteStringToFile,
-} from "./store";
+import { storeReadFileAsString, storeWriteStringToFile } from "./store";
 
 export const kMetadataName = "__metadata.elaris.json";
 
