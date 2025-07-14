@@ -2,7 +2,7 @@ import { appState } from "./appstate.svelte";
 import { kMetadataName, loadAppMetadata } from "./metadata";
 import { loadNoteContent } from "./notes";
 import { kSettingsPath } from "./settings.svelte";
-import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
+import { browserDownloadBlob, formatDateYYYYMMDD } from "./util";
 
 /**
  * @param {any} libZip

@@ -62,11 +62,12 @@
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages";
-  import { toFileName } from "../filenamify";
+  import { fromFileName, isValidFileName, toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, supportsFileSystem } from "../fileutil";
   import { parseUserFunctions, runBoopFunction } from "../functions";
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
+  import { importEdnaNotesFromZipFile } from "../import-edna-notes";
   import { log, logAppExit, logAppOpen, logNoteOp } from "../log";
   import { getLoggedUser } from "../login";
   import Menu, {
@@ -84,8 +85,9 @@
     blockHdrPlainText,
     canDeleteNote,
     createIfNotExists,
-    createNewScratchNote,
     createNoteWithName,
+    createNoteWithUniqueName,
+    createUniqueScratchNote,
     deleteNote,
     isNoteArchivable,
     isNoteArchived,
@@ -99,8 +101,11 @@
     kWelcomeDevSystemNoteName,
     kWelcomeSystemNoteName,
     loadNoteContentIfExists,
+    maybeSaveNoteSelectionAndFoldedRanges,
     noteExists,
     renameNote,
+    saveNote,
+    saveNoteMetadata,
     toggleNoteStarred,
     unArchiveNote,
   } from "../notes";
@@ -425,10 +430,6 @@
     // encryptAllNotes(pwd);
   }
 
-  function exportNotesToZipFile() {
-    exportNotesToZip();
-  }
-
   /**
    * @param {Blob} blob
    * @param {string} fileName
@@ -479,9 +480,9 @@
   function openSettings() {
     showingSettings = true;
   }
-
+  createUniqueScratchNote;
   async function createScratchNote() {
-    let name = await createNewScratchNote();
+    let name = await createUniqueScratchNote();
     await onOpenNote(name);
     // TODO: add a way to undo creation of the note
     showToast(`Created scratch note '${name}'`);
@@ -858,6 +859,7 @@
   const kCmdSwitchToNotesInDir = nmid();
   const kCmdSwitchToLocalStorage = nmid();
   const kCmdExportNotes = nmid();
+  const kCmdImportEdnaNotes = nmid();
   const kCmdExportCurrentNote = nmid();
   const kCmdEncryptNotes = nmid();
   const kCmdDecryptNotes = nmid();
@@ -1024,6 +1026,7 @@
 
   /** @type {MenuItemDef[]} */
   const commandPaletteAdditions = [
+    ["Import Edna notes", kCmdImportEdnaNotes],
     ["Create New Scratch Note", kCmdCreateScratchNote],
     ["Open recent note", kCmdOpenRecent],
     ["Open note in new tab", kCmdOpenNoteInNewTab],
@@ -1368,7 +1371,9 @@
     } else if (cmdId === kCmdSwitchToLocalStorage) {
       // await switchToBrowserStorage();
     } else if (cmdId === kCmdExportNotes) {
-      exportNotesToZipFile();
+      exportNotesToZip();
+    } else if (cmdId === kCmdImportEdnaNotes) {
+      importEdnaNotesFromZipFile();
     } else if (cmdId === kCmdExportCurrentNote) {
       exportCurrentNote();
     } else if (cmdId === kCmdNoteToggleStarred) {

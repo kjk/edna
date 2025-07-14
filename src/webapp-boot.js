@@ -7,6 +7,7 @@ import App from "./components/App.svelte";
 import { updateAfterNoteStateChange } from "./globals";
 import { getLoggedUser } from "./login";
 import { loadAppMetadata } from "./metadata";
+import { maybeMigrateNotesLocalToBackend } from "./migrate-local-to-backend";
 import { Note } from "./note";
 import {
   createIfNotExists,
@@ -17,7 +18,7 @@ import {
   reassignNoteShortcut,
 } from "./notes";
 import { getSettings } from "./settings.svelte";
-import { maybeMigrateNotesLocalToBackend, openLocalStore } from "./store";
+import { openLocalStore } from "./store";
 import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
 import { isDev, len } from "./util";
 

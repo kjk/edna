@@ -15,7 +15,12 @@ import {
 } from "@codemirror/view";
 import { findNoteByName } from "../appstate.svelte.js";
 import { getMetadata, saveAppMetadata } from "../metadata.js";
-import { loadNoteContent, saveNote, saveNoteMetadata } from "../notes.js";
+import {
+  loadNoteContent,
+  maybeSaveNoteSelectionAndFoldedRanges,
+  saveNote,
+  saveNoteMetadata,
+} from "../notes.js";
 import { findEditorByView } from "../state.js";
 import { len, objectEqualDeep } from "../util.js";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation.js";
@@ -227,34 +232,9 @@ export class EdnaEditor {
 
   async saveFoldedState() {
     let note = findNoteByName(this.noteName);
-    let meta = getMetadata();
-    let noteMeta = meta.notes[note.id];
-    if (!noteMeta) {
-      meta.notes[note.id] = {};
-      noteMeta = meta.notes[note.id];
-    }
-    let didChange = false;
     let foldedRanges = getFoldedRanges(this.view);
-    if (!objectEqualDeep(noteMeta.foldedRanges, foldedRanges)) {
-      didChange = true;
-      noteMeta.foldedRanges = foldedRanges;
-    }
     let selection = this.view.state.selection.toJSON();
-    if (!objectEqualDeep(noteMeta.selection, selection)) {
-      didChange = true;
-      noteMeta.selection = selection;
-    }
-    if (!didChange) {
-      // console.log("saveFoldedState: skipping save, no changes");
-      return;
-    }
-    // console.log(
-    //   "saveFoldedState: saving selection:",
-    //   meta.selection,
-    //   "folededState:",
-    //   foldedRanges,
-    // );
-    await saveAppMetadata();
+    await maybeSaveNoteSelectionAndFoldedRanges(note, selection, foldedRanges);
   }
 
   restoreSelectionAndRanges() {

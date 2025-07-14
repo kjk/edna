@@ -1,7 +1,7 @@
 import { appState, findNoteByName, getNotes } from "./appstate.svelte";
 import { updateAfterNoteStateChange } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
-import { nanoid } from "./nanoid";
+import { getMetadata, saveAppMetadata } from "./metadata";
 import { mkRandomContentId, mkRandomNoteId, Note } from "./note";
 import { getSettings } from "./settings.svelte";
 import {
@@ -14,13 +14,11 @@ import {
 import {
   getBuiltInFunctionsNote,
   getHelp,
-  getInboxNote,
-  getJournalNote,
   getReleaseNotes,
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { len, throwIf } from "./util";
+import { len, objectEqualDeep, throwIf } from "./util";
 
 const kLSPassowrdKey = "elaris-password";
 
@@ -159,9 +157,10 @@ export async function saveNote(name, content) {
 }
 
 /**
+ * returns note id
  * @param {string} name
  * @param {string} content
- * @returns {Promise<void>}
+ * @returns {Promise<string>}
  */
 export async function createNoteWithName(name, content = null) {
   content = fixUpNoteContent(content);
@@ -176,6 +175,7 @@ export async function createNoteWithName(name, content = null) {
   }
   appState.allNotes.push(note);
   updateAfterNoteStateChange();
+  return note.id;
 }
 
 /*
@@ -199,20 +199,29 @@ export async function appendToNote(name, content) {
 }
 
 /**
+ * creates a new ${name}<-${N}> note
+ * @param {string} name
+ * @param {string?} content
+ * @returns {Promise<string>}
+ */
+export async function createNoteWithUniqueName(name, content = null) {
+  let names = [];
+  for (let note of appState.allNotes) {
+    if (note.name.startsWith(name)) {
+      names.push(note.name);
+    }
+  }
+  let newName = pickUniqueName(name, names);
+  await createNoteWithName(newName);
+  return newName;
+}
+
+/**
  * creates a new scratch-${N} note
  * @returns {Promise<string>}
  */
-export async function createNewScratchNote() {
-  // generate a unique "scratch-${N}" note name
-  let scratchNames = [];
-  for (let note of appState.allNotes) {
-    if (note.name.startsWith("scratch")) {
-      scratchNames.push(note.name);
-    }
-  }
-  let scratchName = pickUniqueName("scratch", scratchNames);
-  await createNoteWithName(scratchName);
-  return scratchName;
+export async function createUniqueScratchNote() {
+  return await createNoteWithUniqueName(kScratchNoteName);
 }
 
 /**
@@ -409,4 +418,37 @@ export async function saveNoteMetadata(note) {
   let m = note.getMetadata();
   console.log("saveNoteMetadata:", m);
   await storeWriteNoteMeta(m);
+}
+
+export async function maybeSaveNoteSelectionAndFoldedRanges(
+  note,
+  selection,
+  foldedRanges,
+) {
+  let meta = getMetadata();
+  let noteMeta = meta.notes[note.id];
+  if (!noteMeta) {
+    meta.notes[note.id] = {};
+    noteMeta = meta.notes[note.id];
+  }
+  let didChange = false;
+  if (foldedRanges && !objectEqualDeep(noteMeta.foldedRanges, foldedRanges)) {
+    didChange = true;
+    noteMeta.foldedRanges = foldedRanges;
+  }
+  if (selection && !objectEqualDeep(noteMeta.selection, selection)) {
+    didChange = true;
+    noteMeta.selection = selection;
+  }
+  if (!didChange) {
+    // console.log("saveFoldedState: skipping save, no changes");
+    return;
+  }
+  // console.log(
+  //   "saveFoldedState: saving selection:",
+  //   meta.selection,
+  //   "folededState:",
+  //   foldedRanges,
+  // );
+  await saveAppMetadata();
 }
