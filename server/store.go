@@ -3,6 +3,7 @@ package server
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -32,6 +33,7 @@ type UserInfo struct {
 	Email   string
 	Store   *appendstore.Store
 	DataDir string
+	mu      sync.Mutex
 }
 
 var (
@@ -53,22 +55,29 @@ func getLoggedUser(r *http.Request, w http.ResponseWriter) (*UserInfo, error) {
 			userInfo = u
 			return nil
 		}
-		userInfo = &UserInfo{
-			Email: cookie.Email,
-			User:  cookie.User,
-		}
 
 		dataDir := getDataDirMust()
-		// TODO: must escape email to avoid chars not allowed in file names
-		dataDir = filepath.Join(dataDir, email)
+		dirName := ToValidFileName(email)
+		dataDir = filepath.Join(dataDir, dirName)
+		err := os.MkdirAll(dataDir, 0755)
+		if err != nil {
+			logErrorf("getLoggedUser(): failed to create data dir for user %s, err: %s\n", email, err)
+			return err
+		}
+		userInfo = &UserInfo{
+			Email:   cookie.Email,
+			User:    cookie.User,
+			DataDir: dataDir,
+		}
+
 		userInfo.Store = &appendstore.Store{
 			DataDir:       dataDir,
 			IndexFileName: "index.txt",
 			DataFileName:  "data.bin",
 		}
-		err := appendstore.OpenStore(userInfo.Store)
+		err = appendstore.OpenStore(userInfo.Store)
 		if err != nil {
-			logf("getLoggedUser(): failed to open store for user %s, err: %s\n", email, err)
+			logErrorf("getLoggedUser(): failed to open store for user %s, err: %s\n", email, err)
 			return err
 		}
 		users = append(users, userInfo)
@@ -87,10 +96,131 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logf("handleStore: %s, userEmail: %s\n", uri, userInfo.Email)
+
+	// serialize user operations. I could try to be more fine-grained
+	// but this is safe and simple
+	userInfo.mu.Lock()
+	defer userInfo.mu.Unlock()
+
 	if uri == "/api/store/bulkUpload" {
 		handleStoreBulkUpload(w, r, userInfo)
 		return
 	}
+	if uri == "/api/store/getNotes" {
+		handleStoreGetNotes(w, r, userInfo)
+		return
+	}
+	serve404(w, r, "Unknown store operation: "+uri)
+}
+
+func serve404(w http.ResponseWriter, r *http.Request, s string) {
+	http.Error(w, s, http.StatusNotFound)
+}
+
+type GetNotesResponse struct {
+	Ver          string
+	LastChangeID int
+	NotesCompact [][]interface{}
+}
+
+const kStoreKinewCreateNote = "note-create"
+const kStoreKindNoteMeta = "note-meta"
+const kStoreKindDeleteNote = "note-delete"
+const kStoreKindNoteContent = "note-content"
+
+type NoteInfo struct {
+	id          string
+	name        string
+	createdAt   int64
+	modifiedAt  int64
+	isStarred   bool
+	isArchived  bool
+	altShortcut string
+	versionIds  []string
+}
+
+type NoteMeta struct {
+	Id          string `json:"id"`
+	Name        string `json:"name,omitempty"`
+	IsArchived  bool   `json:"isArchived,omitempty"`
+	IsStarred   bool   `json:"isStarred,omitempty"`
+	AltShortcut string `json:"altShortcut,omitempty"`
+}
+
+func applyMetadata(ni *NoteInfo, noteMeta *NoteMeta) error {
+	ni.name = noteMeta.Name
+	ni.isArchived = noteMeta.IsArchived
+	ni.isStarred = noteMeta.IsStarred
+	ni.altShortcut = noteMeta.AltShortcut
+	return nil
+}
+
+func notesFromStoreLog(records []*appendstore.Record) ([]*NoteInfo, error) {
+	notes := make(map[string]*NoteInfo)
+	for _, rec := range records {
+		switch rec.Kind {
+		case kStoreKinewCreateNote:
+			// meta is "noteId:name"
+			parts := strings.SplitN(rec.Meta, ":", 2)
+			id := parts[0]
+			name := parts[1]
+			ni := &NoteInfo{
+				id:        id,
+				name:      name,
+				createdAt: rec.Timestamp,
+			}
+			notes[id] = ni
+
+		case kStoreKindNoteMeta:
+			var noteMeta NoteMeta
+			meta := rec.Meta
+			err := json.Unmarshal([]byte(meta), &noteMeta)
+			if err != nil {
+				logErrorf("applyMetadata: failed to unmarshal note meta: %s, err: %s\n", meta, err)
+				return nil, err
+			}
+			note := notes[noteMeta.Id]
+			applyMetadata(note, &noteMeta)
+			note.modifiedAt = rec.Timestamp
+		case kStoreKindDeleteNote:
+			noteId := rec.Meta
+			delete(notes, noteId)
+		case kStoreKindNoteContent:
+			verId := rec.Meta // verId is noteId:verId
+			noteId := strings.SplitN(rec.Meta, ":", 2)[0]
+			note := notes[noteId]
+			note.versionIds = append(note.versionIds, verId)
+		}
+	}
+
+	var result []*NoteInfo
+	for _, ni := range notes {
+		result = append(result, ni)
+	}
+	return result, nil
+}
+
+func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	rsp := &GetNotesResponse{
+		Ver: "1",
+	}
+	recs := userInfo.Store.Records()
+	rsp.LastChangeID = len(recs)
+	notes, err := notesFromStoreLog(recs)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to get notes: %s", err), http.StatusInternalServerError)
+		return
+	}
+	notesCompact := make([][]interface{}, len(notes))
+	for i, ni := range notes {
+		notesCompact[i] = []interface{}{
+			ni.id,
+			ni.name,
+			ni.createdAt,
+			ni.modifiedAt,
+		}
+	}
+	serveJSONOK(w, r, rsp)
 }
 
 func parseBrowserStore(indexData []byte, dataData []byte) ([]*AppendStoreRecord, error) {
