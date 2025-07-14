@@ -171,9 +171,11 @@ func Main() {
 
 	if flgAdHoc {
 		if true {
-			testRunServerProd()
+			testReplyZipAdHoc()
+			return
 		} else {
 			// make it reachable for compilation
+			testRunServerProd()
 			testCompress()
 			clean()
 		}
