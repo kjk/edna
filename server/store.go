@@ -16,11 +16,11 @@ import (
 
 // AppendStoreRecord represents a record in the append store index
 type AppendStoreRecord struct {
-	Offset   int64  // byte offset in data file
-	Size     int64  // size of data in bytes
-	TimeInMs int64  // timestamp in milliseconds
-	Kind     string // record type/kind
-	Meta     string // optional metadata (can be empty)
+	Offset      int64  // byte offset in data file
+	Size        int64  // size of data in bytes
+	TimestampMs int64  // timestamp in milliseconds
+	Kind        string // record type/kind
+	Meta        string // optional metadata (can be empty)
 }
 
 type UserInfo struct {
@@ -118,7 +118,7 @@ type GetNotesResponse struct {
 	NotesCompact [][]interface{}
 }
 
-const kStoreKinewCreateNote = "note-create"
+const kStoreCreateNote = "note-create"
 const kStoreKindNoteMeta = "note-meta"
 const kStoreKindDeleteNote = "note-delete"
 const kStoreKindNoteContent = "note-content"
@@ -132,6 +132,7 @@ type NoteInfo struct {
 	isArchived  bool
 	altShortcut string
 	versionIds  []string
+	isDeleted   bool
 }
 
 type NoteMeta struct {
@@ -150,11 +151,11 @@ func applyMetadata(ni *NoteInfo, noteMeta *NoteMeta) error {
 	return nil
 }
 
-func notesFromStoreLog(records []*appendstore.Record) ([]*NoteInfo, error) {
+func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, error) {
 	notes := make(map[string]*NoteInfo)
 	for _, rec := range records {
 		switch rec.Kind {
-		case kStoreKinewCreateNote:
+		case kStoreCreateNote:
 			// meta is "noteId:name"
 			parts := strings.SplitN(rec.Meta, ":", 2)
 			id := parts[0]
@@ -164,8 +165,8 @@ func notesFromStoreLog(records []*appendstore.Record) ([]*NoteInfo, error) {
 				name:      name,
 				createdAt: rec.TimestampMs,
 			}
+			panicIf(notes[id] != nil, fmt.Errorf("note with id %s already exists", id))
 			notes[id] = ni
-
 		case kStoreKindNoteMeta:
 			var noteMeta NoteMeta
 			meta := rec.Meta
@@ -175,24 +176,23 @@ func notesFromStoreLog(records []*appendstore.Record) ([]*NoteInfo, error) {
 				return nil, err
 			}
 			note := notes[noteMeta.Id]
+			panicIf(note.isDeleted, fmt.Errorf("note %s is deleted but trying to apply metadata", noteMeta.Id))
 			applyMetadata(note, &noteMeta)
 			note.modifiedAt = rec.TimestampMs
 		case kStoreKindDeleteNote:
 			noteId := rec.Meta
-			delete(notes, noteId)
+			note := notes[noteId]
+			note.isDeleted = true
 		case kStoreKindNoteContent:
 			verId := rec.Meta // verId is noteId:verId
 			noteId := strings.SplitN(rec.Meta, ":", 2)[0]
 			note := notes[noteId]
+			panicIf(note.isDeleted, fmt.Errorf("note %s is deleted but trying to apply metadata", noteId))
 			note.versionIds = append(note.versionIds, verId)
 		}
 	}
 
-	var result []*NoteInfo
-	for _, ni := range notes {
-		result = append(result, ni)
-	}
-	return result, nil
+	return notes, nil
 }
 
 const kNoteFlagIsStarred = 0x01
@@ -226,9 +226,12 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		http.Error(w, fmt.Sprintf("failed to get notes: %s", err), http.StatusInternalServerError)
 		return
 	}
-	notesCompact := make([][]interface{}, len(notes))
+	notesCompact := make([][]interface{}, 0, len(notes))
 
-	for i, ni := range notes {
+	for _, ni := range notes {
+		if ni.isDeleted {
+			continue
+		}
 		// [id, name, flags, altShortcut, createdAt, lastModifiedAt, versionIds...],
 		flags := 0
 		if ni.isStarred {
@@ -248,7 +251,7 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		for _, verId := range ni.versionIds {
 			nc = append(nc, verId)
 		}
-		notesCompact[i] = nc
+		push(&notesCompact, nc)
 	}
 	serveJSONOK(w, r, rsp)
 }

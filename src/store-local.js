@@ -2,7 +2,7 @@ import { AppendStore, AppendStoreRecord } from "./appendstore";
 import { Note, noteIdFromContentId } from "./note";
 import { len } from "./util";
 
-const kStoreKinewCreateNote = "note-create";
+const kStoreCreateNote = "note-create";
 const kStoreKindNoteMeta = "note-meta";
 const kStoreKindDeleteNote = "note-delete";
 const kStoreKindNoteContent = "note-content";
@@ -109,7 +109,7 @@ export class LocalStore {
   async createNote(noteId, name) {
     let store = this.store;
     let meta = `${noteId}:${name}`;
-    await store.appendRecord(null, kStoreKinewCreateNote, meta);
+    await store.appendRecord(null, kStoreCreateNote, meta);
   }
 }
 
@@ -121,7 +121,7 @@ export function notesFromStoreLog(records) {
   let res = [];
   let m = new Map();
   for (let rec of records) {
-    if (rec.kind === kStoreKinewCreateNote) {
+    if (rec.kind === kStoreCreateNote) {
       // meta is "noteId:name"
       let idx = rec.meta.indexOf(":");
       let noteId = rec.meta.substring(0, idx);

@@ -3,6 +3,7 @@ package server
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -53,36 +54,17 @@ func parseIndex(indexContent string) ([]*AppendStoreRecord, error) {
 		}
 
 		record := &AppendStoreRecord{
-			Offset:   offset,
-			Size:     size,
-			TimeInMs: timeInMs,
-			Kind:     kind,
-			Meta:     meta,
+			Offset:      offset,
+			Size:        size,
+			TimestampMs: timeInMs,
+			Kind:        kind,
+			Meta:        meta,
 		}
 
 		records = append(records, record)
 	}
 
 	return records, nil
-}
-
-func replayBrowserStore(store *appendstore.Store, index []byte, data []byte) error {
-	recs, err := parseIndex(string(index))
-	if err != nil {
-		return err
-	}
-	logf("replaying %d records from browser store\n", len(recs))
-	// validate records
-	dataSize := int64(len(data))
-	for _, rec := range recs {
-		end := rec.Offset + rec.Size
-		if end > dataSize {
-			return fmt.Errorf("record %v has invalid offset/size: offset=%d, size=%d, data size=%d",
-				rec, rec.Offset, rec.Size, dataSize)
-		}
-	}
-
-	return nil
 }
 
 func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
@@ -103,22 +85,106 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 		return nil
 	}
 
-	var indexData, dataData []byte
+	var index, data []byte
 	for _, file := range zipReader.File {
 		switch file.Name {
 		case "index.txt":
-			indexData = extractFile(file)
+			index = extractFile(file)
 		case "data.bin":
-			dataData = extractFile(file)
+			data = extractFile(file)
 		}
 	}
 
-	if indexData == nil || dataData == nil {
+	if index == nil || data == nil {
 		return errors.New("zip file must contain notes_store_index.txt and notes_store_data.bin")
 	}
 
-	err = replayBrowserStore(store, indexData, dataData)
-	return err
+	recs, err := parseIndex(string(index))
+	if err != nil {
+		return err
+	}
+	logf("replaying %d records from browser store\n", len(recs))
+	// validate records
+	dataSize := int64(len(data))
+	for _, rec := range recs {
+		end := rec.Offset + rec.Size
+		if end > dataSize {
+			return fmt.Errorf("record %v has invalid offset/size: offset=%d, size=%d, data size=%d",
+				rec, rec.Offset, rec.Size, dataSize)
+		}
+	}
+
+	notes, err := notesFromStoreLog(store.Records())
+	if err != nil {
+		return fmt.Errorf("failed to read existing notes from store: %w", err)
+	}
+	for _, rec := range recs {
+		switch rec.Kind {
+		case kStoreCreateNote:
+			// meta is "noteId:name"
+			parts := strings.SplitN(rec.Meta, ":", 2)
+			id := parts[0]
+			note := notes[id]
+			if note != nil {
+				logf("note %s already exists, skipping create\n", id)
+				continue
+			}
+			store.AppendRecord(kStoreCreateNote, nil, rec.Meta)
+			notes[id] = &NoteInfo{
+				id:        id,
+				name:      parts[1],
+				createdAt: rec.TimestampMs,
+			}
+			logf("created note %s with name %s\n", id, parts[1])
+		case kStoreKindNoteMeta:
+			var noteMeta NoteMeta
+			meta := rec.Meta
+			err := json.Unmarshal([]byte(meta), &noteMeta)
+			if err != nil {
+				logErrorf("applyMetadata: failed to unmarshal note meta: %s, err: %s\n", meta, err)
+				return err
+			}
+			note := notes[noteMeta.Id]
+			if note == nil {
+				logf("note %s does not exist, skipping meta update\n", noteMeta.Id)
+				continue
+			}
+			store.AppendRecord(kStoreKindNoteMeta, nil, rec.Meta)
+			logf("updated meta for note %s: %+v\n", noteMeta.Id, noteMeta)
+
+		case kStoreKindDeleteNote:
+			noteId := rec.Meta
+			note := notes[noteId]
+			if note == nil {
+				logf("note %s does not exist, skipping delete\n", noteId)
+				continue
+			}
+			if note.isDeleted {
+				logf("note %s is already deleted, skipping delete\n", noteId)
+				continue
+			}
+			store.AppendRecord(kStoreKindDeleteNote, nil, noteId)
+			note.isDeleted = true
+			logf("deleted note %s\n", noteId)
+
+		case kStoreKindNoteContent:
+			verId := rec.Meta // verId is noteId:verId
+			noteId := strings.SplitN(rec.Meta, ":", 2)[0]
+			note := notes[noteId]
+			if note == nil {
+				logf("note %s does not exist, skipping content update\n", noteId)
+				continue
+			}
+			if note.isDeleted {
+				logf("note %s is deleted, skipping content update\n", noteId)
+				continue
+			}
+			content := data[rec.Offset : rec.Offset+rec.Size]
+			store.AppendRecord(kStoreKindNoteContent, content, verId)
+			logf("updated content for note %s with verId %s\n", noteId, verId)
+		}
+	}
+	return nil
 }
 
 func testReplyZipAdHoc() {
