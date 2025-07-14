@@ -106,5 +106,13 @@ export function getNotes() {
  * @returns {Note}
  */
 export function findNoteByName(name) {
-  return appState.allNotes.find((n) => n.name === name);
+  for (let note of appState.allNotes) {
+    if (note.name === name) {
+      return note;
+    }
+  }
+  console.warn("findNoteByName: no note with name:", name);
+  let names = appState.allNotes.map((n) => n.name);
+  console.warn("all notes:", names);
+  return null;
 }

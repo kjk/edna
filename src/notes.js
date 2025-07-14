@@ -310,9 +310,8 @@ export async function deleteNote(name) {
 /**
  * @param {string} oldName
  * @param {string} newName
- * @param {string} content
  */
-export async function renameNote(oldName, newName, content) {
+export async function renameNote(oldName, newName) {
   let note = findNoteByName(oldName);
   note.name = newName;
   await saveNoteMetadata(note);
@@ -322,7 +321,6 @@ export async function renameNote(oldName, newName, content) {
   if (idx >= 0) {
     settings.tabs[idx] = newName;
   }
-  await deleteNote(oldName);
 }
 
 /**

@@ -1828,8 +1828,7 @@
     let noteName = settings.currentNoteName;
     closeDialogs();
     let editor = getEditor();
-    let s = editor.getContent() || "";
-    await renameNote(noteName, newName, s);
+    await renameNote(noteName, newName);
     await openNote(newName, true);
     // console.log("onRename: newName:", newName);
   }
