@@ -81,6 +81,7 @@
     appendToNote,
     archiveNote,
     blockHdrMarkdown,
+    blockHdrPlainText,
     canDeleteNote,
     createIfNotExists,
     createNewScratchNote,
@@ -687,7 +688,7 @@
       }
       let text = res;
       if (!res.startsWith("\n∞∞∞")) {
-        text = "\n∞∞∞text-a\n" + res;
+        text = blockHdrPlainText + res;
       }
       insertAfterActiveBlock(view, text);
     }
@@ -747,7 +748,7 @@
       // TODO: be more intelligent
       let text = res;
       if (!res.startsWith("\n∞∞∞")) {
-        text = "\n∞∞∞text-a\n" + res;
+        text = blockHdrPlainText + res;
       }
       insertAfterActiveBlock(view, text);
     }
@@ -1661,8 +1662,8 @@
     // const block = getActiveNoteBlock(state)
     let text = output;
     if (!output.startsWith("\n∞∞∞")) {
-      // text = "\n∞∞∞text-a\n" + "output of running the code:\n" + output;
-      text = "\n∞∞∞text-a\n" + output;
+      // text = blockHdrPlainText + "output of running the code:\n" + output;
+      text = blockHdrPlainText + output;
     }
     insertAfterActiveBlock(view, text);
     return true;
@@ -1716,8 +1717,8 @@
     // const block = getActiveNoteBlock(state)
     let text = output;
     if (!output.startsWith("\n∞∞∞")) {
-      // text = "\n∞∞∞text-a\n" + "output of running the code:\n" + output;
-      text = "\n∞∞∞text-a\n" + output;
+      // text = blockHdrPlainText + "output of running the code:\n" + output;
+      text = blockHdrPlainText + output;
     }
     insertAfterActiveBlock(view, text);
     return true;

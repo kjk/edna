@@ -81,8 +81,6 @@ function makeRandomContentID(noteID) {
 
 export const blockHdrPlainText = "\n∞∞∞text-a\n";
 export const blockHdrMarkdown = "\n∞∞∞markdown\n";
-export const blockHdrJSON = "\n∞∞∞json\n";
-export const blockHdrPHP = "\n∞∞∞php\n";
 
 /**
  * @param {string} name
