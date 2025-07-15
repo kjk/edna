@@ -176,6 +176,7 @@ const kNoteFlagIsArchived = 0x02
 // as an optimization, we only send the last version id of note content
 // front-end doesn't need more and can request more if needed
 func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	logf("handleStoreGetNotes: user %s\n", userInfo.Email)
 	lastChangeIDReq := 0
 	v := r.FormValue("lastChangeID")
 	if v != "" {
