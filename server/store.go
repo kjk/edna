@@ -132,7 +132,10 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 				name:      name,
 				createdAt: rec.TimestampMs,
 			}
-			panicIf(notes[id] != nil, fmt.Errorf("note with id %s already exists", id))
+			if notes[id] != nil {
+				logf("note with id %s already exists", id)
+				continue
+			}
 			notes[id] = ni
 		case kStoreSetNoteMeta:
 			var noteMeta NoteMeta
@@ -143,18 +146,37 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 				return nil, err
 			}
 			note := notes[noteMeta.Id]
-			panicIf(note.isDeleted, fmt.Errorf("note %s is deleted but trying to apply metadata", noteMeta.Id))
+			if note == nil {
+				logf("note %s does not exist, skipping meta update\n", noteMeta.Id)
+				continue
+			}
+			if note.isDeleted {
+				logf("note %s is deleted, skipping meta update\n", noteMeta.Id)
+				continue
+			}
 			applyMetadata(note, &noteMeta)
 			note.modifiedAt = rec.TimestampMs
 		case kStoreDeleteNote:
 			noteId := rec.Meta
 			note := notes[noteId]
+			if note == nil {
+				logf("note %s does not exist, skipping delete\n", noteId)
+				continue
+			}
 			note.isDeleted = true
 		case kStorePut:
 			verId := rec.Meta // verId is noteId:verId
 			noteId := strings.SplitN(rec.Meta, ":", 2)[0]
 			note := notes[noteId]
-			panicIf(note.isDeleted, fmt.Errorf("note %s is deleted but trying to apply metadata", noteId))
+			if note == nil {
+				logf("note %s does not exist, skipping put\n", noteId)
+				continue
+
+			}
+			if note.isDeleted {
+				logf("note %s is deleted, skipping put\n", noteId)
+				continue
+			}
 			note.versionIds = append(note.versionIds, verId)
 		}
 	}
