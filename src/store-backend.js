@@ -1,4 +1,3 @@
-import { encode } from "punycode";
 import { AppendStore } from "./appendstore";
 import { Note } from "./note";
 
@@ -83,11 +82,11 @@ export class BackendStore {
   }
 
   /**
-   * @param {string} verId
+   * @param {string} key
    * @param {string} content
    */
-  async writeNoteContent(verId, content) {
-    let uri = "/api/store/writeNoteContent?verId=" + verId;
+  async putString(key, content) {
+    let uri = "/api/store/putString?key=" + encodeURIComponent(key);
     let boddy = new TextEncoder().encode(content);
     let rsp = await fetch(uri, {
       method: "POST",
@@ -100,11 +99,11 @@ export class BackendStore {
   }
 
   /**
-   * @param {string} noteId
+   * @param {string} key
    * @returns {Promise<string>}
    */
-  async loadLatestNoteContent(noteId) {
-    let uri = "/api/store/loadLatestNoteContent?noteId=" + noteId;
+  async getString(key) {
+    let uri = "/api/store/getString?key=" + encodeURIComponent(key);
     let rsp = await fetch(uri);
     let s = await rsp.text();
     return s;

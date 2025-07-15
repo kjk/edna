@@ -3,32 +3,23 @@ import { Note, noteIdFromContentId } from "./note";
 import { len } from "./util";
 
 const kStoreCreateNote = "note-create";
-const kStoreKindNoteMeta = "note-meta";
-const kStoreKindDeleteNote = "note-delete";
-const kStoreKindNoteContent = "note-content";
+const kStoreDeleteNote = "note-delete";
+const kStoreSetNoteMeta = "note-meta";
+const kStorePut = "put";
 
 /**
  * @param {AppendStoreRecord[]} records
- * @param {string} noteId
+ * @param {string} key
  * @returns {AppendStoreRecord|null}
  */
-function apstoreFindLatestNoteContentVersionRec(records, noteId) {
-  let idx = len(records) - 1;
-  let rec;
-  // look for last note-content or note-delete
-  while (idx >= 0) {
-    rec = records[idx];
-    if (rec.kind === kStoreKindDeleteNote) {
-      if (rec.meta == noteId) {
-        return null;
-      }
-    } else if (rec.kind == kStoreKindNoteContent) {
-      if (rec.meta.startsWith(noteId)) {
-        return rec;
-      }
+function findPutRecord(records, key) {
+  // searching from the end should be faster on average
+  // we're more likely to search for recent content
+  for (let idx = len(records) - 1; idx >= 0; idx--) {
+    let rec = records[idx];
+    if (rec.kind === kStorePut) {
+      return rec;
     }
-    idx--;
-    continue;
   }
   return null;
 }
@@ -45,12 +36,12 @@ export class LocalStore {
   }
 
   /**
-   * @param {string} noteId
+   * @param {string} key
    * @returns {Promise<string>}
    */
-  async loadLatestNoteContent(noteId) {
+  async getString(key) {
     let store = this.store;
-    let rec = apstoreFindLatestNoteContentVersionRec(store.records, noteId);
+    let rec = findPutRecord(store.records, key);
     if (!rec) {
       return null; // no content found
     }
@@ -60,13 +51,13 @@ export class LocalStore {
   }
 
   /**
-   * @param {string} verId
+   * @param {string} key
    * @param {string} content
    */
-  async writeNoteContent(verId, content) {
+  async putString(key, content) {
     let store = this.store;
-    let meta = verId;
-    await store.appendRecord(content, kStoreKindNoteContent, meta);
+    let meta = key;
+    await store.appendRecord(content, kStorePut, meta);
   }
 
   /**
@@ -76,7 +67,7 @@ export class LocalStore {
     let store = this.store;
     // we expect m to be small so storing in index as meta
     let meta = JSON.stringify(m);
-    await store.appendRecord(null, kStoreKindNoteMeta, meta);
+    await store.appendRecord(null, kStoreSetNoteMeta, meta);
   }
 
   /**
@@ -100,7 +91,7 @@ export class LocalStore {
    */
   async deleteNote(noteId) {
     let store = this.store;
-    await store.appendRecord(null, kStoreKindDeleteNote, noteId);
+    await store.appendRecord(null, kStoreDeleteNote, noteId);
   }
 
   /**
@@ -129,7 +120,7 @@ export function notesFromStoreLog(records) {
       let name = rec.meta.substring(idx + 1);
       let note = new Note(noteId, name);
       m.set(note.id, note);
-    } else if (rec.kind === kStoreKindNoteMeta) {
+    } else if (rec.kind === kStoreSetNoteMeta) {
       let meta = JSON.parse(rec.meta);
       let note = m.get(meta.id);
       if (!note) {
@@ -137,7 +128,7 @@ export function notesFromStoreLog(records) {
         continue;
       }
       note.applyMetadata(meta);
-    } else if (rec.kind === kStoreKindDeleteNote) {
+    } else if (rec.kind === kStoreDeleteNote) {
       let noteId = rec.meta;
       let note = m.get(noteId);
       if (!note) {
@@ -145,7 +136,7 @@ export function notesFromStoreLog(records) {
         continue;
       }
       m.delete(noteId);
-    } else if (rec.kind === kStoreKindNoteContent) {
+    } else if (rec.kind === kStorePut) {
       let verId = rec.meta; // verId is noteId:verId
       let noteId = noteIdFromContentId(verId);
       let note = m.get(noteId);

@@ -54,15 +54,15 @@ export async function storeCreateNote(noteId, name) {
  * @param {string} content
  */
 export async function storeWriteNoteContent(verId, content) {
-  await store.writeNoteContent(verId, content);
+  await store.putString(verId, content);
 }
 
 /**
- * @param {string} noteId
+ * @param {string} contentId
  * @returns {Promise<string>}
  */
-export async function storeLoadLatestNoteContent(noteId) {
-  let res = await store.loadLatestNoteContent(noteId);
+export async function storeGetString(contentId) {
+  let res = await store.getString(contentId);
   return res;
 }
 

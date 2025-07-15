@@ -7,7 +7,7 @@ import { getSettings } from "./settings.svelte";
 import {
   storeCreateNote,
   storeDeleteNote,
-  storeLoadLatestNoteContent,
+  storeGetString,
   storeWriteNoteContent,
   storeWriteNoteMeta,
 } from "./store";
@@ -264,7 +264,8 @@ export async function loadNoteContent(name) {
     return res;
   }
   let note = findNoteByName(name);
-  res = await storeLoadLatestNoteContent(note.id);
+  let lastVerId = note.versionIds[note.versionIds.length - 1];
+  res = await storeGetString(lastVerId);
   return fixUpNoteContent(res);
 }
 
