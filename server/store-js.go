@@ -9,63 +9,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/kjk/common/appendstore"
 )
-
-// implements parsing of the appendstore.js index and data files
-
-func parseIndex(indexContent string) ([]*AppendStoreRecord, error) {
-	var records []*AppendStoreRecord
-
-	lines := strings.Split(indexContent, "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-
-		parts := strings.SplitN(line, " ", 4)
-		if len(parts) < 4 {
-			return nil, fmt.Errorf("invalid index line: %s", line)
-		}
-
-		offset, err := strconv.ParseInt(parts[0], 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid offset in index line: %s", line)
-		}
-
-		size, err := strconv.ParseInt(parts[1], 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid size in index line: %s", line)
-		}
-
-		timeInMs, err := strconv.ParseInt(parts[2], 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid time in index line: %s", line)
-		}
-
-		kind := parts[3]
-		var meta string
-		if len(parts) > 4 {
-			meta = parts[4]
-		}
-
-		record := &AppendStoreRecord{
-			Offset:      offset,
-			Size:        size,
-			TimestampMs: timeInMs,
-			Kind:        kind,
-			Meta:        meta,
-		}
-
-		records = append(records, record)
-	}
-
-	return records, nil
-}
 
 func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 	logf("replayBrowserStoreZip: replaying browser store zip with %d bytes\n", len(zipData))
@@ -102,7 +49,7 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 	}
 
 	logf("replayBrowserStoreZip: index size %d, data size %d\n", len(index), len(data))
-	recs, err := parseIndex(string(index))
+	recs, err := appendstore.ParseIndexFromData(index)
 	if err != nil {
 		return err
 	}
