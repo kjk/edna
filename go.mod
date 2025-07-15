@@ -7,7 +7,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/felixge/httpsnoop v1.0.4
 	github.com/gorilla/securecookie v1.1.2
-	github.com/kjk/common v0.0.0-20250715130544-834edbd3f70e
+	github.com/kjk/common v0.0.0-20250715195749-59eb8b47b6fb
 	github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481
 	github.com/klauspost/compress v1.18.0
 	github.com/melbahja/goph v1.4.0

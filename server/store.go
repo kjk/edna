@@ -305,7 +305,7 @@ func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
 
 func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	key := r.FormValue("key")
-	logf("handleStoreLoadLatestNoteContent: user %s, noteId: %s\n", userInfo.Email, key)
+	logf("handleStoreGetString: user %s, key: %s\n", userInfo.Email, key)
 	if key == "" {
 		http.Error(w, "Missing key", http.StatusBadRequest)
 		return
@@ -316,6 +316,7 @@ func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *User
 		http.Error(w, fmt.Sprintf("No content for key '%s'", key), http.StatusNotFound)
 		return
 	}
+	logf("handleStoreGetString: key: %s rec: %d %d %s %s\n", key, rec.Offset, rec.Size, rec.Kind, rec.Meta)
 	content, err := userInfo.Store.ReadRecord(rec)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to read content for key '%s': %s", key, err), http.StatusInternalServerError)
@@ -323,7 +324,7 @@ func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *User
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(content)
-	logf("handleStoreGetString: finished")
+	logf("handleStoreGetString: finished\n")
 }
 
 func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
@@ -400,6 +401,7 @@ func handleStoreReadFileAsString(w http.ResponseWriter, r *http.Request, userInf
 		http.Error(w, fmt.Sprintf("Failed to read file %s: %s", fileName, err), http.StatusInternalServerError)
 		return
 	}
+	logf("handleStoreReadFileAsString: user %s, fileName: %s, size: %d\n", userInfo.Email, fileName, len(d))
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write(d)
 }
