@@ -161,13 +161,14 @@ export async function backendGetLatestNotes() {
   let rsp = await fetch(
     "/api/store/getNotes?lastChangeID=" + curr.LastChangeID,
   );
-  if (!rsp.ok) {
-    console.warn("Failed to fetch latest notes:", rsp.status, rsp.statusText);
-    return curr;
-  }
+  // must check before rsp.ok because it's false for 304 (seems wrong)
   if (rsp.status === 304) {
     // no change
     console.log("No change in latest notes, returning cached version");
+    return curr;
+  }
+  if (!rsp.ok) {
+    console.warn("Failed to fetch latest notes:", rsp.status, rsp.statusText);
     return curr;
   }
   curr = await rsp.json();
