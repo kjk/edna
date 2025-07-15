@@ -27,7 +27,7 @@ func parseIndex(indexContent string) ([]*AppendStoreRecord, error) {
 			continue
 		}
 
-		parts := strings.SplitN(line, " ", 5)
+		parts := strings.SplitN(line, " ", 4)
 		if len(parts) < 4 {
 			return nil, fmt.Errorf("invalid index line: %s", line)
 		}
