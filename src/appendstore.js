@@ -23,15 +23,25 @@ export class AppendStoreRecord {
  * @returns {Promise<Uint8Array>}
  */
 async function readFileSegment(fileHandle, offset, length) {
-  try {
-    const file = await fileHandle.getFile();
-    const slice = file.slice(offset, offset + length);
-    const data = await slice.arrayBuffer();
-    return new Uint8Array(data);
-  } catch (error) {
-    console.error("Error reading file segment:", error);
-    throw error;
-  }
+  const file = await fileHandle.getFile();
+  const slice = file.slice(offset, offset + length);
+  const data = await slice.arrayBuffer();
+  return new Uint8Array(data);
+}
+
+/**
+ *
+ * @param {FileSystemFileHandle} dataHandle
+ * @param {number} offset
+ * @param {Uint8Array} bytes
+ */
+async function writeAtOffset(dataHandle, offset, bytes) {
+  const dataWritable = await dataHandle.createWritable({
+    keepExistingData: true,
+  });
+  await dataWritable.seek(offset);
+  await dataWritable.write(bytes);
+  await dataWritable.close();
 }
 
 export class AppendStore {
@@ -66,9 +76,10 @@ export class AppendStore {
    * @param {string|Uint8Array|null} data
    */
   async _writeData(data, kind, meta) {
-    // Get high-precision UTC time in milliseconds
+    // high-precision UTC time in milliseconds
     const timeInMs = Math.round(performance.timeOrigin + performance.now());
-    // Get current offset (size of data file)
+
+    /** @type {Uint8Array} */
     let bytes;
     let size = 0;
     if (data) {
@@ -89,13 +100,7 @@ export class AppendStore {
     const dataFile = await this.dataHandle.getFile();
     const offset = dataFile.size;
     let rec = new AppendStoreRecord(offset, size, timeInMs, kind, meta);
-    // Append to data file
-    const dataWritable = await this.dataHandle.createWritable({
-      keepExistingData: true,
-    });
-    await dataWritable.seek(offset);
-    await dataWritable.write(bytes);
-    await dataWritable.close();
+    writeAtOffset(this.dataHandle, offset, bytes);
     return rec;
   }
 

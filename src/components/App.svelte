@@ -101,11 +101,8 @@
     kWelcomeDevSystemNoteName,
     kWelcomeSystemNoteName,
     loadNoteContentIfExists,
-    maybeSaveNoteSelectionAndFoldedRanges,
     noteExists,
     renameNote,
-    saveNote,
-    saveNoteMetadata,
     toggleNoteStarred,
     unArchiveNote,
   } from "../notes";
@@ -1827,7 +1824,6 @@
   async function onRename(newName) {
     let noteName = settings.currentNoteName;
     closeDialogs();
-    let editor = getEditor();
     await renameNote(noteName, newName);
     await openNote(newName, true);
     // console.log("onRename: newName:", newName);

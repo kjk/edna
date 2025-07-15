@@ -292,7 +292,7 @@ func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
 	// for recent record
 	for i := len(recs) - 1; i >= 0; i-- {
 		rec := recs[i]
-		if rec.Kind == kStorePut && rec.Meta == key {
+		if rec.Meta == key && rec.Kind == kStorePut {
 			return rec
 		}
 	}

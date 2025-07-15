@@ -17,7 +17,7 @@ function findPutRecord(records, key) {
   // we're more likely to search for recent content
   for (let idx = len(records) - 1; idx >= 0; idx--) {
     let rec = records[idx];
-    if (rec.kind === kStorePut) {
+    if (rec.meta === key && rec.kind === kStorePut) {
       return rec;
     }
   }
@@ -55,9 +55,9 @@ export class LocalStore {
    * @param {string} content
    */
   async putString(key, content) {
+    // console.log("putString:", key, content?.substring(0, 20));
     let store = this.store;
-    let meta = key;
-    await store.appendRecord(content, kStorePut, meta);
+    await store.appendRecord(content, kStorePut, key);
   }
 
   /**
@@ -99,6 +99,7 @@ export class LocalStore {
    * @param {string} name
    */
   async createNote(noteId, name) {
+    console.log("createNote:", noteId, name);
     let store = this.store;
     let meta = `${noteId}:${name}`;
     await store.appendRecord(null, kStoreCreateNote, meta);
