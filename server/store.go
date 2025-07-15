@@ -93,10 +93,10 @@ type GetNotesResponse struct {
 	NotesCompact [][]interface{}
 }
 
-const kStoreKindCreateNote = "note-create"
-const kStoreKindNoteMeta = "note-meta"
-const kStoreKindDeleteNote = "note-delete"
-const kStoreKindNoteContent = "note-content"
+const kStoreCreateNote = "note-create"
+const kStoreDeleteNote = "note-delete"
+const kStoreSetNoteMeta = "note-meta"
+const kStorePut = "put"
 
 type NoteInfo struct {
 	id          string
@@ -130,7 +130,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 	notes := make(map[string]*NoteInfo)
 	for _, rec := range records {
 		switch rec.Kind {
-		case kStoreKindCreateNote:
+		case kStoreCreateNote:
 			// meta is "noteId:name"
 			parts := strings.SplitN(rec.Meta, ":", 2)
 			id := parts[0]
@@ -142,7 +142,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			}
 			panicIf(notes[id] != nil, fmt.Errorf("note with id %s already exists", id))
 			notes[id] = ni
-		case kStoreKindNoteMeta:
+		case kStoreSetNoteMeta:
 			var noteMeta NoteMeta
 			meta := rec.Meta
 			err := json.Unmarshal([]byte(meta), &noteMeta)
@@ -154,11 +154,11 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			panicIf(note.isDeleted, fmt.Errorf("note %s is deleted but trying to apply metadata", noteMeta.Id))
 			applyMetadata(note, &noteMeta)
 			note.modifiedAt = rec.TimestampMs
-		case kStoreKindDeleteNote:
+		case kStoreDeleteNote:
 			noteId := rec.Meta
 			note := notes[noteId]
 			note.isDeleted = true
-		case kStoreKindNoteContent:
+		case kStorePut:
 			verId := rec.Meta // verId is noteId:verId
 			noteId := strings.SplitN(rec.Meta, ":", 2)[0]
 			note := notes[noteId]
@@ -263,30 +263,37 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 	serve200JSON(w, r, rsp)
 }
 
-func apstoreFindLatestNoteContentVersionRecord(recs []*appendstore.Record, noteId string) *appendstore.Record {
+func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
+	// searching from the is faster bcause we're likely looking
+	// for recent record
 	for i := len(recs) - 1; i >= 0; i-- {
 		rec := recs[i]
-		if rec.Kind == kStoreKindNoteContent && strings.HasPrefix(rec.Meta, noteId+":") {
+		if rec.Kind == kStorePut && rec.Meta == key {
 			return rec
 		}
 	}
 	return nil
 }
 
-func handleStoreLoadLatestNoteContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
-	logf("handleStoreLoadLatestNoteContent: user %s, noteId: %s\n", userInfo.Email, r.FormValue("noteId"))
+func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	key := r.FormValue("key")
+	logf("handleStoreLoadLatestNoteContent: user %s, noteId: %s\n", userInfo.Email, key)
+	if key == "" {
+		http.Error(w, "Missing key", http.StatusBadRequest)
+		return
+	}
 	recs := userInfo.Store.Records()
-	rec := apstoreFindLatestNoteContentVersionRecord(recs, r.FormValue("noteId"))
+	rec := findPutRecord(recs, key)
 	if rec == nil {
-		http.Error(w, "No content found for note", http.StatusNotFound)
+		http.Error(w, fmt.Sprintf("No content for key '%s'", key), http.StatusNotFound)
 		return
 	}
 	content, err := userInfo.Store.ReadRecord(rec)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to read note content: %s", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to read content for key '%s': %s", key, err), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(content)
 }
 
@@ -296,7 +303,7 @@ func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 		http.Error(w, "Missing or invalid noteId", http.StatusBadRequest)
 		return
 	}
-	userInfo.Store.AppendRecord(kStoreKindDeleteNote, nil, noteId)
+	userInfo.Store.AppendRecord(kStoreDeleteNote, nil, noteId)
 	serve200JSON(w, r, map[string]string{
 		"message": "Note created"})
 }
@@ -314,7 +321,7 @@ func handleStoreCreateNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 		return
 	}
 	meta := fmt.Sprintf("%s:%s", noteId, name)
-	userInfo.Store.AppendRecord(kStoreKindCreateNote, nil, meta)
+	userInfo.Store.AppendRecord(kStoreCreateNote, nil, meta)
 	serve200JSON(w, r, map[string]string{
 		"message": "Note created"})
 }
@@ -326,24 +333,24 @@ func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *
 		return
 	}
 	// TODO: verify meta is valid JSON
-	userInfo.Store.AppendRecord(kStoreKindNoteMeta, nil, meta)
+	userInfo.Store.AppendRecord(kStoreSetNoteMeta, nil, meta)
 	serve200JSON(w, r, map[string]string{
 		"message": "Note meta set"})
-
 }
 
+// TODO: what to do if duplicate key?
 func handleStoreWriteNoteContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	d, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
-	verId := r.FormValue("verId")
-	if verId == "" {
+	key := r.FormValue("key")
+	if key == "" {
 		http.Error(w, "Missing or invalid verId", http.StatusBadRequest)
 		return
 	}
-	userInfo.Store.AppendRecord(kStoreKindNoteContent, d, verId)
+	userInfo.Store.AppendRecord(kStorePut, d, key)
 	serve200JSON(w, r, map[string]string{
 		"message": "Note content written successfully"})
 }
@@ -406,11 +413,11 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 		handleStoreGetNotes(w, r, userInfo)
 		return
 	}
-	if uri == "/api/store/loadLatestNoteContent" {
-		handleStoreLoadLatestNoteContent(w, r, userInfo)
+	if uri == "/api/store/getString" {
+		handleStoreGetString(w, r, userInfo)
 		return
 	}
-	if uri == "/api/store/writeNoteContent" {
+	if uri == "/api/store/putString" {
 		handleStoreWriteNoteContent(w, r, userInfo)
 		return
 	}

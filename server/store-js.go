@@ -120,7 +120,7 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 	}
 	for _, rec := range recs {
 		switch rec.Kind {
-		case kStoreKindCreateNote:
+		case kStoreCreateNote:
 			// meta is "noteId:name"
 			parts := strings.SplitN(rec.Meta, ":", 2)
 			id := parts[0]
@@ -129,14 +129,14 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 				logf("note %s already exists, skipping create\n", id)
 				continue
 			}
-			store.AppendRecord(kStoreKindCreateNote, nil, rec.Meta)
+			store.AppendRecord(kStoreCreateNote, nil, rec.Meta)
 			notes[id] = &NoteInfo{
 				id:        id,
 				name:      parts[1],
 				createdAt: rec.TimestampMs,
 			}
 			logf("created note %s with name %s\n", id, parts[1])
-		case kStoreKindNoteMeta:
+		case kStoreSetNoteMeta:
 			var noteMeta NoteMeta
 			meta := rec.Meta
 			err := json.Unmarshal([]byte(meta), &noteMeta)
@@ -149,10 +149,10 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 				logf("note %s does not exist, skipping meta update\n", noteMeta.Id)
 				continue
 			}
-			store.AppendRecord(kStoreKindNoteMeta, nil, rec.Meta)
+			store.AppendRecord(kStoreSetNoteMeta, nil, rec.Meta)
 			logf("updated meta for note %s: %+v\n", noteMeta.Id, noteMeta)
 
-		case kStoreKindDeleteNote:
+		case kStoreDeleteNote:
 			noteId := rec.Meta
 			note := notes[noteId]
 			if note == nil {
@@ -163,11 +163,11 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 				logf("note %s is already deleted, skipping delete\n", noteId)
 				continue
 			}
-			store.AppendRecord(kStoreKindDeleteNote, nil, noteId)
+			store.AppendRecord(kStoreDeleteNote, nil, noteId)
 			note.isDeleted = true
 			logf("deleted note %s\n", noteId)
 
-		case kStoreKindNoteContent:
+		case kStorePut:
 			verId := rec.Meta // verId is noteId:verId
 			noteId := strings.SplitN(rec.Meta, ":", 2)[0]
 			note := notes[noteId]
@@ -180,7 +180,7 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 				continue
 			}
 			content := data[rec.Offset : rec.Offset+rec.Size]
-			store.AppendRecord(kStoreKindNoteContent, content, verId)
+			store.AppendRecord(kStorePut, content, verId)
 			logf("updated content for note %s with verId %s\n", noteId, verId)
 		}
 	}
