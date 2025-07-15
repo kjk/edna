@@ -127,6 +127,8 @@ var (
 	flgRunDev bool
 	// compiled assets embedded in the binary
 	flgRunProd bool
+	// if true, don't auto-open the browser
+	flgNoOpen bool
 )
 
 func isDev() bool {
@@ -166,6 +168,7 @@ func Main() {
 		flag.BoolVar(&flgUpdateGoDeps, "update-go-deps", false, "update go dependencies")
 		flag.BoolVar(&flgGen, "gen", false, "generate code")
 		flag.BoolVar(&flgAdHoc, "ad-hoc", false, "run ad-hoc code")
+		flag.BoolVar(&flgNoOpen, "no-open", false, "don't open browser when running in dev mode")
 		flag.Parse()
 	}
 

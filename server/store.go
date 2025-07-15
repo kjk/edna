@@ -126,6 +126,7 @@ func applyMetadata(ni *NoteInfo, noteMeta *NoteMeta) error {
 }
 
 func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, error) {
+	logf("notesFromStoreLog: processing %d records\n", len(records))
 	notes := make(map[string]*NoteInfo)
 	for _, rec := range records {
 		switch rec.Kind {
@@ -248,11 +249,13 @@ func maybeSaveUploadedZip(dataDir string, zipData []byte) {
 		}
 		name := fmt.Sprintf("notes_store-%d.zip", n)
 		zipPath = filepath.Join(dataDir, name)
+		n++
 	}
 	err := os.WriteFile(zipPath, zipData, 0644)
 	if err != nil {
 		logIfErrf(err, "maybeSaveUploadedZip: wrote zip to %s\n", zipPath)
 	}
+	logf("maybeSaveUploadedZip: wrote zip to %s\n", zipPath)
 }
 
 func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
@@ -269,20 +272,13 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 
 	maybeSaveUploadedZip(userInfo.DataDir, zipData)
 
+	logf("handleStoreBulkUpload: replaying browser store zip with %d bytes\n", len(zipData))
 	err = replayBrowserStoreZip(userInfo.Store, zipData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	if false {
-		dataDir := getDataDirMust()
-		zipPath := filepath.Join(dataDir, "notes_store.zip")
-		err = os.WriteFile(zipPath, zipData, 0644)
-		logIfErrf(err)
-		logf("handleStoreBulkUpload: user %s, wrote zip to %s\n", userInfo.Email, zipPath)
-	}
-
+	logf("handleStoreBulkUpload: replayed %d records\n", len(userInfo.Store.Records()))
 	var rsp struct {
 		Message string `json:"message"`
 	}
@@ -322,6 +318,7 @@ func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *User
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(content)
+	logf("handleStoreGetString: finished")
 }
 
 func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {

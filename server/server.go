@@ -666,7 +666,7 @@ func runServerDev() {
 
 	logf("runServerDev(): starting on '%s', dev: %v\n", httpSrv.Addr, isDev())
 	waitFn := serverListen(httpSrv)
-	if isWinOrMac() {
+	if isWinOrMac() && !flgNoOpen {
 		openBrowserForServerMust(httpSrv)
 	}
 	waitFn()

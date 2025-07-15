@@ -68,6 +68,8 @@ func parseIndex(indexContent string) ([]*AppendStoreRecord, error) {
 }
 
 func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
+	logf("replayBrowserStoreZip: replaying browser store zip with %d bytes\n", len(zipData))
+
 	zipReader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return errors.New("invalid zip file")
@@ -96,9 +98,10 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 	}
 
 	if index == nil || data == nil {
-		return errors.New("zip file must contain notes_store_index.txt and notes_store_data.bin")
+		return errors.New("zip file must contain index.txt and data.bin")
 	}
 
+	logf("replayBrowserStoreZip: index size %d, data size %d\n", len(index), len(data))
 	recs, err := parseIndex(string(index))
 	if err != nil {
 		return err
@@ -184,6 +187,7 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 			logf("updated content for note %s with verId %s\n", noteId, verId)
 		}
 	}
+	logf("replayBrowserStoreZip: replayed %d records\n", len(recs))
 	return nil
 }
 
