@@ -46,10 +46,13 @@ export async function getAppendStoreZip(indexFileName, dataFileName) {
   return blob;
 }
 
-export async function deleteBrowserStorage() {
+export async function deleteBrowserStorage(files = null) {
   const root = await navigator.storage.getDirectory();
   // @ts-ignore
   for await (const name of root.keys()) {
+    if (files && !files.includes(name)) {
+      continue;
+    }
     await root.removeEntry(name, { recursive: true });
     console.warn(`Deleted entry: ${name}`);
   }
@@ -85,6 +88,7 @@ export async function maybeMigrateNotesLocalToBackend() {
       e,
     );
   }
-  await deleteBrowserStorage();
+  let files = ["notes_store_data.bin", "notes_store_index.txt"];
+  await deleteBrowserStorage(files);
   console.warn("maybeMigrateNotesLocalToBackend: migration completed");
 }
