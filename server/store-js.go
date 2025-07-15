@@ -14,7 +14,7 @@ import (
 	"github.com/kjk/common/appendstore"
 )
 
-func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
+func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData []byte) error {
 	logf("replayBrowserStoreZip: replaying browser store zip with %d bytes\n", len(zipData))
 
 	zipReader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
@@ -47,6 +47,8 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 	if index == nil || data == nil {
 		return errors.New("zip file must contain index.txt and data.bin")
 	}
+
+	maybeSaveIndexAndData(userDataDir, index, data)
 
 	logf("replayBrowserStoreZip: index size %d, data size %d\n", len(index), len(data))
 	recs, err := appendstore.ParseIndexFromData(index)
@@ -139,7 +141,7 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 }
 
 func testReplyZipAdHoc() {
-	dir := "data"
+	dir := filepath.Join("data", "kkowalczyk@gmail.com")
 	zipName := "notes_store.zip"
 	zipPath := filepath.Join(dir, zipName)
 	zipData, err := os.ReadFile(zipPath)
@@ -159,6 +161,6 @@ func testReplyZipAdHoc() {
 	err = appendstore.OpenStore(store)
 	must(err)
 	logf("store opened: %s\n", filepath.Join(store.DataDir, store.IndexFileName))
-	err = replayBrowserStoreZip(store, zipData)
+	err = replayBrowserStoreZip("", store, zipData)
 	must(err)
 }

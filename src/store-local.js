@@ -2,6 +2,7 @@ import { AppendStore, AppendStoreRecord } from "./appendstore";
 import { Note, noteIdFromContentId } from "./note";
 import { len } from "./util";
 
+// must match store.go
 const kStoreCreateNote = "note-create";
 const kStoreDeleteNote = "note-delete";
 const kStoreSetNoteMeta = "note-meta";
@@ -100,6 +101,7 @@ export class LocalStore {
    */
   async createNote(noteId, name) {
     console.log("createNote:", noteId, name);
+    debugger;
     let store = this.store;
     let meta = `${noteId}:${name}`;
     await store.appendRecord(null, kStoreCreateNote, meta);

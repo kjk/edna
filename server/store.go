@@ -14,15 +14,6 @@ import (
 	"github.com/kjk/common/appendstore"
 )
 
-// AppendStoreRecord represents a record in the append store index
-type AppendStoreRecord struct {
-	Offset      int64  // byte offset in data file
-	Size        int64  // size of data in bytes
-	TimestampMs int64  // timestamp in milliseconds
-	Kind        string // record type/kind
-	Meta        string // optional metadata (can be empty)
-}
-
 type UserInfo struct {
 	User    string
 	Email   string
@@ -92,6 +83,7 @@ type GetNotesResponse struct {
 	NotesCompact [][]interface{}
 }
 
+// must match store-local.js
 const kStoreCreateNote = "note-create"
 const kStoreDeleteNote = "note-delete"
 const kStoreSetNoteMeta = "note-meta"
@@ -236,6 +228,18 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 	serve200JSON(w, r, rsp)
 }
 
+func maybeSaveIndexAndData(dataDir string, index []byte, data []byte) {
+	if !isDev() || dataDir == "" {
+		// only when testing
+		return
+	}
+	os.MkdirAll(dataDir, 0755)
+	path := filepath.Join(dataDir, "index.txt")
+	os.WriteFile(path, index, 0644)
+	path = filepath.Join(dataDir, "data.bin")
+	os.WriteFile(path, data, 0644)
+}
+
 func maybeSaveUploadedZip(dataDir string, zipData []byte) {
 	if !isDev() {
 		// only when testing
@@ -274,7 +278,7 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 	maybeSaveUploadedZip(userInfo.DataDir, zipData)
 
 	logf("handleStoreBulkUpload: replaying browser store zip with %d bytes\n", len(zipData))
-	err = replayBrowserStoreZip(userInfo.Store, zipData)
+	err = replayBrowserStoreZip(userInfo.DataDir, userInfo.Store, zipData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
