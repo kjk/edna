@@ -234,9 +234,9 @@ func maybeSaveIndexAndData(dataDir string, index []byte, data []byte) {
 		return
 	}
 	os.MkdirAll(dataDir, 0755)
-	path := filepath.Join(dataDir, "index.txt")
+	path := filepath.Join(dataDir, "notes_store_index.txt")
 	os.WriteFile(path, index, 0644)
-	path = filepath.Join(dataDir, "data.bin")
+	path = filepath.Join(dataDir, "notes_store_data.bin")
 	os.WriteFile(path, data, 0644)
 }
 
@@ -393,6 +393,10 @@ func handleStoreReadFileAsString(w http.ResponseWriter, r *http.Request, userInf
 	path := filepath.Join(userInfo.DataDir, ToValidFileName(fileName))
 	d, err := os.ReadFile(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, fmt.Sprintf("File %s does not exist", fileName), http.StatusNotFound)
+			return
+		}
 		http.Error(w, fmt.Sprintf("Failed to read file %s: %s", fileName, err), http.StatusInternalServerError)
 		return
 	}

@@ -45,7 +45,7 @@ async function readFile(path) {
     const file = await fh.getFile();
     return await file.arrayBuffer();
   } catch (e) {
-    console.warn(e);
+    console.warn(`file: ${path} error: ${e}`);
     return null;
   }
 }

@@ -53,8 +53,21 @@ export class BackendStore {
   async readFileAsString(fileName) {
     let uri =
       "/api/store/readFileAsString?fileName=" + encodeURIComponent(fileName);
-    let rsp = await fetch(uri);
-    let s = await rsp.text();
+    let s = "";
+    try {
+      let rsp = await fetch(uri);
+      if (rsp.status === 404) {
+        console.warn(`File ${fileName} not found`);
+        return "";
+      }
+      if (!rsp.ok) {
+        console.warn("readFileAsString error:", rsp.status, rsp.statusText);
+        return "";
+      }
+      s = await rsp.text();
+    } catch (e) {
+      console.warn("readFileAsString error:", e);
+    }
     return s;
   }
 
@@ -118,7 +131,7 @@ function parseLatestNotes(s) {
   let init = {
     Ver: 1,
     LastChangeID: 0,
-    Notes: [],
+    NotesCompact: [],
   };
   if (!s) {
     return init;
@@ -154,10 +167,15 @@ function notesFromCompact(compactNotes) {
 
 // cached result of /api/store/getNotes in localStorage
 const kKeyLatestNotes = "elaris:latestNotes";
+
+/**
+ * @returns {Promise<Note[]>}
+ */
 export async function backendGetLatestNotes() {
   console.log("backendGetLatestNotes");
   let s = localStorage.getItem(kKeyLatestNotes);
   let curr = parseLatestNotes(s);
+  let notes = notesFromCompact(curr.NotesCompact);
   let rsp = await fetch(
     "/api/store/getNotes?lastChangeID=" + curr.LastChangeID,
   );
@@ -165,18 +183,17 @@ export async function backendGetLatestNotes() {
   if (rsp.status === 304) {
     // no change
     console.log("No change in latest notes, returning cached version");
-    return curr;
+    return notes;
   }
   if (!rsp.ok) {
     console.warn("Failed to fetch latest notes:", rsp.status, rsp.statusText);
-    return curr;
   }
   curr = await rsp.json();
   if (curr.Ver !== 1) {
     console.warn("Unexpected version of latest notes:", curr.Ver);
-    return curr;
+    return notes;
   }
-  let notes = notesFromCompact(curr.NotesCompact);
+  notes = notesFromCompact(curr.NotesCompact);
   s = JSON.stringify(curr, null, 2);
   localStorage.setItem(kKeyLatestNotes, s);
   return notes;
