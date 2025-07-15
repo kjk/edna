@@ -7,7 +7,10 @@ import App from "./components/App.svelte";
 import { updateAfterNoteStateChange } from "./globals";
 import { getLoggedUser } from "./login";
 import { loadAppMetadata } from "./metadata";
-import { maybeMigrateNotesLocalToBackend } from "./migrate-local-to-backend";
+import {
+  deleteBrowserStorage,
+  maybeMigrateNotesLocalToBackend,
+} from "./migrate-local-to-backend";
 import { Note } from "./note";
 import {
   createIfNotExists,
@@ -37,16 +40,6 @@ function resetApp() {
     console.log("reloading");
     window.location.reload();
   });
-}
-
-async function deleteBrowserStorage() {
-  const root = await navigator.storage.getDirectory();
-  // @ts-ignore
-  for await (const name of root.keys()) {
-    await root.removeEntry(name, { recursive: true });
-    console.log(`Deleted entry: ${name}`);
-  }
-  console.log("Browser storage cleared.");
 }
 
 async function listBrowserStorage() {
