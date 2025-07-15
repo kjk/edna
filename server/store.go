@@ -134,7 +134,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			}
 			if notes[id] != nil {
 				logf("note with id %s already exists", id)
-				continue
+				return nil, fmt.Errorf("kStoreCreateNote: note with id %s already exists", id)
 			}
 			notes[id] = ni
 		case kStoreSetNoteMeta:
@@ -142,17 +142,17 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			meta := rec.Meta
 			err := json.Unmarshal([]byte(meta), &noteMeta)
 			if err != nil {
-				logErrorf("applyMetadata: failed to unmarshal note meta: %s, err: %s\n", meta, err)
+				logErrorf("kStoreSetNoteMeta: failed to unmarshal note meta: %s, err: %s\n", meta, err)
 				return nil, err
 			}
 			note := notes[noteMeta.Id]
 			if note == nil {
 				logf("note %s does not exist, skipping meta update\n", noteMeta.Id)
-				continue
+				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s does not exist", noteMeta.Id)
 			}
 			if note.isDeleted {
 				logf("note %s is deleted, skipping meta update\n", noteMeta.Id)
-				continue
+				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s is deleted", noteMeta.Id)
 			}
 			applyMetadata(note, &noteMeta)
 			note.modifiedAt = rec.TimestampMs
@@ -161,7 +161,11 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			note := notes[noteId]
 			if note == nil {
 				logf("note %s does not exist, skipping delete\n", noteId)
-				continue
+				return nil, fmt.Errorf("kStoreDeleteNote: note %s does not exist", noteId)
+			}
+			if note.isDeleted {
+				logf("note %s is deleted, skipping delete\n", noteId)
+				return nil, fmt.Errorf("kStoreDeleteNote: note %s is deleted", noteId)
 			}
 			note.isDeleted = true
 		case kStorePut:
@@ -170,12 +174,11 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			note := notes[noteId]
 			if note == nil {
 				logf("note %s does not exist, skipping put\n", noteId)
-				continue
-
+				return nil, fmt.Errorf("kStorePut: note %s does not exist", noteId)
 			}
 			if note.isDeleted {
 				logf("note %s is deleted, skipping put\n", noteId)
-				continue
+				return nil, fmt.Errorf("kStorePut: note %s is deleted", noteId)
 			}
 			note.versionIds = append(note.versionIds, verId)
 		}
