@@ -76,7 +76,6 @@ func getLoggedUser(r *http.Request, w http.ResponseWriter) (*UserInfo, error) {
 			return err
 		}
 		users = append(users, userInfo)
-		userInfo = u
 		return nil
 	}
 	doUserOpByEmail(email, getOrCreateUser)
@@ -88,7 +87,7 @@ func serve404(w http.ResponseWriter, r *http.Request, s string) {
 }
 
 type GetNotesResponse struct {
-	Ver          string
+	Ver          int
 	LastChangeID int
 	NotesCompact [][]interface{}
 }
@@ -173,6 +172,8 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 const kNoteFlagIsStarred = 0x01
 const kNoteFlagIsArchived = 0x02
 
+// as an optimization, we only send the last version id of note content
+// front-end doesn't need more and can request more if needed
 func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	lastChangeIDReq := 0
 	v := r.FormValue("lastChangeID")
@@ -186,7 +187,7 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 	}
 	recs := userInfo.Store.Records()
 	rsp := &GetNotesResponse{
-		Ver:          "1",
+		Ver:          1,
 		LastChangeID: len(recs),
 	}
 	if lastChangeIDReq >= rsp.LastChangeID {
@@ -206,13 +207,17 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		if ni.isDeleted {
 			continue
 		}
-		// [id, name, flags, altShortcut, createdAt, lastModifiedAt, versionIds...],
+		// [id, name, flags, altShortcut, createdAt, lastModifiedAt, lastVersionId],
 		flags := 0
 		if ni.isStarred {
 			flags |= kNoteFlagIsStarred
 		}
 		if ni.isArchived {
 			flags |= kNoteFlagIsArchived
+		}
+		lastVersionId := ""
+		if len(ni.versionIds) > 0 {
+			lastVersionId = ni.versionIds[len(ni.versionIds)-1]
 		}
 		nc := []interface{}{
 			ni.id,
@@ -221,13 +226,33 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 			ni.altShortcut,
 			ni.createdAt,
 			ni.modifiedAt,
-		}
-		for _, verId := range ni.versionIds {
-			nc = append(nc, verId)
+			lastVersionId,
 		}
 		push(&notesCompact, nc)
 	}
+	rsp.NotesCompact = notesCompact
 	serve200JSON(w, r, rsp)
+}
+
+func maybeSaveUploadedZip(dataDir string, zipData []byte) {
+	if !isDev() {
+		// only when testing
+		return
+	}
+	// pick unique name so that we don't overwrite
+	zipPath := filepath.Join(dataDir, "notes_store.zip")
+	n := 1
+	for {
+		if _, err := os.Stat(zipPath); os.IsNotExist(err) {
+			break
+		}
+		name := fmt.Sprintf("notes_store-%d.zip", n)
+		zipPath = filepath.Join(dataDir, name)
+	}
+	err := os.WriteFile(zipPath, zipData, 0644)
+	if err != nil {
+		logIfErrf(err, "maybeSaveUploadedZip: wrote zip to %s\n", zipPath)
+	}
 }
 
 func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
@@ -241,6 +266,8 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 		return
 	}
 	logf("handleStoreBulkUpload: user %s, zip size: %d\n", userInfo.Email, len(zipData))
+
+	maybeSaveUploadedZip(userInfo.DataDir, zipData)
 
 	err = replayBrowserStoreZip(userInfo.Store, zipData)
 	if err != nil {

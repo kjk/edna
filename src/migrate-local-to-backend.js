@@ -1,3 +1,5 @@
+import { AppendStore } from "./appendstore";
+
 /**
  * @param {any} libZip
  * @param {any} zipWriter
@@ -47,6 +49,13 @@ export async function getAppendStoreZip(indexFileName, dataFileName) {
 export async function maybeMigrateNotesLocalToBackend() {
   let indexFileName = "notes_store_index.txt";
   let dataFileName = "notes_store_data.bin";
+  let store = await AppendStore.create("notes_store");
+  if (store.records.length === 0) {
+    console.warn(
+      "maybeMigrateNotesLocalToBackend: no records in store, skipping upload to backend",
+    );
+    return;
+  }
   let blob = await getAppendStoreZip(indexFileName, dataFileName);
   try {
     let rsp = await fetch("/api/store/bulkUpload", {

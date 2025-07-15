@@ -175,7 +175,7 @@ export async function backendGetLatestNotes() {
     console.warn("Unexpected version of latest notes:", curr.Ver);
     return curr;
   }
-  let notes = notesFromCompact(curr.Notes);
+  let notes = notesFromCompact(curr.NotesCompact);
   s = JSON.stringify(curr, null, 2);
   localStorage.setItem(kKeyLatestNotes, s);
   return notes;
