@@ -77,6 +77,7 @@
     kMenuStatusNormal,
     kMenuStatusRemoved,
   } from "../Menu.svelte";
+  import { downloadBrowserStoreAsZip } from "../migrate-local-to-backend";
   import { isMoving } from "../mouse-track.svelte";
   import {
     appendToNote,
@@ -858,6 +859,7 @@
   const kCmdExportNotes = nmid();
   const kCmdImportEdnaNotes = nmid();
   const kCmdExportCurrentNote = nmid();
+  const kCmdDownloadBrowserstore = nmid();
   const kCmdEncryptNotes = nmid();
   const kCmdDecryptNotes = nmid();
   const kCmdEncryptionHelp = nmid();
@@ -1408,6 +1410,8 @@
       if (!settings.showSidebar) {
         view.focus();
       }
+    } else if (cmdId === kCmdDownloadBrowserstore) {
+      downloadBrowserStoreAsZip();
     } else if (cmdId === kCmdFind || cmdId == kCmdSearch) {
       openFindPanel();
     } else if (cmdId === kCmdFindInNotes || cmdId == kCmdSearchInNotes) {
@@ -1517,17 +1521,21 @@
   let commandsDef = $state(null);
 
   function buildCommandPaletteDef() {
-    commandsDef = buildCommandsDef();
+    let cmds = buildCommandsDef();
     for (let mi of commandPaletteAdditions) {
       let status = menuItemStatus(mi);
       if (status != kMenuStatusNormal) {
         continue;
       }
-      commandsDef.push(mi);
+      cmds.push(mi);
     }
     // console.log("commandPaletteAdditions:", commandPaletteAdditions);
     let name = commandNameOverride(kCmdToggleSpellChecking);
-    commandsDef.push([name, kCmdToggleSpellChecking]);
+    cmds.push([name, kCmdToggleSpellChecking]);
+    if (isDev()) {
+      cmds.push(["Download browser store as zip", kCmdDownloadBrowserstore]);
+    }
+    commandsDef = cmds;
   }
 
   function closeTab(noteName) {

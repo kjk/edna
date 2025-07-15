@@ -17,57 +17,95 @@ export class AppendStoreRecord {
 
 /**
  *
- * @param {FileSystemFileHandle} fileHandle
+ * @param {string} path
  * @param {number} offset
- * @param {number} length
+ * @param {number} size
  * @returns {Promise<Uint8Array>}
  */
-async function readFileSegment(fileHandle, offset, length) {
-  const file = await fileHandle.getFile();
-  const slice = file.slice(offset, offset + length);
+async function readFileSegment(path, offset, size) {
+  const startTime = performance.now();
+  const root = await navigator.storage.getDirectory();
+  const fh = await root.getFileHandle(path);
+  const file = await fh.getFile();
+  const slice = file.slice(offset, offset + size);
   const data = await slice.arrayBuffer();
+  logDur(startTime, `readFileSegment size:${size}`);
   return new Uint8Array(data);
 }
 
 /**
  *
- * @param {FileSystemFileHandle} dataHandle
+ * @param {string} path
+ * @returns
+ */
+async function readFile(path) {
+  const root = await navigator.storage.getDirectory();
+  try {
+    const fh = await root.getFileHandle(path);
+    const file = await fh.getFile();
+    return await file.arrayBuffer();
+  } catch (e) {
+    console.warn(e);
+    return null;
+  }
+}
+
+/**
+ *
+ * @param {FileSystemFileHandle} fh
  * @param {number} offset
  * @param {Uint8Array} bytes
  */
-async function writeAtOffset(dataHandle, offset, bytes) {
-  const dataWritable = await dataHandle.createWritable({
+async function writeAtOffset(fh, offset, bytes) {
+  const writable = await fh.createWritable({
     keepExistingData: true,
   });
-  await dataWritable.seek(offset);
-  await dataWritable.write(bytes);
-  await dataWritable.close();
+  await writable.seek(offset);
+  await writable.write(bytes);
+  await writable.close();
+}
+
+/**
+ *
+ * @param {string} path
+ * @param {Uint8Array} blob
+ * @retruns {number}
+ */
+async function appendToFile(path, blob) {
+  const root = await navigator.storage.getDirectory();
+  const fh = await root.getFileHandle(path, {
+    create: true,
+  });
+  const file = await fh.getFile();
+  const offset = file.size;
+  await writeAtOffset(fh, offset, blob);
+  return offset;
 }
 
 export class AppendStore {
   /** @type {AppendStoreRecord[]} */
   records = [];
-  /** @type {FileSystemFileHandle} */
-  indexHandle;
-  /** @type {FileSystemFileHandle} */
-  dataHandle;
+  /** @type {string} */
+  indexPath;
+  /** @type {string} */
+  dataPath;
 
   static async create(fileNamePrefix = "appendStore") {
-    const indexFileName = `${fileNamePrefix}_index.txt`;
-    const dataFileName = `${fileNamePrefix}_data.bin`;
-    const root = await navigator.storage.getDirectory();
-    const indexHandle = await root.getFileHandle(indexFileName, {
-      create: true,
-    });
-    const dataHandle = await root.getFileHandle(dataFileName, { create: true });
-    let res = new AppendStore(indexHandle, dataHandle);
+    const indexPath = `${fileNamePrefix}_index.txt`;
+    const dataPath = `${fileNamePrefix}_data.bin`;
+    let res = new AppendStore(indexPath, dataPath);
     res.records = await res._readIndex();
     return res;
   }
 
-  constructor(indexHandle, dataHandle) {
-    this.indexHandle = indexHandle;
-    this.dataHandle = dataHandle;
+  /**
+   *
+   * @param {string} indexPath
+   * @param {string} dataPath
+   */
+  constructor(indexPath, dataPath) {
+    this.indexPath = indexPath;
+    this.dataPath = dataPath;
     this.utf8Encoder = new TextEncoder();
     this.utf8Decoder = new TextDecoder();
   }
@@ -77,8 +115,11 @@ export class AppendStore {
    */
   async _writeData(data, kind, meta) {
     // high-precision UTC time in milliseconds
-    const timeInMs = Math.round(performance.timeOrigin + performance.now());
-
+    const timestampMs = Math.round(performance.timeOrigin + performance.now());
+    if (!data) {
+      // it's ok for data to be empty
+      return new AppendStoreRecord(0, 0, timestampMs, kind, meta);
+    }
     /** @type {Uint8Array} */
     let bytes;
     let size = 0;
@@ -94,14 +135,10 @@ export class AppendStore {
     }
     if (size === 0) {
       // it's ok for data to be empty
-      let rec = new AppendStoreRecord(0, 0, timeInMs, kind, meta);
-      return rec;
+      return new AppendStoreRecord(0, 0, timestampMs, kind, meta);
     }
-    const dataFile = await this.dataHandle.getFile();
-    const offset = dataFile.size;
-    let rec = new AppendStoreRecord(offset, size, timeInMs, kind, meta);
-    writeAtOffset(this.dataHandle, offset, bytes);
-    return rec;
+    let offset = await appendToFile(this.dataPath, bytes);
+    return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
   }
 
   /**
@@ -122,23 +159,12 @@ export class AppendStore {
     let rec = await this._writeData(data, kind, meta);
     let { offset, size, timeInMs } = rec;
 
-    // Create index line
-    const line =
-      meta !== null && meta !== undefined
-        ? `${offset} ${size} ${timeInMs} ${kind} ${meta}\n`
-        : `${offset} ${size} ${timeInMs} ${kind}\n`;
+    const line = meta
+      ? `${offset} ${size} ${timeInMs} ${kind} ${meta}\n`
+      : `${offset} ${size} ${timeInMs} ${kind}\n`;
+    console.warn("line:", line);
     const indexBytes = this.utf8Encoder.encode(line);
-
-    // Append to index file
-    const indexFile = await this.indexHandle.getFile();
-    const indexOffset = indexFile.size;
-    const indexWritable = await this.indexHandle.createWritable({
-      keepExistingData: true,
-    });
-    await indexWritable.seek(indexOffset);
-    await indexWritable.write(indexBytes);
-    await indexWritable.close();
-
+    await appendToFile(this.indexPath, indexBytes);
     this.records.push(rec);
     logDur(startTime, `AppendStore.write`);
   }
@@ -152,16 +178,20 @@ export class AppendStore {
     if (size == 0) {
       return "";
     }
-    let bytes = await readFileSegment(this.dataHandle, offset, size);
+    let bytes = await readFileSegment(this.dataPath, offset, size);
     return this.utf8Decoder.decode(bytes);
   }
 
+  /**
+   * @returns {Promise<AppendStoreRecord[]>}
+   */
   async _readIndex() {
-    const file = await this.indexHandle.getFile();
-    const buffer = await file.arrayBuffer();
-    const text = this.utf8Decoder.decode(buffer);
-    let records = parseIndex(text);
-    return records;
+    const d = await readFile(this.indexPath);
+    if (!d) {
+      return [];
+    }
+    const text = this.utf8Decoder.decode(d);
+    return parseIndex(text);
   }
 }
 
@@ -205,4 +235,15 @@ function parseIndex(s) {
     records.push(new AppendStoreRecord(offset, size, time, kind, meta));
   }
   return records;
+}
+
+export async function dumpIndex() {
+  const path = "notes_store_index.txt";
+  const d = await readFile(path);
+  if (!d) {
+    console.log("no index file exists");
+    return;
+  }
+  const s = new TextDecoder().decode(d);
+  console.log("index:", s);
 }

@@ -101,7 +101,6 @@ export class LocalStore {
    */
   async createNote(noteId, name) {
     console.log("createNote:", noteId, name);
-    debugger;
     let store = this.store;
     let meta = `${noteId}:${name}`;
     await store.appendRecord(null, kStoreCreateNote, meta);
@@ -144,7 +143,7 @@ export function notesFromStoreLog(records) {
       let noteId = noteIdFromContentId(verId);
       let note = m.get(noteId);
       if (!note) {
-        console.warn("kStoreKindNoteContent: no note for meta:", verId);
+        console.warn("kStorePut: no note for meta:", verId);
         continue;
       }
       note.versionIds.push(verId);

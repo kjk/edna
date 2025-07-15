@@ -2,6 +2,7 @@ import "./main.css";
 import "./markdown-anti-tailwind.css";
 import "highlight.js/styles/github.css";
 import { mount, unmount } from "svelte";
+import { dumpIndex } from "./appendstore";
 import { appState, findNoteByName } from "./appstate.svelte";
 import App from "./components/App.svelte";
 import { updateAfterNoteStateChange } from "./globals";
@@ -72,6 +73,7 @@ function setupWindowDebug() {
     listBrowserStorage: listBrowserStorage,
     deleteBrowserStorage: deleteBrowserStorage,
     resetApp: resetApp,
+    dumpIndex: dumpIndex,
   };
 }
 

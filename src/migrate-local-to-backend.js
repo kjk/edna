@@ -1,4 +1,5 @@
 import { AppendStore } from "./appendstore";
+import { browserDownloadBlob, formatDateYYYYMMDD } from "./util";
 
 /**
  * @param {any} libZip
@@ -91,4 +92,13 @@ export async function maybeMigrateNotesLocalToBackend() {
   let files = ["notes_store_data.bin", "notes_store_index.txt"];
   await deleteBrowserStorage(files);
   console.warn("maybeMigrateNotesLocalToBackend: migration completed");
+}
+
+export async function downloadBrowserStoreAsZip() {
+  console.log("downloadBrowserStoreAsZip");
+  let indexFileName = "notes_store_index.txt";
+  let dataFileName = "notes_store_data.bin";
+  let blob = await getAppendStoreZip(indexFileName, dataFileName);
+  let name = "notes_store" + formatDateYYYYMMDD() + ".zip";
+  browserDownloadBlob(blob, name);
 }
