@@ -6,17 +6,18 @@ import (
 	"net/http"
 )
 
-func serveInternalError(w http.ResponseWriter, err error) {
+func serve500Error(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	io.WriteString(w, err.Error())
 }
 
-func serveJSON(w http.ResponseWriter, data []byte) {
+func serve200JSONData(w http.ResponseWriter, data []byte) {
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
-func serveJSONOK(w http.ResponseWriter, r *http.Request, v interface{}) {
+func serve200JSON(w http.ResponseWriter, r *http.Request, v interface{}) {
 	d, err := json.Marshal(v)
 	must(err)
 	w.Header().Set("Content-Type", "application/json")
@@ -25,7 +26,7 @@ func serveJSONOK(w http.ResponseWriter, r *http.Request, v interface{}) {
 	logIfErrf(err)
 }
 
-func serveIfError(w http.ResponseWriter, err error) bool {
+func serve500IfError(w http.ResponseWriter, err error) bool {
 	if err != nil {
 		logErrorf("serveIfError(): %s\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -80,7 +80,7 @@ func serverApiCurrencyRates(w http.ResponseWriter, r *http.Request) {
 		logf("serverCurrencyRates: have cached data, since update: %s\n", sinceUpdate)
 		if sinceUpdate < currencyUpdateFreq {
 			logf("serverCurrencyRates: using cached data\n")
-			serveJSON(w, []byte(cachedCurrencyRatesJSON))
+			serve200JSONData(w, []byte(cachedCurrencyRatesJSON))
 			return
 		}
 	}
@@ -89,16 +89,16 @@ func serverApiCurrencyRates(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logf("serverCurrencyRates: getCurrencyRates() failed with: '%s'\n", err)
 		if cachedCurrencyRatesJSON != nil {
-			serveJSON(w, cachedCurrencyRatesJSON)
+			serve200JSONData(w, cachedCurrencyRatesJSON)
 			return
 		}
-		serveInternalError(w, err)
+		serve500Error(w, err)
 		return
 	}
 	logf("serverCurrencyRates: got data of size %d %s\n", len(d), truncData(d, 64))
 	cachedCurrencyRatesJSON = d
 	currencyRatesLastUpdate = time.Now()
-	serveJSON(w, d)
+	serve200JSONData(w, d)
 }
 
 func truncData(data []byte, maxLen int) string {
@@ -131,7 +131,7 @@ func serveChromeDevToolsJSON(w http.ResponseWriter, r *http.Request) {
 	s = strings.ReplaceAll(s, "{{root}}", srcDir)
 	s = strings.ReplaceAll(s, "{{uuid}}", uuid)
 	// logf("serveChromeDevToolsJSON:\n\n%s\n\n", s)
-	serveJSON(w, []byte(s))
+	serve200JSONData(w, []byte(s))
 }
 
 func makeSecureCookie() {
@@ -301,7 +301,7 @@ func handleAuthUser(w http.ResponseWriter, r *http.Request) {
 		v["avatar_url"] = cookie.AvatarURL
 		logf("handleAuthUser: logged in as '%s', '%s'\n", cookie.User, cookie.Email)
 	}
-	serveJSONOK(w, r, v)
+	serve200JSON(w, r, v)
 }
 
 // /auth/githubcb

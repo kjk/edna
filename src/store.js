@@ -1,6 +1,10 @@
 import { AppendStore } from "./appendstore";
 import { Note } from "./note";
-import { BackendStore } from "./store-backend";
+import {
+  backendGetLatestNotes,
+  BackendStore,
+  createBackendStore,
+} from "./store-backend";
 import { createLocalStore, LocalStore, notesFromStoreLog } from "./store-local";
 import { throwIf } from "./util";
 
@@ -72,4 +76,9 @@ export async function openLocalStore() {
   return notesFromStoreLog(localStore.store.records);
 }
 
-export function openBackendStore() {}
+export async function openBackendStore() {
+  let backendStore = await createBackendStore();
+  store = backendStore;
+  let res = await backendGetLatestNotes();
+  return res;
+}

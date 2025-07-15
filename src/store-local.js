@@ -46,7 +46,7 @@ export class LocalStore {
 
   /**
    * @param {string} noteId
-   * @returns
+   * @returns {Promise<string>}
    */
   async loadLatestNoteContent(noteId) {
     let store = this.store;
@@ -94,6 +94,7 @@ export class LocalStore {
   async readFileAsString(fileName) {
     return localStorage.getItem(fileName) || "";
   }
+
   /**
    * @param {string} noteId
    */

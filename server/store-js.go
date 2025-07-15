@@ -120,7 +120,7 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 	}
 	for _, rec := range recs {
 		switch rec.Kind {
-		case kStoreCreateNote:
+		case kStoreKindCreateNote:
 			// meta is "noteId:name"
 			parts := strings.SplitN(rec.Meta, ":", 2)
 			id := parts[0]
@@ -129,7 +129,7 @@ func replayBrowserStoreZip(store *appendstore.Store, zipData []byte) error {
 				logf("note %s already exists, skipping create\n", id)
 				continue
 			}
-			store.AppendRecord(kStoreCreateNote, nil, rec.Meta)
+			store.AppendRecord(kStoreKindCreateNote, nil, rec.Meta)
 			notes[id] = &NoteInfo{
 				id:        id,
 				name:      parts[1],

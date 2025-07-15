@@ -1,3 +1,4 @@
+import { encode } from "punycode";
 import { AppendStore } from "./appendstore";
 import { Note } from "./note";
 
@@ -18,28 +19,95 @@ export class BackendStore {
     this.contentCache = contentCache;
   }
 
+  /**
+   * @param {Object} m
+   */
   async writeNoteMeta(m) {
-    throw new Error("NYI");
+    let meta = JSON.stringify(m);
+    let uri = "/api/store/writeNoteMeta?meta=" + encodeURIComponent(meta);
+    let rsp = await fetch(uri);
+    console.log("writeNoteMeta rsp:", rsp);
   }
-  async writeStringToFile(fileName, s) {
-    throw new Error("NYI");
+
+  /**
+   * @param {string} fileName
+   * @param {string} content
+   */
+  async writeStringToFile(fileName, content) {
+    let uri =
+      "/api/store/writeStringToFile?fileName=" + encodeURIComponent(fileName);
+    let boddy = new TextEncoder().encode(content);
+    let rsp = await fetch(uri, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/octet-stream",
+      },
+      body: boddy,
+    });
+    console.log("rsp:", rsp);
   }
+
+  /**
+   * @param {string} fileName
+   * @returns {Promise<string>}
+   */
   async readFileAsString(fileName) {
-    throw new Error("NYI");
-    return "";
+    let uri =
+      "/api/store/readFileAsString?fileName=" + encodeURIComponent(fileName);
+    let rsp = await fetch(uri);
+    let s = await rsp.text();
+    return s;
   }
+
+  /**
+   * @param {string} noteId
+   */
   async deleteNote(noteId) {
-    throw new Error("NYI");
+    let uri = "/api/store/deleteNote?noteId=" + noteId;
+    let rsp = await fetch(uri);
+    console.log("deleteNote rsp:", rsp);
   }
+
+  /**
+   * @param {string} noteId
+   * @param {string} name
+   */
   async createNote(noteId, name) {
-    throw new Error("NYI");
+    let uri =
+      "/api/store/createNote?noteId=" +
+      noteId +
+      "&name=" +
+      encodeURIComponent(name);
+    let rsp = await fetch(uri);
+    console.log("createNote rsp:", rsp);
   }
+
+  /**
+   * @param {string} verId
+   * @param {string} content
+   */
   async writeNoteContent(verId, content) {
-    throw new Error("NYI");
+    let uri = "/api/store/writeNoteContent?verId=" + verId;
+    let boddy = new TextEncoder().encode(content);
+    let rsp = await fetch(uri, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/octet-stream",
+      },
+      body: boddy,
+    });
+    console.log("rsp:", rsp);
   }
+
+  /**
+   * @param {string} noteId
+   * @returns {Promise<string>}
+   */
   async loadLatestNoteContent(noteId) {
-    throw new Error("NYI");
-    return "";
+    let uri = "/api/store/loadLatestNoteContent?noteId=" + noteId;
+    let rsp = await fetch(uri);
+    let s = await rsp.text();
+    return s;
   }
 }
 
@@ -87,7 +155,7 @@ function notesFromCompact(compactNotes) {
 
 // cached result of /api/store/getNotes in localStorage
 const kKeyLatestNotes = "elaris:latestNotes";
-async function backendGetLatestNotes() {
+export async function backendGetLatestNotes() {
   console.log("backendGetLatestNotes");
   let s = localStorage.getItem(kKeyLatestNotes);
   let curr = parseLatestNotes(s);

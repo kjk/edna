@@ -83,31 +83,6 @@ func getLoggedUser(r *http.Request, w http.ResponseWriter) (*UserInfo, error) {
 	return userInfo, nil
 }
 
-func handleStore(w http.ResponseWriter, r *http.Request) {
-	uri := r.URL.Path
-	userInfo, err := getLoggedUser(r, w)
-	if serveIfError(w, err) {
-		logf("handleStore: %s, err: %s\n", uri, err)
-		return
-	}
-	logf("handleStore: %s, userEmail: %s\n", uri, userInfo.Email)
-
-	// serialize user operations. I could try to be more fine-grained
-	// but this is safe and simple
-	userInfo.mu.Lock()
-	defer userInfo.mu.Unlock()
-
-	if uri == "/api/store/bulkUpload" {
-		handleStoreBulkUpload(w, r, userInfo)
-		return
-	}
-	if uri == "/api/store/getNotes" {
-		handleStoreGetNotes(w, r, userInfo)
-		return
-	}
-	serve404(w, r, "Unknown store operation: "+uri)
-}
-
 func serve404(w http.ResponseWriter, r *http.Request, s string) {
 	http.Error(w, s, http.StatusNotFound)
 }
@@ -118,7 +93,7 @@ type GetNotesResponse struct {
 	NotesCompact [][]interface{}
 }
 
-const kStoreCreateNote = "note-create"
+const kStoreKindCreateNote = "note-create"
 const kStoreKindNoteMeta = "note-meta"
 const kStoreKindDeleteNote = "note-delete"
 const kStoreKindNoteContent = "note-content"
@@ -155,7 +130,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 	notes := make(map[string]*NoteInfo)
 	for _, rec := range records {
 		switch rec.Kind {
-		case kStoreCreateNote:
+		case kStoreKindCreateNote:
 			// meta is "noteId:name"
 			parts := strings.SplitN(rec.Meta, ":", 2)
 			id := parts[0]
@@ -200,8 +175,7 @@ const kNoteFlagIsArchived = 0x02
 
 func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	lastChangeIDReq := 0
-	r.ParseForm()
-	v := r.Form.Get("lastChangeID")
+	v := r.FormValue("lastChangeID")
 	if v != "" {
 		var err error
 		lastChangeIDReq, err = strconv.Atoi(v)
@@ -253,7 +227,7 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		}
 		push(&notesCompact, nc)
 	}
-	serveJSONOK(w, r, rsp)
+	serve200JSON(w, r, rsp)
 }
 
 func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
@@ -274,11 +248,191 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 		return
 	}
 
-	dataDir := getDataDirMust()
-	zipPath := filepath.Join(dataDir, "notes_store.zip")
-	err = os.WriteFile(zipPath, zipData, 0644)
-	logIfErrf(err)
-	logf("handleStoreBulkUpload: user %s, wrote zip to %s\n", userInfo.Email, zipPath)
+	if false {
+		dataDir := getDataDirMust()
+		zipPath := filepath.Join(dataDir, "notes_store.zip")
+		err = os.WriteFile(zipPath, zipData, 0644)
+		logIfErrf(err)
+		logf("handleStoreBulkUpload: user %s, wrote zip to %s\n", userInfo.Email, zipPath)
+	}
 
-	http.Error(w, "Bulk upload not implemented yet", http.StatusNotImplemented)
+	var rsp struct {
+		Message string `json:"message"`
+	}
+	rsp.Message = fmt.Sprintf("Successfully uploaded %d records", len(userInfo.Store.Records()))
+	serve200JSON(w, r, rsp)
+}
+
+func apstoreFindLatestNoteContentVersionRecord(recs []*appendstore.Record, noteId string) *appendstore.Record {
+	for i := len(recs) - 1; i >= 0; i-- {
+		rec := recs[i]
+		if rec.Kind == kStoreKindNoteContent && strings.HasPrefix(rec.Meta, noteId+":") {
+			return rec
+		}
+	}
+	return nil
+}
+
+func handleStoreLoadLatestNoteContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	logf("handleStoreLoadLatestNoteContent: user %s, noteId: %s\n", userInfo.Email, r.FormValue("noteId"))
+	recs := userInfo.Store.Records()
+	rec := apstoreFindLatestNoteContentVersionRecord(recs, r.FormValue("noteId"))
+	if rec == nil {
+		http.Error(w, "No content found for note", http.StatusNotFound)
+		return
+	}
+	content, err := userInfo.Store.ReadRecord(rec)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to read note content: %s", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write(content)
+}
+
+func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	noteId := r.FormValue("noteId")
+	if noteId == "" {
+		http.Error(w, "Missing or invalid noteId", http.StatusBadRequest)
+		return
+	}
+	userInfo.Store.AppendRecord(kStoreKindDeleteNote, nil, noteId)
+	serve200JSON(w, r, map[string]string{
+		"message": "Note created"})
+}
+
+// TODO: verify that there is no note with the same name or id
+func handleStoreCreateNote(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	noteId := r.FormValue("noteId")
+	if noteId == "" {
+		http.Error(w, "Missing or invalid noteId", http.StatusBadRequest)
+		return
+	}
+	name := r.FormValue("name")
+	if name == "" {
+		http.Error(w, "Missing or invalid name", http.StatusBadRequest)
+		return
+	}
+	meta := fmt.Sprintf("%s:%s", noteId, name)
+	userInfo.Store.AppendRecord(kStoreKindCreateNote, nil, meta)
+	serve200JSON(w, r, map[string]string{
+		"message": "Note created"})
+}
+
+func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	meta := r.FormValue("meta")
+	if meta == "" {
+		http.Error(w, "Missing or invalid meta", http.StatusBadRequest)
+		return
+	}
+	// TODO: verify meta is valid JSON
+	userInfo.Store.AppendRecord(kStoreKindNoteMeta, nil, meta)
+	serve200JSON(w, r, map[string]string{
+		"message": "Note meta set"})
+
+}
+
+func handleStoreWriteNoteContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	d, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	verId := r.FormValue("verId")
+	if verId == "" {
+		http.Error(w, "Missing or invalid verId", http.StatusBadRequest)
+		return
+	}
+	userInfo.Store.AppendRecord(kStoreKindNoteContent, d, verId)
+	serve200JSON(w, r, map[string]string{
+		"message": "Note content written successfully"})
+}
+
+func handleStoreReadFileAsString(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	fileName := r.FormValue("fileName")
+	if fileName == "" {
+		http.Error(w, "Missing or invalid fileName", http.StatusBadRequest)
+		return
+	}
+	path := filepath.Join(userInfo.DataDir, ToValidFileName(fileName))
+	d, err := os.ReadFile(path)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to read file %s: %s", fileName, err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write(d)
+}
+
+func handleStoreWriteStringToFile(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	d, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	fileName := r.FormValue("fileName")
+	if fileName == "" {
+		http.Error(w, "Missing or invalid fileName", http.StatusBadRequest)
+		return
+	}
+	path := filepath.Join(userInfo.DataDir, ToValidFileName(fileName))
+	if err := os.WriteFile(path, d, 0644); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to write file %s: %s", fileName, err), http.StatusInternalServerError)
+		return
+	}
+	serve200JSON(w, r, map[string]string{
+		"message": "Note content written successfully"})
+}
+
+func handleStore(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.Path
+	userInfo, err := getLoggedUser(r, w)
+	if serve500IfError(w, err) {
+		logf("handleStore: %s, err: %s\n", uri, err)
+		return
+	}
+	logf("handleStore: %s, userEmail: %s\n", uri, userInfo.Email)
+
+	// serialize user operations. I could try to be more fine-grained
+	// but this is safe and simple
+	userInfo.mu.Lock()
+	defer userInfo.mu.Unlock()
+
+	if uri == "/api/store/bulkUpload" {
+		handleStoreBulkUpload(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/getNotes" {
+		handleStoreGetNotes(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/loadLatestNoteContent" {
+		handleStoreLoadLatestNoteContent(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/writeNoteContent" {
+		handleStoreWriteNoteContent(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/createNote" {
+		handleStoreCreateNote(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/deleteNote" {
+		handleStoreDeleteNote(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/writeNoteMeta" {
+		handleStoreWriteNoteMeta(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/writeStringToFile" {
+		handleStoreWriteStringToFile(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/readFileAsString" {
+		handleStoreReadFileAsString(w, r, userInfo)
+		return
+	}
+	serve404(w, r, "Unknown store operation: "+uri)
 }

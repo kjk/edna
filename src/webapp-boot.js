@@ -18,7 +18,7 @@ import {
   reassignNoteShortcut,
 } from "./notes";
 import { getSettings } from "./settings.svelte";
-import { openLocalStore } from "./store";
+import { openBackendStore, openLocalStore } from "./store";
 import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
 import { isDev, len } from "./util";
 
@@ -142,8 +142,10 @@ export async function boot() {
   appState.user = user;
   if (user) {
     await maybeMigrateNotesLocalToBackend();
+    appState.allNotes = await openBackendStore();
+  } else {
+    appState.allNotes = await openLocalStore();
   }
-  appState.allNotes = await openLocalStore();
   updateAfterNoteStateChange();
   await loadAppMetadata(); // pre-load
 
