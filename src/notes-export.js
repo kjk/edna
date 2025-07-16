@@ -1,33 +1,10 @@
-import { appState } from "./appstate.svelte";
-import { kMetadataName, loadAppMetadata } from "./metadata";
-import { loadNoteContent } from "./notes";
-import { kSettingsPath } from "./settings.svelte";
 import { browserDownloadBlob, formatDateYYYYMMDD } from "./util";
+import { kMetadataName, loadAppMetadata } from "./metadata";
 
-/**
- * @param {any} libZip
- * @param {any} zipWriter
- * @param {string} fileName
- * @param {Blob} fileBlob
- */
-async function addBinaryBlob(libZip, zipWriter, fileName, fileBlob) {
-  let blobReader = new libZip.BlobReader(fileBlob);
-  let opts = {
-    level: 9,
-  };
-  await zipWriter.add(fileName, blobReader, opts);
-}
-
-/**
- * @param {any} libZip
- * @param {any} zipWriter
- * @param {string} fileName
- * @param {string} text
- */
-async function addTextFile(libZip, zipWriter, fileName, text) {
-  let fileBlob = new Blob([text], { type: "text/plain" });
-  await addBinaryBlob(libZip, zipWriter, fileName, fileBlob);
-}
+import { addTextFile } from "./ziputil";
+import { appState } from "./appstate.svelte";
+import { kSettingsPath } from "./settings.svelte";
+import { loadNoteContent } from "./notes";
 
 /**
  * packs all notes, un-encrypted, into a .zip blob

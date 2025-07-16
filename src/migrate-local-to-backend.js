@@ -1,32 +1,9 @@
-import { AppendStore, readFile } from "./appendstore";
-import { kMetadataName } from "./metadata";
-import { validateIndex, validateLocalStoreIndex } from "./store-local";
+import { addBinaryBlob, addTextFile } from "./ziputil";
 import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
 
-/**
- * @param {any} libZip
- * @param {any} zipWriter
- * @param {string} fileName
- * @param {Blob} fileBlob
- */
-async function addBinaryBlob(libZip, zipWriter, fileName, fileBlob) {
-  let blobReader = new libZip.BlobReader(fileBlob);
-  let opts = {
-    level: 9,
-  };
-  await zipWriter.add(fileName, blobReader, opts);
-}
-
-/**
- * @param {any} libZip
- * @param {any} zipWriter
- * @param {string} fileName
- * @param {string} s
- */
-async function addText(libZip, zipWriter, fileName, s) {
-  let utf8 = new TextEncoder().encode(s);
-  return await addBinaryBlob(libZip, zipWriter, fileName, new Blob([utf8]));
-}
+import { kMetadataName } from "./metadata";
+import { ofsReadFile } from "./appendstore";
+import { validateIndex } from "./store-local";
 
 export async function listBrowserStorage() {
   try {
@@ -71,14 +48,14 @@ const localStorageFiles = [kMetadataName];
 async function createLocalStoreZip(validate = false) {
   let indexFileName = "notes_store_index.txt";
   let dataFileName = "notes_store_data.bin";
-  let indexContent = await readFile(indexFileName);
+  let indexContent = await ofsReadFile(indexFileName);
   if (len(indexContent) === 0) {
     console.warn(
       "maybeMigrateNotesLocalToBackend: index file is empty, skipping migration",
     );
     return null;
   }
-  let dataContent = await readFile(dataFileName);
+  let dataContent = await ofsReadFile(dataFileName);
   if (len(dataContent) === 0) {
     console.warn(
       "maybeMigrateNotesLocalToBackend: data file is empty, skipping migration",
@@ -108,7 +85,7 @@ async function createLocalStoreZip(validate = false) {
       );
       continue;
     }
-    await addText(libZip, zipWriter, "file:" + fileName, s);
+    await addTextFile(libZip, zipWriter, "file:" + fileName, s);
   }
   let blob = await zipWriter.close();
   return blob;

@@ -45,7 +45,7 @@ function padBytes(bytes, padSize) {
  * @param {string} path
  * @returns {Promise<number>}
  */
-async function getFileSize(path) {
+async function ofsGetFileSize(path) {
   const root = await navigator.storage.getDirectory();
   try {
     const fh = await root.getFileHandle(path);
@@ -62,7 +62,7 @@ async function getFileSize(path) {
  * @param {number} size
  * @returns {Promise<Uint8Array>}
  */
-async function readFileSegment(path, offset, size) {
+async function ofsReadFileSegment(path, offset, size) {
   const startTime = performance.now();
   const root = await navigator.storage.getDirectory();
   const fh = await root.getFileHandle(path);
@@ -77,7 +77,7 @@ async function readFileSegment(path, offset, size) {
  * @param {string} path
  * @returns {Promise<ArrayBuffer|null>}
  */
-export async function readFile(path) {
+export async function ofsReadFile(path) {
   const root = await navigator.storage.getDirectory();
   try {
     const fh = await root.getFileHandle(path);
@@ -95,7 +95,7 @@ export async function readFile(path) {
  * @param {number} offset
  * @param {Uint8Array} bytes
  */
-async function writeAtOffset(fh, offset, bytes) {
+async function ofsWriteAtOffset(fh, offset, bytes) {
   const writable = await fh.createWritable({
     keepExistingData: true,
   });
@@ -109,12 +109,12 @@ async function writeAtOffset(fh, offset, bytes) {
  * @param {number} offset
  * @param {Uint8Array} bytes
  */
-async function writeToFileAtOffset(path, offset, bytes) {
+async function ofsWriteToFileAtOffset(path, offset, bytes) {
   const root = await navigator.storage.getDirectory();
   const fh = await root.getFileHandle(path, {
     create: true,
   });
-  await writeAtOffset(fh, offset, bytes);
+  await ofsWriteAtOffset(fh, offset, bytes);
 }
 
 /**
@@ -123,14 +123,14 @@ async function writeToFileAtOffset(path, offset, bytes) {
  * @param {Uint8Array} blob
  * @retruns {number}
  */
-async function appendToFile(path, blob) {
+async function ofsAppendToFile(path, blob) {
   const root = await navigator.storage.getDirectory();
   const fh = await root.getFileHandle(path, {
     create: true,
   });
   const file = await fh.getFile();
   const offset = file.size;
-  await writeAtOffset(fh, offset, blob);
+  await ofsWriteAtOffset(fh, offset, blob);
   return offset;
 }
 
@@ -151,7 +151,7 @@ export class AppendStore {
   }
 
   async getIndexAsString() {
-    const d = await readFile(this.indexPath);
+    const d = await ofsReadFile(this.indexPath);
     return d ? this.utf8Decoder.decode(d) : "";
   }
 
@@ -176,7 +176,7 @@ export class AppendStore {
     let bytes = toBytes(data);
     let size = len(bytes);
     throwIf(size === 0, "Data size must be greater than 0");
-    await writeToFileAtOffset(this.dataPath, offset, bytes);
+    await ofsWriteToFileAtOffset(this.dataPath, offset, bytes);
     return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
   }
 
@@ -195,7 +195,7 @@ export class AppendStore {
     if (padSize > 0) {
       bytes = padBytes(bytes, padSize);
     }
-    let offset = await appendToFile(this.dataPath, bytes);
+    let offset = await ofsAppendToFile(this.dataPath, bytes);
     return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
   }
 
@@ -246,7 +246,7 @@ export class AppendStore {
         return size;
       }
       if (dataSize < 0) {
-        dataSize = await getFileSize(this.dataPath);
+        dataSize = await ofsGetFileSize(this.dataPath);
       }
       return dataSize - rec.offset;
     }
@@ -283,7 +283,7 @@ export class AppendStore {
       : `${offset} ${size} ${timeInMs} ${kind}\n`;
     console.warn("line:", line);
     const indexBytes = this.utf8Encoder.encode(line);
-    await appendToFile(this.indexPath, indexBytes);
+    await ofsAppendToFile(this.indexPath, indexBytes);
     this.records.push(rec);
     logDur(startTime, `AppendStore.appendRecord`);
   }
@@ -297,7 +297,7 @@ export class AppendStore {
     if (size == 0) {
       return "";
     }
-    let bytes = await readFileSegment(this.dataPath, offset, size);
+    let bytes = await ofsReadFileSegment(this.dataPath, offset, size);
     return this.utf8Decoder.decode(bytes);
   }
 
@@ -305,7 +305,7 @@ export class AppendStore {
    * @returns {Promise<AppendStoreRecord[]>}
    */
   async _readIndex() {
-    const d = await readFile(this.indexPath);
+    const d = await ofsReadFile(this.indexPath);
     if (!d) {
       return [];
     }
@@ -385,7 +385,7 @@ function validateKindAndMeta(kind, meta) {
 
 export async function dumpIndex() {
   const path = "notes_store_index.txt";
-  const d = await readFile(path);
+  const d = await ofsReadFile(path);
   if (!d) {
     console.log("no index file exists");
     return;
