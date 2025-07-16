@@ -1,4 +1,4 @@
-import { logDur } from "./util";
+import { len, logDur, throwIf } from "./util";
 
 export class AppendStoreRecord {
   constructor(offset, size, timeInMs, kind, meta = "") {
@@ -16,7 +16,42 @@ export class AppendStoreRecord {
 }
 
 /**
- *
+ * if string, encodes as UTF-8
+ * @param {string|Uint8Array} data
+ * @returns {Uint8Array|null}
+ */
+function toBytes(data) {
+  if (!data) {
+    return null;
+  }
+  if (typeof data === "string") {
+    return this.utf8Encoder.encode(data);
+  } else if (data instanceof Uint8Array) {
+    return data;
+  }
+  throw new Error("Invalid data type: must be string or Uint8Array");
+}
+
+function padBytes(bytes, padSize) {
+  const paddedBytes = new Uint8Array(bytes.length + padSize);
+  paddedBytes.fill(32); // Fill with spaces
+  paddedBytes.set(bytes);
+  // The rest of the array is already filled with spaces by default
+  return paddedBytes;
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<number>}
+ */
+async function getFileSize(path) {
+  const root = await navigator.storage.getDirectory();
+  const fh = await root.getFileHandle(path);
+  const file = await fh.getFile();
+  return file.size;
+}
+
+/**
  * @param {string} path
  * @param {number} offset
  * @param {number} size
@@ -34,7 +69,6 @@ async function readFileSegment(path, offset, size) {
 }
 
 /**
- *
  * @param {string} path
  * @returns
  */
@@ -63,6 +97,19 @@ async function writeAtOffset(fh, offset, bytes) {
   await writable.seek(offset);
   await writable.write(bytes);
   await writable.close();
+}
+
+/**
+ * @param {string} path
+ * @param {number} offset
+ * @param {Uint8Array} bytes
+ */
+async function writeToFileAtOffset(path, offset, bytes) {
+  const root = await navigator.storage.getDirectory();
+  const fh = await root.getFileHandle(path, {
+    create: true,
+  });
+  await writeAtOffset(fh, offset, bytes);
 }
 
 /**
@@ -113,49 +160,111 @@ export class AppendStore {
   /**
    * @param {string|Uint8Array|null} data
    */
-  async _writeData(data, kind, meta) {
+  async _writeDataAtOffset(offset, data, kind, meta) {
     // high-precision UTC time in milliseconds
     const timestampMs = Math.round(performance.timeOrigin + performance.now());
-    if (!data) {
-      // it's ok for data to be empty
-      return new AppendStoreRecord(0, 0, timestampMs, kind, meta);
-    }
-    /** @type {Uint8Array} */
-    let bytes;
-    let size = 0;
-    if (data) {
-      if (typeof data === "string") {
-        bytes = this.utf8Encoder.encode(data);
-      } else if (data instanceof Uint8Array) {
-        bytes = data;
-      } else {
-        throw new Error("Invalid data type: must be string or Uint8Array");
-      }
-      size = bytes.length;
-    }
+    let bytes = toBytes(data);
+    let size = len(bytes);
+    throwIf(size === 0, "Data size must be greater than 0");
+    await writeToFileAtOffset(this.dataPath, offset, bytes);
+    return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
+  }
+
+  /**
+   * @param {string|Uint8Array|null} data
+   */
+  async _writeData(data, kind, meta, padSize = 0) {
+    // high-precision UTC time in milliseconds
+    const timestampMs = Math.round(performance.timeOrigin + performance.now());
+    let bytes = toBytes(data);
+    let size = len(bytes);
     if (size === 0) {
       // it's ok for data to be empty
       return new AppendStoreRecord(0, 0, timestampMs, kind, meta);
+    }
+    if (padSize > 0) {
+      bytes = padBytes(bytes, padSize);
     }
     let offset = await appendToFile(this.dataPath, bytes);
     return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
   }
 
   /**
+   * Potentially overwrites existing record with the same kind and meta.
+   * Meant for files for which we don't need to keep history and are frequently
+   * written to, like metadata.
+   * If we find an existing record with the same kind and meta and
+   * enough space for the file, we append new record to index but overwrite
+   * the data.
    * @param {string|Uint8Array|null} data
    * @param {string} kind
    * @param {string} meta
+   * @param {number} reserveSpaceFactor : 1.4 or 2 are good values
    */
-  async appendRecord(data, kind, meta = null) {
+  async overWriteRecord(data, kind, meta, reserveSpaceFactor = 1.0) {
     const startTime = performance.now();
-    if (!kind || kind.includes(" ") || kind.includes("\n")) {
-      throw new Error(
-        "Kind must be a non-empty string without spaces or newlines",
-      );
+    validateKindAndMeta(kind, meta);
+    let existingRecordsIndexes = [];
+    let recs = this.records;
+    let n = recs.length;
+    for (let i = 0; i < n; i++) {
+      let rec = recs[i];
+      if (rec.kind === kind && rec.meta === meta) {
+        existingRecordsIndexes.push(i);
+      }
     }
-    if (meta && meta.includes("\n")) {
-      throw new Error("Meta data cannot contain newline characters");
+    if (len(existingRecordsIndexes) === 0) {
+      let padSize = 0;
+      if (reserveSpaceFactor > 1.0) {
+        padSize = Math.ceil(data.length * (reserveSpaceFactor - 1.0));
+      }
+      await this.appendRecord(data, kind, meta, padSize);
+      return;
     }
+
+    let dataSize = -1;
+    async function calcRecordSize(idx) {
+      // size of the record idx is the difference between its offset
+      // and the offset of the next non-empty record
+      let rec = recs[idx];
+      for (let i = idx + 1; idx < n; i++) {
+        let rec2 = recs[i];
+        if (rec2.offset === 0) {
+          continue;
+        }
+        let size = rec2.offset - rec.offset;
+        return size;
+      }
+      if (dataSize < 0) {
+        dataSize = await getFileSize(this.dataPath);
+      }
+      return dataSize - rec.offset;
+    }
+    for (let idx of existingRecordsIndexes) {
+      let size = await calcRecordSize.call(this, idx);
+      if (size >= data.length) {
+        // we have enough space to overwrite the record
+        let rec = await this._writeData(data, kind, meta);
+        recs[idx] = rec; // overwrite the record
+        logDur(startTime, `AppendStore.overWriteRecord`);
+        return;
+      }
+    }
+
+    // existing records don't have enough space, so we append a new record
+    // TODO: pas reserveSpaceFactor to
+    await this.appendRecord(data, kind, meta);
+  }
+
+  /**
+   * @param {string|Uint8Array|null} data
+   * @param {string} kind
+   * @param {string} meta
+   * @param {number} padSize
+   */
+  async appendRecord(data, kind, meta = null, padSize = 0) {
+    const startTime = performance.now();
+    validateKindAndMeta(kind, meta);
     let rec = await this._writeData(data, kind, meta);
     let { offset, size, timeInMs } = rec;
 
@@ -166,7 +275,7 @@ export class AppendStore {
     const indexBytes = this.utf8Encoder.encode(line);
     await appendToFile(this.indexPath, indexBytes);
     this.records.push(rec);
-    logDur(startTime, `AppendStore.write`);
+    logDur(startTime, `AppendStore.appendRecord`);
   }
 
   async readString(offset, size) {
@@ -235,6 +344,17 @@ function parseIndex(s) {
     records.push(new AppendStoreRecord(offset, size, time, kind, meta));
   }
   return records;
+}
+
+function validateKindAndMeta(kind, meta) {
+  if (!kind || kind.includes(" ") || kind.includes("\n")) {
+    throw new Error(
+      "Kind must be a non-empty string without spaces or newlines",
+    );
+  }
+  if (meta && meta.includes("\n")) {
+    throw new Error("Meta cannot contain newline characters");
+  }
 }
 
 export async function dumpIndex() {
