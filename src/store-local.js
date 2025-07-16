@@ -1,12 +1,13 @@
-import { AppendStore, AppendStoreRecord } from "./appendstore";
+import { AppendStore, AppendStoreRecord, parseIndexCb } from "./appendstore";
 import { Note, noteIdFromContentId } from "./note";
-import { len } from "./util";
+import { isDev, len, throwIf } from "./util";
 
 // must match store.go
 const kStoreCreateNote = "note-create";
 const kStoreDeleteNote = "note-delete";
 const kStoreSetNoteMeta = "note-meta";
 const kStorePut = "put";
+const kStorePutOverwrite = "put-o";
 
 /**
  * @param {AppendStoreRecord[]} records
@@ -59,6 +60,14 @@ export class LocalStore {
     // console.log("putString:", key, content?.substring(0, 20));
     let store = this.store;
     await store.appendRecord(content, kStorePut, key);
+    await debugValidateLocalStoreIndex();
+  }
+
+  async putStringOverwrite(key, content) {
+    // console.log("putStringOverwrite:", key, content?.substring(0, 20));
+    let store = this.store;
+    await store.overWriteRecord(content, kStorePutOverwrite, key);
+    await debugValidateLocalStoreIndex();
   }
 
   /**
@@ -69,6 +78,7 @@ export class LocalStore {
     // we expect m to be small so storing in index as meta
     let meta = JSON.stringify(m);
     await store.appendRecord(null, kStoreSetNoteMeta, meta);
+    await debugValidateLocalStoreIndex();
   }
 
   /**
@@ -93,6 +103,7 @@ export class LocalStore {
   async deleteNote(noteId) {
     let store = this.store;
     await store.appendRecord(null, kStoreDeleteNote, noteId);
+    await debugValidateLocalStoreIndex();
   }
 
   /**
@@ -104,6 +115,7 @@ export class LocalStore {
     let store = this.store;
     let meta = `${noteId}:${name}`;
     await store.appendRecord(null, kStoreCreateNote, meta);
+    await debugValidateLocalStoreIndex();
   }
 }
 
@@ -155,9 +167,65 @@ export function notesFromStoreLog(records) {
   return res;
 }
 
+let localStore;
+
 export async function createLocalStore() {
   let apstore = await AppendStore.create("notes_store");
   console.log(`notes_store has ${apstore.records.length} records`);
-  let store = new LocalStore(apstore);
-  return store;
+  localStore = new LocalStore(apstore);
+  return localStore;
+}
+
+/**
+ * @param {string} s
+ */
+export function validateIndex(s) {
+  let m = new Set(); // remembers non-deleted notes
+  parseIndexCb(s, (line, record) => {
+    let k = record.kind;
+    let meta = record.meta;
+    if (k === "kStoreCreateNote") {
+      let noteId = meta;
+      throwIf(
+        m.has(noteId),
+        `Duplicate note id in index: ${noteId}, line: ${line}`,
+      );
+      m.add(noteId);
+    } else if (k === "kStoreDeleteNote") {
+      let noteId = meta;
+      throwIf(
+        !m.has(noteId),
+        `Deleting non-existing note: ${noteId}, line: ${line}`,
+      );
+      m.delete(noteId);
+    } else if (k === "kStorePut") {
+      let verId = meta; // verId is noteId:verId
+      let noteId = noteIdFromContentId(verId);
+      throwIf(
+        !m.has(noteId),
+        `Putting non-existing note: ${noteId}, line: ${line}`,
+      );
+    } else if (k === "kStoreSetNoteMeta") {
+      let json = JSON.parse(meta);
+      let noteId = json.id;
+      throwIf(
+        !m.has(noteId),
+        `Setting meta for non-existing note: ${noteId}, line: ${line}`,
+      );
+    } else {
+      throwIf(true, `Unknown record kind in index: ${k}, line: ${line}`);
+    }
+  });
+}
+
+export async function validateLocalStoreIndex() {
+  throwIf(!localStore, "Local store is not initialized");
+  let s = await localStore.store.getIndexAsString();
+  validateIndex(s);
+}
+
+async function debugValidateLocalStoreIndex() {
+  if (isDev()) {
+    await validateLocalStoreIndex();
+  }
 }

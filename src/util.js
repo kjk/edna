@@ -651,3 +651,23 @@ export function setLocalStorageFromJSON(key, js) {
   // console.log("setLocalStorageFromJSON:", key, "size:", len(s));
   localStorage.setItem(key, s);
 }
+
+/**
+ * Iterator that yields substrings separated by a character
+ * @param {string} s
+ * @param {string} sep
+ * @returns {Generator<string>}
+ */
+export function* stringIter(s, sep) {
+  let start = 0;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === sep) {
+      yield s.slice(start, i);
+      start = i + 1;
+    }
+  }
+  // Yield the last substring if there's remaining content
+  if (start < s.length) {
+    yield s.slice(start);
+  }
+}

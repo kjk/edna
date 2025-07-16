@@ -46,9 +46,13 @@ function padBytes(bytes, padSize) {
  */
 async function getFileSize(path) {
   const root = await navigator.storage.getDirectory();
-  const fh = await root.getFileHandle(path);
-  const file = await fh.getFile();
-  return file.size;
+  try {
+    const fh = await root.getFileHandle(path);
+    const file = await fh.getFile();
+    return file.size;
+  } catch (e) {
+    return -1;
+  }
 }
 
 /**
@@ -70,9 +74,9 @@ async function readFileSegment(path, offset, size) {
 
 /**
  * @param {string} path
- * @returns
+ * @returns {Promise<ArrayBuffer|null>}
  */
-async function readFile(path) {
+export async function readFile(path) {
   const root = await navigator.storage.getDirectory();
   try {
     const fh = await root.getFileHandle(path);
@@ -143,6 +147,11 @@ export class AppendStore {
     let res = new AppendStore(indexPath, dataPath);
     res.records = await res._readIndex();
     return res;
+  }
+
+  async getIndexAsString() {
+    const d = await readFile(this.indexPath);
+    return d ? this.utf8Decoder.decode(d) : "";
   }
 
   /**
@@ -306,27 +315,30 @@ export class AppendStore {
 
 /**
  * @param {string} s
- * @returns {AppendStoreRecord[]}
+ * @param {(line: string, record: AppendStoreRecord) => void} callback
  */
-function parseIndex(s) {
-  const lines = s.split("\n").filter((line) => line.trim() !== "");
-
-  const records = [];
+export function parseIndexCb(s, callback) {
+  const lines = s.split("\n");
+  let rest;
   for (let line of lines) {
-    let rest = line.trim();
+    // rest = line.trim();
+    rest = line;
     const offsetEnd = rest.indexOf(" ");
-    if (offsetEnd === -1) continue;
+    throwIf(offsetEnd === -1, `Invalid index line: ${line}`);
     const offset = parseInt(rest.slice(0, offsetEnd), 10);
+    throwIf(isNaN(offset), `Invalid offset in index line: ${line}`);
 
     rest = rest.slice(offsetEnd + 1);
     const sizeEnd = rest.indexOf(" ");
-    if (sizeEnd === -1) continue;
+    throwIf(isNaN(sizeEnd), `Invalid index line: ${line}`);
     const size = parseInt(rest.slice(0, sizeEnd), 10);
 
     rest = rest.slice(sizeEnd + 1);
     const timeEnd = rest.indexOf(" ");
-    if (timeEnd === -1) continue;
+    throwIf(isNaN(timeEnd), `Invalid index line: ${line}`);
     const time = parseFloat(rest.slice(0, timeEnd));
+    throwIf(isNaN(time), `Invalid time in index line: ${line}`);
+    throwIf(time < 10000, `Invalid time < 10000 in index line: ${line}`);
 
     rest = rest.slice(timeEnd + 1);
     const kindEnd = rest.indexOf(" ");
@@ -338,11 +350,20 @@ function parseIndex(s) {
       kind = rest.slice(0, kindEnd);
       meta = rest.slice(kindEnd + 1);
     }
-    if (isNaN(offset) || isNaN(size) || isNaN(time)) {
-      continue;
-    }
-    records.push(new AppendStoreRecord(offset, size, time, kind, meta));
+    const record = new AppendStoreRecord(offset, size, time, kind, meta);
+    callback(line, record);
   }
+}
+
+/**
+ * @param {string} s
+ * @returns {AppendStoreRecord[]}
+ */
+function parseIndex(s) {
+  const records = [];
+  parseIndexCb(s, (line, record) => {
+    records.push(record);
+  });
   return records;
 }
 
