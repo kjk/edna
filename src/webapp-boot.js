@@ -10,6 +10,7 @@ import { getLoggedUser } from "./login";
 import { loadAppMetadata } from "./metadata";
 import {
   deleteBrowserStorage,
+  listBrowserStorage,
   maybeMigrateNotesLocalToBackend,
 } from "./migrate-local-to-backend";
 import { Note } from "./note";
@@ -41,27 +42,6 @@ function resetApp() {
     console.log("reloading");
     window.location.reload();
   });
-}
-
-async function listBrowserStorage() {
-  try {
-    const root = await navigator.storage.getDirectory();
-    console.log("OPFS Root Contents:");
-
-    // @ts-ignore
-    for await (const [name, handle] of root.entries()) {
-      if (handle.kind === "file") {
-        let f = await handle.getFile();
-        console.log(
-          `File: ${name}, size: ${f.size} bytes, modified: ${f.lastModifiedDate}`,
-        );
-      } else if (handle.kind === "directory") {
-        console.log(`Directory: ${name}`);
-      }
-    }
-  } catch (error) {
-    console.error("Error accessing OPFS:", error);
-  }
 }
 
 function setupWindowDebug() {

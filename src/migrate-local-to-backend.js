@@ -28,6 +28,27 @@ async function addText(libZip, zipWriter, fileName, s) {
   return await addBinaryBlob(libZip, zipWriter, fileName, new Blob([utf8]));
 }
 
+export async function listBrowserStorage() {
+  try {
+    const root = await navigator.storage.getDirectory();
+    console.log("OPFS Root Contents:");
+
+    // @ts-ignore
+    for await (const [name, handle] of root.entries()) {
+      if (handle.kind === "file") {
+        let f = await handle.getFile();
+        console.log(
+          `File: ${name}, size: ${f.size} bytes, modified: ${f.lastModifiedDate}`,
+        );
+      } else if (handle.kind === "directory") {
+        console.log(`Directory: ${name}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error accessing OPFS:", error);
+  }
+}
+
 export async function deleteBrowserStorage(files = null) {
   const root = await navigator.storage.getDirectory();
   // @ts-ignore
@@ -118,7 +139,7 @@ export async function maybeMigrateNotesLocalToBackend() {
   }
   let toDelete = ["notes_store_data.bin", "notes_store_index.txt"];
   await deleteBrowserStorage(toDelete);
-  await list;
+  await listBrowserStorage();
   for (let file of localStorageFiles) {
     localStorage.removeItem(file);
   }

@@ -107,7 +107,7 @@ export async function importEdnaNotesFromZipFile() {
     let textWriter = new libZip.TextWriter();
     await e.getData(textWriter);
     let content = await textWriter.getData();
-    let note = findNoteByName(name);
+    let note = findNoteByName(name, true);
     if (note) {
       let existingContent = await loadNoteContent(name);
       if (existingContent === content) {

@@ -103,13 +103,17 @@ export function getNotes() {
 
 /**
  * @param {string} name
+ * @param {boolean} [quiet=false] set if you don't expect note to exist
  * @returns {Note}
  */
-export function findNoteByName(name) {
+export function findNoteByName(name, quiet = false) {
   for (let note of appState.allNotes) {
     if (note.name === name) {
       return note;
     }
+  }
+  if (quiet) {
+    return null;
   }
   console.warn("findNoteByName: no note with name:", name);
   let names = appState.allNotes.map((n) => n.name);
