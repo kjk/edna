@@ -184,28 +184,28 @@ export function validateIndex(s) {
   parseIndexCb(s, (line, record) => {
     let k = record.kind;
     let meta = record.meta;
-    if (k === "kStoreCreateNote") {
-      let noteId = meta;
+    if (k === kStoreCreateNote) {
+      let noteId = meta.split(":")[0];
       throwIf(
         m.has(noteId),
         `Duplicate note id in index: ${noteId}, line: ${line}`,
       );
       m.add(noteId);
-    } else if (k === "kStoreDeleteNote") {
+    } else if (k === kStoreDeleteNote) {
       let noteId = meta;
       throwIf(
         !m.has(noteId),
         `Deleting non-existing note: ${noteId}, line: ${line}`,
       );
       m.delete(noteId);
-    } else if (k === "kStorePut") {
+    } else if (k === kStorePut) {
       let verId = meta; // verId is noteId:verId
       let noteId = noteIdFromContentId(verId);
       throwIf(
         !m.has(noteId),
         `Putting non-existing note: ${noteId}, line: ${line}`,
       );
-    } else if (k === "kStoreSetNoteMeta") {
+    } else if (k === kStoreSetNoteMeta) {
       let json = JSON.parse(meta);
       let noteId = json.id;
       throwIf(
@@ -221,7 +221,12 @@ export function validateIndex(s) {
 export async function validateLocalStoreIndex() {
   throwIf(!localStore, "Local store is not initialized");
   let s = await localStore.store.getIndexAsString();
-  validateIndex(s);
+  try {
+    validateIndex(s);
+  } catch (e) {
+    console.log(s);
+    throw e;
+  }
 }
 
 async function debugValidateLocalStoreIndex() {

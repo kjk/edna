@@ -15,6 +15,7 @@ export class AppendStoreRecord {
   }
 }
 
+let utf8Encoder = new TextEncoder();
 /**
  * if string, encodes as UTF-8
  * @param {string|Uint8Array} data
@@ -25,7 +26,7 @@ function toBytes(data) {
     return null;
   }
   if (typeof data === "string") {
-    return this.utf8Encoder.encode(data);
+    return utf8Encoder.encode(data);
   } else if (data instanceof Uint8Array) {
     return data;
   }
@@ -319,26 +320,30 @@ export class AppendStore {
  */
 export function parseIndexCb(s, callback) {
   const lines = s.split("\n");
-  let rest;
-  for (let line of lines) {
-    // rest = line.trim();
+  let n = lines.length;
+  if (n > 0 && lines[n - 1] === "") {
+    n--; // remove the last empty line
+  }
+  let rest, line;
+  for (let i = 0; i < n; i++) {
+    line = lines[i];
     rest = line;
     const offsetEnd = rest.indexOf(" ");
-    throwIf(offsetEnd === -1, `Invalid index line: ${line}`);
+    throwIf(offsetEnd === -1, `Invalid index line: '${line}'`);
     const offset = parseInt(rest.slice(0, offsetEnd), 10);
-    throwIf(isNaN(offset), `Invalid offset in index line: ${line}`);
+    throwIf(isNaN(offset), `Invalid offset in index line: '${line}'`);
 
     rest = rest.slice(offsetEnd + 1);
     const sizeEnd = rest.indexOf(" ");
-    throwIf(isNaN(sizeEnd), `Invalid index line: ${line}`);
+    throwIf(isNaN(sizeEnd), `Invalid index line: '${line}'`);
     const size = parseInt(rest.slice(0, sizeEnd), 10);
 
     rest = rest.slice(sizeEnd + 1);
     const timeEnd = rest.indexOf(" ");
-    throwIf(isNaN(timeEnd), `Invalid index line: ${line}`);
+    throwIf(isNaN(timeEnd), `Invalid index line: '${line}'`);
     const time = parseFloat(rest.slice(0, timeEnd));
-    throwIf(isNaN(time), `Invalid time in index line: ${line}`);
-    throwIf(time < 10000, `Invalid time < 10000 in index line: ${line}`);
+    throwIf(isNaN(time), `Invalid time in index line: '${line}'`);
+    throwIf(time < 10000, `Invalid time < 10000 in index line: '${line}'`);
 
     rest = rest.slice(timeEnd + 1);
     const kindEnd = rest.indexOf(" ");

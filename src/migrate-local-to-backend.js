@@ -28,37 +28,6 @@ async function addText(libZip, zipWriter, fileName, s) {
   return await addBinaryBlob(libZip, zipWriter, fileName, new Blob([utf8]));
 }
 
-/**
- *
- * @param {ArrayBuffer} indexContent
- * @param {ArrayBuffer} dataContent
- * @param {string[]} localStorageFiles
- * @returns {Promise<Blob>}
- */
-export async function getAppendStoreZip(
-  indexContent,
-  dataContent,
-  localStorageFiles,
-) {
-  let libZip = await import("@zip.js/zip.js");
-  let blobWriter = new libZip.BlobWriter("application/zip");
-  let zipWriter = new libZip.ZipWriter(blobWriter);
-  addBinaryBlob(libZip, zipWriter, "index.txt", new Blob([indexContent]));
-  addBinaryBlob(libZip, zipWriter, "data.bin", new Blob([dataContent]));
-  for (let fileName of localStorageFiles) {
-    let s = localStorage.getItem(fileName);
-    if (!s) {
-      console.warn(
-        `getAppendStoreZip: localStorage file ${fileName} not found`,
-      );
-      continue;
-    }
-    await addText(libZip, zipWriter, "file:" + fileName, s);
-  }
-  let blob = await zipWriter.close();
-  return blob;
-}
-
 export async function deleteBrowserStorage(files = null) {
   const root = await navigator.storage.getDirectory();
   // @ts-ignore
@@ -72,7 +41,13 @@ export async function deleteBrowserStorage(files = null) {
   console.warn("Browser storage cleared.");
 }
 
-export async function maybeMigrateNotesLocalToBackend() {
+const localStorageFiles = [kMetadataName];
+
+/**
+ * @param {boolean} validate
+ * @returns {Promise<Blob|null>}
+ */
+async function createLocalStoreZip(validate = false) {
   let indexFileName = "notes_store_index.txt";
   let dataFileName = "notes_store_data.bin";
   let indexContent = await readFile(indexFileName);
@@ -80,22 +55,43 @@ export async function maybeMigrateNotesLocalToBackend() {
     console.warn(
       "maybeMigrateNotesLocalToBackend: index file is empty, skipping migration",
     );
-    return;
+    return null;
   }
   let dataContent = await readFile(dataFileName);
   if (len(dataContent) === 0) {
     console.warn(
       "maybeMigrateNotesLocalToBackend: data file is empty, skipping migration",
     );
+    return null;
+  }
+  if (validate) {
+    await validateLocalStoreIndex();
+  }
+
+  let libZip = await import("@zip.js/zip.js");
+  let blobWriter = new libZip.BlobWriter("application/zip");
+  let zipWriter = new libZip.ZipWriter(blobWriter);
+  addBinaryBlob(libZip, zipWriter, "index.txt", new Blob([indexContent]));
+  addBinaryBlob(libZip, zipWriter, "data.bin", new Blob([dataContent]));
+  for (let fileName of localStorageFiles) {
+    let s = localStorage.getItem(fileName);
+    if (!s) {
+      console.warn(
+        `createLocalStoreZip: localStorage file ${fileName} not found`,
+      );
+      continue;
+    }
+    await addText(libZip, zipWriter, "file:" + fileName, s);
+  }
+  let blob = await zipWriter.close();
+  return blob;
+}
+
+export async function maybeMigrateNotesLocalToBackend() {
+  const blob = await createLocalStoreZip(true);
+  if (!blob) {
     return;
   }
-  await validateLocalStoreIndex();
-  let localStorageFiles = [kMetadataName];
-  let blob = await getAppendStoreZip(
-    indexContent,
-    dataContent,
-    localStorageFiles,
-  );
   try {
     let rsp = await fetch("/api/store/bulkUpload", {
       method: "POST",
@@ -124,10 +120,10 @@ export async function maybeMigrateNotesLocalToBackend() {
 
 export async function downloadBrowserStoreAsZip() {
   console.log("downloadBrowserStoreAsZip");
-  let indexFileName = "notes_store_index.txt";
-  let dataFileName = "notes_store_data.bin";
-  let files = [kMetadataName];
-  let blob = await getAppendStoreZip(indexFileName, dataFileName, files);
+  const blob = await createLocalStoreZip(true);
+  if (!blob) {
+    return;
+  }
   let name = "notes_store" + formatDateYYYYMMDD() + ".zip";
   browserDownloadBlob(blob, name);
 }
