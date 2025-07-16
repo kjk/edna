@@ -1,6 +1,6 @@
 import { AppendStore, readFile } from "./appendstore";
 import { kMetadataName } from "./metadata";
-import { validateLocalStoreIndex } from "./store-local";
+import { validateIndex, validateLocalStoreIndex } from "./store-local";
 import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
 
 /**
@@ -65,14 +65,20 @@ async function createLocalStoreZip(validate = false) {
     return null;
   }
   if (validate) {
-    await validateLocalStoreIndex();
+    let s = new TextDecoder().decode(indexContent);
+    try {
+      validateIndex(s);
+    } catch (e) {
+      console.log(s);
+      throw e;
+    }
   }
 
   let libZip = await import("@zip.js/zip.js");
   let blobWriter = new libZip.BlobWriter("application/zip");
   let zipWriter = new libZip.ZipWriter(blobWriter);
-  addBinaryBlob(libZip, zipWriter, "index.txt", new Blob([indexContent]));
-  addBinaryBlob(libZip, zipWriter, "data.bin", new Blob([dataContent]));
+  await addBinaryBlob(libZip, zipWriter, "index.txt", new Blob([indexContent]));
+  await addBinaryBlob(libZip, zipWriter, "data.bin", new Blob([dataContent]));
   for (let fileName of localStorageFiles) {
     let s = localStorage.getItem(fileName);
     if (!s) {
@@ -112,6 +118,7 @@ export async function maybeMigrateNotesLocalToBackend() {
   }
   let toDelete = ["notes_store_data.bin", "notes_store_index.txt"];
   await deleteBrowserStorage(toDelete);
+  await list;
   for (let file of localStorageFiles) {
     localStorage.removeItem(file);
   }
