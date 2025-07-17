@@ -1,5 +1,3 @@
-import { logDur } from "./util";
-
 /**
  * @param {string} path
  * @returns {Promise<number>}
@@ -170,8 +168,18 @@ export class FileSystemOFS {
     return await ofsReadFileSegment(path, offset, size);
   }
 
+  /**
+   * @param {string} path
+   * @returns {Promise<boolean>}
+   */
   async deleteFile(path) {
     const root = await navigator.storage.getDirectory();
-    await root.removeEntry(path, { recursive: true });
+    try {
+      await root.removeEntry(path, { recursive: true });
+      return true;
+    } catch (e) {
+      // it's ok if the file doesn't exist
+    }
+    return false;
   }
 }

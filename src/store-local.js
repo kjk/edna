@@ -1,4 +1,9 @@
-import { AppendStore, AppendStoreRecord, parseIndexCb } from "./appendstore";
+import {
+  AppendStore,
+  AppendStoreRecord,
+  kFileSystemWorkerOFS,
+  parseIndexCb,
+} from "./appendstore";
 import { Note, noteIdFromContentId } from "./note";
 import { isDev, len, throwIf } from "./util";
 
@@ -169,7 +174,11 @@ export function notesFromStoreLog(records) {
 let localStore;
 
 export async function createLocalStore() {
-  let apstore = await AppendStore.create("notes_store");
+  let apstore = await AppendStore.create(
+    "notes_store",
+    false,
+    kFileSystemWorkerOFS,
+  );
   console.log(`notes_store has ${apstore.records().length} records`);
   localStore = new LocalStore(apstore);
   return localStore;

@@ -81,15 +81,8 @@ export class AppendStore {
       );
     }
     if (clear) {
-      try {
-        await res.fs.deleteFile(indexPath);
-        await res.fs.deleteFile(dataPath);
-      } catch (e) {
-        console.warn(
-          `AppendStore.create: failed to delete files ${indexPath} or ${dataPath}`,
-          e,
-        );
-      }
+      await res.fs.deleteFile(indexPath);
+      await res.fs.deleteFile(dataPath);
     } else {
       res._records = await res._readIndex();
     }

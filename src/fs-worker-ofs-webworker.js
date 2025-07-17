@@ -91,10 +91,17 @@ async function ofsAppendToFile(path, blob) {
 
 /**
  * @param {string} path
+ * @returns {Promise<boolean>}
  */
 async function ofsDeleteFile(path) {
   const root = await navigator.storage.getDirectory();
-  await root.removeEntry(path, { recursive: true });
+  try {
+    await root.removeEntry(path, { recursive: true });
+    return true;
+  } catch (e) {
+    // it's ok if the file doesn't exist
+    return false;
+  }
 }
 
 // Message handler for the web worker
@@ -131,8 +138,7 @@ self.onmessage = async function (e) {
         break;
 
       case "deleteFile":
-        await ofsDeleteFile(args.path);
-        result = undefined;
+        result = await ofsDeleteFile(args.path);
         break;
 
       default:
@@ -142,6 +148,7 @@ self.onmessage = async function (e) {
     // Send result back to main thread
     self.postMessage(
       {
+        req: e.data,
         id,
         success: true,
         result: result,
@@ -150,7 +157,9 @@ self.onmessage = async function (e) {
     );
   } catch (error) {
     // Send error back to main thread
+    console.error("Error in OFS worker:", error, "req:", e.data);
     self.postMessage({
+      req: e.data,
       id,
       success: false,
       error: {
