@@ -1,5 +1,8 @@
 import { len, logDur, throwIf } from "./util";
 
+import { FileSystemMem } from "./fs-mem";
+import { FileSystemOFS } from "./fs-ofs";
+
 export class AppendStoreRecord {
   constructor(offset, size, timeInMs, kind, meta = "") {
     /** @type {number} */
@@ -41,99 +44,6 @@ function padBytes(bytes, padSize) {
   return paddedBytes;
 }
 
-/**
- * @param {string} path
- * @returns {Promise<number>}
- */
-async function ofsGetFileSize(path) {
-  const root = await navigator.storage.getDirectory();
-  try {
-    const fh = await root.getFileHandle(path);
-    const file = await fh.getFile();
-    return file.size;
-  } catch (e) {
-    return -1;
-  }
-}
-
-/**
- * @param {string} path
- * @param {number} offset
- * @param {number} size
- * @returns {Promise<Uint8Array>}
- */
-async function ofsReadFileSegment(path, offset, size) {
-  const startTime = performance.now();
-  const root = await navigator.storage.getDirectory();
-  const fh = await root.getFileHandle(path);
-  const file = await fh.getFile();
-  const slice = file.slice(offset, offset + size);
-  const data = await slice.arrayBuffer();
-  logDur(startTime, `readFileSegment size:${size}`);
-  return new Uint8Array(data);
-}
-
-/**
- * @param {string} path
- * @returns {Promise<ArrayBuffer|null>}
- */
-export async function ofsReadFile(path) {
-  const root = await navigator.storage.getDirectory();
-  try {
-    const fh = await root.getFileHandle(path);
-    const file = await fh.getFile();
-    return await file.arrayBuffer();
-  } catch (e) {
-    console.warn(`file: ${path} error: ${e}`);
-    return null;
-  }
-}
-
-/**
- *
- * @param {FileSystemFileHandle} fh
- * @param {number} offset
- * @param {Uint8Array} bytes
- */
-async function ofsWriteAtOffset(fh, offset, bytes) {
-  const writable = await fh.createWritable({
-    keepExistingData: true,
-  });
-  await writable.seek(offset);
-  await writable.write(bytes);
-  await writable.close();
-}
-
-/**
- * @param {string} path
- * @param {number} offset
- * @param {Uint8Array} bytes
- */
-async function ofsWriteToFileAtOffset(path, offset, bytes) {
-  const root = await navigator.storage.getDirectory();
-  const fh = await root.getFileHandle(path, {
-    create: true,
-  });
-  await ofsWriteAtOffset(fh, offset, bytes);
-}
-
-/**
- *
- * @param {string} path
- * @param {Uint8Array} blob
- * @retruns {number}
- */
-async function ofsAppendToFile(path, blob) {
-  const root = await navigator.storage.getDirectory();
-  const fh = await root.getFileHandle(path, {
-    create: true,
-  });
-  const file = await fh.getFile();
-  const offset = file.size;
-  await ofsWriteAtOffset(fh, offset, blob);
-  return offset;
-}
-
 export class AppendStore {
   /** @type {AppendStoreRecord[]} */
   records = [];
@@ -141,17 +51,20 @@ export class AppendStore {
   indexPath;
   /** @type {string} */
   dataPath;
+  /** @type {FileSystemOFS | FileSystemMem} */
+  fs;
 
   static async create(fileNamePrefix = "appendStore") {
     const indexPath = `${fileNamePrefix}_index.txt`;
     const dataPath = `${fileNamePrefix}_data.bin`;
     let res = new AppendStore(indexPath, dataPath);
+    res.fs = new FileSystemOFS();
     res.records = await res._readIndex();
     return res;
   }
 
   async getIndexAsString() {
-    const d = await ofsReadFile(this.indexPath);
+    const d = await this.fs.readFile(this.indexPath);
     return d ? this.utf8Decoder.decode(d) : "";
   }
 
@@ -176,7 +89,7 @@ export class AppendStore {
     let bytes = toBytes(data);
     let size = len(bytes);
     throwIf(size === 0, "Data size must be greater than 0");
-    await ofsWriteToFileAtOffset(this.dataPath, offset, bytes);
+    await this.fs.writeToFileAtOffset(this.dataPath, offset, bytes);
     return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
   }
 
@@ -195,7 +108,7 @@ export class AppendStore {
     if (padSize > 0) {
       bytes = padBytes(bytes, padSize);
     }
-    let offset = await ofsAppendToFile(this.dataPath, bytes);
+    let offset = await this.fs.appendToFile(this.dataPath, bytes);
     return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
   }
 
@@ -246,7 +159,7 @@ export class AppendStore {
         return size;
       }
       if (dataSize < 0) {
-        dataSize = await ofsGetFileSize(this.dataPath);
+        dataSize = await this.fs.getFileSize(this.dataPath);
       }
       return dataSize - rec.offset;
     }
@@ -283,7 +196,7 @@ export class AppendStore {
       : `${offset} ${size} ${timeInMs} ${kind}\n`;
     console.warn("line:", line);
     const indexBytes = this.utf8Encoder.encode(line);
-    await ofsAppendToFile(this.indexPath, indexBytes);
+    await this.fs.appendToFile(this.indexPath, indexBytes);
     this.records.push(rec);
     logDur(startTime, `AppendStore.appendRecord`);
   }
@@ -297,7 +210,7 @@ export class AppendStore {
     if (size == 0) {
       return "";
     }
-    let bytes = await ofsReadFileSegment(this.dataPath, offset, size);
+    let bytes = await this.fs.readFileSegment(this.dataPath, offset, size);
     return this.utf8Decoder.decode(bytes);
   }
 
@@ -305,7 +218,7 @@ export class AppendStore {
    * @returns {Promise<AppendStoreRecord[]>}
    */
   async _readIndex() {
-    const d = await ofsReadFile(this.indexPath);
+    const d = await this.fs.readFile(this.indexPath);
     if (!d) {
       return [];
     }
@@ -384,12 +297,14 @@ function validateKindAndMeta(kind, meta) {
 }
 
 export async function dumpIndex() {
-  const path = "notes_store_index.txt";
-  const d = await ofsReadFile(path);
-  if (!d) {
-    console.log("no index file exists");
-    return;
-  }
-  const s = new TextDecoder().decode(d);
-  console.log("index:", s);
+  // TODO: now that store can have a different file system,
+  // needs store instance
+  // const path = "notes_store_index.txt";
+  // const d = await ofsReadFile(path);
+  // if (!d) {
+  //   console.log("no index file exists");
+  //   return;
+  // }
+  // const s = new TextDecoder().decode(d);
+  // console.log("index:", s);
 }
