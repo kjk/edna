@@ -9,6 +9,7 @@
   import { getAltChar, len } from "../util.js";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
+    IconGrokIconDown,
     IconMdiArrowCollapseLeft,
     IconMdiArrowCollapseRight,
     IconMenu,
@@ -20,7 +21,7 @@
   /** @typedef {import("../Menu.svelte").MenuDef} MenuDef */
   /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
 
-  /** @type {{ 
+  /** @type {{
     class?: string,
     openNote: (name: string, newTab: boolean) => void,
     closeTab: (name: string) => void,
@@ -262,7 +263,7 @@
     }}
     class="clickable-icon mt-[-2px] relative"
   >
-    &nbsp;⏷
+    <div class="mt-[2px]">{@render IconGrokIconDown()}</div>
     {#if showingQuickAccess}
       <QuickAccess openNote={myOpenNote} forHistory={false} />
     {/if}

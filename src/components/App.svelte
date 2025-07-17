@@ -172,7 +172,7 @@
 
   let column = $state(1);
   let docSize = $state(0);
-  let language = $state("plaintext");
+  let language = $state("text");
   let languageAuto = $state(true);
   let line = $state(1);
   let noteName = $derived(settings.currentNoteName);

@@ -135,7 +135,6 @@
   {/if}
   <div class="text-gray-400">&bull;</div>
   <CurrentTime class="ml-1 mr-1"></CurrentTime>
-  <div class="text-gray-400">&bull;</div>
 </div>
 
 <style scoped>

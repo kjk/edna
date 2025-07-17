@@ -16,6 +16,7 @@
   import { findModelByID, getSettings } from "../settings.svelte";
   import { isKeyCtrlEnter, len } from "../util";
   import AiModels from "./AiModels.svelte";
+  import { IconGrokIconDown } from "./Icons.svelte";
 
   /** @type {{
     close: () => void,
@@ -401,9 +402,10 @@
           ev.stopPropagation();
           showingModels = true;
         }}
-        class="hover:bg-gray-100 cursor-pointer px-1 relative"
+        class="hover:bg-gray-100 flex items-center cursor-pointer px-1 relative"
       >
-        {aiModelName}&nbsp;⏷
+        <div>{aiModelName}</div>
+        <div class="ml-1.5">{@render IconGrokIconDown()}</div>
         {#if showingModels}
           <AiModels
             close={() => {
