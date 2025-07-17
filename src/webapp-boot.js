@@ -1,8 +1,17 @@
 import "./main.css";
 import "./markdown-anti-tailwind.css";
 import "highlight.js/styles/github.css";
-
+import { mount, unmount } from "svelte";
+import { dumpIndex } from "./appendstore";
+import { testAppendStore } from "./apppendstore.test";
 import { appState, findNoteByName } from "./appstate.svelte";
+import App from "./components/App.svelte";
+import { ofsDeleteFiles, ofsListFiles } from "./fs-ofs";
+import { updateAfterNoteStateChange } from "./globals";
+import { getLoggedUser } from "./login";
+import { loadAppMetadata } from "./metadata";
+import { maybeMigrateNotesLocalToBackend } from "./migrate-local-to-backend";
+import { Note } from "./note";
 import {
   createIfNotExists,
   isSystemNoteName,
@@ -11,21 +20,10 @@ import {
   kScratchNoteName,
   reassignNoteShortcut,
 } from "./notes";
+import { getSettings } from "./settings.svelte";
+import { openBackendStore, openLocalStore } from "./store";
 import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
 import { isDev, len } from "./util";
-import { mount, unmount } from "svelte";
-import { ofsDeleteFiles, ofsListFiles } from "./fs-ofs";
-import { openBackendStore, openLocalStore } from "./store";
-
-import App from "./components/App.svelte";
-import { Note } from "./note";
-import { dumpIndex } from "./appendstore";
-import { getLoggedUser } from "./login";
-import { getSettings } from "./settings.svelte";
-import { loadAppMetadata } from "./metadata";
-import { maybeMigrateNotesLocalToBackend } from "./migrate-local-to-backend";
-import { testAppendStore } from "./apppendstore.test";
-import { updateAfterNoteStateChange } from "./globals";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
 
@@ -100,9 +98,9 @@ async function createDefaultNotes(existingNotes) {
     }
   }
   if (isFirstRun) {
-    reassignNoteShortcut(kScratchNoteName, "1");
-    reassignNoteShortcut(kDailyJournalNoteName, "2");
-    reassignNoteShortcut(kInboxNoteName, "3");
+    await reassignNoteShortcut(kScratchNoteName, "1");
+    await reassignNoteShortcut(kDailyJournalNoteName, "2");
+    await reassignNoteShortcut(kInboxNoteName, "3");
   }
   return createdNotes;
 }

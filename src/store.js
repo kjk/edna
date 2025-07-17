@@ -1,12 +1,11 @@
-import {
-  BackendStore,
-  backendGetLatestNotes,
-  createBackendStore,
-} from "./store-backend";
-import { LocalStore, createLocalStore, notesFromStoreLog } from "./store-local";
-
 import { AppendStore } from "./appendstore";
 import { Note } from "./note";
+import {
+  backendGetLatestNotes,
+  BackendStore,
+  createBackendStore,
+} from "./store-backend";
+import { createLocalStore, LocalStore, notesFromStoreLog } from "./store-local";
 import { throwIf } from "./util";
 
 /** @type { LocalStore | BackendStore } */
@@ -47,7 +46,7 @@ export async function storeDeleteNote(noteId) {
  * @param {string} name
  */
 export async function storeCreateNote(noteId, name) {
-  store.createNote(noteId, name);
+  await store.createNote(noteId, name);
 }
 
 /**

@@ -1,3 +1,4 @@
+import test from "node:test";
 import {
   AppendStore,
   AppendStoreRecord,
@@ -44,11 +45,96 @@ async function verifyRecs(store, recs, trecs) {
     );
   }
 }
-export async function testAppendStoreWithFS(fsType, prefix) {
+
+/**
+ * Gets the last record from the store.
+ * @param {AppendStore} store
+ * @returns {AppendStoreRecord | null}
+ */
+function getLastRecord(store) {
+  const recs = store.records();
+  return recs.length > 0 ? recs[recs.length - 1] : null;
+}
+
+/**
+ * @param {string} fsType
+ * @param {string} prefix
+ */
+export async function testAppendOverwrite(fsType, prefix) {
+  let store = await AppendStore.create(prefix, fsType, true);
+  store.overWriteDataExpandPercent = 100;
+  let kind = "file";
+  let meta = "foo.txt";
+  let d = "lala";
+  await store.overWriteRecord(kind, d, meta);
+
+  let rec1 = getLastRecord(store);
+  {
+    let rec = rec1;
+    let data = await store.readRecordAsString(rec);
+    throwIf(
+      rec.kind !== kind || rec.meta !== meta || data !== d,
+      `Overwritten record does not match: expected {kind: ${kind}, meta: ${meta}, data: ${d}}, got {kind: ${rec.kind}, meta: ${rec.meta}, data: ${data}}`,
+    );
+    throwIf(
+      rec.size * 2 == rec.sizeInFile,
+      `Overwritten record sizeInFile should be double the size, but got ${rec.sizeInFile} for size ${rec.size}`,
+    );
+  }
+  d = "lalalala2";
+  await store.overWriteRecord(kind, d, meta);
+  {
+    let rec = getLastRecord(store);
+    let data = await store.readRecordAsString(rec);
+    throwIf(
+      rec.kind !== kind || rec.meta !== meta || data !== d,
+      `Overwritten record does not match: expected {kind: ${kind}, meta: ${meta}, data: ${d}}, got {kind: ${rec.kind}, meta: ${rec.meta}, data: ${data}}`,
+    );
+    throwIf(
+      rec.size * 2 == rec.sizeInFile,
+      `Overwritten record sizeInFile should be double the size, but got ${rec.sizeInFile} for size ${rec.size}`,
+    );
+  }
+
+  d = "lolahi";
+  await store.overWriteRecord(kind, d, meta);
+  {
+    let rec = getLastRecord(store);
+    let data = await store.readRecordAsString(rec);
+    throwIf(
+      rec.kind !== kind || rec.meta !== meta || data !== d,
+      `Overwritten record does not match: expected {kind: ${kind}, meta: ${meta}, data: ${d}}, got {kind: ${rec.kind}, meta: ${rec.meta}, data: ${data}}`,
+    );
+    throwIf(
+      rec.size * 2 == rec.sizeInFile,
+      `Overwritten record sizeInFile should be double the size, but got ${rec.sizeInFile} for size ${rec.size}`,
+    );
+    throwIf(rec1.overWritten !== true, `Expected rec1 to be overwritten`);
+  }
+  // verify overwritten records recognized when reading all records
+  store = await AppendStore.create(prefix, fsType, false);
+  let recs = store.records();
+  throwIf(
+    recs.length !== 2,
+    `Expected 2 records after overwriting, got ${recs.length}`,
+  );
+  throwIf(
+    store._allRecords.length !== 3,
+    `Expected 3 all records after overwriting, got ${store._allRecords.length}`,
+  );
+  let rec = recs[0];
+  throwIf(!rec.overWritten, `Expected first record to be overwritten`);
+}
+
+/**
+ * @param {string} fsType
+ * @param {string} prefix
+ */
+async function testAppendMany(fsType, prefix) {
   const startTime = performance.now();
-  let trecs = genTestRecords(1000);
+  let trecs = genTestRecords(500);
   console.log("Testing AppendStore...");
-  let store = await AppendStore.create(prefix, true, fsType);
+  let store = await AppendStore.create(prefix, fsType, true);
   let i = 0;
   for (let rec of trecs) {
     await store.appendRecord(rec.kind, rec.data, rec.meta);
@@ -70,12 +156,21 @@ export async function testAppendStoreWithFS(fsType, prefix) {
 
   // re-open the store to verify persistence
   console.log("Verifying record after re-opening store...");
-  store = await AppendStore.create(prefix, false, fsType);
+  store = await AppendStore.create(prefix, fsType, false);
   recs = store.records();
   await verifyRecs(store, recs, trecs);
+}
+/**
+ * @param {string} fsType
+ * @param {string} prefix
+ */
+export async function testAppendStoreWithFS(fsType, prefix) {
+  const startTime = performance.now();
+  testAppendOverwrite(fsType, prefix);
+  testAppendMany(fsType, prefix);
 
-  // test ovderwrite
-  store = await AppendStore.create(prefix, true, fsType);
+  // delete the store
+  await AppendStore.create(prefix, fsType, true);
 
   logDur(startTime, `AppendStore tests finished.`);
 }

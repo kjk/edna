@@ -128,14 +128,21 @@ let lastMsgs = [];
 // Message handler for the web worker
 self.onmessage = async function (e) {
   const { id, method, args } = e.data;
+  // don't retain large objects
   let argsCopy = {};
   for (let k of Object.keys(args)) {
+    if (k === "blob") {
+      continue;
+    }
     if (args[k] instanceof ArrayBuffer) {
+      continue;
+    }
+    if (args[k] instanceof Uint8Array) {
       continue;
     }
     argsCopy[k] = args[k];
   }
-  lastMsgs.push(method, args);
+  lastMsgs.push(method, argsCopy);
   // keep between 10 and 20 messages
   if (lastMsgs.length > 20 * 2) {
     lastMsgs = lastMsgs.slice(10 * 2);
@@ -193,7 +200,9 @@ self.onmessage = async function (e) {
     // Send error back to main thread
     let n = lastMsgs.length / 2;
     for (let i = 0; i < n; i++) {
-      console.log(`${lastMsgs[i * 2]}: ${JSON.stringify(lastMsgs[i * 2 + 1])}`);
+      let k = lastMsgs[i * 2];
+      let v = lastMsgs[i * 2 + 1];
+      console.log(`${k}: `, v);
     }
     console.error("Error in OFS worker:", error, "req:", e.data);
     self.postMessage({

@@ -69,7 +69,7 @@ function serializeRecord(rec) {
   if (rec.sizeInFile > 0) {
     sz = `${rec.size}:${rec.sizeInFile}`;
   } else {
-    sz = `${rec.sizeInFile}`;
+    sz = `${rec.size}`;
   }
   let { offset, timeInMs, kind, meta } = rec;
   const line = meta
@@ -157,13 +157,7 @@ export class AppendStore {
     this._nonOverwritten = res;
   }
 
-  async getIndexAsString() {
-    const d = await this.fs.readFile(this.indexPath);
-    return d ? utf8Decoder.decode(d) : "";
-  }
-
   /**
-   *
    * @param {string} indexPath
    * @param {string} dataPath
    */
@@ -189,16 +183,15 @@ export class AppendStore {
   }
 
   /**
-   * @param {string | Uint8Array | null} data
+   * @param {Uint8Array | null} bytes
    * @param {string} kind
    * @param {string} meta
    * @param {number} additionalBytes
    * @returns {Promise<AppendStoreRecord>}
    */
-  async _writeData(data, kind, meta, additionalBytes = 0) {
+  async _writeBytes(bytes, kind, meta, additionalBytes = 0) {
     // high-precision UTC time in milliseconds
     const timestampMs = Math.round(performance.timeOrigin + performance.now());
-    let bytes = toBytes(data);
     let size = len(bytes);
     if (size === 0) {
       // it's ok for data to be empty
@@ -216,6 +209,30 @@ export class AppendStore {
   }
 
   /**
+   * @param {AppendStoreRecord} rec
+   */
+  async _writeRecordToIndex(rec) {
+    const indexBytes = serializeRecord(rec);
+    await this.fs.appendToFile(this.indexPath, indexBytes);
+    this._allRecords.push(rec);
+    this._calcNonOverwritten();
+  }
+
+  /**
+   * @param {string} kind
+   * @param {string|Uint8Array|null} data
+   * @param {string} meta
+   * @param {number} additionalBytes
+   * @return {Promise<void>}
+   */
+  async appendRecord(kind, data, meta = null, additionalBytes = 0) {
+    validateKindAndMeta(kind, meta);
+    let bytes = toBytes(data);
+    let rec = await this._writeBytes(bytes, kind, meta, additionalBytes);
+    await this._writeRecordToIndex(rec);
+  }
+
+  /**
    * Potentially overwrites existing record with the same kind and meta.
    * Meant for files for which we don't need to keep history and are frequently
    * written to, like metadata.
@@ -225,17 +242,17 @@ export class AppendStore {
    * @param {string|Uint8Array|null} data
    * @param {string} kind
    * @param {string} meta
-   * @param {number} reserveSpaceFactor : 1.4 or 2 are good values
    * @return {Promise<void>}
    */
-  async overWriteRecord(data, kind, meta, reserveSpaceFactor = 1.0) {
+  async overWriteRecord(data, kind, meta) {
     // const startTime = performance.now();
     validateKindAndMeta(kind, meta);
 
+    let bytes = toBytes(data);
     // find a record that we can overwrite
     let recToOverwriteIdx = -1;
     let recs = this._allRecords;
-    let neededSize = len(data);
+    let neededSize = len(bytes);
     for (let i = 0; i < len(recs); i++) {
       let rec = recs[i];
       if (
@@ -253,7 +270,7 @@ export class AppendStore {
       // for future overwrites
       let op = this.overWriteDataExpandPercent;
       let additionalBytes = (neededSize * op) / 100;
-      this.appendRecord(kind, data, meta, additionalBytes);
+      await this.appendRecord(kind, bytes, meta, additionalBytes);
       return;
     }
 
@@ -262,7 +279,6 @@ export class AppendStore {
     let recOverwritten = this._allRecords[recToOverwriteIdx];
     let offset = recOverwritten.offset;
     recOverwritten.overWritten = true;
-    let bytes = toBytes(data);
     await this.fs.writeToFileAtOffset(this.dataPath, offset, bytes);
     let rec = new AppendStoreRecord(
       offset,
@@ -271,45 +287,7 @@ export class AppendStore {
       kind,
       meta,
     );
-    let indexBytes = serializeRecord(rec);
-    await this.fs.appendToFile(this.indexPath, indexBytes);
-    this._allRecords.push(rec);
-    this._calcNonOverwritten();
-  }
-
-  /**
-   * @param {string} kind
-   * @param {string|Uint8Array|null} data
-   * @param {string} meta
-   * @param {number} additionalBytes
-   * @return {Promise<void>}
-   */
-  async appendRecord(kind, data, meta = null, additionalBytes = 0) {
-    // const startTime = performance.now();
-    validateKindAndMeta(kind, meta);
-    let rec = await this._writeData(data, kind, meta, additionalBytes);
-
-    const indexBytes = serializeRecord(rec);
-    await this.fs.appendToFile(this.indexPath, indexBytes);
-    this._allRecords.push(rec);
-    this._calcNonOverwritten();
-    // logDur(startTime, `AppendStore.appendRecord`);
-  }
-
-  /**
-   * for debugging
-   * @returns {Promise<ArrayBuffer|null>}
-   */
-  async getIndexContent() {
-    return await this.fs.readFile(this.indexPath);
-  }
-
-  /**
-   * for debugging
-   * @returns {Promise<ArrayBuffer|null>}
-   */
-  async getDataContent() {
-    return await this.fs.readFile(this.dataPath);
+    await this._writeRecordToIndex(rec);
   }
 
   /**
@@ -341,6 +319,31 @@ export class AppendStore {
     }
     const text = utf8Decoder.decode(d);
     return parseIndex(text);
+  }
+
+  /**
+   * for debugging
+   * @returns {Promise<ArrayBuffer|null>}
+   */
+  async getIndexContent() {
+    return await this.fs.readFile(this.indexPath);
+  }
+
+  /**
+   * for debugging
+   * @returns {Promise<ArrayBuffer|null>}
+   */
+  async getDataContent() {
+    return await this.fs.readFile(this.dataPath);
+  }
+
+  /**
+   * for debugging
+   * @returns {Promise<string>}
+   */
+  async getIndexAsString() {
+    const d = await this.fs.readFile(this.indexPath);
+    return d ? utf8Decoder.decode(d) : "";
   }
 }
 
