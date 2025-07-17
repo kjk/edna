@@ -160,7 +160,7 @@
 
   let column = $state(1);
   let docSize = $state(0);
-  let language = $state("plaintext");
+  let language = $state("text");
   let languageAuto = $state(true);
   let line = $state(1);
   let noteName = $derived(settings.currentNoteName);
@@ -337,6 +337,7 @@
       if (view && searchPanelOpen(view.state)) {
         console.log("closing search panel on ESC");
         isMoving.disableMoveTracking = false;
+        // @ts-ignore
         closeSearchPanel(view);
         return;
       }
@@ -1206,6 +1207,7 @@
 
   function openFindPanel() {
     let view = getEditorView();
+    // @ts-ignore
     openSearchPanel(view);
   }
 
@@ -1303,9 +1305,11 @@
     } else if (cmdId === kCmdMoveBlock) {
       moveCurrentBlock();
     } else if (cmdId === kCmdFoldCode) {
+      // @ts-ignore
       foldCode(view);
       view.focus();
     } else if (cmdId === kCmdUnfoldColde) {
+      // @ts-ignore
       unfoldCode(view);
       view.focus();
     } else if (cmdId === kCmdFoldBlock) {

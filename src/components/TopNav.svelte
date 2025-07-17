@@ -9,6 +9,7 @@
   import GitHub from "./GitHub.svelte";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
+    IconGrokIconDown,
     IconMdiArrowCollapseLeft,
     IconMdiArrowCollapseRight,
     IconMenu,
@@ -230,7 +231,7 @@
     }}
     class="clickable-icon mt-[-2px] relative"
   >
-    &nbsp;⏷
+    <div class="mt-[2px]">{@render IconGrokIconDown()}</div>
     {#if showingQuickAccess}
       <QuickAccess openNote={myOpenNote} forHistory={false} />
     {/if}
@@ -260,8 +261,8 @@
           />
         {/if}
         <div class="text-sm">{appState.user.login}</div>
-        <div class="text-gray-700 ml-[-4px]">
-          ⏷
+        <div class="text-gray-700 ml-[-4px] flex">
+          <div class="mt-[2px]">{@render IconGrokIconDown()}</div>
           <div
             class="hidden absolute text-sm flex-col border shadow left-0 top-full py-2 z-20 group-hover:flex bg-white"
           >

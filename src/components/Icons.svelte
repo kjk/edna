@@ -28,6 +28,7 @@
     IconMdiArrowCollapseRight,
     IconTablerTrash,
     IconTablerArchive,
+    IconGrokIconDown,
   };
 </script>
 
@@ -646,5 +647,22 @@ https://icones.js.org/collection/all?s=replace-all&icon=lucide:replace
         rx="2"
       /></g
     ></svg
+  >
+{/snippet}
+
+<!--
+from grok.com
+-->
+{#snippet IconGrokIconDown()}
+  <svg
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    stroke-width="2"
+    class="size-3"
+    ><path d="M6 9L12 15L18 9" stroke="currentColor" stroke-linecap="square"
+    ></path></svg
   >
 {/snippet}
