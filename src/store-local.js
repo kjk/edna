@@ -176,8 +176,8 @@ let localStore;
 export async function createLocalStore() {
   let apstore = await AppendStore.create(
     "notes_store",
-    false,
     kFileSystemWorkerOFS,
+    false,
   );
   console.log(`notes_store has ${apstore.records().length} records`);
   localStore = new LocalStore(apstore);

@@ -101,10 +101,16 @@ export class AppendStore {
   // 100 means we expand the data by 100%
   overWriteDataExpandPercent = 140;
 
+  /**
+   * @param {string} fileNamePrefix
+   * @param {string} fsType
+   * @param {boolean} clear
+   * @returns {Promise<AppendStore>}
+   */
   static async create(
     fileNamePrefix = "appendStore",
-    clear = false,
     fsType = kFileSystemOFS,
+    clear = false,
   ) {
     const indexPath = `${fileNamePrefix}_index.txt`;
     const dataPath = `${fileNamePrefix}_data.bin`;

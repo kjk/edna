@@ -74,6 +74,9 @@ export async function testAppendStoreWithFS(fsType, prefix) {
   recs = store.records();
   await verifyRecs(store, recs, trecs);
 
+  // test ovderwrite
+  store = await AppendStore.create(prefix, true, fsType);
+
   logDur(startTime, `AppendStore tests finished.`);
 }
 
