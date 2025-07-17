@@ -61,7 +61,7 @@ export async function testAppendStoreWithFS(fsType, prefix) {
   logDur(startTime, `appended ${i} records`);
   console.log("Verifying records...");
   let recs = store.records();
-  verifyRecs(store, recs, trecs);
+  await verifyRecs(store, recs, trecs);
 
   // we can't re-open in-memory store
   if (fsType === kFileSystemMem) {
@@ -73,7 +73,7 @@ export async function testAppendStoreWithFS(fsType, prefix) {
   console.log("Verifying record after re-opening store...");
   store = await AppendStore.create(prefix, false, fsType);
   recs = store.records();
-  verifyRecs(store, recs, trecs);
+  await verifyRecs(store, recs, trecs);
 
   logDur(startTime, `AppendStore tests finished.`);
 }
