@@ -50,41 +50,13 @@ async function ofsReadFileSegment(path, offset, size) {
   } catch (e) {
     return null;
   }
-  let accessHandle;
-  for (let i = 0; i < 3; i++) {
-    try {
-      // @ts-ignore
-      accessHandle = await fh.createSyncAccessHandle();
-      break;
-    } catch (e) {
-      if (i === 2) {
-        throw e; // rethrow after 3 attempts
-      }
-      console.error(
-        `Failed to create access handle for ${path}, retrying... (${i + 1})`,
-      );
-    }
-  }
+  // @ts-ignore
+  let accessHandle = await fh.createSyncAccessHandle();
   const ab = new ArrayBuffer(size);
   const buffer = new DataView(ab);
   accessHandle.read(buffer, { at: offset });
   accessHandle.close();
   return new Uint8Array(ab);
-}
-
-/**
- * @param {string} path
- * @param {number} offset
- * @param {number} size
- * @returns {Promise<Uint8Array>}
- */
-async function ofsReadFileSegment2(path, offset, size) {
-  const root = await navigator.storage.getDirectory();
-  const fh = await root.getFileHandle(path);
-  const file = await fh.getFile();
-  const slice = file.slice(offset, offset + size);
-  const data = await slice.arrayBuffer();
-  return new Uint8Array(data);
 }
 
 /**
