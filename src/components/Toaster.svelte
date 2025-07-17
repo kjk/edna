@@ -21,7 +21,6 @@
    * @param {number} id
    */
   function removeToast(id) {
-    console.log("removeToast:", id);
     let idx = -1;
     for (let i = 0; i < len(toasts); i++) {
       if (toasts[i].id === id) {
@@ -90,6 +89,7 @@
 <script>
   import { len } from "../util";
   import { getScrollbarWidth } from "../util.js";
+
   let style = $state("");
   $effect(() => {
     let dx = getScrollbarWidth();

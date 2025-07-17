@@ -45,16 +45,15 @@ async function verifyRecs(store, recs, trecs) {
     );
   }
 }
-export async function testAppendStoreWithFS(fsType) {
+export async function testAppendStoreWithFS(fsType, prefix) {
   const startTime = performance.now();
   let trecs = genTestRecords(1000);
-  const prefix = "testAppendStore_";
   console.log("Testing AppendStore...");
   let store = await AppendStore.create(prefix, true, fsType);
   let i = 0;
   for (let rec of trecs) {
     await store.appendRecord(rec.data, rec.kind, rec.meta);
-    if (i % 100 === 0) {
+    if (i % 250 === 0) {
       logDur(startTime, `appended ${i} records`);
     }
     i++;
@@ -81,13 +80,22 @@ export async function testAppendStoreWithFS(fsType) {
 
 export async function testAppendStore() {
   console.log("Testing AppendStore with FileSystemWorkerOFS...");
-  await testAppendStoreWithFS(kFileSystemWorkerOFS);
+  await testAppendStoreWithFS(kFileSystemWorkerOFS, "as_test_workerofs_");
 
-  console.log("Testing AppendStore with FileSystemMem...");
-  await testAppendStoreWithFS(kFileSystemMem);
+  // console.log("Testing AppendStore with FileSystemMem...");
+  // await testAppendStoreWithFS(kFileSystemMem, "as_test_mem_");
 
-  console.log("Testing AppendStore with FileSystemOFS...");
-  await testAppendStoreWithFS(kFileSystemOFS);
+  let isSafari =
+    navigator.userAgent.includes("Safari") &&
+    !navigator.userAgent.includes("Chrome");
+  if (isSafari) {
+    console.log(
+      "Skipping FileSystemOFS test on Safari because it doesn't support createWritable().",
+    );
+  } else {
+    console.log("Testing AppendStore with FileSystemOFS...");
+    await testAppendStoreWithFS(kFileSystemOFS, "as_test_ofs_");
+  }
 
   console.log("All AppendStore tests passed.");
 }

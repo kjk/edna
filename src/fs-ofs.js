@@ -47,31 +47,22 @@ export async function ofsReadFile(path) {
 }
 
 /**
- *
- * @param {FileSystemFileHandle} fh
- * @param {number} offset
- * @param {Uint8Array} bytes
- */
-async function ofsWriteAtOffset(fh, offset, bytes) {
-  const writable = await fh.createWritable({
-    keepExistingData: true,
-  });
-  await writable.seek(offset);
-  await writable.write(bytes);
-  await writable.close();
-}
-
-/**
  * @param {string} path
  * @param {number} offset
- * @param {Uint8Array} bytes
+ * @param {Uint8Array} blob
  */
-async function ofsWriteToFileAtOffset(path, offset, bytes) {
+async function ofsWriteToFileAtOffset(path, offset, blob) {
   const root = await navigator.storage.getDirectory();
   const fh = await root.getFileHandle(path, {
     create: true,
   });
-  await ofsWriteAtOffset(fh, offset, bytes);
+  const writable = await fh.createWritable({
+    keepExistingData: true,
+  });
+  await writable.seek(offset);
+  await writable.write(blob);
+  await writable.close();
+  return offset;
 }
 
 /**
@@ -86,7 +77,12 @@ async function ofsAppendToFile(path, blob) {
   });
   const file = await fh.getFile();
   const offset = file.size;
-  await ofsWriteAtOffset(fh, offset, blob);
+  const writable = await fh.createWritable({
+    keepExistingData: true,
+  });
+  await writable.seek(offset);
+  await writable.write(blob);
+  await writable.close();
   return offset;
 }
 
