@@ -43,9 +43,11 @@ class AppState {
   /** @type {import("./settings.svelte").Settings} */
   settings = $state(undefined); // user settings
 
-  forceNewTab = false;
-
   isOffline = $state(!navigator.onLine);
+
+  forceNewTab = false;
+  /** @type {Map<string, any>} */
+  noteSelectionState = new Map();
 }
 
 // TODO: maybe convert to $effect() on appState.notes

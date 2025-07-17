@@ -13,16 +13,15 @@ import {
   EditorView,
   lineNumbers,
 } from "@codemirror/view";
-import { findNoteByName } from "../appstate.svelte.js";
-import { getMetadata, saveAppMetadata } from "../metadata.js";
+import { appState, findNoteByName } from "../appstate.svelte.js";
+import { getMetadata } from "../metadata.js";
 import {
   loadNoteContent,
   maybeSaveNoteSelectionAndFoldedRanges,
   saveNote,
-  saveNoteMetadata,
 } from "../notes.js";
 import { findEditorByView } from "../state.js";
-import { len, objectEqualDeep } from "../util.js";
+import { len } from "../util.js";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation.js";
 import {
   blockLineNumbers,
@@ -152,6 +151,7 @@ export class EdnaEditor {
         todoCheckboxPlugin,
         // foldNotifications(this),
         markdown({ addKeymap: false }),
+        // @ts-ignore
         Prec.highest(cmKeymap.of(markdownKeymap)),
         links,
       ],
@@ -244,7 +244,7 @@ export class EdnaEditor {
     if (!noteMeta) {
       return;
     }
-    let savedSelection = noteMeta.selection;
+    let savedSelection = appState.noteSelectionState.get(note.id);
     // TODO: validate selection?
     if (savedSelection) {
       // console.log("setContent: restoring selection:", savedSelection);

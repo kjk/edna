@@ -419,11 +419,20 @@ export async function saveNoteMetadata(note) {
   await storeWriteNoteMeta(m);
 }
 
+/**
+ * @param {Note} note
+ * @param {any} selection
+ * @param {any} foldedRanges
+ */
 export async function maybeSaveNoteSelectionAndFoldedRanges(
   note,
   selection,
   foldedRanges,
 ) {
+  if (selection) {
+    appState.noteSelectionState.set(note.id, selection);
+  }
+
   let meta = getMetadata();
   let noteMeta = meta.notes[note.id];
   if (!noteMeta) {
@@ -435,18 +444,12 @@ export async function maybeSaveNoteSelectionAndFoldedRanges(
     didChange = true;
     noteMeta.foldedRanges = foldedRanges;
   }
-  if (selection && !objectEqualDeep(noteMeta.selection, selection)) {
-    didChange = true;
-    noteMeta.selection = selection;
-  }
   if (!didChange) {
     // console.log("saveFoldedState: skipping save, no changes");
     return;
   }
   // console.log(
-  //   "saveFoldedState: saving selection:",
-  //   meta.selection,
-  //   "folededState:",
+  //   "saveFoldedState: saving folededState:",
   //   foldedRanges,
   // );
   await saveAppMetadata();
