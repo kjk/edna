@@ -5,9 +5,8 @@ import {
   kFileSystemOFS,
   kFileSystemWorkerOFS,
 } from "./appendstore";
-import { logDur, throwIf } from "./util";
-
 import { genRandomID } from "./nanoid";
+import { logDur, throwIf } from "./util";
 
 /** @typedef {{kind: string, meta: string | null, data: string}} TestRecord */
 /**
@@ -52,7 +51,7 @@ export async function testAppendStoreWithFS(fsType, prefix) {
   let store = await AppendStore.create(prefix, true, fsType);
   let i = 0;
   for (let rec of trecs) {
-    await store.appendRecord(rec.data, rec.kind, rec.meta);
+    await store.appendRecord(rec.kind, rec.data, rec.meta);
     if (i % 250 === 0) {
       logDur(startTime, `appended ${i} records`);
     }

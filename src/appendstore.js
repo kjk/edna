@@ -1,11 +1,19 @@
-import { len, logDur, throwIf } from "./util";
-
 import { FileSystemMem } from "./fs-mem";
 import { FileSystemOFS } from "./fs-ofs";
 import { FileSystemWorkerOFS } from "./fs-worker-ofs";
+import { len, logDur, throwIf } from "./util";
 
 export class AppendStoreRecord {
-  constructor(offset, size, timeInMs, kind, meta = "") {
+  /** @type {number} */
+  sizeInFile = 0;
+  /**
+   * @param {number} offset
+   * @param {number} size
+   * @param {number} timeInMs
+   * @param {string} kind
+   * @param {string} meta
+   */
+  constructor(offset, size, timeInMs, kind, meta = null) {
     /** @type {number} */
     this.offset = offset;
     /** @type {number} */
@@ -16,10 +24,13 @@ export class AppendStoreRecord {
     this.kind = kind;
     /** @type {string?} */
     this.meta = meta;
+    this.overWritten = false;
   }
 }
 
-let utf8Encoder = new TextEncoder();
+const utf8Encoder = new TextEncoder();
+const utf8Decoder = new TextDecoder();
+
 /**
  * if string, encodes as UTF-8
  * @param {string|Uint8Array} data
@@ -37,6 +48,10 @@ function toBytes(data) {
   throw new Error("Invalid data type: must be string or Uint8Array");
 }
 
+/**
+ * @param {Uint8Array} bytes
+ * @param {number} padSize
+ */
 function padBytes(bytes, padSize) {
   const paddedBytes = new Uint8Array(bytes.length + padSize);
   paddedBytes.fill(32); // Fill with spaces
@@ -45,19 +60,46 @@ function padBytes(bytes, padSize) {
   return paddedBytes;
 }
 
+/**
+ * @param {AppendStoreRecord} rec
+ * @returns {Uint8Array}
+ */
+function serializeRecord(rec) {
+  let sz = "";
+  if (rec.sizeInFile > 0) {
+    sz = `${rec.size}:${rec.sizeInFile}`;
+  } else {
+    sz = `${rec.sizeInFile}`;
+  }
+  let { offset, timeInMs, kind, meta } = rec;
+  const line = meta
+    ? `${offset} ${sz} ${timeInMs} ${kind} ${meta}\n`
+    : `${offset} ${sz} ${timeInMs} ${kind}\n`;
+  return utf8Encoder.encode(line);
+}
+
 export const kFileSystemOFS = "ofs";
 export const kFileSystemMem = "mem";
 export const kFileSystemWorkerOFS = "worker-ofs";
 
 export class AppendStore {
   /** @type {AppendStoreRecord[]} */
-  _records = [];
+  _allRecords = [];
+  /** @type {AppendStoreRecord[]} */
+  _nonOverwritten = [];
   /** @type {string} */
   indexPath;
   /** @type {string} */
   dataPath;
   /** @type {FileSystemOFS | FileSystemMem | FileSystemWorkerOFS} */
   fs;
+
+  // when over-writing a record, we expand the data by this much to minimize
+  // the amount written to file.
+  // 0 means no expansion.
+  // 40 means we expand the data by 40%
+  // 100 means we expand the data by 100%
+  overWriteDataExpandPercent = 140;
 
   static async create(
     fileNamePrefix = "appendStore",
@@ -84,18 +126,34 @@ export class AppendStore {
       await res.fs.deleteFile(indexPath);
       await res.fs.deleteFile(dataPath);
     } else {
-      res._records = await res._readIndex();
+      res._allRecords = await res._readIndex();
     }
     return res;
   }
 
   records() {
-    return this._records;
+    return this._allRecords;
+  }
+
+  _calcNonOverwritten() {
+    let recs = this._allRecords;
+    let n = len(recs);
+    let res = new Array(n);
+    let j = 0;
+    for (let i = 0; i < n; i++) {
+      let r = recs[i];
+      if (r.overWritten) {
+        continue;
+      }
+      res[j++] = r;
+    }
+    res.length = j;
+    this._nonOverwritten = res;
   }
 
   async getIndexAsString() {
     const d = await this.fs.readFile(this.indexPath);
-    return d ? this.utf8Decoder.decode(d) : "";
+    return d ? utf8Decoder.decode(d) : "";
   }
 
   /**
@@ -106,12 +164,13 @@ export class AppendStore {
   constructor(indexPath, dataPath) {
     this.indexPath = indexPath;
     this.dataPath = dataPath;
-    this.utf8Encoder = new TextEncoder();
-    this.utf8Decoder = new TextDecoder();
   }
 
   /**
-   * @param {string|Uint8Array|null} data
+   * @param {string | Uint8Array | null} data
+   * @param {number} offset
+   * @param {string} kind
+   * @param {string} meta
    */
   async _writeDataAtOffset(offset, data, kind, meta) {
     // high-precision UTC time in milliseconds
@@ -124,9 +183,13 @@ export class AppendStore {
   }
 
   /**
-   * @param {string|Uint8Array|null} data
+   * @param {string | Uint8Array | null} data
+   * @param {string} kind
+   * @param {string} meta
+   * @param {number} additionalBytes
+   * @returns {Promise<AppendStoreRecord>}
    */
-  async _writeData(data, kind, meta, padSize = 0) {
+  async _writeData(data, kind, meta, additionalBytes = 0) {
     // high-precision UTC time in milliseconds
     const timestampMs = Math.round(performance.timeOrigin + performance.now());
     let bytes = toBytes(data);
@@ -135,11 +198,15 @@ export class AppendStore {
       // it's ok for data to be empty
       return new AppendStoreRecord(0, 0, timestampMs, kind, meta);
     }
-    if (padSize > 0) {
-      bytes = padBytes(bytes, padSize);
+    if (additionalBytes > 0) {
+      bytes = padBytes(bytes, additionalBytes);
     }
     let offset = await this.fs.appendToFile(this.dataPath, bytes);
-    return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
+    let rec = new AppendStoreRecord(offset, size, timestampMs, kind, meta);
+    if (additionalBytes > 0) {
+      rec.sizeInFile = size + additionalBytes;
+    }
+    return rec;
   }
 
   /**
@@ -153,85 +220,78 @@ export class AppendStore {
    * @param {string} kind
    * @param {string} meta
    * @param {number} reserveSpaceFactor : 1.4 or 2 are good values
+   * @return {Promise<void>}
    */
   async overWriteRecord(data, kind, meta, reserveSpaceFactor = 1.0) {
     // const startTime = performance.now();
     validateKindAndMeta(kind, meta);
-    let existingRecordsIndexes = [];
-    let recs = this._records;
-    let n = recs.length;
-    for (let i = 0; i < n; i++) {
+
+    // find a record that we can overwrite
+    let recToOverwriteIdx = -1;
+    let recs = this._allRecords;
+    let neededSize = len(data);
+    for (let i = 0; i < len(recs); i++) {
       let rec = recs[i];
-      if (rec.kind === kind && rec.meta === meta) {
-        existingRecordsIndexes.push(i);
+      if (
+        rec.kind === kind &&
+        rec.meta === meta &&
+        rec.sizeInFile >= neededSize
+      ) {
+        recToOverwriteIdx = i;
       }
+      break;
     }
-    if (len(existingRecordsIndexes) === 0) {
-      let padSize = 0;
-      if (reserveSpaceFactor > 1.0) {
-        padSize = Math.ceil(data.length * (reserveSpaceFactor - 1.0));
-      }
-      await this.appendRecord(data, kind, meta, padSize);
+
+    if (recToOverwriteIdx == -1) {
+      // no record to overwrite, append a new one with potentially padding
+      // for future overwrites
+      let op = this.overWriteDataExpandPercent;
+      let additionalBytes = (neededSize * op) / 100;
+      this.appendRecord(kind, data, meta, additionalBytes);
       return;
     }
 
-    let dataSize = -1;
-    async function calcRecordSize(idx) {
-      // size of the record idx is the difference between its offset
-      // and the offset of the next non-empty record
-      let rec = recs[idx];
-      for (let i = idx + 1; idx < n; i++) {
-        let rec2 = recs[i];
-        if (rec2.offset === 0) {
-          continue;
-        }
-        let size = rec2.offset - rec.offset;
-        return size;
-      }
-      if (dataSize < 0) {
-        dataSize = await this.fs.getFileSize(this.dataPath);
-      }
-      return dataSize - rec.offset;
-    }
-    for (let idx of existingRecordsIndexes) {
-      let size = await calcRecordSize.call(this, idx);
-      if (size >= data.length) {
-        // we have enough space to overwrite the record
-        let rec = await this._writeData(data, kind, meta);
-        recs[idx] = rec; // overwrite the record
-        // logDur(startTime, `AppendStore.overWriteRecord`);
-        return;
-      }
-    }
+    const timestampMs = Math.round(performance.timeOrigin + performance.now());
 
-    // existing records don't have enough space, so we append a new record
-    // TODO: pas reserveSpaceFactor to
-    await this.appendRecord(data, kind, meta);
+    let recOverwritten = this._allRecords[recToOverwriteIdx];
+    let offset = recOverwritten.offset;
+    recOverwritten.overWritten = true;
+    let bytes = toBytes(data);
+    await this.fs.writeToFileAtOffset(this.dataPath, offset, bytes);
+    let rec = new AppendStoreRecord(
+      offset,
+      bytes.length,
+      timestampMs,
+      kind,
+      meta,
+    );
+    let indexBytes = serializeRecord(rec);
+    await this.fs.appendToFile(this.indexPath, indexBytes);
+    this._allRecords.push(rec);
+    this._calcNonOverwritten();
   }
 
   /**
-   * @param {string|Uint8Array|null} data
    * @param {string} kind
+   * @param {string|Uint8Array|null} data
    * @param {string} meta
-   * @param {number} padSize
+   * @param {number} additionalBytes
+   * @return {Promise<void>}
    */
-  async appendRecord(data, kind, meta = null, padSize = 0) {
+  async appendRecord(kind, data, meta = null, additionalBytes = 0) {
     // const startTime = performance.now();
     validateKindAndMeta(kind, meta);
-    let rec = await this._writeData(data, kind, meta);
-    let { offset, size, timeInMs } = rec;
+    let rec = await this._writeData(data, kind, meta, additionalBytes);
 
-    const line = meta
-      ? `${offset} ${size} ${timeInMs} ${kind} ${meta}\n`
-      : `${offset} ${size} ${timeInMs} ${kind}\n`;
-    // console.warn("line:", line);
-    const indexBytes = this.utf8Encoder.encode(line);
+    const indexBytes = serializeRecord(rec);
     await this.fs.appendToFile(this.indexPath, indexBytes);
-    this._records.push(rec);
+    this._allRecords.push(rec);
+    this._calcNonOverwritten();
     // logDur(startTime, `AppendStore.appendRecord`);
   }
 
   /**
+   * for debugging
    * @returns {Promise<ArrayBuffer|null>}
    */
   async getIndexContent() {
@@ -239,6 +299,7 @@ export class AppendStore {
   }
 
   /**
+   * for debugging
    * @returns {Promise<ArrayBuffer|null>}
    */
   async getDataContent() {
@@ -261,7 +322,7 @@ export class AppendStore {
       return "";
     }
     let bytes = await this.fs.readFileSegment(this.dataPath, offset, size);
-    return this.utf8Decoder.decode(bytes);
+    return utf8Decoder.decode(bytes);
   }
 
   /**
@@ -272,7 +333,7 @@ export class AppendStore {
     if (!d) {
       return [];
     }
-    const text = this.utf8Decoder.decode(d);
+    const text = utf8Decoder.decode(d);
     return parseIndex(text);
   }
 }
@@ -299,7 +360,10 @@ export function parseIndexCb(s, callback) {
     rest = rest.slice(offsetEnd + 1);
     const sizeEnd = rest.indexOf(" ");
     throwIf(isNaN(sizeEnd), `Invalid index line: '${line}'`);
-    const size = parseInt(rest.slice(0, sizeEnd), 10);
+    let szStr = rest.slice(0, sizeEnd);
+    let szParts = szStr.split(":");
+    const size = parseInt(szParts[0], 10);
+    let sizeInFile = len(szParts) == 2 ? parseInt(szParts[1], 10) : 0;
 
     rest = rest.slice(sizeEnd + 1);
     const timeEnd = rest.indexOf(" ");
