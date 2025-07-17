@@ -1,6 +1,7 @@
 <script>
   import { len } from "../util";
   import "overlayscrollbars/overlayscrollbars.css";
+  import { onMount } from "svelte";
   import { OverlayScrollbars } from "overlayscrollbars";
   import { getOverlayScrollbarOptions } from "../settings.svelte";
 
@@ -29,18 +30,20 @@
   let refs = $state(new Array(n));
   let prevItemsLen = n;
 
-  // make sure to call selectionChanged() callback on initial
-  // selection, so if there's state calcualted based on that,
-  // it gets properly initalized
-  setTimeout(() => {
-    if (initialSelection > n - 1) {
-      initialSelection = n - 1;
-    }
-    if (n === 0) {
-      initialSelection = -1;
-    }
-    select(initialSelection);
-  }, 50);
+  onMount(() => {
+    let timerId = setTimeout(() => {
+      if (initialSelection > n - 1) {
+        initialSelection = n - 1;
+      }
+      if (n === 0) {
+        initialSelection = -1;
+      }
+      select(initialSelection);
+    }, 50);
+    return () => {
+      clearTimeout(timerId);
+    };
+  });
 
   $effect(() => {
     let n = len(items);
