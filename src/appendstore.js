@@ -44,6 +44,9 @@ function padBytes(bytes, padSize) {
   return paddedBytes;
 }
 
+export const kFileSystemOFS = "ofs";
+export const kFileSystemMem = "mem";
+
 export class AppendStore {
   /** @type {AppendStoreRecord[]} */
   _records = [];
@@ -54,14 +57,33 @@ export class AppendStore {
   /** @type {FileSystemOFS | FileSystemMem} */
   fs;
 
-  static async create(fileNamePrefix = "appendStore", clear = false) {
+  static async create(
+    fileNamePrefix = "appendStore",
+    clear = false,
+    fsType = kFileSystemOFS,
+  ) {
     const indexPath = `${fileNamePrefix}_index.txt`;
     const dataPath = `${fileNamePrefix}_data.bin`;
     let res = new AppendStore(indexPath, dataPath);
-    res.fs = new FileSystemOFS();
+    if (fsType === kFileSystemOFS) {
+      res.fs = new FileSystemOFS();
+    } else if (fsType === kFileSystemMem) {
+      res.fs = new FileSystemMem();
+    } else {
+      throw new Error(
+        `Unknown file system type: ${fsType} (must be 'ofs' or 'mem')`,
+      );
+    }
     if (clear) {
-      await res.fs.deleteFile(indexPath);
-      await res.fs.deleteFile(dataPath);
+      try {
+        await res.fs.deleteFile(indexPath);
+        await res.fs.deleteFile(dataPath);
+      } catch (e) {
+        console.warn(
+          `AppendStore.create: failed to delete files ${indexPath} or ${dataPath}`,
+          e,
+        );
+      }
     } else {
       res._records = await res._readIndex();
     }
@@ -134,7 +156,7 @@ export class AppendStore {
    * @param {number} reserveSpaceFactor : 1.4 or 2 are good values
    */
   async overWriteRecord(data, kind, meta, reserveSpaceFactor = 1.0) {
-    const startTime = performance.now();
+    // const startTime = performance.now();
     validateKindAndMeta(kind, meta);
     let existingRecordsIndexes = [];
     let recs = this._records;
@@ -178,7 +200,7 @@ export class AppendStore {
         // we have enough space to overwrite the record
         let rec = await this._writeData(data, kind, meta);
         recs[idx] = rec; // overwrite the record
-        logDur(startTime, `AppendStore.overWriteRecord`);
+        // logDur(startTime, `AppendStore.overWriteRecord`);
         return;
       }
     }
@@ -195,7 +217,7 @@ export class AppendStore {
    * @param {number} padSize
    */
   async appendRecord(data, kind, meta = null, padSize = 0) {
-    const startTime = performance.now();
+    // const startTime = performance.now();
     validateKindAndMeta(kind, meta);
     let rec = await this._writeData(data, kind, meta);
     let { offset, size, timeInMs } = rec;
@@ -203,11 +225,11 @@ export class AppendStore {
     const line = meta
       ? `${offset} ${size} ${timeInMs} ${kind} ${meta}\n`
       : `${offset} ${size} ${timeInMs} ${kind}\n`;
-    console.warn("line:", line);
+    // console.warn("line:", line);
     const indexBytes = this.utf8Encoder.encode(line);
     await this.fs.appendToFile(this.indexPath, indexBytes);
     this._records.push(rec);
-    logDur(startTime, `AppendStore.appendRecord`);
+    // logDur(startTime, `AppendStore.appendRecord`);
   }
 
   /**

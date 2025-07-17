@@ -93,7 +93,7 @@ export class FileSystemMem {
    * @returns {Promise<Uint8Array>}
    */
   async readFileSegment(path, offset, size) {
-    const startTime = performance.now();
+    // const startTime = performance.now();
     const blob = this.files.get(path);
 
     if (!blob) {
@@ -104,7 +104,7 @@ export class FileSystemMem {
     const slice = blob.slice(offset, offset + size);
     const data = await slice.arrayBuffer();
 
-    logDur(startTime, `readFileSegment size:${size}`);
+    // logDur(startTime, `readFileSegment size:${size}`);
     return new Uint8Array(data);
   }
 

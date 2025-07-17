@@ -1,9 +1,9 @@
 import { addBinaryBlob, addTextFile } from "./ziputil";
 import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
+import { ofsDeleteFiles, ofsListFiles } from "./fs-ofs";
 
 import { kMetadataName } from "./metadata";
 import { localStore } from "./store";
-import { ofsListFiles } from "./fs-ofs";
 import { validateIndex } from "./store-local";
 
 const localStorageFiles = [kMetadataName];

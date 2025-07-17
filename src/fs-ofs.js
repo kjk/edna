@@ -22,13 +22,13 @@ async function ofsGetFileSize(path) {
  * @returns {Promise<Uint8Array>}
  */
 async function ofsReadFileSegment(path, offset, size) {
-  const startTime = performance.now();
+  // const startTime = performance.now();
   const root = await navigator.storage.getDirectory();
   const fh = await root.getFileHandle(path);
   const file = await fh.getFile();
   const slice = file.slice(offset, offset + size);
   const data = await slice.arrayBuffer();
-  logDur(startTime, `readFileSegment size:${size}`);
+  // logDur(startTime, `readFileSegment size:${size}`);
   return new Uint8Array(data);
 }
 
