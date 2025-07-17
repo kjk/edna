@@ -2,6 +2,7 @@ import { len, logDur, throwIf } from "./util";
 
 import { FileSystemMem } from "./fs-mem";
 import { FileSystemOFS } from "./fs-ofs";
+import { FileSystemWorkerOFS } from "./fs-worker-ofs";
 
 export class AppendStoreRecord {
   constructor(offset, size, timeInMs, kind, meta = "") {
@@ -46,6 +47,7 @@ function padBytes(bytes, padSize) {
 
 export const kFileSystemOFS = "ofs";
 export const kFileSystemMem = "mem";
+export const kFileSystemWorkerOFS = "worker-ofs";
 
 export class AppendStore {
   /** @type {AppendStoreRecord[]} */
@@ -54,7 +56,7 @@ export class AppendStore {
   indexPath;
   /** @type {string} */
   dataPath;
-  /** @type {FileSystemOFS | FileSystemMem} */
+  /** @type {FileSystemOFS | FileSystemMem | FileSystemWorkerOFS} */
   fs;
 
   static async create(
@@ -69,6 +71,10 @@ export class AppendStore {
       res.fs = new FileSystemOFS();
     } else if (fsType === kFileSystemMem) {
       res.fs = new FileSystemMem();
+    } else if (fsType === kFileSystemWorkerOFS) {
+      let fs = new FileSystemWorkerOFS();
+      await fs.initWorker();
+      res.fs = fs;
     } else {
       throw new Error(
         `Unknown file system type: ${fsType} (must be 'ofs' or 'mem')`,

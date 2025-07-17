@@ -3,6 +3,7 @@ import {
   AppendStoreRecord,
   kFileSystemMem,
   kFileSystemOFS,
+  kFileSystemWorkerOFS,
 } from "./appendstore";
 import { logDur, throwIf } from "./util";
 
@@ -79,8 +80,10 @@ export async function testAppendStoreWithFS(fsType) {
 }
 
 export async function testAppendStore() {
+  console.log("Testing AppendStore with FileSystemWorkerOFS...");
+  await testAppendStoreWithFS(kFileSystemWorkerOFS);
   console.log("Testing AppendStore with FileSystemMem...");
-  await testAppendStoreWithFS("mem");
+  await testAppendStoreWithFS(kFileSystemMem);
   console.log("Testing AppendStore with FileSystemOFS...");
   await testAppendStoreWithFS(kFileSystemOFS);
   console.log("All AppendStore tests passed.");
