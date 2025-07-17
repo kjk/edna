@@ -1,19 +1,8 @@
 import "./main.css";
 import "./markdown-anti-tailwind.css";
 import "highlight.js/styles/github.css";
-import { mount, unmount } from "svelte";
-import { dumpIndex } from "./appendstore";
+
 import { appState, findNoteByName } from "./appstate.svelte";
-import App from "./components/App.svelte";
-import { updateAfterNoteStateChange } from "./globals";
-import { getLoggedUser } from "./login";
-import { loadAppMetadata } from "./metadata";
-import {
-  deleteBrowserStorage,
-  listBrowserStorage,
-  maybeMigrateNotesLocalToBackend,
-} from "./migrate-local-to-backend";
-import { Note } from "./note";
 import {
   createIfNotExists,
   isSystemNoteName,
@@ -22,10 +11,21 @@ import {
   kScratchNoteName,
   reassignNoteShortcut,
 } from "./notes";
-import { getSettings } from "./settings.svelte";
-import { openBackendStore, openLocalStore } from "./store";
 import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
 import { isDev, len } from "./util";
+import { mount, unmount } from "svelte";
+import { ofsDeleteFiles, ofsListFiles } from "./fs-ofs";
+import { openBackendStore, openLocalStore } from "./store";
+
+import App from "./components/App.svelte";
+import { Note } from "./note";
+import { dumpIndex } from "./appendstore";
+import { getLoggedUser } from "./login";
+import { getSettings } from "./settings.svelte";
+import { loadAppMetadata } from "./metadata";
+import { maybeMigrateNotesLocalToBackend } from "./migrate-local-to-backend";
+import { testAppendStore } from "./apppendstore.test";
+import { updateAfterNoteStateChange } from "./globals";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
 
@@ -38,7 +38,7 @@ function resetApp() {
   unmount(appSvelte);
   console.log("clearing localStorage");
   localStorage.clear();
-  deleteBrowserStorage().then(() => {
+  ofsDeleteFiles().then(() => {
     console.log("reloading");
     window.location.reload();
   });
@@ -50,10 +50,11 @@ function setupWindowDebug() {
   }
   // for ad-hoc use by me during development and debugging
   globalThis.debug = {
-    listBrowserStorage: listBrowserStorage,
-    deleteBrowserStorage: deleteBrowserStorage,
+    listBrowserStorage: ofsListFiles,
+    deleteBrowserStorage: ofsDeleteFiles,
     resetApp: resetApp,
     dumpIndex: dumpIndex,
+    testAppendStore: testAppendStore,
   };
 }
 

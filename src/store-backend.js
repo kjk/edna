@@ -201,7 +201,7 @@ export async function backendGetLatestNotes() {
 
 export async function createBackendStore() {
   let contentCacheStore = await AppendStore.create("cache_store");
-  console.log(`cache_store has ${contentCacheStore.records.length} records`);
+  console.log(`cache_store has ${contentCacheStore.records().length} records`);
   let contentCache = new ContentCache(contentCacheStore);
   let store = new BackendStore(contentCache);
   return store;

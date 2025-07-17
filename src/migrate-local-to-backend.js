@@ -2,42 +2,9 @@ import { addBinaryBlob, addTextFile } from "./ziputil";
 import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
 
 import { kMetadataName } from "./metadata";
-import { ofsReadFile } from "./appendstore";
+import { localStore } from "./store";
+import { ofsListFiles } from "./fs-ofs";
 import { validateIndex } from "./store-local";
-
-export async function listBrowserStorage() {
-  try {
-    const root = await navigator.storage.getDirectory();
-    console.log("OPFS Root Contents:");
-
-    // @ts-ignore
-    for await (const [name, handle] of root.entries()) {
-      if (handle.kind === "file") {
-        let f = await handle.getFile();
-        console.log(
-          `File: ${name}, size: ${f.size} bytes, modified: ${f.lastModifiedDate}`,
-        );
-      } else if (handle.kind === "directory") {
-        console.log(`Directory: ${name}`);
-      }
-    }
-  } catch (error) {
-    console.error("Error accessing OPFS:", error);
-  }
-}
-
-export async function deleteBrowserStorage(files = null) {
-  const root = await navigator.storage.getDirectory();
-  // @ts-ignore
-  for await (const name of root.keys()) {
-    if (files && !files.includes(name)) {
-      continue;
-    }
-    await root.removeEntry(name, { recursive: true });
-    console.warn(`Deleted entry: ${name}`);
-  }
-  console.warn("Browser storage cleared.");
-}
 
 const localStorageFiles = [kMetadataName];
 
@@ -46,16 +13,19 @@ const localStorageFiles = [kMetadataName];
  * @returns {Promise<Blob|null>}
  */
 async function createLocalStoreZip(validate = false) {
-  let indexFileName = "notes_store_index.txt";
-  let dataFileName = "notes_store_data.bin";
-  let indexContent = await ofsReadFile(indexFileName);
+  let store = localStore?.store;
+  if (!store) {
+    console.warn("createLocalStoreZip: localStore is not initialized");
+    return null;
+  }
+  let indexContent = await store.getIndexContent();
   if (len(indexContent) === 0) {
     console.warn(
       "maybeMigrateNotesLocalToBackend: index file is empty, skipping migration",
     );
     return null;
   }
-  let dataContent = await ofsReadFile(dataFileName);
+  let dataContent = await store.getDataContent();
   if (len(dataContent) === 0) {
     console.warn(
       "maybeMigrateNotesLocalToBackend: data file is empty, skipping migration",
@@ -115,8 +85,8 @@ export async function maybeMigrateNotesLocalToBackend() {
     );
   }
   let toDelete = ["notes_store_data.bin", "notes_store_index.txt"];
-  await deleteBrowserStorage(toDelete);
-  await listBrowserStorage();
+  await ofsDeleteFiles(toDelete);
+  await ofsListFiles();
   for (let file of localStorageFiles) {
     localStorage.removeItem(file);
   }

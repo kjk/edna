@@ -46,7 +46,7 @@ function padBytes(bytes, padSize) {
 
 export class AppendStore {
   /** @type {AppendStoreRecord[]} */
-  records = [];
+  _records = [];
   /** @type {string} */
   indexPath;
   /** @type {string} */
@@ -54,13 +54,22 @@ export class AppendStore {
   /** @type {FileSystemOFS | FileSystemMem} */
   fs;
 
-  static async create(fileNamePrefix = "appendStore") {
+  static async create(fileNamePrefix = "appendStore", clear = false) {
     const indexPath = `${fileNamePrefix}_index.txt`;
     const dataPath = `${fileNamePrefix}_data.bin`;
     let res = new AppendStore(indexPath, dataPath);
     res.fs = new FileSystemOFS();
-    res.records = await res._readIndex();
+    if (clear) {
+      await res.fs.deleteFile(indexPath);
+      await res.fs.deleteFile(dataPath);
+    } else {
+      res._records = await res._readIndex();
+    }
     return res;
+  }
+
+  records() {
+    return this._records;
   }
 
   async getIndexAsString() {
@@ -128,7 +137,7 @@ export class AppendStore {
     const startTime = performance.now();
     validateKindAndMeta(kind, meta);
     let existingRecordsIndexes = [];
-    let recs = this.records;
+    let recs = this._records;
     let n = recs.length;
     for (let i = 0; i < n; i++) {
       let rec = recs[i];
@@ -197,11 +206,31 @@ export class AppendStore {
     console.warn("line:", line);
     const indexBytes = this.utf8Encoder.encode(line);
     await this.fs.appendToFile(this.indexPath, indexBytes);
-    this.records.push(rec);
+    this._records.push(rec);
     logDur(startTime, `AppendStore.appendRecord`);
   }
 
-  async readString(offset, size) {
+  /**
+   * @returns {Promise<ArrayBuffer|null>}
+   */
+  async getIndexContent() {
+    return await this.fs.readFile(this.indexPath);
+  }
+
+  /**
+   * @returns {Promise<ArrayBuffer|null>}
+   */
+  async getDataContent() {
+    return await this.fs.readFile(this.dataPath);
+  }
+
+  /**
+   * Reads a record from the store as a string
+   * @param {AppendStoreRecord} rec
+   * @returns {Promise<string>}
+   */
+  async readRecordAsString(rec) {
+    const { offset, size } = rec;
     if (offset < 0 || size < 0) {
       throw new Error(`Invalid offset '${offset}' or size '${size}`);
     }

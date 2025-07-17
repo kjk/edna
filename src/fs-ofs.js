@@ -92,6 +92,41 @@ async function ofsAppendToFile(path, blob) {
   return offset;
 }
 
+/**
+ * @param {string[]} files
+ */
+export async function ofsDeleteFiles(files = null) {
+  const root = await navigator.storage.getDirectory();
+  // @ts-ignore
+  for await (const name of root.keys()) {
+    if (files && !files.includes(name)) {
+      continue;
+    }
+    await root.removeEntry(name, { recursive: true });
+  }
+}
+
+export async function ofsListFiles() {
+  try {
+    const root = await navigator.storage.getDirectory();
+    console.log("OPFS Root Contents:");
+
+    // @ts-ignore
+    for await (const [name, handle] of root.entries()) {
+      if (handle.kind === "file") {
+        let f = await handle.getFile();
+        console.log(
+          `File: ${name}, size: ${f.size} bytes, modified: ${f.lastModifiedDate}`,
+        );
+      } else if (handle.kind === "directory") {
+        console.log(`Directory: ${name}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error accessing OPFS:", error);
+  }
+}
+
 export class FileSystemOFS {
   /**
    * @param {string} path
@@ -133,5 +168,10 @@ export class FileSystemOFS {
    */
   async readFileSegment(path, offset, size) {
     return await ofsReadFileSegment(path, offset, size);
+  }
+
+  async deleteFile(path) {
+    const root = await navigator.storage.getDirectory();
+    await root.removeEntry(path, { recursive: true });
   }
 }

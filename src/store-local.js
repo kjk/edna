@@ -43,12 +43,11 @@ export class LocalStore {
    */
   async getString(key) {
     let store = this.store;
-    let rec = findPutRecord(store.records, key);
+    let rec = findPutRecord(store.records(), key);
     if (!rec) {
       return null; // no content found
     }
-    let { offset, size } = rec;
-    let content = await store.readString(offset, size);
+    let content = await store.readRecordAsString(rec);
     return content;
   }
 
@@ -171,7 +170,7 @@ let localStore;
 
 export async function createLocalStore() {
   let apstore = await AppendStore.create("notes_store");
-  console.log(`notes_store has ${apstore.records.length} records`);
+  console.log(`notes_store has ${apstore.records().length} records`);
   localStore = new LocalStore(apstore);
   return localStore;
 }
