@@ -218,7 +218,7 @@
           : "bg-gray-200 dark:bg-gray-500! hover:bg-gray-100 cursor-pointer"}
         {@const noteNameCls = noteCls(noteName)}
         <button
-          class="truncate justify-between whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 align-baseline clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 items-center {cls}"
+          class="truncate justify-between items-center whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 group {cls}"
           onclick={() => openNote(noteName, false)}
           title={getNameWithShortcut(noteName)}
         >
@@ -233,7 +233,7 @@
                 ev.stopPropagation();
                 closeTab(noteName);
               }}
-              class="hover:bg-red-300 hover:text-red-600"
+              class="hover:bg-red-300 hover:text-red-600 invisible group-hover:visible flex"
             >
               {@render IconTablerX()}
             </div>
