@@ -9,11 +9,6 @@
     "Scrolllock",
     "topnav"
   ],
-  "[vue]": {
-    "editor.defaultFormatter": "Vue.volar",
-    "editor.formatOnSave": true,
-    "editor.tabSize": 2,
-  },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
