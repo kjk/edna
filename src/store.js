@@ -1,11 +1,7 @@
 import { AppendStore } from "./appendstore";
 import { Note } from "./note";
-import {
-  backendGetLatestNotes,
-  BackendStore,
-  createBackendStore,
-} from "./store-backend";
-import { createLocalStore, LocalStore, notesFromStoreLog } from "./store-local";
+import { BackendStore, createBackendStore } from "./store-backend";
+import { createLocalStore, LocalStore } from "./store-local";
 import { throwIf } from "./util";
 
 /** @type { LocalStore | BackendStore } */
@@ -70,18 +66,28 @@ export async function storeGetString(contentId) {
 export let localStore;
 
 /**
- * @returns {Promise<Note[]>}
+ * @returns {Promise<LocalStore>}
  */
 export async function openLocalStore() {
   throwIf(store != undefined, "store already opened");
   localStore = await createLocalStore();
   store = localStore;
-  return notesFromStoreLog(localStore.store.records());
+  return localStore;
 }
 
+export function closeLocalStore() {
+  localStore = null;
+  store = null;
+}
+
+/** @type { BackendStore } */
+export let backendStore;
+
+/**
+ * @returns {Promise<BackendStore>}
+ */
 export async function openBackendStore() {
-  let backendStore = await createBackendStore();
+  backendStore = await createBackendStore();
   store = backendStore;
-  let res = await backendGetLatestNotes();
-  return res;
+  return backendStore;
 }

@@ -77,6 +77,9 @@
 
   let showingHelp = $state(false);
 
+  /**
+   * @param {string} url
+   */
   function openURLOrNote(url) {
     showingHelp = false;
     if (url.startsWith("system:")) {
@@ -92,6 +95,10 @@
   let showingMenu = $state(false);
   let noFocusEditorOnMenuOut = false;
   let menuPos = { x: 0, y: 0 };
+
+  /**
+   * @param {number} cmdid
+   */
   function myOnMenuCmd(cmdid) {
     noFocusEditorOnMenuOut = true;
     showingMenu = false;

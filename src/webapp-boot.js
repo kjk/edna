@@ -114,12 +114,14 @@ export async function boot() {
   let user = await getLoggedUser();
   console.log("user:", user);
   appState.user = user;
+  let store;
   if (user) {
     await maybeMigrateNotesLocalToBackend();
-    appState.allNotes = await openBackendStore();
+    store = await openBackendStore();
   } else {
-    appState.allNotes = await openLocalStore();
+    store = await openLocalStore();
   }
+  appState.allNotes = await store.getAllNotes();
   updateAfterNoteStateChange();
   await loadAppMetadata(); // pre-load
 

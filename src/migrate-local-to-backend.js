@@ -1,10 +1,9 @@
-import { addBinaryBlob, addTextFile } from "./ziputil";
-import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
 import { ofsDeleteFiles, ofsListFiles } from "./fs-ofs";
-
 import { kMetadataName } from "./metadata";
-import { localStore } from "./store";
+import { closeLocalStore, openLocalStore } from "./store";
 import { validateIndex } from "./store-local";
+import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
+import { addBinaryBlob, addTextFile } from "./ziputil";
 
 const localStorageFiles = [kMetadataName];
 
@@ -13,25 +12,24 @@ const localStorageFiles = [kMetadataName];
  * @returns {Promise<Blob|null>}
  */
 async function createLocalStoreZip(validate = false) {
-  let store = localStore?.store;
-  if (!store) {
-    console.warn("createLocalStoreZip: localStore is not initialized");
-    return null;
-  }
-  let indexContent = await store.getIndexContent();
+  let localStore = await openLocalStore();
+
+  let indexContent = await localStore.store.getIndexContent();
   if (len(indexContent) === 0) {
     console.warn(
       "maybeMigrateNotesLocalToBackend: index file is empty, skipping migration",
     );
     return null;
   }
-  let dataContent = await store.getDataContent();
+  let dataContent = await localStore.store.getDataContent();
   if (len(dataContent) === 0) {
     console.warn(
       "maybeMigrateNotesLocalToBackend: data file is empty, skipping migration",
     );
     return null;
   }
+  closeLocalStore();
+
   if (validate) {
     let s = new TextDecoder().decode(indexContent);
     try {

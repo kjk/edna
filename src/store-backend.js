@@ -5,6 +5,9 @@ export class ContentCache {
   /** @type {AppendStore} */
   store;
 
+  /**
+   * @param {AppendStore} store
+   */
   constructor(store) {
     this.store = store;
   }
@@ -14,6 +17,9 @@ export class BackendStore {
   /** @type {ContentCache} */
   contentCache;
 
+  /**
+   * @param {ContentCache} contentCache
+   */
   constructor(contentCache) {
     this.contentCache = contentCache;
   }
@@ -121,6 +127,13 @@ export class BackendStore {
     let s = await rsp.text();
     return s;
   }
+
+  /**
+   * @returns {Promise<Note[]>}
+   */
+  async getAllNotes() {
+    return await backendGetLatestNotes();
+  }
 }
 
 /**
@@ -171,7 +184,7 @@ const kKeyLatestNotes = "elaris:latestNotes";
 /**
  * @returns {Promise<Note[]>}
  */
-export async function backendGetLatestNotes() {
+async function backendGetLatestNotes() {
   console.log("backendGetLatestNotes");
   let s = localStorage.getItem(kKeyLatestNotes);
   let curr = parseLatestNotes(s);

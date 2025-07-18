@@ -64,14 +64,18 @@ export class LocalStore {
     // console.log("putString:", key, content?.substring(0, 20));
     let store = this.store;
     await store.appendRecord(kStorePut, content, key);
-    await debugValidateLocalStoreIndex();
+    await debugValidateLocalStoreIndex(this);
   }
 
+  /**
+   * @param {string} key
+   * @param {string} content
+   */
   async putStringOverwrite(key, content) {
     // console.log("putStringOverwrite:", key, content?.substring(0, 20));
     let store = this.store;
     await store.overWriteRecord(content, kStorePutOverwrite, key);
-    await debugValidateLocalStoreIndex();
+    await debugValidateLocalStoreIndex(this);
   }
 
   /**
@@ -82,7 +86,7 @@ export class LocalStore {
     // we expect m to be small so storing in index as meta
     let meta = JSON.stringify(m);
     await store.appendRecord(kStoreSetNoteMeta, null, meta);
-    await debugValidateLocalStoreIndex();
+    await debugValidateLocalStoreIndex(this);
   }
 
   /**
@@ -107,7 +111,7 @@ export class LocalStore {
   async deleteNote(noteId) {
     let store = this.store;
     await store.appendRecord(kStoreDeleteNote, null, noteId);
-    await debugValidateLocalStoreIndex();
+    await debugValidateLocalStoreIndex(this);
   }
 
   /**
@@ -119,7 +123,15 @@ export class LocalStore {
     let store = this.store;
     let meta = `${noteId}:${name}`;
     await store.appendRecord(kStoreCreateNote, null, meta);
-    await debugValidateLocalStoreIndex();
+    await debugValidateLocalStoreIndex(this);
+  }
+
+  /**
+   * @returns {Promise<Note[]>}
+   */
+  async getAllNotes() {
+    let store = this.store;
+    return notesFromStoreLog(store.records());
   }
 }
 
@@ -127,7 +139,7 @@ export class LocalStore {
  * @param {AppendStoreRecord[]} records
  * @returns {Note[]}
  */
-export function notesFromStoreLog(records) {
+function notesFromStoreLog(records) {
   let res = [];
   let m = new Map();
   for (let rec of records) {
@@ -171,8 +183,6 @@ export function notesFromStoreLog(records) {
   return res;
 }
 
-let localStore;
-
 export async function createLocalStore() {
   let apstore = await AppendStore.create(
     "notes_store",
@@ -180,8 +190,7 @@ export async function createLocalStore() {
     false,
   );
   console.log(`notes_store has ${apstore.records().length} records`);
-  localStore = new LocalStore(apstore);
-  return localStore;
+  return new LocalStore(apstore);
 }
 
 /**
@@ -226,8 +235,10 @@ export function validateIndex(s) {
   });
 }
 
-export async function validateLocalStoreIndex() {
-  throwIf(!localStore, "Local store is not initialized");
+/**
+ * @param {LocalStore} localStore
+ */
+async function validateLocalStoreIndex(localStore) {
   let s = await localStore.store.getIndexAsString();
   try {
     validateIndex(s);
@@ -237,8 +248,11 @@ export async function validateLocalStoreIndex() {
   }
 }
 
-async function debugValidateLocalStoreIndex() {
+/**
+ * @param {LocalStore} localStore
+ */
+async function debugValidateLocalStoreIndex(localStore) {
   if (isDev()) {
-    await validateLocalStoreIndex();
+    await validateLocalStoreIndex(localStore);
   }
 }
