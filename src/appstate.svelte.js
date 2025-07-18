@@ -45,9 +45,15 @@ class AppState {
 
   isOffline = $state(!navigator.onLine);
 
+  // if true, next call to open a note will open in a new tab
   forceNewTab = false;
+
+  //keeps editor selection / cursor state for notes
+  // key is note id
   /** @type {Map<string, any>} */
   noteSelectionState = new Map();
+
+  showingLogin = $state(false);
 }
 
 // TODO: maybe convert to $effect() on appState.notes

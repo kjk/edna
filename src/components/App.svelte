@@ -135,6 +135,7 @@
   import FindInNotes from "./FindInNotes.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
+  import Login from "./Login.svelte";
   import ModalMessage, {
     clearModalMessage,
     modalMessageState,
@@ -196,6 +197,7 @@
       showingHistorySelector ||
       showingBlockSelector ||
       showingFindInNotes ||
+      appState.showingLogin ||
       showingDecryptPassword ||
       showingEncryptPassword
     );
@@ -215,6 +217,7 @@
     showingBlockSelector = false;
     showingFindInNotes = false;
     showingAskAI = false;
+    appState.showingLogin = false;
 
     appState.forceNewTab = false;
 
@@ -2049,13 +2052,6 @@
   function docDidChange() {
     updateDocSize();
   }
-
-  // debug functions to be called from dev tools console as:
-  // window.edna.debug.clearLocalStorage etc.
-  // @ts-ignore
-  window.elaris = {
-    debug: {},
-  };
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -2249,5 +2245,11 @@
       startText={askAIStartText}
       insertResponse={insertAskAIResponse}
     ></AskAI>
+  </Overlay>
+{/if}
+
+{#if appState.showingLogin}
+  <Overlay blur={true} onclose={closeDialogs}>
+    <Login onclose={() => (appState.showingLogin = false)} />
   </Overlay>
 {/if}

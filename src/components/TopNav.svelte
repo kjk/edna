@@ -21,7 +21,7 @@
   /** @typedef {import("../Menu.svelte").MenuDef} MenuDef */
   /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
 
-  /** @type {{ 
+  /** @type {{
     class?: string,
     openNote: (name: string, newTab: boolean) => void,
     closeTab: (name: string) => void,
@@ -89,15 +89,18 @@
     window.open(url, "_blank");
   }
 
-  let shwingMenu = $state(false);
+  let showingMenu = $state(false);
   let noFocusEditorOnMenuOut = false;
   let menuPos = { x: 0, y: 0 };
   function myOnMenuCmd(cmdid) {
     noFocusEditorOnMenuOut = true;
-    shwingMenu = false;
+    showingMenu = false;
     onmenucmd(cmdid);
   }
 
+  /**
+   * @param {string} name
+   */
   function noteCls(name) {
     let note = findNoteByName(name);
     let isArchived = note && note.isArchived;
@@ -133,10 +136,10 @@
     onmouseenter={(ev) => {
       menuPos = { x: ev.x, y: ev.y };
       noFocusEditorOnMenuOut = false;
-      shwingMenu = true;
+      showingMenu = true;
     }}
     onmouseleave={() => {
-      shwingMenu = false;
+      showingMenu = false;
       if (!noFocusEditorOnMenuOut) {
         focusEditor();
       }
@@ -144,7 +147,7 @@
     class="clickable-icon relative"
   >
     {@render IconMenu()}
-    {#if shwingMenu}
+    {#if showingMenu}
       {@const menuDef = buildMenuDef()}
       <Menu {menuItemStatus} onmenucmd={myOnMenuCmd} {menuDef} pos={null} />
     {/if}
@@ -271,12 +274,12 @@
         </div>
       </div>
     {:else}
-      <a
+      <button
         title="LogIn with GitHub to access notes from any computer"
-        href="/auth/ghlogin"
+        onclick={() => (appState.showingLogin = true)}
         class="relative flex items-center mr-4 font-bold text-slate-600 dark:text-slate-200 clickable-icon"
         ><GitHub class="mt-[1px]" />
-        <div class="ml-1.5">login</div></a
+        <div class="ml-1.5">login</div></button
       >
     {/if}
 
