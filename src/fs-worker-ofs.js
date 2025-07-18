@@ -11,9 +11,8 @@ export class FileSystemWorkerOFS {
   async initWorker() {
     if (this.worker) return;
 
-    this.worker = new Worker("./fs-worker-ofs-webworker.js", {
-      type: "module",
-    });
+    const workerUrl = new URL("./fs-worker-ofs-webworker.js", import.meta.url);
+    this.worker = new Worker(workerUrl, { type: "module" });
 
     this.worker.onmessage = (e) => {
       const { id, success, result, error } = e.data;
