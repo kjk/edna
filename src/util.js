@@ -497,6 +497,11 @@ export function noOp() {
   // do nothing
 }
 
+/**
+ * @param {string} s
+ * @param {number} startIdx
+ * @param {number} endIdx
+ */
 export function isWholeWord(s, startIdx, endIdx) {
   // Ensure indices are within the string boundaries
   if (startIdx < 0 || endIdx > s.length || startIdx >= endIdx) {
@@ -510,6 +515,9 @@ export function isWholeWord(s, startIdx, endIdx) {
   return startOk && endOk;
 }
 
+/**
+ * @param {string} input
+ */
 export function splitStringPreservingQuotes(input) {
   // This regex matches sequences of characters that are either:
   // 1. Enclosed in double quotes ("quoted text")
@@ -544,6 +552,10 @@ export function makeHilightRegExp(filter) {
   return new RegExp(`(${s})`, "gi");
 }
 
+/**
+ * @param {string} s
+ * @param {RegExp} regexp
+ */
 export function hilightText(s, regexp) {
   // console.log("hilightText:", s, regexp);
   return s.replace(regexp, '<span class="hili">$1</span>');
@@ -557,12 +569,20 @@ export function copyObj(src, keys) {
   return res;
 }
 
+/**
+ * @param {any[]} arr
+ * @param {any} item
+ */
 export function pushIfNotExists(arr, item) {
   if (!arr.includes(item)) {
     arr.push(item);
   }
 }
 
+/**
+ * @param {any[]} arr
+ * @param {any} item
+ */
 export function arrayRemove(arr, item) {
   let i = arr.indexOf(item);
   if (i >= 0) {

@@ -1,6 +1,8 @@
 package server
 
 import (
+	"archive/zip"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -83,11 +85,15 @@ type GetNotesResponse struct {
 	NotesCompact [][]any
 }
 
+const kNoteFlagIsStarred = 0x01
+const kNoteFlagIsArchived = 0x02
+
 // must match store-local.js
 const kStoreCreateNote = "note-create"
 const kStoreDeleteNote = "note-delete"
 const kStoreSetNoteMeta = "note-meta"
 const kStorePut = "put"
+const kStorePutOverwrite = "put-o"
 
 type NoteInfo struct {
 	id          string
@@ -187,8 +193,76 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 	return notes, nil
 }
 
-const kNoteFlagIsStarred = 0x01
-const kNoteFlagIsArchived = 0x02
+type GetMultiRequest struct {
+	VerIDs []string
+}
+
+func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
+	// searching from the is faster bcause we're likely looking
+	// for recent record
+	for i := len(recs) - 1; i >= 0; i-- {
+		rec := recs[i]
+		if rec.Meta == key && rec.Kind == kStorePut {
+			return rec
+		}
+	}
+	return nil
+}
+
+func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	logf("handleStoreGetNotesMultiContent: user %s\n", userInfo.Email)
+	d, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to read request body: %v", err), http.StatusInternalServerError)
+		return
+	}
+	req := &GetMultiRequest{}
+	if err := json.Unmarshal(d, req); err != nil {
+		http.Error(w, fmt.Sprintf("failed to unmarshal request body: %v", err), http.StatusBadRequest)
+		return
+	}
+	if len(req.VerIDs) == 0 {
+		http.Error(w, "no note ids provided", http.StatusBadRequest)
+		return
+	}
+	store := userInfo.Store
+	buf := bytes.Buffer{}
+	zipFile := zip.NewWriter(&buf)
+	recs := store.Records()
+	for _, verID := range req.VerIDs {
+		rec := findPutRecord(recs, verID)
+		if rec == nil {
+			http.Error(w, fmt.Sprintf("note %s does not exist", verID), http.StatusNotFound)
+			return
+		}
+		d, err := store.ReadRecord(rec)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to get note content %s: %v", verID, err), http.StatusInternalServerError)
+			return
+		}
+		header := &zip.FileHeader{
+			Name:   verID,
+			Method: zip.Deflate,
+		}
+		zipWriter, err := zipFile.CreateHeader(header)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to create zip file entry for %s: %v", verID, err), http.StatusInternalServerError)
+			return
+		}
+		if _, err := zipWriter.Write(d); err != nil {
+			http.Error(w, fmt.Sprintf("failed to write note content %s to zip file: %v", verID, err), http.StatusInternalServerError)
+			return
+		}
+	}
+	if err := zipFile.Close(); err != nil {
+		http.Error(w, fmt.Sprintf("failed to close zip file", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.WriteHeader(http.StatusOK)
+	w.Write(buf.Bytes())
+	logf("handleStoreGetNotesMultiContent: finished\n")
+}
 
 // as an optimization, we only send the last version id of note content
 // front-end doesn't need more and can request more if needed
@@ -314,18 +388,6 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 	}
 	rsp.Message = fmt.Sprintf("Successfully uploaded %d records", len(userInfo.Store.Records()))
 	serve200JSON(w, r, rsp)
-}
-
-func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
-	// searching from the is faster bcause we're likely looking
-	// for recent record
-	for i := len(recs) - 1; i >= 0; i-- {
-		rec := recs[i]
-		if rec.Meta == key && rec.Kind == kStorePut {
-			return rec
-		}
-	}
-	return nil
 }
 
 func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
@@ -471,6 +533,10 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	}
 	if uri == "/api/store/getNotes" {
 		handleStoreGetNotes(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/getNotesMultiContent" {
+		handleStoreGetNotesMultiContent(w, r, userInfo)
 		return
 	}
 	if uri == "/api/store/getString" {

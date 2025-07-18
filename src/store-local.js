@@ -11,7 +11,7 @@ import { isDev, len, throwIf } from "./util";
 const kStoreCreateNote = "note-create";
 const kStoreDeleteNote = "note-delete";
 const kStoreSetNoteMeta = "note-meta";
-const kStorePut = "put";
+export const kStorePut = "put";
 const kStorePutOverwrite = "put-o";
 
 /**

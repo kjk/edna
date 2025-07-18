@@ -55,6 +55,10 @@ export class Note {
     this.id = id;
     this.name = name;
   }
+
+  currContentVersionId() {
+    return this.versionIds[this.versionIds.length - 1];
+  }
 }
 
 const kNoteIdLen = 4;
