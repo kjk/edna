@@ -28,7 +28,7 @@ var (
 	muStore sync.Mutex
 )
 
-func getLoggedUser(r *http.Request, w http.ResponseWriter) (*UserInfo, error) {
+func getLoggedUser(r *http.Request, _ http.ResponseWriter) (*UserInfo, error) {
 	cookie := getSecureCookie(r)
 	if cookie == nil || cookie.Email == "" {
 		return nil, fmt.Errorf("user not logged in (no cookie)")
@@ -73,14 +73,14 @@ func getLoggedUser(r *http.Request, w http.ResponseWriter) (*UserInfo, error) {
 	return userInfo, nil
 }
 
-func serve404(w http.ResponseWriter, r *http.Request, s string) {
+func serve404(w http.ResponseWriter, _ *http.Request, s string) {
 	http.Error(w, s, http.StatusNotFound)
 }
 
 type GetNotesResponse struct {
 	Ver          int
 	LastChangeID int
-	NotesCompact [][]interface{}
+	NotesCompact [][]any
 }
 
 // must match store-local.js
@@ -220,7 +220,7 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		http.Error(w, fmt.Sprintf("failed to get notes: %s", err), http.StatusInternalServerError)
 		return
 	}
-	notesCompact := make([][]interface{}, 0, len(notes))
+	notesCompact := make([][]any, 0, len(notes))
 
 	for _, ni := range notes {
 		if ni.isDeleted {
@@ -238,7 +238,7 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		if len(ni.versionIds) > 0 {
 			lastVersionId = ni.versionIds[len(ni.versionIds)-1]
 		}
-		nc := []interface{}{
+		nc := []any{
 			ni.id,
 			ni.name,
 			flags,
