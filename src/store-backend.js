@@ -170,8 +170,8 @@ function notesFromCompact(compactNotes) {
     note.isStarred = (flags & kNoteFlagIsStarred) !== 0;
     note.isArchived = (flags & kNoteFlagIsArchived) !== 0;
     note.altShortcut = n[3] || "";
-    // 4 is createdAt
-    // 5 is updatedAt
+    note.createdAt = n[4];
+    note.updatedAt = n[5];
     note.versionIds = n.slice(6);
     res.push(note);
   }

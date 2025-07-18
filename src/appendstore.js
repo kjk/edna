@@ -9,17 +9,17 @@ export class AppendStoreRecord {
   /**
    * @param {number} offset
    * @param {number} size
-   * @param {number} timeInMs
+   * @param {number} timestampMs
    * @param {string} kind
    * @param {string} meta
    */
-  constructor(offset, size, timeInMs, kind, meta = null) {
+  constructor(offset, size, timestampMs, kind, meta = null) {
     /** @type {number} */
     this.offset = offset;
     /** @type {number} */
     this.size = size;
     /** @type {number} */
-    this.timeInMs = timeInMs;
+    this.timestampMs = timestampMs;
     /** @type {string} */
     this.kind = kind;
     /** @type {string?} */
@@ -71,10 +71,10 @@ function serializeRecord(rec) {
   } else {
     sz = `${rec.size}`;
   }
-  let { offset, timeInMs, kind, meta } = rec;
+  let { offset, timestampMs, kind, meta } = rec;
   const line = meta
-    ? `${offset} ${sz} ${timeInMs} ${kind} ${meta}\n`
-    : `${offset} ${sz} ${timeInMs} ${kind}\n`;
+    ? `${offset} ${sz} ${timestampMs} ${kind} ${meta}\n`
+    : `${offset} ${sz} ${timestampMs} ${kind}\n`;
   return utf8Encoder.encode(line);
 }
 

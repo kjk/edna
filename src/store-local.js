@@ -4,7 +4,7 @@ import {
   kFileSystemWorkerOFS,
   parseIndexCb,
 } from "./appendstore";
-import { Note, noteIdFromContentId } from "./note";
+import { Note, noteIdFromVerId } from "./note";
 import { isDev, len, throwIf } from "./util";
 
 // must match store.go
@@ -149,6 +149,7 @@ function notesFromStoreLog(records) {
       let noteId = rec.meta.substring(0, idx);
       let name = rec.meta.substring(idx + 1);
       let note = new Note(noteId, name);
+      note.createdAt = rec.timestampMs;
       m.set(note.id, note);
     } else if (rec.kind === kStoreSetNoteMeta) {
       let meta = JSON.parse(rec.meta);
@@ -158,6 +159,7 @@ function notesFromStoreLog(records) {
         continue;
       }
       note.applyMetadata(meta);
+      note.updatedAt = rec.timestampMs;
     } else if (rec.kind === kStoreDeleteNote) {
       let noteId = rec.meta;
       let note = m.get(noteId);
@@ -168,13 +170,14 @@ function notesFromStoreLog(records) {
       m.delete(noteId);
     } else if (rec.kind === kStorePut) {
       let verId = rec.meta; // verId is noteId:verId
-      let noteId = noteIdFromContentId(verId);
+      let noteId = noteIdFromVerId(verId);
       let note = m.get(noteId);
       if (!note) {
         console.warn("kStorePut: no note for meta:", verId);
         continue;
       }
       note.versionIds.push(verId);
+      note.updatedAt = rec.timestampMs;
     }
   }
   for (let note of m.values()) {
@@ -217,7 +220,7 @@ export function validateIndex(s) {
       m.delete(noteId);
     } else if (k === kStorePut) {
       let verId = meta; // verId is noteId:verId
-      let noteId = noteIdFromContentId(verId);
+      let noteId = noteIdFromVerId(verId);
       throwIf(
         !m.has(noteId),
         `Putting non-existing note: ${noteId}, line: ${line}`,

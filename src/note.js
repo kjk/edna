@@ -20,6 +20,10 @@ export class Note {
   isStarred;
   /** @type {string}  */
   altShortcut;
+  /** @type {number} */
+  createdAt;
+  /** @type {number} */
+  updatedAt;
 
   getMetadata() {
     // by using toUndef() we make JSON-serialized version
@@ -43,6 +47,10 @@ export class Note {
     this.altShortcut = m.altShortcut;
   }
 
+  /**
+   * @param {string} [id]
+   * @param {string} [name]
+   */
   constructor(id, name) {
     this.id = id;
     this.name = name;
@@ -67,7 +75,10 @@ export function mkRandomContentId(noteID) {
   return noteID + ":" + nanoid(kNoteCotentIdLen);
 }
 
-export function noteIdFromContentId(verId) {
+/**
+ * @param {string} verId
+ */
+export function noteIdFromVerId(verId) {
   let idx = verId.indexOf(":");
   if (idx < 0) {
     throw new Error("invalid contentId: " + verId);
