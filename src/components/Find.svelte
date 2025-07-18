@@ -110,16 +110,19 @@
 
   /**
    * Compare equality of this query with the another one.
+   * @param {SearchQuery} other
    */
+  // @ts-ignore
   function _compare(other) {
     let res = untrack(() => query.eq(other) && query.literal == other.literal);
     return res;
   }
 
-  function _setQuery(q, internal) {
-    console.log("_setQuery:", q);
-  }
+  // function _setQuery(q, internal) {
+  //   console.log("_setQuery:", q);
+  // }
 
+  // @ts-ignore
   export function update(update) {
     // console.log("find update", update);
     // let resetCounter = false;
@@ -204,23 +207,28 @@
   }
 
   function next() {
+    // @ts-ignore
     findNext(view);
     updateCurrentMatchCount();
   }
 
   function prev() {
+    // @ts-ignore
     findPrevious(view);
     updateCurrentMatchCount();
   }
 
   function all() {
+    // @ts-ignore
     selectMatches(view);
   }
 
   function replace() {
+    // @ts-ignore
     replaceNext(view);
   }
   function _replaceAll() {
+    // @ts-ignore
     replaceAll(view);
   }
 
@@ -255,12 +263,14 @@
 
     return () => {
       isMoving.disableMoveTracking = false;
+      // @ts-ignore
       closeSearchPanel(view);
     };
   });
 
   function close() {
     isMoving.disableMoveTracking = false;
+    // @ts-ignore
     closeSearchPanel(view);
   }
   function matchCase() {
@@ -275,6 +285,9 @@
     appState.searchRegex = !appState.searchRegex;
     console.log("matchRegex", appState.searchRegex);
   }
+  /**
+   * @param {boolean} isPressed
+   */
   function btnPressedCls(isPressed) {
     return isPressed
       ? "bg-gray-100 border-1 border-gray-300"

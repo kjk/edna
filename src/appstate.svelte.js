@@ -112,7 +112,7 @@ export function getNotes() {
 /**
  * @param {string} name
  * @param {boolean} [quiet=false] set if you don't expect note to exist
- * @returns {Note}
+ * @returns {Note|null}
  */
 export function findNoteByName(name, quiet = false) {
   for (let note of appState.allNotes) {

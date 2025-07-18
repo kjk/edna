@@ -76,7 +76,9 @@
   <div class="flex justify-between items-baseline">
     <div></div>
     <div class="self-center font-semibold mb-4">Login to Elaris</div>
-    <div class="kbd mt-[4px]">Esc</div>
+    <button title="Close" onclick={() => onclose()} class="kbd-btn mt-[4px]"
+      >Esc</button
+    >
   </div>
 
   <div class="mb-4">

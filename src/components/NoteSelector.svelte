@@ -359,6 +359,9 @@
   function toggleShowArchived() {
     appState.showingArchived = !appState.showingArchived;
   }
+  /**
+   * @param {boolean} isShowing
+   */
   function showHideTxt(isShowing) {
     return isShowing ? "hide" : "show";
   }
@@ -377,7 +380,7 @@
 {#snippet showArchived()}
   {#if len(appState.archivedNotes)}
     <div
-      class="flex justify-around text-gray-700 text-sm max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
+      class="flex justify-end text-gray-700 text-sm max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
     >
       {#if len(appState.archivedNotes) > 0}
         <button
@@ -565,7 +568,7 @@
         </div>
 
         <div
-          class="absolute top-0 right-[8px] opacity-0 invisible group-hover:visible group-hover:opacity-100 flex items-center self-center bg-gray-100"
+          class="absolute top-[-2px] right-[8px] opacity-0 invisible group-hover:visible group-hover:opacity-100 flex items-center self-center bg-gray-100"
         >
           {#if isNoteArchivable(noteInfo.name)}
             {#if isNoteArchived(noteInfo.name)}

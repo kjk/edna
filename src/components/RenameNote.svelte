@@ -1,6 +1,6 @@
 <script>
   import { focus } from "../actions";
-  import { appState } from "../appstate.svelte";
+  import { appState, findNoteByName } from "../appstate.svelte";
   import { isSystemNoteName, sanitizeNoteName } from "../notes";
 
   /** @type { {
@@ -24,8 +24,8 @@
     if (isSystemNoteName(name)) {
       return false;
     }
-    let noteNames = appState.allNotes;
-    return !noteNames.includes(name);
+    let note = findNoteByName(name);
+    return note === null;
   });
 
   let renameError = $derived.by(() => {
@@ -33,8 +33,8 @@
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = appState.allNotes;
-    if (noteNames.includes(name)) {
+    let note = findNoteByName(name);
+    if (note != null) {
       return `note <span class="font-bold">${name}</span> already exists`;
     }
     return "";
@@ -66,8 +66,11 @@
   {onkeydown}
   class="selector z-20 absolute center-x-with-translate top-[4rem] flex flex-col max-w-full p-3"
 >
-  <div class="text-lg font-semibold">
-    Rename <span class="font-bold">{oldName}</span> to:
+  <div class="flex">
+    <div class="text-lg font-semibold grow">
+      Rename <span class="font-bold">{oldName}</span> to:
+    </div>
+    <button onclick={() => onclose()} title="Close" class="kbd-btn">Esc</button>
   </div>
   <input
     bind:value={newName}
