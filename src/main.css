@@ -131,6 +131,10 @@ select {
   @apply dark:bg-gray-900 dark:text-gray-300;
 }
 
+.kbd {
+  @apply text-xs border-1 border-gray-300 bg-gray-100 px-0.5;
+}
+
 .red {
   @apply text-red-500 dark:text-red-400;
 }

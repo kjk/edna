@@ -296,6 +296,9 @@
     }
   }
 
+  /**
+   * @param {MenuItem} mi
+   */
   function isSelectable(mi) {
     if (mi.isRemoved || mi.isDisabled || mi.isSeparator) {
       return false;
@@ -317,6 +320,9 @@
     }
   }
 
+  /**
+   * @param {number} dir
+   */
   function selectSibling(dir) {
     let mi = findCurrentlySelected();
     if (!mi) {
@@ -464,7 +470,7 @@
   </svg>
 {/snippet}
 
-{#snippet menuItem(mi)}
+{#snippet menuItem(/** @type {MenuItem} */ mi)}
   <!-- svelte-ignore a11y_mouse_events_have_key_events -->
   {#if mi.isSeparator}
     {@render separator(mi)}
@@ -478,12 +484,16 @@
       bind:this={mi.element}
     >
       <div>{mi.text}</div>
-      <div class="ml-4 text-xs opacity-75">{mi.shortcut || ""}</div>
+      {#if mi.shortcut}
+        <div class="kbd ml-4">{mi.shortcut}</div>
+      {:else}
+        <div></div>
+      {/if}
     </div>
   {/if}
 {/snippet}
 
-{#snippet submenu(mi)}
+{#snippet submenu(/** @type {MenuItem} */ mi)}
   <!-- svelte-ignore a11y_mouse_events_have_key_events -->
   <div
     role="menuitem"
@@ -507,7 +517,7 @@
   </div>
 {/snippet}
 
-{#snippet menuItems(items)}
+{#snippet menuItems(/** @type {MenuItem[]} */ items)}
   {#each items as mi}
     {#if !mi.isRemoved}
       {#if mi.isSubMenu}

@@ -3,7 +3,7 @@
   import { kReleaseNotesSystemNoteName } from "../notes";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{ 
+  /** @type {{
     selectItem: (name: string) => void,
   }} */
   let { selectItem } = $props();
@@ -49,7 +49,7 @@
   {onkeydown}
   tabindex="-1"
   use:focus
-  class="absolute flex flex-col mt-[-2px] z-20 text-sm p-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden center-x-with-translate"
+  class="absolute left-[-1rem] flex flex-col mt-[-2px] z-20 text-sm p-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden"
 >
   <ListBox
     bind:this={listboxRef}
@@ -58,7 +58,7 @@
     {initialSelection}
     compact={false}
   >
-    {#snippet renderItem(item, idx)}
+    {#snippet renderItem(item, /* @type {number} */ idx)}
       <div
         title={item.key}
         class="text-left px-1 grow self-end max-w-[32ch] truncate"

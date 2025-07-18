@@ -27,7 +27,7 @@
    nameLC: string,
    shortcut: string,
    ref: HTMLElement,
-  }} Item 
+  }} Item
    */
 
   function verifyCommandsAreUnique() {
@@ -148,7 +148,11 @@
         {@html hili}
       </div>
       <div class="grow"></div>
-      <div class="mr-2">{item.shortcut}</div>
+      {#if item.shortcut}
+        <div class="mr-2 kbd">{item.shortcut}</div>
+      {:else}
+        <div></div>
+      {/if}
     {/snippet}
   </ListBox>
 </form>

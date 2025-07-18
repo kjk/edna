@@ -112,7 +112,31 @@ export function serializeShortuct(s) {
       res += "Meta + ";
     }
   }
-  res = res + s.key.toUpperCase();
+  let key = s.key.toUpperCase();
+  switch (key) {
+    case "ENTER":
+      key = "⏎";
+      break;
+    case "ARROWUP":
+      key = "↑";
+      break;
+    case "ARROWDOWN":
+      key = "↓";
+      break;
+    case "UP":
+      key = "↑";
+      break;
+    case "DOWN":
+      key = "↓";
+      break;
+    case "ARROWLEFT":
+      key = "←";
+      break;
+    case "ARROWRIGHT":
+      key = "→";
+      break;
+  }
+  res += key;
   return res;
 }
 
@@ -232,6 +256,9 @@ export function parseShortcut(s) {
   return res;
 }
 
+/**
+ * @param {string} txt
+ */
 export function extractShortcut(txt) {
   const s = parseShortcut(txt);
   if (s === null) {
