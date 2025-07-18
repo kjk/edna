@@ -72,7 +72,7 @@
     let parts = splitStringPreservingQuotes(searchTerm);
     let nParts = len(parts);
     while (len(notesToSearch) > 0) {
-      noteBeingSearched = notesToSearch[0];
+      noteBeingSearched = notesToSearch[0].name;
       notesToSearch.splice(0, 1);
       let s = await loadNoteContent(noteBeingSearched);
       if (!matchCase) {
