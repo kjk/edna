@@ -1,7 +1,5 @@
 <script>
-  import { tick } from "svelte";
-  import markdownIt from "markdown-it";
-  import markdownItAnchor from "markdown-it-anchor";
+  import { onMount, tick } from "svelte";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";
   import {
@@ -337,22 +335,52 @@
   }
 
   let hljs;
-  function startLazyImportHljs() {
-    if (hljs) {
-      return;
+  let hljsPromise;
+  let markdownIt;
+  let markdownItPromise;
+  let markdownItAnchor;
+  let markdownItAnchorPromise;
+  function startLazyImports() {
+    if (!hljsPromise) {
+      hljsPromise = import("highlight.js");
+      hljsPromise.then((mod) => {
+        console.warn("hljs:", mod);
+        hljs = mod.default;
+      });
     }
-    import("highlight.js").then((hljsMod) => {
-      console.warn("hljsMod:", hljsMod);
-      hljs = hljsMod.default;
-    });
+    if (!markdownItPromise) {
+      markdownItPromise = import("markdown-it");
+      markdownItPromise.then((mod) => {
+        console.warn("markdownIt:", mod);
+        markdownIt = mod.default;
+      });
+    }
+    if (!markdownItAnchorPromise) {
+      markdownItAnchorPromise = import("markdown-it-anchor");
+      markdownItAnchorPromise.then((mod) => {
+        console.warn("markdownItAnchor:", mod);
+        markdownItAnchor = mod.default;
+      });
+    }
   }
+
+  onMount(() => {
+    console.log("AskAI mount");
+    startLazyImports();
+    return () => {
+      console.log("AskAI unmount");
+    };
+  });
 
   /**
    * @param {string} md
    * @returns {string}
    */
   function mdToHTML(md) {
-    startLazyImportHljs();
+    startLazyImports();
+    if (!markdownIt || !markdownItAnchor) {
+      return "";
+    }
     let mdIt = markdownIt({
       linkify: true,
       highlight: function (str, lang) {
