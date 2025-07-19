@@ -127,8 +127,7 @@ function manualChunks(id) {
     id.includes("/node_modules/") ||
     ROLLUP_COMMON_MODULES.some((commonModule) => id.includes(commonModule))
   ) {
-    // return "vendor";
-    return;
+    return "vendor";
   }
 
   function logMaybe() {
