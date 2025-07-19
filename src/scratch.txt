@@ -1,0 +1,56 @@
+/*
+*/
+/**
+ * @param {string} id
+ */
+function manualChunks(id) {
+  if (id.includes("elaris/src/")) {
+    return null; // don't log
+  }
+  if (id.includes("/node_modules/svelte/")) {
+    return null; // don't log
+  }
+  if (id.includes("@zip.js/zip.js")) {
+    return "zipjs";
+  }
+  if (id.includes("/prettier/")) {
+    return "prettier";
+  }
+  console.log("id:", id);
+  return null;
+}
+
+current:
+../dist/index.html                                      0.68 kB │ gzip:   0.39 kB
+../dist/assets/fs-worker-ofs-webworker-BoutZzh4.js      5.09 kB
+../dist/assets/index-BN-8vN7K.css                      52.36 kB │ gzip:  10.46 kB
+../dist/assets/langrust-BaREA2t_.js                    70.77 kB │ gzip:  25.03 kB
+../dist/assets/langlegacy-mHF0njMa.js                  74.92 kB │ gzip:  24.09 kB
+../dist/assets/langcpp-hHn6iIPo.js                    101.28 kB │ gzip:  32.59 kB
+../dist/assets/zipjs-CZ9Rp8oG.js                      181.17 kB │ gzip:  62.70 kB
+../dist/assets/langphp-Co1NSNqa.js                    297.65 kB │ gzip:  93.53 kB
+../dist/assets/langjavascript-CjoA2rly.js             714.93 kB │ gzip: 227.19 kB
+../dist/assets/prettier-CxF5HvPZ.js                 1,623.79 kB │ gzip: 464.09 kB
+../dist/assets/index-buTrUD0t.js                    2,536.51 kB │ gzip: 819.59 kB
+
+after changes:
+../dist/index.html                                      0.68 kB │ gzip:   0.39 kB
+../dist/assets/fs-worker-ofs-webworker-BoutZzh4.js      5.09 kB
+../dist/assets/index-BN-8vN7K.css                      52.36 kB │ gzip:  10.46 kB
+../dist/assets/langlezer-OoSUR6Mg.js                    0.37 kB │ gzip:   0.28 kB
+../dist/assets/langrust-2uu1IeBF.js                     0.66 kB │ gzip:   0.46 kB
+../dist/assets/langxml-DeJ-Nyy8.js                      0.70 kB │ gzip:   0.45 kB
+../dist/assets/langjava-DD_wQxRj.js                     0.91 kB │ gzip:   0.56 kB
+../dist/assets/langpython-Y_fZgtcs.js                   2.41 kB │ gzip:   1.04 kB
+../dist/assets/langvue-CmXqdMcJ.js                      3.07 kB │ gzip:   1.53 kB
+../dist/assets/langsql-CGoS6B_4.js                      9.72 kB │ gzip:   4.23 kB
+../dist/assets/langlegacy-DKGqRqAm.js                  78.42 kB │ gzip:  25.20 kB
+../dist/assets/markdownit-CYWxoUGq.js                 112.43 kB │ gzip:  46.74 kB
+../dist/assets/langphp-Cyyt_2yn.js                    176.95 kB │ gzip:  56.29 kB
+../dist/assets/zipjs-CZ9Rp8oG.js                      181.17 kB │ gzip:  62.70 kB
+../dist/assets/langcpp-D3njTeXX.js                    252.01 kB │ gzip:  77.97 kB
+../dist/assets/langjavascript-BPti6Ec9.js             322.32 kB │ gzip: 100.06 kB
+../dist/assets/lezer-C5_y20qs.js                      565.94 kB │ gzip: 194.10 kB
+../dist/assets/highlightjs-BUP3wii2.js                974.41 kB │ gzip: 308.25 kB
+../dist/assets/index-DItNsnkx.js                    1,296.59 kB │ gzip: 405.68 kB
+../dist/assets/prettier-CxF5HvPZ.js                 1,623.79 kB │ gzip: 464.09 kB
