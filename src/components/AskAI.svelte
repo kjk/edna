@@ -1,6 +1,5 @@
 <script>
   import { tick } from "svelte";
-  import hljs from "highlight.js";
   import markdownIt from "markdown-it";
   import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
@@ -21,7 +20,7 @@
   /** @type {{
     close: () => void,
     startText: string,
-    insertResponse: (string) => void,
+    insertResponse: (s: string) => void,
 }}*/
   let { close, startText, insertResponse } = $props();
 
@@ -34,7 +33,10 @@
 
   /**
    * @param {number} apiProvider
-   * @returns {{maybeValidApiKey, apiProviderToUse}}
+   * @returns {{maybeValidApiKey:string, apiProviderToUse:number;}}
+   * @param {string} openAIKey
+   * @param {string} xAIKey
+   * @param {string} openRouterKey
    */
   function pickApiKeyForProvider(
     apiProvider,
@@ -225,6 +227,11 @@
     close();
   }
 
+  /**
+   * @param {string} prompt
+   * @param {string} apiKey
+   * @param {string} baseURL
+   */
   async function streamChatGPTResponse(prompt, apiKey, baseURL) {
     // console.warn("streamChatGPTResponse");
 
@@ -329,11 +336,23 @@
     };
   }
 
+  let hljs;
+  function startLazyImportHljs() {
+    if (hljs) {
+      return;
+    }
+    import("highlight.js").then((hljsMod) => {
+      console.warn("hljsMod:", hljsMod);
+      hljs = hljsMod.default;
+    });
+  }
+
   /**
    * @param {string} md
    * @returns {string}
    */
   function mdToHTML(md) {
+    startLazyImportHljs();
     let mdIt = markdownIt({
       linkify: true,
       highlight: function (str, lang) {
