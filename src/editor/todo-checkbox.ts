@@ -13,7 +13,7 @@ import { isMonospaceFont } from "./theme/font-theme";
 class CheckboxWidget extends WidgetType {
   constructor(
     readonly checked: boolean,
-    readonly monospace: boolean
+    readonly monospace: boolean,
   ) {
     super();
   }
@@ -60,10 +60,11 @@ class CheckboxWidget extends WidgetType {
   }
 }
 
-const checkboxRegex = /^([\t\f\v ]*-[\t\f\v ]*)\[( |x|X)\]/gm;
+const checkboxRegex = /^([\t\f\v ]*-[\t\f\v ]*)\[( |x|X)\] /gm;
 
 function checkboxes(view: EditorView) {
   let widgets: any = [];
+
   for (let { from, to } of view.visibleRanges) {
     let range = view.state.sliceDoc(from, to);
     let match;
@@ -75,15 +76,15 @@ function checkboxes(view: EditorView) {
         let deco = Decoration.replace({
           widget: new CheckboxWidget(
             match[2] === "x" || match[2] === "X",
-            view.state.facet(isMonospaceFont)
+            view.state.facet(isMonospaceFont),
           ),
           inclusive: false,
         });
         widgets.push(
           deco.range(
             from + match.index + match[1].length,
-            from + match.index + match[0].length
-          )
+            from + match.index + match[0].length,
+          ),
         );
       }
     }
@@ -92,12 +93,12 @@ function checkboxes(view: EditorView) {
 }
 
 function toggleBoolean(view: EditorView, pos: number) {
-  let before = view.state.doc.sliceString(pos - 3, pos).toLowerCase();
+  let before = view.state.doc.sliceString(pos - 4, pos).toLowerCase();
   let change;
-  if (before === "[x]") {
-    change = { from: pos - 3, to: pos, insert: "[ ]" };
-  } else if (before === "[ ]") {
-    change = { from: pos - 3, to: pos, insert: "[x]" };
+  if (before === "[x] ") {
+    change = { from: pos - 4, to: pos, insert: "[ ] " };
+  } else if (before === "[ ] ") {
+    change = { from: pos - 4, to: pos, insert: "[x] " };
   } else {
     return false;
   }
@@ -130,6 +131,11 @@ export const todoCheckboxPlugin = [
     {
       decorations: (v) => v.decorations,
 
+      provide: (plugin) =>
+        EditorView.atomicRanges.of((view) => {
+          return view.plugin(plugin)?.decorations || Decoration.none;
+        }),
+
       eventHandlers: {
         mousedown: (e, view) => {
           let target = e.target as HTMLElement;
@@ -140,6 +146,6 @@ export const todoCheckboxPlugin = [
             return toggleBoolean(view, view.posAtDOM(target));
         },
       },
-    }
+    },
   ),
 ];
