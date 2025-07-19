@@ -8,21 +8,7 @@ import { defineConfig } from "vite";
  * @param {string} id
  */
 function manualChunks(id) {
-  // this is a hack to put getDefaultExportFromCjs function in main index chunk
-  // otehrwise it somehow ended up in highlighjs chunk, was imported by main
-  // chunk causing eagarly loading highlightjs
-  // https://github.com/vitejs/vite/issues/17823
-  // https://github.com/vitejs/vite/issues/19758
-  // https://github.com/vitejs/vite/issues/5189
-  const ROLLUP_COMMON_MODULES = [
-    "vite/preload-helper",
-    "vite/modulepreload-polyfill",
-    "vite/dynamic-import-helper",
-    "commonjsHelpers",
-    "commonjs-dynamic-modules",
-    "__vite-browser-external",
-  ];
-
+  // pack all .css files in the same chunk
   if (id.endsWith(".css")) {
     return;
   }
@@ -35,34 +21,34 @@ function manualChunks(id) {
     ["/@zip.js/zip.js", "zipjs"],
     ["/prettier/", "prettier"],
 
-    ["/@codemirror/legacy-modes/", "langlegacy"],
+    // ["/@codemirror/legacy-modes/", "langlegacy"],
     // ["/@codemirror/lang-rust/", "langrust"],
     // ["/@codemirror/lang-php/", "langphp"],
-    ["/@codemirror/lang-cpp/", "langcpp"],
+    // ["/@codemirror/lang-cpp/", "langcpp"],
 
     // ["/@codemirror/lang-javascript/", "langjavascript"],
     // ["/@codemirror/lang-css/", "langcss"],
     // ["/@codemirror/lang-html/", "langhtml"],
     // ["/@replit/codemirror-lang-svelte/", "langsvelte"],
 
-    [
-      "/@codemirror/lang-javascript/",
-      "/@codemirror/lang-css/",
-      "/@codemirror/lang-html/",
-      "/@codemirror/lang-vue/",
-      "/@replit/codemirror-lang-svelte/",
-      "langweb",
-    ],
+    // [
+    //   "/@codemirror/lang-javascript/",
+    //   "/@codemirror/lang-css/",
+    //   "/@codemirror/lang-html/",
+    //   "/@codemirror/lang-vue/",
+    //   "/@replit/codemirror-lang-svelte/",
+    //   "langweb",
+    // ],
 
-    ["@codemirror/lang-python", "langpython"],
+    // ["@codemirror/lang-python", "langpython"],
     // ["@codemirror/lang-java", "langjava"],
     // ["@codemirror/lang-vue", "langvue"],
     // ["@codemirror/lang-xml", "langxml"],
 
     // ["@codemirror/lang-lezer", "langlezer"],
-    ["@codemirror/lang-sql", "langsql"],
+    // ["@codemirror/lang-sql", "langsql"],
     // ["/@codemirror/lang-json/", "langjson"],
-    ["/@replit/codemirror-lang-csharp/", "langcsharp"],
+    // ["/@replit/codemirror-lang-csharp/", "langcsharp"],
 
     // markdown-it and highlight.js are used together in askai.svelte
     [
@@ -121,12 +107,28 @@ function manualChunks(id) {
     "/@lezer/",
   ];
 
+  // this is a hack to put getDefaultExportFromCjs function in main index chunk
+  // otehrwise it somehow ended up in highlighjs chunk, was imported by main
+  // chunk causing eagarly loading highlightjs
+  // https://github.com/vitejs/vite/issues/17823
+  // https://github.com/vitejs/vite/issues/19758
+  // https://github.com/vitejs/vite/issues/5189
+  const ROLLUP_COMMON_MODULES = [
+    "vite/preload-helper",
+    "vite/modulepreload-polyfill",
+    "vite/dynamic-import-helper",
+    "commonjsHelpers",
+    "commonjs-dynamic-modules",
+    "__vite-browser-external",
+  ];
+
   // bundle all other 3rd-party modules into a single vendor.js module
   if (
     id.includes("/node_modules/") ||
     ROLLUP_COMMON_MODULES.some((commonModule) => id.includes(commonModule))
   ) {
-    return "vendor";
+    // return "vendor";
+    return;
   }
 
   function logMaybe() {
