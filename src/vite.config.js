@@ -8,6 +8,19 @@ import { defineConfig } from "vite";
  * @param {string} id
  */
 function manualChunks(id) {
+  if (false && id.includes("/highlight.js/")) {
+    console.log(id);
+  }
+  // this is a hack to put getDefaultExportFromCjs function in main index chunk
+  // otehrwise it somehow ended up in highlighjs chunk, was imported by main
+  // chunk causing eagarly loading highlightjs
+  // https://github.com/vitejs/vite/issues/17823
+  // https://github.com/vitejs/vite/issues/19758
+  if (id.includes("commonjsHelpers.js")) {
+    // console.log(id);
+    return "index";
+  }
+
   const chunksDef = [
     ["/@zip.js/zip.js", "zipjs"],
     ["/prettier/", "prettier"],
@@ -98,7 +111,7 @@ function manualChunks(id) {
     "vite/modulepreload-polyfill.js",
     "__vite-browser-external",
     "vite/preload-helper.js",
-    "commonjsHelpers.js",
+    // "commonjsHelpers.js",
     "/@lezer/",
   ];
   for (let s of noLog) {

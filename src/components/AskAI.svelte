@@ -334,34 +334,65 @@
     };
   }
 
+  let isLazyImportng = false;
   let hljs;
-  let hljsPromise;
   let markdownIt;
-  let markdownItPromise;
   let markdownItAnchor;
-  let markdownItAnchorPromise;
-  function startLazyImports() {
-    if (!hljsPromise) {
-      hljsPromise = import("highlight.js");
-      hljsPromise.then((mod) => {
-        console.warn("hljs:", mod);
-        hljs = mod.default;
-      });
-    }
-    if (!markdownItPromise) {
-      markdownItPromise = import("markdown-it");
-      markdownItPromise.then((mod) => {
-        console.warn("markdownIt:", mod);
-        markdownIt = mod.default;
-      });
-    }
-    if (!markdownItAnchorPromise) {
-      markdownItAnchorPromise = import("markdown-it-anchor");
-      markdownItAnchorPromise.then((mod) => {
-        console.warn("markdownItAnchor:", mod);
-        markdownItAnchor = mod.default;
-      });
-    }
+  async function startLazyImports() {
+    if (isLazyImportng) return;
+    isLazyImportng = true;
+    let promises = await Promise.all([
+      import("highlight.js"),
+      import("markdown-it"),
+      import("markdown-it-anchor"),
+    ]);
+
+    hljs = promises[0].default;
+    markdownIt = promises[1].default;
+    markdownItAnchor = promises[2].default;
+    console.warn("hljs:", hljs);
+    console.warn("markdownIt:", markdownIt);
+    console.warn("markdownItAnchor:", markdownItAnchor);
+  }
+
+  // TODO: ma\ybe use this version which bundles less languages
+  async function startLazyImportsLessLangs() {
+    if (isLazyImportng) return;
+    isLazyImportng = true;
+    let promises = await Promise.all([
+      import("highlight.js/lib/core"),
+      import("markdown-it"),
+      import("markdown-it-anchor"),
+    ]);
+
+    hljs = promises[0].default;
+    markdownIt = promises[1].default;
+    markdownItAnchor = promises[2].default;
+    let langs = await Promise.all([
+      import("highlight.js/lib/languages/javascript"),
+      import("highlight.js/lib/languages/typescript"),
+      import("highlight.js/lib/languages/go"),
+      import("highlight.js/lib/languages/css"),
+      import("highlight.js/lib/languages/xml"),
+      import("highlight.js/lib/languages/java"),
+      import("highlight.js/lib/languages/json"),
+      import("highlight.js/lib/languages/python"),
+      import("highlight.js/lib/languages/rust"),
+    ]);
+    hljs.registerLanguage("javascript", langs[0].default);
+    hljs.registerLanguage("typescript", langs[1].default);
+    hljs.registerLanguage("go", langs[2].default);
+    hljs.registerLanguage("css", langs[3].default);
+    hljs.registerLanguage("xml", langs[4].default);
+    hljs.registerLanguage("html", langs[4].default);
+    hljs.registerLanguage("java", langs[5].default);
+    hljs.registerLanguage("json", langs[6].default);
+    hljs.registerLanguage("python", langs[7].default);
+    hljs.registerLanguage("rust", langs[8].default);
+
+    console.warn("hljs:", hljs);
+    console.warn("markdownIt:", markdownIt);
+    console.warn("markdownItAnchor:", markdownItAnchor);
   }
 
   onMount(() => {
