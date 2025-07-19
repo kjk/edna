@@ -1,6 +1,6 @@
 import "./main.css";
 import "./markdown-anti-tailwind.css";
-import "./highlightjs-github.css";
+import "highlight.js/styles/github.css";
 import { mount, unmount } from "svelte";
 import { dumpIndex } from "./appendstore";
 import { testAppendStore } from "./apppendstore.test";

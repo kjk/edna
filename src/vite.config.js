@@ -8,17 +8,27 @@ import { defineConfig } from "vite";
  * @param {string} id
  */
 function manualChunks(id) {
-  if (false && id.includes("/highlight.js/")) {
-    console.log(id);
-  }
   // this is a hack to put getDefaultExportFromCjs function in main index chunk
   // otehrwise it somehow ended up in highlighjs chunk, was imported by main
   // chunk causing eagarly loading highlightjs
   // https://github.com/vitejs/vite/issues/17823
   // https://github.com/vitejs/vite/issues/19758
-  if (id.includes("commonjsHelpers.js")) {
-    // console.log(id);
-    return "index";
+  // https://github.com/vitejs/vite/issues/5189
+  const ROLLUP_COMMON_MODULES = [
+    "vite/preload-helper",
+    "vite/modulepreload-polyfill",
+    "vite/dynamic-import-helper",
+    "commonjsHelpers",
+    "commonjs-dynamic-modules",
+    "__vite-browser-external",
+  ];
+
+  if (id.endsWith(".css")) {
+    return;
+  }
+
+  if (false && id.includes("/highlight.js/")) {
+    console.log(id);
   }
 
   const chunksDef = [
@@ -54,6 +64,7 @@ function manualChunks(id) {
     // ["/@codemirror/lang-json/", "langjson"],
     ["/@replit/codemirror-lang-csharp/", "langcsharp"],
 
+    // markdown-it and highlight.js are used together in askai.svelte
     [
       "/markdown-it/",
       "/entities/",
@@ -62,16 +73,11 @@ function manualChunks(id) {
       "/punycode.js/",
       "/uc.micro/",
       "/markdown-it-anchor/",
-      "markdownit",
-    ],
-    ["/highlight.js/", "highlightjs"],
-    // ["/@lezer/", "lezer"],
-  ];
+      "/highlight.js/",
 
-  // for highlight.js, don't create a chunk for one .css file
-  if (id.endsWith(".css")) {
-    return null;
-  }
+      "markdownit-hljs",
+    ],
+  ];
 
   for (let def of chunksDef) {
     let n = def.length;
@@ -81,7 +87,7 @@ function manualChunks(id) {
       }
     }
   }
-  const noLog = [
+  const noLogList = [
     "elaris/src",
     "/svelte/src/",
     "debounce",
@@ -114,13 +120,25 @@ function manualChunks(id) {
     // "commonjsHelpers.js",
     "/@lezer/",
   ];
-  for (let s of noLog) {
-    if (id.includes(s)) {
-      return null;
-    }
+
+  // bundle all other 3rd-party modules into a single vendor.js module
+  if (
+    id.includes("/node_modules/") ||
+    ROLLUP_COMMON_MODULES.some((commonModule) => id.includes(commonModule))
+  ) {
+    return "vendor";
   }
-  console.log(id);
-  return null;
+
+  function logMaybe() {
+    for (let s of noLogList) {
+      if (id.includes(s)) {
+        return;
+      }
+    }
+    console.log(id);
+  }
+  logMaybe();
+  // all other files are project source files and are allowed to be split whichever way rollup wants
 }
 
 // https://vitejs.dev/config/
