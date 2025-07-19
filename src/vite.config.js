@@ -18,7 +18,7 @@ function manualChunks(id) {
   }
 
   const chunksDef = [
-    ["/@zip.js/zip.js", "zipjs"],
+    ["/@zip.js/zip.js/", "zipjs"],
     ["/prettier/", "prettier"],
 
     // ["/@codemirror/legacy-modes/", "langlegacy"],
@@ -40,13 +40,13 @@ function manualChunks(id) {
     //   "langweb",
     // ],
 
-    // ["@codemirror/lang-python", "langpython"],
-    // ["@codemirror/lang-java", "langjava"],
-    // ["@codemirror/lang-vue", "langvue"],
-    // ["@codemirror/lang-xml", "langxml"],
+    // ["/@codemirror/lang-python/", "langpython"],
+    // ["/@codemirror/lang-java/", "langjava"],
+    // ["/@codemirror/lang-vue/", "langvue"],
+    // ["/@codemirror/lang-xml/", "langxml"],
 
-    // ["@codemirror/lang-lezer", "langlezer"],
-    // ["@codemirror/lang-sql", "langsql"],
+    // ["/@codemirror/lang-lezer/", "langlezer"],
+    // ["/@codemirror/lang-sql/", "langsql"],
     // ["/@codemirror/lang-json/", "langjson"],
     // ["/@replit/codemirror-lang-csharp/", "langcsharp"],
 
