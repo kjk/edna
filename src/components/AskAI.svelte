@@ -350,9 +350,9 @@
     hljs = promises[0].default;
     markdownIt = promises[1].default;
     markdownItAnchor = promises[2].default;
-    console.warn("hljs:", hljs);
-    console.warn("markdownIt:", markdownIt);
-    console.warn("markdownItAnchor:", markdownItAnchor);
+    // console.warn("hljs:", hljs);
+    // console.warn("markdownIt:", markdownIt);
+    // console.warn("markdownItAnchor:", markdownItAnchor);
   }
 
   // TODO: ma\ybe use this version which bundles less languages
