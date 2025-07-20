@@ -125,6 +125,14 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 				logf("note %s is deleted, skipping meta update\n", noteMeta.Id)
 				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s is deleted", noteMeta.Id)
 			}
+			if noteMeta.AltShortcut != "" {
+				for _, n := range notes {
+					if n.altShortcut == noteMeta.AltShortcut {
+						n.altShortcut = ""
+					}
+				}
+				note.altShortcut = noteMeta.AltShortcut
+			}
 			applyMetadata(note, &noteMeta)
 			note.modifiedAt = rec.TimestampMs
 		case kStoreDeleteNote:
@@ -220,7 +228,7 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 		}
 	}
 	if err := zipFile.Close(); err != nil {
-		http.Error(w, fmt.Sprintf("failed to close zip file", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("failed to close zip file, error: %v", err), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
