@@ -59,26 +59,40 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 	maybeSaveIndexAndData(userDataDir, index, data)
 
 	logf("replayBrowserStoreZip: index size %d, data size %d\n", len(index), len(data))
-	recs, err := appendstore.ParseIndexFromData(index)
+	newRecs, err := appendstore.ParseIndexFromData(index)
 	if err != nil {
 		return err
 	}
-	logf("replaying %d records from browser store\n", len(recs))
+	logf("replayBrowserStoreZip: replaying %d records from browser store\n", len(newRecs))
 	// validate records
 	dataSize := int64(len(data))
-	for _, rec := range recs {
+	for _, rec := range newRecs {
 		end := rec.Offset + rec.Size
 		if end > dataSize {
 			return fmt.Errorf("record %v has invalid offset/size: offset=%d, size=%d, data size=%d",
 				rec, rec.Offset, rec.Size, dataSize)
 		}
 	}
-
-	notes, err := notesFromStoreLog(store.Records())
+	recs := store.Records()
+	notes, err := notesFromStoreLog(recs)
 	if err != nil {
 		return fmt.Errorf("failed to read existing notes from store: %w", err)
 	}
-	for _, rec := range recs {
+	var hasScratch, hasInbox, hasDailyNote bool
+	for _, note := range notes {
+		switch note.name {
+		case "scratch":
+			hasScratch = true
+		case "inbox":
+			hasInbox = true
+		case "daily journal":
+			hasDailyNote = true
+		}
+	}
+
+	// key is id of note to ignore
+	ignoreNotes := map[string]bool{}
+	for _, rec := range newRecs {
 		switch rec.Kind {
 		case kStoreCreateNote:
 			// meta is "noteId:name"
@@ -86,65 +100,92 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 			id := parts[0]
 			note := notes[id]
 			if note != nil {
-				logf("note %s already exists, skipping create\n", id)
+				logf("replayBrowserStoreZip: note %s already exists, skipping create\n", id)
+				continue
+			}
+			name := parts[1]
+			ignore := hasScratch && name == "scratch"
+			if hasInbox && name == "inbox" {
+				ignore = true
+			}
+			if hasDailyNote && name == "daily journal" {
+				ignore = true
+			}
+			if ignore {
+				ignoreNotes[id] = true
+				logf("replayBrowserStoreZip: note %s already exists, skipping create\n", id)
 				continue
 			}
 			store.AppendRecord(kStoreCreateNote, nil, rec.Meta)
 			notes[id] = &NoteInfo{
 				id:        id,
-				name:      parts[1],
+				name:      name,
 				createdAt: rec.TimestampMs,
 			}
-			logf("created note %s with name %s\n", id, parts[1])
+			logf("replayBrowserStoreZip: created note %s with name %s\n", id, parts[1])
 		case kStoreSetNoteMeta:
 			var noteMeta NoteMeta
 			meta := rec.Meta
 			err := json.Unmarshal([]byte(meta), &noteMeta)
 			if err != nil {
-				logErrorf("applyMetadata: failed to unmarshal note meta: %s, err: %s\n", meta, err)
+				logErrorf("replayBrowserStoreZip: applyMetadata: failed to unmarshal note meta: %s, err: %s\n", meta, err)
 				return err
 			}
-			note := notes[noteMeta.Id]
+			id := noteMeta.Id
+			if ignoreNotes[id] {
+				logf("replayBrowserStoreZip: note %s already exists, skipping meta update\n", id)
+				continue
+			}
+			note := notes[id]
 			if note == nil {
-				logf("note %s does not exist, skipping meta update\n", noteMeta.Id)
+				logf("replayBrowserStoreZip: note %s does not exist, skipping meta update\n", noteMeta.Id)
 				continue
 			}
 			store.AppendRecord(kStoreSetNoteMeta, nil, rec.Meta)
-			logf("updated meta for note %s: %+v\n", noteMeta.Id, noteMeta)
+			logf("replayBrowserStoreZip: updated meta for note %s: %+v\n", id, noteMeta)
 
 		case kStoreDeleteNote:
-			noteId := rec.Meta
-			note := notes[noteId]
+			id := rec.Meta
+			if ignoreNotes[id] {
+				logf("replayBrowserStoreZip: note %s already exists, skipping meta update\n", id)
+				continue
+			}
+
+			note := notes[id]
 			if note == nil {
-				logf("note %s does not exist, skipping delete\n", noteId)
+				logf("replayBrowserStoreZip: note %s does not exist, skipping delete\n", id)
 				continue
 			}
 			if note.isDeleted {
-				logf("note %s is already deleted, skipping delete\n", noteId)
+				logf("replayBrowserStoreZip: note %s is already deleted, skipping delete\n", id)
 				continue
 			}
-			store.AppendRecord(kStoreDeleteNote, nil, noteId)
+			store.AppendRecord(kStoreDeleteNote, nil, id)
 			note.isDeleted = true
-			logf("deleted note %s\n", noteId)
+			// logf("replayBrowserStoreZip: deleted note %s\n", noteId)
 
 		case kStorePut:
-			verId := rec.Meta // verId is noteId:verId
-			noteId := strings.SplitN(rec.Meta, ":", 2)[0]
-			note := notes[noteId]
+			verId := rec.Meta // verId is id:verId
+			id := strings.SplitN(rec.Meta, ":", 2)[0]
+			if ignoreNotes[id] {
+				logf("replayBrowserStoreZip: note %s already exists, skipping meta update\n", id)
+				continue
+			}
+			note := notes[id]
 			if note == nil {
-				logf("note %s does not exist, skipping content update\n", noteId)
+				logf("replayBrowserStoreZip: note %s does not exist, skipping content update\n", id)
 				continue
 			}
 			if note.isDeleted {
-				logf("note %s is deleted, skipping content update\n", noteId)
+				logf("replayBrowserStoreZip:note %s is deleted, skipping content update\n", id)
 				continue
 			}
 			content := data[rec.Offset : rec.Offset+rec.Size]
 			store.AppendRecord(kStorePut, content, verId)
-			logf("updated content for note %s with verId %s\n", noteId, verId)
+			// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
 		}
 	}
-	logf("replayBrowserStoreZip: replayed %d records\n", len(recs))
+	logf("replayBrowserStoreZip: replayed %d records\n", len(newRecs))
 	return nil
 }
 

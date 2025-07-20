@@ -116,14 +116,15 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 				logErrorf("kStoreSetNoteMeta: failed to unmarshal note meta: %s, err: %s\n", meta, err)
 				return nil, err
 			}
-			note := notes[noteMeta.Id]
+			id := noteMeta.Id
+			note := notes[id]
 			if note == nil {
-				logf("note %s does not exist, skipping meta update\n", noteMeta.Id)
-				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s does not exist", noteMeta.Id)
+				logf("note %s does not exist, skipping meta update\n", id)
+				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s does not exist", id)
 			}
 			if note.isDeleted {
-				logf("note %s is deleted, skipping meta update\n", noteMeta.Id)
-				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s is deleted", noteMeta.Id)
+				logf("note %s is deleted, skipping meta update\n", id)
+				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s is deleted", id)
 			}
 			if noteMeta.AltShortcut != "" {
 				for _, n := range notes {
@@ -136,28 +137,28 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			applyMetadata(note, &noteMeta)
 			note.modifiedAt = rec.TimestampMs
 		case kStoreDeleteNote:
-			noteId := rec.Meta
-			note := notes[noteId]
+			id := rec.Meta
+			note := notes[id]
 			if note == nil {
-				logf("note %s does not exist, skipping delete\n", noteId)
-				return nil, fmt.Errorf("kStoreDeleteNote: note %s does not exist", noteId)
+				logf("note %s does not exist, skipping delete\n", id)
+				return nil, fmt.Errorf("kStoreDeleteNote: note %s does not exist", id)
 			}
 			if note.isDeleted {
-				logf("note %s is deleted, skipping delete\n", noteId)
-				return nil, fmt.Errorf("kStoreDeleteNote: note %s is deleted", noteId)
+				logf("note %s is deleted, skipping delete\n", id)
+				return nil, fmt.Errorf("kStoreDeleteNote: note %s is deleted", id)
 			}
 			note.isDeleted = true
 		case kStorePut:
-			verId := rec.Meta // verId is noteId:verId
-			noteId := strings.SplitN(rec.Meta, ":", 2)[0]
-			note := notes[noteId]
+			verId := rec.Meta // verId is id:verId
+			id := strings.SplitN(rec.Meta, ":", 2)[0]
+			note := notes[id]
 			if note == nil {
-				logf("note %s does not exist, skipping put\n", noteId)
-				return nil, fmt.Errorf("kStorePut: note %s does not exist", noteId)
+				logf("note %s does not exist, skipping put\n", id)
+				return nil, fmt.Errorf("kStorePut: note %s does not exist", id)
 			}
 			if note.isDeleted {
-				logf("note %s is deleted, skipping put\n", noteId)
-				return nil, fmt.Errorf("kStorePut: note %s is deleted", noteId)
+				logf("note %s is deleted, skipping put\n", id)
+				return nil, fmt.Errorf("kStorePut: note %s is deleted", id)
 			}
 			note.versionIds = append(note.versionIds, verId)
 		}
