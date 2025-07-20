@@ -1,4 +1,5 @@
 <script>
+  import { tooltip } from "../actions.js";
   import { appState, findNoteByName } from "../appstate.svelte.js";
   import { focusEditor, openNoteSelector } from "../globals.js";
   import Menu from "../Menu.svelte";
@@ -125,7 +126,8 @@
     <button
       onclick={() => (settings.showSidebar = false)}
       class="clickable-icon"
-      title={"Hide Sidebar"}
+      {@attach tooltip}
+      data-tooltip={"Hide Sidebar"}
     >
       {@render IconMdiArrowCollapseLeft()}
     </button>
@@ -133,7 +135,8 @@
     <button
       onclick={() => (settings.showSidebar = true)}
       class="clickable-icon"
-      title={"Show Sidebar"}
+      {@attach tooltip}
+      data-tooltip={"Show Sidebar"}
     >
       {@render IconMdiArrowCollapseRight()}
     </button>
@@ -224,7 +227,8 @@
       openNoteSelector();
     }}
     class="clickable-icon ml-1 px-1!"
-    title={"Open note in a new tab"}
+    {@attach tooltip}
+    data-tooltip={"Open note in a new tab"}
   >
     {@render IconTablerPlus()}
   </button>
@@ -297,17 +301,19 @@
       >Elaris
     </a> -->
     <button
+      {@attach tooltip}
       onclick={() => (settings.alwaysShowTopNav = false)}
       class="clickable-icon"
-      title={"Make Navigation Bar Smaller"}
+      aria-label={"Make Navigation Bar Smaller"}
     >
       {@render IconMdiArrowCollapseRight()}
     </button>
   {:else}
     <button
+      {@attach tooltip}
       onclick={() => (settings.alwaysShowTopNav = true)}
       class="clickable-icon"
-      title={"Make Navigation Bar Full Size"}
+      aria-label={"Make Navigation Bar Full Size"}
     >
       {@render IconMdiArrowCollapseLeft()}
     </button>

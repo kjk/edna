@@ -191,3 +191,9 @@ select {
   @apply text-gray-700  disabled:text-gray-400;
   @apply dark:text-gray-400 dark:disabled:text-gray-600;
 }
+
+.tippy-box {
+  @apply px-2 py-1;
+  @apply text-sm;
+  @apply border shadow-md;
+}

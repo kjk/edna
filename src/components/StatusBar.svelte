@@ -1,4 +1,5 @@
 <script>
+  import { tooltip } from "../actions.js";
   import {
     getLanguage,
     getLanguageNameFromToken,
@@ -66,6 +67,14 @@
   let changeLanguageTitle = $derived(
     fixUpShortcuts(`Change language for current block (Mod + L)`),
   );
+
+  /**
+   * @param {number} docSize
+   */
+  function noteSizeFn(docSize) {
+    return `Note Size: ${docSize} bytes`;
+  }
+  let noteSize = $derived(noteSizeFn(docSize));
 </script>
 
 <div
@@ -88,7 +97,8 @@
   <button
     onclick={toggleSpellCheck}
     class="clickable"
-    title="Toggle spell check"
+    {@attach tooltip}
+    data-tooltip="Toggle spell check"
   >
     <span
       >Spell check is {#if isSpellChecking}on{:else}off{/if}</span
@@ -98,7 +108,8 @@
   <button
     onclick={openLanguageSelector}
     class="clickable"
-    title={changeLanguageTitle}
+    {@attach tooltip}
+    data-tooltip={changeLanguageTitle}
   >
     {languageName}
     {#if languageAuto}
@@ -106,14 +117,20 @@
     {/if}
   </button>
   <div class="text-gray-400">&bull;</div>
-  <button onclick={smartRun} class="clickable" title={runBlockTitle}>
+  <button
+    onclick={smartRun}
+    class="clickable"
+    {@attach tooltip}
+    data-tooltip={runBlockTitle}
+  >
     Smart Run
   </button>
 
   {#if supportsFormat}
     <div class="text-gray-400">&bull;</div>
     <button
-      title={formatBlockTitle}
+      {@attach tooltip}
+      data-tooltip={formatBlockTitle}
       aria-label={formatBlockTitle}
       onclick={formatCurrentBlock}
       class="clickable-icon"

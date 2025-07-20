@@ -1,6 +1,8 @@
 import "./main.css";
 import "./markdown-anti-tailwind.css";
 import "highlight.js/styles/github.css";
+import "tippy.js/themes/light-border.css";
+import "tippy.js/themes/light.css";
 import { mount, unmount } from "svelte";
 import { dumpIndex } from "./appendstore";
 import { testAppendStore } from "./apppendstore.test";

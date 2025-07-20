@@ -1,3 +1,5 @@
+import tippy from "tippy.js";
+
 /**
  * @param {HTMLElement} node
  */
@@ -11,6 +13,9 @@ export function focus(node, delay = 50) {
   }, delay);
 }
 
+/**
+ * @param {HTMLElement} element
+ */
 export function hasFocusedChild(element) {
   // Get the currently focused element
   const activeElement = document.activeElement;
@@ -34,6 +39,9 @@ export function smartfocus(node) {
 }
 
 // return {x, y} position that ensures that rect is visible inside window
+/**
+ * @param {DOMRect} rect
+ */
 export function ensureRectVisibleInWindow(rect) {
   let x = rect.x;
   const winDx = window.innerWidth;
@@ -120,6 +128,9 @@ export function trapFocusEvent(node, ev) {
  * @param {HTMLElement} node
  */
 export function trapfocus(node) {
+  /**
+   * @param {KeyboardEvent} ev
+   */
   function handleKeydown(ev) {
     if (ev.key === "Tab") {
       trapFocusEvent(node, ev);
@@ -134,14 +145,18 @@ export function trapfocus(node) {
   };
 }
 
+/**
+ * @param {HTMLFormElement} node
+ * @param {() => void} callback
+ */
 export function clickOutside(node, callback) {
-  let handleClick = (event) => {
+  function handleClick(event) {
     if (!node.contains(event.target) && !event.defaultPrevented) {
       callback();
       event.stopPropagation();
       event.preventDefault();
     }
-  };
+  }
 
   document.addEventListener("click", handleClick, true);
 
@@ -150,4 +165,25 @@ export function clickOutside(node, callback) {
       document.removeEventListener("click", handleClick, true);
     },
   };
+}
+
+/**
+ * @param {HTMLElement} element
+ */
+export function tooltip(element) {
+  let content = element.getAttribute("title");
+  if (!content) {
+    content = element.getAttribute("aria-label");
+  }
+  if (!content) {
+    content = element.dataset.tooltip;
+  }
+  const tooltip = tippy(element, {
+    theme: "light",
+    content,
+    duration: [0, 0],
+    delay: [0, 0],
+    animation: false,
+  });
+  return tooltip.destroy;
 }
