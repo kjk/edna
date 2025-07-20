@@ -52,7 +52,9 @@ var (
 	cookieEncrKeyHexStr = "00db6337a267be94a44813335bf3bd9e35868875b896fbe3758e613fbb8ec8d4"
 
 	// maps ouath secret to login info
-	loginsInProress = map[string]string{}
+	oauthLoginsInProgress = map[string]string{}
+
+	emailLoginsInProgress = []*logInData{}
 )
 
 func getCurrencyRates() ([]byte, error) {
@@ -255,6 +257,12 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			return
 		case "/auth/user":
 			handleAuthUser(w, r)
+			return
+		case "/api/send_login_in_email":
+			handleAPISendLogInEmail(w, r)
+			return
+		case "/api/verify_login_code":
+			handleAPIVerifyLoginCode(w, r)
 			return
 
 		case "/math.js.map":

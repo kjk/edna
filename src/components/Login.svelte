@@ -12,6 +12,7 @@
 
   let email = $state("");
   let loginCode = $state("");
+  let error = $state("");
 
   let isValidEmail = $derived.by(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,14 +34,6 @@
   });
 
   /**
-   * @param {string} email
-   */
-  function handleSendMagicLink(email) {
-    // TODO: Implement magic link sending
-    console.log("Sending magic link to:", email);
-    waitingForMagicLink = true;
-  }
-  /**
    * @param {KeyboardEvent} ev
    */
   function onkeydown(ev) {
@@ -54,15 +47,27 @@
     }
 
     if (canSendMagicLink && key === "Enter") {
-      emitSendMagicLink();
+      sendEmailWithLoginCode();
       ev.preventDefault();
       ev.stopPropagation();
       return;
     }
   }
 
-  function emitSendMagicLink() {
-    handleSendMagicLink(email.trim());
+  async function sendEmailWithLoginCode() {
+    console.log("Sending email with login code to:", email);
+    waitingForMagicLink = true;
+    let uri =
+      "/api/send_login_in_email" + "?email=" + encodeURIComponent(email);
+    try {
+      let rsp = await fetch(uri);
+      if (!rsp.ok) {
+        error = "failed to send email";
+      }
+    } catch (e) {
+      console.error(e);
+      error = e.toString();
+    }
   }
 </script>
 
@@ -125,9 +130,12 @@
       placeholder="Enter your login code"
     />
   {/if}
+  {#if error}
+    <div class="mt-2 text-red-500 text-sm">{error}</div>
+  {/if}
   <div class="mt-4">
     <button
-      onclick={emitSendMagicLink}
+      onclick={sendEmailWithLoginCode}
       disabled={!canSendMagicLink}
       class="w-full cursor-pointer py-2 px-4 button-outline"
     >

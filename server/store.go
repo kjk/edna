@@ -40,52 +40,7 @@ var (
 	muStore sync.Mutex
 )
 
-func getLoggedUser(r *http.Request, _ http.ResponseWriter) (*UserInfo, error) {
-	cookie := getSecureCookie(r)
-	if cookie == nil || cookie.Email == "" {
-		return nil, fmt.Errorf("user not logged in (no cookie)")
-	}
-	email := cookie.Email
-
-	var userInfo *UserInfo
-	getOrCreateUser := func(u *UserInfo, i int) error {
-		if u != nil {
-			userInfo = u
-			return nil
-		}
-
-		dataDir := getDataDirMust()
-		dirName := ToValidFileName(email)
-		dataDir = filepath.Join(dataDir, dirName)
-		err := os.MkdirAll(dataDir, 0755)
-		if err != nil {
-			logErrorf("getLoggedUser(): failed to create data dir for user %s, err: %s\n", email, err)
-			return err
-		}
-		userInfo = &UserInfo{
-			Email:   cookie.Email,
-			User:    cookie.User,
-			DataDir: dataDir,
-		}
-
-		userInfo.Store = &appendstore.Store{
-			DataDir:       dataDir,
-			IndexFileName: "index.txt",
-			DataFileName:  "data.bin",
-		}
-		err = appendstore.OpenStore(userInfo.Store)
-		if err != nil {
-			logErrorf("getLoggedUser(): failed to open store for user %s, err: %s\n", email, err)
-			return err
-		}
-		users = append(users, userInfo)
-		return nil
-	}
-	doUserOpByEmail(email, getOrCreateUser)
-	return userInfo, nil
-}
-
-func serve404(w http.ResponseWriter, _ *http.Request, s string) {
+func serve404(w http.ResponseWriter, s string) {
 	http.Error(w, s, http.StatusNotFound)
 }
 
@@ -334,7 +289,7 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		push(&notesCompact, nc)
 	}
 	rsp.NotesCompact = notesCompact
-	serve200JSON(w, r, rsp)
+	serve200JSON(w, rsp)
 }
 
 func maybeSaveIndexAndData(dataDir string, index []byte, data []byte) {
@@ -397,7 +352,7 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 		Message string `json:"message"`
 	}
 	rsp.Message = fmt.Sprintf("Successfully uploaded %d records", len(userInfo.Store.Records()))
-	serve200JSON(w, r, rsp)
+	serve200JSON(w, rsp)
 }
 
 func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
@@ -431,7 +386,7 @@ func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 		return
 	}
 	userInfo.Store.AppendRecord(kStoreDeleteNote, nil, noteId)
-	serve200JSON(w, r, map[string]string{
+	serve200JSON(w, map[string]string{
 		"message": "Note created"})
 }
 
@@ -449,7 +404,7 @@ func handleStoreCreateNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 	}
 	meta := fmt.Sprintf("%s:%s", noteId, name)
 	userInfo.Store.AppendRecord(kStoreCreateNote, nil, meta)
-	serve200JSON(w, r, map[string]string{
+	serve200JSON(w, map[string]string{
 		"message": "Note created"})
 }
 
@@ -461,7 +416,7 @@ func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *
 	}
 	// TODO: verify meta is valid JSON
 	userInfo.Store.AppendRecord(kStoreSetNoteMeta, nil, meta)
-	serve200JSON(w, r, map[string]string{
+	serve200JSON(w, map[string]string{
 		"message": "Note meta set"})
 }
 
@@ -478,7 +433,7 @@ func handleStoreWriteNoteContent(w http.ResponseWriter, r *http.Request, userInf
 		return
 	}
 	userInfo.Store.AppendRecord(kStorePut, d, key)
-	serve200JSON(w, r, map[string]string{
+	serve200JSON(w, map[string]string{
 		"message": "Note content written successfully"})
 }
 
@@ -519,7 +474,7 @@ func handleStoreWriteStringToFile(w http.ResponseWriter, r *http.Request, userIn
 		http.Error(w, fmt.Sprintf("Failed to write file %s: %s", fileName, err), http.StatusInternalServerError)
 		return
 	}
-	serve200JSON(w, r, map[string]string{
+	serve200JSON(w, map[string]string{
 		"message": "Note content written successfully"})
 }
 
@@ -577,5 +532,5 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 		handleStoreReadFileAsString(w, r, userInfo)
 		return
 	}
-	serve404(w, r, "Unknown store operation: "+uri)
+	serve404(w, "Unknown store operation: "+uri)
 }

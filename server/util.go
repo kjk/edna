@@ -33,6 +33,10 @@ func push[S ~[]E, E any](s *S, els ...E) {
 	*s = append(*s, els...)
 }
 
+func sliceRemoveAt[S ~[]E, E any](s *S, i int) {
+	*s = append((*s)[:i], (*s)[i+1:]...)
+}
+
 func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {
 	cmd := exec.Command(exe, args...)
 	cmd.Dir = dir

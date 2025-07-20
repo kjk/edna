@@ -2,11 +2,15 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/kjk/common/appendstore"
 	"github.com/sanity-io/litter"
 )
 
@@ -21,22 +25,34 @@ type logInData struct {
 func createLogInCode(email string) string {
 	code := genRandomLoginCode(6)
 	logf("createLogInCode: email=%s, code=%s\n")
-	d := &logInData{
+	v := &logInData{
 		Code:     code,
 		Email:    email,
 		ExpireAt: time.Now().Add(time.Minute * 60),
 	}
 
-	setLogInData := func(u *UserInfo, i int) error {
-		if u != nil {
-			u.Lock()
-			u.logInData = d
-			u.Unlock()
-		}
-		return nil
-	}
-	doUserOpByEmail(email, setLogInData)
+	muStore.Lock()
+	defer muStore.Unlock()
+	push(&emailLoginsInProgress, v)
 	return code
+}
+
+func getLogInInfo(code string) *logInData {
+	muStore.Lock()
+	defer muStore.Unlock()
+	var expiredIdx []int
+	now := time.Now()
+	var found *logInData
+	for i, v := range emailLoginsInProgress {
+		if now.After(v.ExpireAt) {
+			push(&expiredIdx, i)
+		}
+		found = v
+	}
+	for _, i := range expiredIdx {
+		sliceRemoveAt(&emailLoginsInProgress, i)
+	}
+	return found
 }
 
 // /auth/user
@@ -55,7 +71,7 @@ func handleAuthUser(w http.ResponseWriter, r *http.Request) {
 		v["avatar_url"] = cookie.AvatarURL
 		logf("handleAuthUser: logged in as '%s', '%s'\n", cookie.User, cookie.Email)
 	}
-	serve200JSON(w, r, v)
+	serve200JSON(w, v)
 }
 
 // /auth/githubcb
@@ -65,7 +81,7 @@ func handleAuthUser(w http.ResponseWriter, r *http.Request) {
 func handleGithubCallback(w http.ResponseWriter, r *http.Request) {
 	logf("handleGithubCallback: '%s'\n", r.URL)
 	state := r.FormValue("state")
-	redirectURL := loginsInProress[state]
+	redirectURL := oauthLoginsInProgress[state]
 	if redirectURL == "" {
 		logErrorf("invalid oauth state, no redirect for state '%s'\n", state)
 		uri := "/github_login_failed?err=" + url.QueryEscape("invalid oauth state")
@@ -147,7 +163,7 @@ func handleLoginGitHub(w http.ResponseWriter, r *http.Request) {
 	// secret value passed to auth server and then back to us
 	state := genRandomID(8)
 	muStore.Lock()
-	loginsInProress[state] = redirectURL
+	oauthLoginsInProgress[state] = redirectURL
 	muStore.Unlock()
 
 	cb := httpScheme(r) + r.Host + "/auth/githubcb"
@@ -184,4 +200,139 @@ func handleLogoutGitHub(w http.ResponseWriter, r *http.Request) {
 	}
 	doUserOpByEmail(email, removeUserFn)
 	http.Redirect(w, r, "/", http.StatusFound) // 302
+}
+
+func getLoggedUser(r *http.Request, _ http.ResponseWriter) (*UserInfo, error) {
+	cookie := getSecureCookie(r)
+	if cookie == nil || cookie.Email == "" {
+		return nil, fmt.Errorf("user not logged in (no cookie)")
+	}
+	email := cookie.Email
+
+	var userInfo *UserInfo
+	getOrCreateUser := func(u *UserInfo, i int) error {
+		if u != nil {
+			userInfo = u
+			return nil
+		}
+
+		dataDir := getDataDirMust()
+		dirName := ToValidFileName(email)
+		dataDir = filepath.Join(dataDir, dirName)
+		err := os.MkdirAll(dataDir, 0755)
+		if err != nil {
+			logErrorf("getLoggedUser(): failed to create data dir for user %s, err: %s\n", email, err)
+			return err
+		}
+		userInfo = &UserInfo{
+			Email:   cookie.Email,
+			User:    cookie.User,
+			DataDir: dataDir,
+		}
+
+		userInfo.Store = &appendstore.Store{
+			DataDir:       dataDir,
+			IndexFileName: "index.txt",
+			DataFileName:  "data.bin",
+		}
+		err = appendstore.OpenStore(userInfo.Store)
+		if err != nil {
+			logErrorf("getLoggedUser(): failed to open store for user %s, err: %s\n", email, err)
+			return err
+		}
+		users = append(users, userInfo)
+		return nil
+	}
+	doUserOpByEmail(email, getOrCreateUser)
+	return userInfo, nil
+}
+
+// /api/verify-login-code?code=<code>
+func handleAPIVerifyLoginCode(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	v := getLogInInfo(code)
+	if v == nil {
+		serve404JSON(w, map[string]any{
+			"status": "error",
+			"error":  "login code not found",
+		})
+		return
+	}
+	serve200JSON(w, map[string]any{
+		"status":  "ok",
+		"message": "login code verified",
+	})
+}
+
+func serve404JSON(w http.ResponseWriter, v map[string]any) {
+	d, _ := json.Marshal(v)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotFound)
+	w.Write(d)
+}
+
+// GET /login/{code}
+func handleLogInLink(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.Path
+	code := strings.TrimPrefix(uri, "/login/")
+	logf("handleLogInLink: code='%s'\n", code)
+	v := getLogInInfo(code)
+	if v == nil {
+		serve404(w, "invalid login code")
+		return
+	}
+
+	email := v.Email
+	var userInfo *UserInfo
+	getOrCreateUser := func(u *UserInfo, i int) error {
+		if u != nil {
+			userInfo = u
+			return nil
+		}
+
+		dataDir := getDataDirMust()
+		dirName := ToValidFileName(email)
+		dataDir = filepath.Join(dataDir, dirName)
+		err := os.MkdirAll(dataDir, 0755)
+		if err != nil {
+			logErrorf("getLoggedUser(): failed to create data dir for user %s, err: %s\n", email, err)
+			return err
+		}
+		user := strings.Split(email, "@")[0]
+		userInfo = &UserInfo{
+			Email:   email,
+			User:    user,
+			DataDir: dataDir,
+		}
+
+		userInfo.Store = &appendstore.Store{
+			DataDir:       dataDir,
+			IndexFileName: "index.txt",
+			DataFileName:  "data.bin",
+		}
+		err = appendstore.OpenStore(userInfo.Store)
+		if err != nil {
+			logErrorf("getLoggedUser(): failed to open store for user %s, err: %s\n", email, err)
+			return err
+		}
+		users = append(users, userInfo)
+		return nil
+	}
+	err := doUserOpByEmail(email, getOrCreateUser)
+	if serve400JSONIfErr(w, err) {
+		return
+	}
+
+	c := &SecureCookieValue{
+		User:  userInfo.User,
+		Email: userInfo.Email,
+		Name:  userInfo.User,
+	}
+	setSecureCookie(w, c)
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+
+	// go func() {
+	// 	body := fmt.Sprintf("user %s (%d) signed in via e-mail code\n", email, userID)
+	// 	notifyMeViaEmail("log in via email code", body, email)
+	// }()
 }

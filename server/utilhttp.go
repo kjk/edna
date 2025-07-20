@@ -22,7 +22,7 @@ func serve200JSONData(w http.ResponseWriter, data []byte) {
 	w.Write(data)
 }
 
-func serve200JSON(w http.ResponseWriter, r *http.Request, v any) {
+func serve200JSON(w http.ResponseWriter, v any) {
 	d, err := json.Marshal(v)
 	must(err)
 	w.Header().Set("Content-Type", "application/json")
@@ -89,6 +89,7 @@ func getURLParams(urlVals url.Values, args ...any) error {
 	}
 	return nil
 }
+
 func fmtSmart(msg ...any) string {
 	if len(msg) == 0 {
 		return ""
@@ -101,16 +102,17 @@ func fmtSmart(msg ...any) string {
 	return fmt.Sprintf(s, args...)
 }
 
-func serveJSONIfErr(w http.ResponseWriter, err error, msgFormat ...any) bool {
+func serve400JSONIfErr(w http.ResponseWriter, err error, msgFormat ...any) bool {
 	if err == nil {
 		return false
 	}
 	v := map[string]any{
-		"Error": err.Error(),
+		"status": "error",
+		"error":  err.Error(),
 	}
 	msg := fmtSmart(msgFormat...)
 	if msg != "" {
-		v["Message"] = msg
+		v["message"] = msg
 		logf("serveJSONIfErr: Error: '%s', message: '%s'\n", err.Error(), msg)
 	} else {
 		logf("serveJSONIfErr: '%s'\n", err.Error())
@@ -145,4 +147,11 @@ func postWithHeaders(uri string, hdrs map[string]string) (*http.Response, error)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	return resp, err
+}
+
+func getServerBaseURL() string {
+	if isDev() {
+		return fmt.Sprintf("http://localhost:%d", httpPort)
+	}
+	return "https://" + domain
 }

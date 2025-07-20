@@ -21,10 +21,12 @@ const (
 
 // GET /api/send_login_in_email?email=${email}&turnstileToken=${turnstileToken}
 func handleAPISendLogInEmail(w http.ResponseWriter, r *http.Request) {
-	logf("sendLogInEmail\n")
-	var email, turnstileToken string
-	err := getURLParams(r.URL.Query(), "email", &email, "turnstileToken", &turnstileToken)
-	if serveJSONIfErr(w, err) {
+	logf("handleAPISendLogInEmail\n")
+	var email string
+	//var turnstileToken string
+	//err := getURLParams(r.URL.Query(), "email", &email, "turnstileToken", &turnstileToken)
+	err := getURLParams(r.URL.Query(), "email", &email)
+	if serve400JSONIfErr(w, err) {
 		return
 	}
 	// if serveCheckTurnstile(w, r, turnstileToken) {
@@ -35,11 +37,12 @@ func handleAPISendLogInEmail(w http.ResponseWriter, r *http.Request) {
 
 	mg := mailgun.NewMailgun(mailgunDomain, mailgunAPIKey)
 
-	subject := "Log In code for s3uploadproxy.arslexis.io"
+	subject := fmt.Sprintf("%d is login code for elaris.arslexis.io")
 	//signURL := getServerBaseURL() + "/login/" + code
-	body := "Your s3uploadproxy.arslexis.io login code: " + code + "\n"
+	body := "Your elaris.arslexis.io login code: " + code + "\n"
 	body += "This code will expire in one hour.\n"
 	body += "If you did not request login code, please ignore this email.\n"
+	body += "or you can login via link: " + getServerBaseURL() + "/login/" + code
 
 	// Send the message with a 10 second timeout
 	message := mailgun.NewMessage(emailSender, subject, body, email)
@@ -47,10 +50,10 @@ func handleAPISendLogInEmail(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	_, _, err = mg.Send(ctx, message)
 	logf("sendLogInEmail: sent email, error: %s\n", err)
-	if serveJSONIfErr(w, err) {
+	if serve400JSONIfErr(w, err) {
 		return
 	}
-	serveJSON(w, nil, http.StatusOK)
+	serve200JSON(w, map[string]any{"status": "ok", "message": "Email sent successfully"})
 	// recordEvent(r, "send_login_email", "user", email)
 	// go func() {
 	// 	body := "Someone requested log in link for " + email
