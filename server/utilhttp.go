@@ -22,7 +22,7 @@ func serve200JSONData(w http.ResponseWriter, data []byte) {
 	w.Write(data)
 }
 
-func serve200JSON(w http.ResponseWriter, r *http.Request, v interface{}) {
+func serve200JSON(w http.ResponseWriter, r *http.Request, v any) {
 	d, err := json.Marshal(v)
 	must(err)
 	w.Header().Set("Content-Type", "application/json")
@@ -101,11 +101,11 @@ func fmtSmart(msg ...any) string {
 	return fmt.Sprintf(s, args...)
 }
 
-func serveJSONIfErr(w http.ResponseWriter, err error, msgFormat ...interface{}) bool {
+func serveJSONIfErr(w http.ResponseWriter, err error, msgFormat ...any) bool {
 	if err == nil {
 		return false
 	}
-	v := map[string]interface{}{
+	v := map[string]any{
 		"Error": err.Error(),
 	}
 	msg := fmtSmart(msgFormat...)

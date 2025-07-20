@@ -125,7 +125,7 @@ func getCallstack(skip int) string {
 
 // given map[string]any, return a given key if it exists
 // and is a string. Otherwise return empty string.
-func mapStr(m map[string]interface{}, key string) string {
+func mapStr(m map[string]any, key string) string {
 	if v, ok := m[key]; ok {
 		if s, ok := v.(string); ok {
 			return s

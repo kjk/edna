@@ -43,7 +43,7 @@ func createLogInCode(email string) string {
 // returns JSON with user info in the body
 func handleAuthUser(w http.ResponseWriter, r *http.Request) {
 	logf("handleAuthUser: '%s'\n", r.URL)
-	v := map[string]interface{}{}
+	v := map[string]any{}
 	cookie := getSecureCookie(r)
 	if cookie == nil {
 		v["error"] = "not logged in"
@@ -93,7 +93,7 @@ func handleGithubCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, errorURL+"?error="+url.QueryEscape(err.Error()), http.StatusTemporaryRedirect)
 		return
 	}
-	var m map[string]interface{}
+	var m map[string]any
 	err = json.NewDecoder(resp.Body).Decode(&m)
 	if err != nil {
 		logf("json.NewDecoder() failed with '%s'\n", err)
