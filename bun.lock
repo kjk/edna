@@ -45,17 +45,21 @@
         "@rollup/plugin-terser": "^0.4.4",
         "@sveltejs/vite-plugin-svelte": "^5.1.1",
         "@tailwindcss/vite": "^4.1.11",
-        "@types/bun": "^1.2.18",
+        "@types/bun": "^1.2.19",
         "@types/node": "^24.0.15",
         "markdown-it": "^14.1.0",
         "markdown-it-anchor": "^9.2.0",
         "prettier-plugin-svelte": "^3.4.0",
-        "svelte": "^5.36.8",
+        "svelte": "^5.36.10",
         "tailwindcss": "^4.1.11",
         "vite": "^7.0.5",
       },
     },
   },
+  "trustedDependencies": [
+    "@tailwindcss/oxide",
+    "esbuild",
+  ],
   "packages": {
     "@ampproject/remapping": ["@ampproject/remapping@2.3.0", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.5", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw=="],
 

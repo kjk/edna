@@ -7,6 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
+	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/kjk/common/u"
@@ -97,4 +100,36 @@ func runLoggedInDir(dir string, exe string, args ...string) error {
 	logf("running: %s in dir '%s'\n", cmd.String(), cmd.Dir)
 	err := cmd.Run()
 	return err
+}
+
+func getCallstackFrames(skip int) []string {
+	var callers [32]uintptr
+	n := runtime.Callers(skip+1, callers[:])
+	frames := runtime.CallersFrames(callers[:n])
+	var cs []string
+	for {
+		frame, more := frames.Next()
+		if !more {
+			break
+		}
+		s := frame.File + ":" + strconv.Itoa(frame.Line)
+		cs = append(cs, s)
+	}
+	return cs
+}
+
+func getCallstack(skip int) string {
+	frames := getCallstackFrames(skip + 1)
+	return strings.Join(frames, "\n")
+}
+
+// given map[string]any, return a given key if it exists
+// and is a string. Otherwise return empty string.
+func mapStr(m map[string]interface{}, key string) string {
+	if v, ok := m[key]; ok {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return ""
 }

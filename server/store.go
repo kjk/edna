@@ -21,7 +21,17 @@ type UserInfo struct {
 	Email   string
 	Store   *appendstore.Store
 	DataDir string
-	mu      sync.Mutex
+
+	logInData *logInData
+	mu        sync.Mutex
+}
+
+func (u *UserInfo) Lock() {
+	u.mu.Lock()
+}
+
+func (u *UserInfo) Unlock() {
+	u.mu.Unlock()
 }
 
 var (

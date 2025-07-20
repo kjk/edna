@@ -107,9 +107,8 @@ func loadSecrets() {
 	// getEnv("GITHUB_SECRET_ONLINETOOL", &secretGitHubOnlineTool, 40, must)
 	// getEnv("GITHUB_SECRET_TOOLS_ARSLEXIS", &secretGitHubToolsArslexis, 40, must)
 	// getEnv("GITHUB_SECRET_LOCAL", &secretGitHubLocal, 40, must)
-	// getEnv("MAILGUN_DOMAIN", &mailgunDomain, 4, must)
-	// getEnv("MAILGUN_API_KEY", &mailgunAPIKey, 32, must)
-
+	getEnv("MAILGUN_DOMAIN", &mailgunDomain, 4, must)
+	getEnv("MAILGUN_API_KEY", &mailgunAPIKey, 32, must)
 	// // when running locally we shouldn't send axiom / pirsch
 	// if isDev() || flgRunProdLocal {
 	// 	axiomApiToken = ""
