@@ -191,34 +191,37 @@
     </select>
   </div>
 
-  <label class="flex-col mt-2">
-    <h2 class="font-bold text-left">OpenAI API Key</h2>
-    <input
-      class="w-full mt-0.5 px-1 py-1"
-      type="text"
-      bind:value={settings.openAIKey}
-    />
-  </label>
+  <details class="mt-4 text-sm">
+    <summary class="font-bold">AI Keys</summary>
+    <label class="flex-col mt-2">
+      <h2 class="font-bold text-left">OpenAI API Key</h2>
+      <input
+        class="w-full mt-0.5 px-1 py-1"
+        type="text"
+        bind:value={settings.openAIKey}
+      />
+    </label>
 
-  <label class="flex-col mt-2">
-    <h2 class="font-bold text-left">Grok API Key</h2>
-    <input
-      class="w-full mt-0.5 px-1 py-1"
-      type="text"
-      bind:value={settings.xAIKey}
-    />
-  </label>
+    <label class="flex-col mt-2">
+      <h2 class="font-bold text-left">Grok API Key</h2>
+      <input
+        class="w-full mt-0.5 px-1 py-1"
+        type="text"
+        bind:value={settings.xAIKey}
+      />
+    </label>
 
-  <label class="flex-col mt-2">
-    <h2 class="font-bold text-left">OpenRouter API Key</h2>
-    <input
-      class="w-full mt-0.5 px-1 py-1"
-      type="text"
-      bind:value={settings.openRouterKey}
-    />
-  </label>
+    <label class="flex-col mt-2">
+      <h2 class="font-bold text-left">OpenRouter API Key</h2>
+      <input
+        class="w-full mt-0.5 px-1 py-1"
+        type="text"
+        bind:value={settings.openRouterKey}
+      />
+    </label>
+  </details>
 
-  <div class="mt-2 flex flex-col">
+  <div class="mt-4 flex flex-col">
     <h2>Misc</h2>
     <label class="flex">
       <input type="checkbox" bind:checked={settings.useWideSelectors} />
