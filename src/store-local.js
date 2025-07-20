@@ -158,6 +158,14 @@ function notesFromStoreLog(records) {
         console.warn("kStoreKindNoteMeta: no notefor meta record:", meta);
         continue;
       }
+      if (meta.altShortcut !== "") {
+        for (let n of m.values()) {
+          if (n.altShortcut === meta.altShortcut) {
+            n.altShortcut = "";
+          }
+        }
+        note.altShortcut = meta.altShortcut;
+      }
       note.applyMetadata(meta);
       note.updatedAt = rec.timestampMs;
     } else if (rec.kind === kStoreDeleteNote) {
