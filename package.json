@@ -67,5 +67,9 @@
     "kiss-crypto": "^0.3.4",
     "overlayscrollbars": "^2.11.4",
     "prettier": "^3.6.2"
-  }
+  },
+  "trustedDependencies": [
+    "@tailwindcss/oxide",
+    "esbuild"
+  ]
 }
