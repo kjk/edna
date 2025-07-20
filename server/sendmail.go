@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/mailgun/mailgun-go/v4"
@@ -37,14 +38,13 @@ func handleAPISendLogInEmail(w http.ResponseWriter, r *http.Request) {
 
 	mg := mailgun.NewMailgun(mailgunDomain, mailgunAPIKey)
 
-	subject := fmt.Sprintf("%d is login code for elaris.arslexis.io")
-	//signURL := getServerBaseURL() + "/login/" + code
-	body := "Your elaris.arslexis.io login code: " + code + "\n"
-	body += "This code will expire in one hour.\n"
-	body += "If you did not request login code, please ignore this email.\n"
-	body += "or you can login via link: " + getServerBaseURL() + "/login/" + code
-
-	// Send the message with a 10 second timeout
+	subject := fmt.Sprintf("%s is your login code for Elaris", code)
+	signURL := getServerBaseURL() + "/login/" + code
+	body := `Your elaris.arslexis.io login code: {code}
+This code will expire in one hour.
+If you did not request login code, please ignore this email.
+or you can login via link: ` + signURL
+	body = strings.Replace(body, "{code}", code, 1)
 	message := mailgun.NewMessage(emailSender, subject, body, email)
 	ctx, cancel := context.WithTimeout(ctx(), time.Second*10)
 	defer cancel()
@@ -55,10 +55,10 @@ func handleAPISendLogInEmail(w http.ResponseWriter, r *http.Request) {
 	}
 	serve200JSON(w, map[string]any{"status": "ok", "message": "Email sent successfully"})
 	// recordEvent(r, "send_login_email", "user", email)
-	// go func() {
-	// 	body := "Someone requested log in link for " + email
-	// 	notifyMeViaEmail("log in attempt", body, email)
-	// }()
+	go func() {
+		body := "Someone requested log in link for " + email
+		notifyMeViaEmail("log in attempt", body, email)
+	}()
 }
 
 func sendCrashEmail(errStr string, r *http.Request) {
