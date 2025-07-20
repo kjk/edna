@@ -114,8 +114,20 @@ select {
 .kbd {
   @apply font-mono;
   @apply text-nowrap whitespace-nowrap;
-  @apply font-semibold;
-  /* @apply text-center; */
+  @apply text-xs px-2 py-0.5;
+  @apply border-1 border-gray-300 bg-gray-100;
+  @apply rounded;
+  @apply w-fit;
+}
+
+.kbd-btn {
+  /* @apply font-mono; */
+  @apply text-nowrap whitespace-nowrap;
+  @apply text-xs px-1!;
+  @apply border-1 border-gray-300;
+  @apply bg-gray-100 hover:bg-gray-200;
+  @apply cursor-pointer;
+  /* @apply h-fit; */
 }
 
 .selector {

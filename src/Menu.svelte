@@ -478,7 +478,11 @@
       bind:this={mi.element}
     >
       <div>{mi.text}</div>
-      <div class="ml-4 text-xs opacity-75">{mi.shortcut || ""}</div>
+      {#if mi.shortcut}
+        <div class="kbd ml-4">{mi.shortcut}</div>
+      {:else}
+        <div></div>
+      {/if}
     </div>
   {/if}
 {/snippet}
