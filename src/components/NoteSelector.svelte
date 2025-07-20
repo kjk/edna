@@ -264,14 +264,14 @@
   /**
    * @param {KeyboardEvent} ev
    */
-  function onKeydown(ev) {
+  async function onKeydown(ev) {
     // console.log("onKeyDown:", event);
     let altN = isAltNumEvent(ev);
     if (altN !== null) {
       ev.preventDefault();
       let note = selectedNote;
       if (note) {
-        reassignNoteShortcut(note.name, altN);
+        await reassignNoteShortcut(note.name, altN);
         //.then(updateNoteInfos);
         return;
       }

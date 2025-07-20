@@ -293,9 +293,9 @@ export async function createDefaultNotes(existingNotes) {
   }
   if (isFirstRun) {
     await loadNotesMetadata(); // must pre-load to make them available
-    reassignNoteShortcut(kScratchNoteName, "1");
-    reassignNoteShortcut(kDailyJournalNoteName, "2");
-    reassignNoteShortcut(kInboxNoteName, "3");
+    await reassignNoteShortcut(kScratchNoteName, "1");
+    await reassignNoteShortcut(kDailyJournalNoteName, "2");
+    await reassignNoteShortcut(kInboxNoteName, "3");
   }
   return nCreated;
 }
