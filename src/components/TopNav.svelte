@@ -256,7 +256,7 @@
 
     {#if appState.user}
       <div
-        class="clickable-icon relative group flex items-center gap-x-2 px-2 mr-1.5 py-1"
+        class="clickable-icon relative group flex items-center gap-x-2 px-1 py-1"
       >
         {#if appState.user.avatar_url}
           <img
@@ -282,20 +282,20 @@
       </div>
     {:else}
       <button
-        title="LogIn with GitHub to access notes from any computer"
+        title="LogIn to access notes from any computer"
         onclick={() => (appState.showingLogin = true)}
-        class="relative flex items-center mr-4 font-bold text-slate-600 dark:text-slate-200 clickable-icon"
-        ><GitHub class="mt-[1px]" />
-        <div class="ml-1.5">login</div></button
+        class="relative flex items-center font-bold text-slate-600 dark:text-slate-200 clickable-icon"
+      >
+        login</button
       >
     {/if}
 
-    <a
+    <!-- <a
       class="mr-1 font-bold text-slate-600 dark:text-slate-200"
       href="/help"
       target="_blank"
       >Elaris
-    </a>
+    </a> -->
     <button
       onclick={() => (settings.alwaysShowTopNav = false)}
       class="clickable-icon"

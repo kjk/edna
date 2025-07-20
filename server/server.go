@@ -276,6 +276,11 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			return
 		}
 
+		if strings.HasPrefix(uri, "/login/") {
+			handleLogInLink(w, r)
+			return
+		}
+
 		if strings.HasPrefix(uri, "/api/store/") {
 			handleStore(w, r)
 			return

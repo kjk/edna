@@ -38,13 +38,20 @@ func handleAPISendLogInEmail(w http.ResponseWriter, r *http.Request) {
 
 	mg := mailgun.NewMailgun(mailgunDomain, mailgunAPIKey)
 
-	subject := fmt.Sprintf("%s is your login code for Elaris", code)
+	subject := fmt.Sprintf("%s is your Elaris login code", code)
 	signURL := getServerBaseURL() + "/login/" + code
-	body := `Your elaris.arslexis.io login code: {code}
+	body := `Your Elaris login code:
+
+{code}
+
+You can also login via link {signURL}.
+
 This code will expire in one hour.
+
 If you did not request login code, please ignore this email.
-or you can login via link: ` + signURL
+`
 	body = strings.Replace(body, "{code}", code, 1)
+	body = strings.Replace(body, "{signURL}", signURL, 1)
 	message := mailgun.NewMessage(emailSender, subject, body, email)
 	ctx, cancel := context.WithTimeout(ctx(), time.Second*10)
 	defer cancel()

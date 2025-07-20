@@ -13,6 +13,11 @@
   let email = $state("");
   let loginCode = $state("");
   let error = $state("");
+  let hasLoginCode = $derived.by(() => {
+    let s = loginCode.trim();
+    // check if login code is 6 characters long and contains only numbers
+    return s.length === 6 && /^\d+$/.test(s);
+  });
 
   let isValidEmail = $derived.by(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,6 +56,22 @@
       ev.preventDefault();
       ev.stopPropagation();
       return;
+    }
+  }
+
+  async function loginWithCode() {
+    console.log("Logging in with code");
+    let uri = "/api/verify_login_code?code=" + encodeURIComponent(loginCode);
+    try {
+      let rsp = await fetch(uri);
+      if (!rsp.ok) {
+        let js = await rsp.json();
+        error = js.error || "can't verify login code";
+      }
+      window.location.pathname = `/login/${loginCode}`;
+    } catch (e) {
+      console.error(e);
+      error = e.toString();
     }
   }
 
@@ -129,21 +150,26 @@
       use:focus
       placeholder="Enter your login code"
     />
+    <button
+      onclick={loginWithCode}
+      disabled={!hasLoginCode}
+      class="mt-4 w-full cursor-pointer py-2 px-4 button-outline"
+    >
+      Login
+    </button>
   {/if}
   {#if error}
     <div class="mt-2 text-red-500 text-sm">{error}</div>
   {/if}
-  <div class="mt-4">
-    <button
-      onclick={sendEmailWithLoginCode}
-      disabled={!canSendMagicLink}
-      class="w-full cursor-pointer py-2 px-4 button-outline"
-    >
-      {#if waitingForMagicLink}
-        Re-send login code
-      {:else}
-        Get login code
-      {/if}
-    </button>
-  </div>
+  <button
+    onclick={sendEmailWithLoginCode}
+    disabled={!canSendMagicLink}
+    class="mt-4 w-full cursor-pointer py-2 px-4 button-outline"
+  >
+    {#if waitingForMagicLink}
+      Re-send login code
+    {:else}
+      Get login code
+    {/if}
+  </button>
 </div>

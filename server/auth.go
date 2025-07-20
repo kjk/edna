@@ -247,7 +247,7 @@ func getLoggedUser(r *http.Request, _ http.ResponseWriter) (*UserInfo, error) {
 	return userInfo, nil
 }
 
-// /api/verify-login-code?code=<code>
+// /api/verify_login_code?code=<code>
 func handleAPIVerifyLoginCode(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	v := getLogInInfo(code)
