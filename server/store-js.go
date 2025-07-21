@@ -54,14 +54,6 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 			index = extractFile(file)
 		case "data.bin":
 			data = extractFile(file)
-		default:
-			if strings.HasPrefix(file.Name, "file:") {
-				d := extractFile(file)
-				fileName := strings.TrimPrefix(file.Name, "file:")
-				path := filepath.Join(userDataDir, ToValidFileName(fileName))
-				os.WriteFile(path, d, 0644)
-				logf("replayBrowserStoreZip: saved file %s (%d bytes)\n", path, len(d))
-			}
 		}
 	}
 

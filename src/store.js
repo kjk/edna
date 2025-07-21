@@ -7,6 +7,8 @@ import { throwIf } from "./util";
 /** @type { LocalStore | BackendStore } */
 let store;
 
+let utf8Decoder = new TextDecoder();
+
 /**
  * @param {Object} m
  */
@@ -16,10 +18,10 @@ export async function storeWriteNoteMeta(m) {
 
 /**
  * @param {string} fileName
- * @param {string} s
+ * @param {string|Uint8Array} s
  */
-export async function storeWriteStringToFile(fileName, s) {
-  await store.writeStringToFile(fileName, s);
+export async function storeWriteFile(fileName, s) {
+  await store.writeFile(fileName, s);
 }
 
 /**
@@ -27,7 +29,8 @@ export async function storeWriteStringToFile(fileName, s) {
  * @returns {Promise<string>}
  */
 export async function storeReadFileAsString(fileName) {
-  return store.readFileAsString(fileName);
+  let data = await store.readFile(fileName);
+  return data ? utf8Decoder.decode(data) : null;
 }
 
 /**
@@ -50,7 +53,15 @@ export async function storeCreateNote(noteId, name) {
  * @param {string} content
  */
 export async function storeWriteNoteContent(verId, content) {
-  await store.putString(verId, content);
+  await store.put(verId, content);
+}
+
+/**
+ * @param {string} contentId
+ * @returns {Promise<Uint8Array|null>}
+ */
+export async function storeGet(contentId) {
+  return await store.get(contentId);
 }
 
 /**
@@ -58,8 +69,8 @@ export async function storeWriteNoteContent(verId, content) {
  * @returns {Promise<string>}
  */
 export async function storeGetString(contentId) {
-  let res = await store.getString(contentId);
-  return res;
+  let res = await store.get(contentId);
+  return res ? utf8Decoder.decode(res) : null;
 }
 
 /** @type { LocalStore } */

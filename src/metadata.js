@@ -1,4 +1,4 @@
-import { storeReadFileAsString, storeWriteStringToFile } from "./store";
+import { storeReadFileAsString, storeWriteFile } from "./store";
 
 export const kMetadataName = "__metadata.elaris.json";
 
@@ -35,7 +35,7 @@ function getFunctionsMetadata() {
 
 export async function saveAppMetadata() {
   let s = JSON.stringify(metadata, null, 2);
-  await storeWriteStringToFile(kMetadataName, s);
+  await storeWriteFile(kMetadataName, s);
 }
 
 /**

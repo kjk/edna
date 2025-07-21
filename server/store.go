@@ -60,7 +60,7 @@ const kStoreCreateNote = "note-create"
 const kStoreDeleteNote = "note-delete"
 const kStoreSetNoteMeta = "note-meta"
 const kStorePut = "put"
-const kStorePutOverwrite = "put-o"
+const kStoreWriteFile = "write-file"
 
 type Note struct {
 	id          string
@@ -346,6 +346,7 @@ func maybeSaveUploadedZip(dataDir string, zipData []byte) {
 	logf("maybeSaveUploadedZip: wrote zip to %s\n", zipPath)
 }
 
+// /api/store/bulkUpload
 func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	if !verifyPOSTRequest(w, r) {
 		return
@@ -374,7 +375,8 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 	serve200JSON(w, rsp)
 }
 
-func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+// POST /api/store/get?key=<key>
+func handleStoreGet(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	key := r.FormValue("key")
 	logf("handleStoreGetString: user %s, key: %s\n", userInfo.Email, key)
 	if key == "" {
@@ -398,6 +400,7 @@ func handleStoreGetString(w http.ResponseWriter, r *http.Request, userInfo *User
 	logf("handleStoreGetString: finished\n")
 }
 
+// GET /api/store/deleteNote?noteId=<id>
 func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	noteId := r.FormValue("noteId")
 	if noteId == "" {
@@ -439,8 +442,8 @@ func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *
 		"message": "Note meta set"})
 }
 
-// TODO: what to do if duplicate key?
-func handleStoreWriteNoteContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+// POST /api/store/put?key=<key>
+func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	d, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -456,45 +459,50 @@ func handleStoreWriteNoteContent(w http.ResponseWriter, r *http.Request, userInf
 		"message": "Note content written successfully"})
 }
 
-func handleStoreReadFileAsString(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
-	fileName := r.FormValue("fileName")
-	if fileName == "" {
-		http.Error(w, "Missing or invalid fileName", http.StatusBadRequest)
+// GET /api/store/readFile?name=<fileName>
+func handleStoreReadFile(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	name := r.FormValue("name")
+	if name == "" {
+		http.Error(w, "Missing or invalid name", http.StatusBadRequest)
 		return
 	}
-	path := filepath.Join(userInfo.DataDir, ToValidFileName(fileName))
+	path := filepath.Join(userInfo.DataDir, ToValidFileName(name))
 	d, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			http.Error(w, fmt.Sprintf("File %s does not exist", fileName), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("File %s does not exist", name), http.StatusNotFound)
 			return
 		}
-		http.Error(w, fmt.Sprintf("Failed to read file %s: %s", fileName, err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to read file %s: %s", name, err), http.StatusInternalServerError)
 		return
 	}
-	logf("handleStoreReadFileAsString: user %s, fileName: %s, size: %d\n", userInfo.Email, fileName, len(d))
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	logf("handleStoreReadFile: user %s, fileName: %s, size: %d\n", userInfo.Email, name, len(d))
+	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(d)
 }
 
-func handleStoreWriteStringToFile(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+// POST /api/store/writeFile?name=<fileName>
+func handleStoreWriteFile(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	d, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
-	fileName := r.FormValue("fileName")
-	if fileName == "" {
-		http.Error(w, "Missing or invalid fileName", http.StatusBadRequest)
+	name := r.FormValue("name")
+	if name == "" {
+		http.Error(w, "Missing or invalid name", http.StatusBadRequest)
 		return
 	}
-	path := filepath.Join(userInfo.DataDir, ToValidFileName(fileName))
-	if err := os.WriteFile(path, d, 0644); err != nil {
-		http.Error(w, fmt.Sprintf("Failed to write file %s: %s", fileName, err), http.StatusInternalServerError)
+	meta, _ := json.Marshal(map[string]string{
+		"name": name,
+	})
+	if err := userInfo.Store.AppendRecord(kStoreWriteFile, d, string(meta)); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to write file %s: %s", name, err), http.StatusInternalServerError)
 		return
 	}
+
 	serve200JSON(w, map[string]string{
-		"message": "Note content written successfully"})
+		"message": fmt.Sprintf("File %s content written successfully", name)})
 }
 
 func handleStore(w http.ResponseWriter, r *http.Request) {
@@ -511,24 +519,12 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	userInfo.mu.Lock()
 	defer userInfo.mu.Unlock()
 
-	if uri == "/api/store/bulkUpload" {
-		handleStoreBulkUpload(w, r, userInfo)
+	if uri == "/api/store/get" {
+		handleStoreGet(w, r, userInfo)
 		return
 	}
-	if uri == "/api/store/getNotes" {
-		handleStoreGetNotes(w, r, userInfo)
-		return
-	}
-	if uri == "/api/store/getNotesMultiContent" {
-		handleStoreGetNotesMultiContent(w, r, userInfo)
-		return
-	}
-	if uri == "/api/store/getString" {
-		handleStoreGetString(w, r, userInfo)
-		return
-	}
-	if uri == "/api/store/putString" {
-		handleStoreWriteNoteContent(w, r, userInfo)
+	if uri == "/api/store/put" {
+		handleStorePut(w, r, userInfo)
 		return
 	}
 	if uri == "/api/store/createNote" {
@@ -543,13 +539,27 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 		handleStoreWriteNoteMeta(w, r, userInfo)
 		return
 	}
-	if uri == "/api/store/writeStringToFile" {
-		handleStoreWriteStringToFile(w, r, userInfo)
+	if uri == "/api/store/writeFile" {
+		handleStoreWriteFile(w, r, userInfo)
 		return
 	}
-	if uri == "/api/store/readFileAsString" {
-		handleStoreReadFileAsString(w, r, userInfo)
+	if uri == "/api/store/readFile" {
+		handleStoreReadFile(w, r, userInfo)
 		return
 	}
+
+	if uri == "/api/store/bulkUpload" {
+		handleStoreBulkUpload(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/getNotes" {
+		handleStoreGetNotes(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/getNotesMultiContent" {
+		handleStoreGetNotesMultiContent(w, r, userInfo)
+		return
+	}
+
 	serve404(w, "Unknown store operation: "+uri)
 }

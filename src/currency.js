@@ -1,4 +1,6 @@
+let math = globalThis.math;
 let currencyData = null;
+
 async function getCurrencyData() {
   if (currencyData !== null) {
     return currencyData;

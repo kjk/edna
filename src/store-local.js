@@ -12,21 +12,49 @@ const kStoreCreateNote = "note-create";
 const kStoreDeleteNote = "note-delete";
 const kStoreSetNoteMeta = "note-meta";
 export const kStorePut = "put";
-const kStorePutOverwrite = "put-o";
+const kStoreWriteFile = "write-file";
 
 /**
  * @param {AppendStoreRecord[]} records
  * @param {string} key
  * @returns {AppendStoreRecord|null}
  */
-function findPutRecord(records, key) {
+export function findPutRecord(records, key) {
   // searching from the end should be faster on average
   // we're more likely to search for recent content
-  for (let idx = len(records) - 1; idx >= 0; idx--) {
+  let lastIdx = len(records) - 1;
+  for (let idx = lastIdx; idx >= 0; idx--) {
     let rec = records[idx];
-    if (rec.meta === key && rec.kind === kStorePut) {
-      return rec;
+    if (rec.kind !== kStorePut) {
+      continue;
     }
+    if (rec.meta !== key) {
+      continue;
+    }
+    return rec;
+  }
+  return null;
+}
+
+/**
+ * @param {AppendStoreRecord[]} records
+ * @param {string} name
+ * @returns {AppendStoreRecord|null}
+ */
+export function findWriteFileRecord(records, name) {
+  // searching from the end should be faster on average
+  // we're more likely to search for recent content
+  let lastIdx = len(records) - 1;
+  for (let idx = lastIdx; idx >= 0; idx--) {
+    let rec = records[idx];
+    if (rec.kind !== kStoreWriteFile) {
+      continue;
+    }
+    let m = JSON.parse(rec.meta);
+    if (m?.name !== name) {
+      continue;
+    }
+    return rec;
   }
   return null;
 }
@@ -44,23 +72,20 @@ export class LocalStore {
 
   /**
    * @param {string} key
-   * @returns {Promise<string>}
+   * @returns {Promise<Uint8Array|null>} returns null if doesn't exist
    */
-  async getString(key) {
+  async get(key) {
     let store = this.store;
     let rec = findPutRecord(store.records(), key);
-    if (!rec) {
-      return null; // no content found
-    }
-    let content = await store.readRecordAsString(rec);
+    let content = rec ? await store.readRecord(rec) : null;
     return content;
   }
 
   /**
    * @param {string} key
-   * @param {string} content
+   * @param {string|Uint8Array} content
    */
-  async putString(key, content) {
+  async put(key, content) {
     // console.log("putString:", key, content?.substring(0, 20));
     let store = this.store;
     await store.appendRecord(kStorePut, content, key);
@@ -68,14 +93,27 @@ export class LocalStore {
   }
 
   /**
-   * @param {string} key
-   * @param {string} content
+   * @param {string} name
+   * @param {string |Uint8Array} content
    */
-  async putStringOverwrite(key, content) {
-    // console.log("putStringOverwrite:", key, content?.substring(0, 20));
+  async writeFile(name, content) {
+    // console.log("putStringOverwrite:", meta, content?.substring(0, 20));
     let store = this.store;
-    await store.overWriteRecord(content, kStorePutOverwrite, key);
+    let meta = JSON.stringify({
+      name: name,
+    });
+    await store.overWriteRecord(content, kStoreWriteFile, meta);
     await debugValidateLocalStoreIndex(this);
+  }
+
+  /**
+   * @param {string} fileName
+   * @returns {Promise<Uint8Array>}
+   */
+  async readFile(fileName) {
+    let store = this.store;
+    let rec = findWriteFileRecord(store.records(), fileName);
+    return rec ? await store.readRecord(rec) : null;
   }
 
   /**
@@ -87,22 +125,6 @@ export class LocalStore {
     let meta = JSON.stringify(m);
     await store.appendRecord(kStoreSetNoteMeta, null, meta);
     await debugValidateLocalStoreIndex(this);
-  }
-
-  /**
-   * @param {string} fileName
-   * @param {string} s
-   */
-  async writeStringToFile(fileName, s) {
-    localStorage.setItem(fileName, s);
-  }
-
-  /**
-   * @param {string} fileName
-   * @returns {Promise<string>}
-   */
-  async readFileAsString(fileName) {
-    return localStorage.getItem(fileName) || "";
   }
 
   /**
@@ -119,7 +141,7 @@ export class LocalStore {
    * @param {string} name
    */
   async createNote(noteId, name) {
-    console.log("createNote:", noteId, name);
+    // console.log("createNote:", noteId, name);
     let store = this.store;
     let meta = `${noteId}:${name}`;
     await store.appendRecord(kStoreCreateNote, null, meta);
@@ -186,6 +208,8 @@ function notesFromStoreLog(records) {
       }
       note.versionIds.push(verId);
       note.updatedAt = rec.timestampMs;
+    } else if (rec.kind === kStoreWriteFile) {
+      // do nothing
     }
   }
   for (let note of m.values()) {
@@ -240,6 +264,8 @@ export function validateIndex(s) {
         !m.has(noteId),
         `Setting meta for non-existing note: ${noteId}, line: ${line}`,
       );
+    } else if (k === kStoreWriteFile) {
+      // do nothing
     } else {
       throwIf(true, `Unknown record kind in index: ${k}, line: ${line}`);
     }

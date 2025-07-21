@@ -36,7 +36,7 @@ const utf8Decoder = new TextDecoder();
  * @param {string|Uint8Array} data
  * @returns {Uint8Array|null}
  */
-function toBytes(data) {
+export function toBytes(data) {
   if (!data) {
     return null;
   }
@@ -291,11 +291,10 @@ export class AppendStore {
   }
 
   /**
-   * Reads a record from the store as a string
    * @param {AppendStoreRecord} rec
-   * @returns {Promise<string>}
+   * @returns {Promise<Uint8Array>}
    */
-  async readRecordAsString(rec) {
+  async readRecord(rec) {
     const { offset, size } = rec;
     if (offset < 0 || size < 0) {
       throw new Error(`Invalid offset '${offset}' or size '${size}`);
@@ -303,10 +302,20 @@ export class AppendStore {
 
     // if we write empty string, data size is 0
     if (size == 0) {
-      return "";
+      return null;
     }
     let bytes = await this.fs.readFileSegment(this.dataPath, offset, size);
-    return utf8Decoder.decode(bytes);
+    return bytes;
+  }
+
+  /**
+   * Reads a record from the store as a string
+   * @param {AppendStoreRecord} rec
+   * @returns {Promise<string|null>}
+   */
+  async readRecordAsString(rec) {
+    let bytes = await this.readRecord(rec);
+    return bytes ? utf8Decoder.decode(bytes) : null;
   }
 
   /**
@@ -342,7 +351,7 @@ export class AppendStore {
    * @returns {Promise<string>}
    */
   async getIndexAsString() {
-    const d = await this.fs.readFile(this.indexPath);
+    const d = await this.getIndexContent();
     return d ? utf8Decoder.decode(d) : "";
   }
 }

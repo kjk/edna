@@ -5,8 +5,6 @@ import { validateIndex } from "./store-local";
 import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
 import { addBinaryBlob, addTextFile } from "./ziputil";
 
-const localStorageFiles = [kMetadataName];
-
 /**
  * @param {boolean} validate
  * @returns {Promise<Blob|null>}
@@ -45,16 +43,6 @@ async function createLocalStoreZip(validate = false) {
   let zipWriter = new libZip.ZipWriter(blobWriter);
   await addBinaryBlob(libZip, zipWriter, "index.txt", new Blob([indexContent]));
   await addBinaryBlob(libZip, zipWriter, "data.bin", new Blob([dataContent]));
-  for (let fileName of localStorageFiles) {
-    let s = localStorage.getItem(fileName);
-    if (!s) {
-      console.warn(
-        `createLocalStoreZip: localStorage file ${fileName} not found`,
-      );
-      continue;
-    }
-    await addTextFile(libZip, zipWriter, "file:" + fileName, s);
-  }
   let blob = await zipWriter.close();
   return blob;
 }
@@ -85,9 +73,6 @@ export async function maybeMigrateNotesLocalToBackend() {
   let toDelete = ["notes_store_data.bin", "notes_store_index.txt"];
   await ofsDeleteFiles(toDelete);
   await ofsListFiles();
-  for (let file of localStorageFiles) {
-    localStorage.removeItem(file);
-  }
   console.warn("maybeMigrateNotesLocalToBackend: migration completed");
 }
 
