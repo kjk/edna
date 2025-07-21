@@ -59,6 +59,9 @@ export async function importEdnaNotesFromZipFile() {
   }
   let notesMeta = await readMetadata();
   console.warn("len(notesMeta.notes):", len(notesMeta.notes));
+  /**
+   * @param {string} name
+   */
   function findNoteMeta(name) {
     for (let n of notesMeta.notes) {
       if (n.name === name) {

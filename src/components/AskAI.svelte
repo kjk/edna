@@ -355,7 +355,7 @@
     // console.warn("markdownItAnchor:", markdownItAnchor);
   }
 
-  // TODO: ma\ybe use this version which bundles less languages
+  // TODO: maybe use this version which bundles less languages
   async function startLazyImportsLessLangs() {
     if (isLazyImportng) return;
     isLazyImportng = true;
@@ -378,6 +378,8 @@
       import("highlight.js/lib/languages/json"),
       import("highlight.js/lib/languages/python"),
       import("highlight.js/lib/languages/rust"),
+      import("highlight.js/lib/languages/bash"),
+      import("highlight.js/lib/languages/shell"),
     ]);
     hljs.registerLanguage("javascript", langs[0].default);
     hljs.registerLanguage("typescript", langs[1].default);
@@ -389,6 +391,8 @@
     hljs.registerLanguage("json", langs[6].default);
     hljs.registerLanguage("python", langs[7].default);
     hljs.registerLanguage("rust", langs[8].default);
+    hljs.registerLanguage("bash", langs[9].default);
+    hljs.registerLanguage("shell", langs[10].default);
 
     console.warn("hljs:", hljs);
     console.warn("markdownIt:", markdownIt);
@@ -442,12 +446,22 @@
     }
   }
 
-  /** @type {HTMLElement} */
+  /** @type {HTMLButtonElement} */
   let btnInsertRef;
-  /** @type {HTMLElement} */
+  /** @type {HTMLTextAreaElement} */
   let textAreaRef;
+  /** @type {HTMLButtonElement} */
+  let btnAskAIRef;
 
   let showingModels = $state(false);
+
+  onMount(() => {
+    if (!btnAskAIRef.disabled) {
+      btnAskAIRef.focus();
+    } else {
+      textAreaRef.focus();
+    }
+  });
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -517,7 +531,6 @@
         </div>
         <input
           placeholder="Enter OpenAI API key"
-          use:focus
           bind:value={settings.openAIKey}
           class="px-1 py-[1px]"
         />
@@ -545,7 +558,6 @@
         </div>
         <input
           placeholder="Enter xAI API key"
-          use:focus
           bind:value={settings.xAIKey}
           class="px-1 py-[1px]"
         />
@@ -587,7 +599,6 @@
         </div>
       {/if}
       <input
-        use:focus
         bind:value={settings.openRouterKey}
         placeholder="Enter OpenRouter API key"
         class="px-1 py-[1px]"
@@ -598,7 +609,6 @@
   <textarea
     bind:value={questionText}
     bind:this={textAreaRef}
-    use:focus
     {onkeydown}
     class="mt-1 w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
   ></textarea>
@@ -643,7 +653,11 @@
       class="button-outline {reqFinished ? 'visible' : 'invisible'}"
       >Insert response as block</button
     >
-    <button onclick={askai} disabled={askAIDisabled} class="ml-2 button-outline"
+    <button
+      bind:this={btnAskAIRef}
+      onclick={askai}
+      disabled={askAIDisabled}
+      class="ml-2 button-outline"
       >{#if reqFinished}Ask AI Again{:else}Ask AI{/if}</button
     >
     <button onclick={close} class="button-outline ml-2"
