@@ -14,6 +14,19 @@ import (
 	"github.com/kjk/common/appendstore"
 )
 
+func genUniqueNoteName(name string, nameToNote map[string]*Note) string {
+	if n := nameToNote[name]; n == nil || n.isDeleted {
+		return name
+	}
+
+	for i := 0; ; i++ {
+		name := fmt.Sprintf("%s-%d", name, i)
+		if _, ok := nameToNote[name]; !ok {
+			return name
+		}
+	}
+}
+
 func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData []byte) error {
 	logf("replayBrowserStoreZip: replaying browser store zip with %d bytes\n", len(zipData))
 
@@ -73,36 +86,80 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				rec, rec.Offset, rec.Size, dataSize)
 		}
 	}
-	recs := store.Records()
-	idToNote, err := idToNoteFromRecords(recs)
+	oldRecs := store.Records()
+	idToNoteOld, err := idToNoteFromRecords(oldRecs)
 	if err != nil {
 		return fmt.Errorf("failed to read existing notes from store: %w", err)
 	}
-	nameToNote := make(map[string]*Note)
-	for _, note := range idToNote {
-		nameToNote[note.name] = note
+	nameToNoteOld := make(map[string]*Note)
+	for _, note := range idToNoteOld {
+		nameToNoteOld[note.name] = note
 	}
-	hasScratch := nameToNote["scratch"] != nil
-	hasInbox := nameToNote["inbox"] != nil
-	hasDailyNote := nameToNote["daily journal"] != nil
+	hasScratch := nameToNoteOld["scratch"] != nil
+	hasInbox := nameToNoteOld["inbox"] != nil
+	hasDailyNote := nameToNoteOld["daily journal"] != nil
 
 	// key is id of note to ignore
-	ignoreNotes := map[string]bool{}
+	idToIgnoreNew := map[string]bool{}
 
-	// skip duplicates when importing
-	// for both recs and newRecs calculate map from name of the note
-	// to verId of latest version
-	// then
+	idToNoteNew, err := idToNoteFromRecords(newRecs)
+	if err != nil {
+		return fmt.Errorf("failed to read new notes from store: %w", err)
+	}
+	nameToNoteMaybeDuplicatesNew := make(map[string]*Note)
+	for _, note := range idToNoteNew {
+		nameToNoteMaybeDuplicatesNew[note.name] = note
+	}
+
+	// don't modify map while traversing
+	nonDups := make([]string, 0, len(nameToNoteMaybeDuplicatesNew))
+	for name := range nameToNoteMaybeDuplicatesNew {
+		if nameToNoteOld[name] == nil {
+			push(&nonDups, name)
+		}
+	}
+	for _, name := range nonDups {
+		delete(nameToNoteMaybeDuplicatesNew, name)
+	}
+	// value is name
+	idToRenameNew := map[string]string{}
+	for name := range nameToNoteMaybeDuplicatesNew {
+		newNote := nameToNoteMaybeDuplicatesNew[name]
+		oldNote := nameToNoteOld[name]
+		newLastVerId := sliceLastOrZero(newNote.versionIds)
+		oldNoteVerId := sliceLastOrZero(oldNote.versionIds)
+		if newLastVerId == "" {
+			// shouldn't happen: new note has no versions
+			idToIgnoreNew[newNote.id] = true
+			continue
+		}
+		contentRecNew := findPutRecord(newRecs, newLastVerId)
+		contentRecOld := findPutRecord(oldRecs, oldNoteVerId)
+		if contentRecOld == nil {
+			// shouldn't happen but ignore
+			idToIgnoreNew[newNote.id] = true
+			continue
+		}
+		newContent := data[contentRecNew.Offset : contentRecNew.Offset+contentRecNew.Size]
+		oldContent, _ := store.ReadRecord(contentRecOld)
+		if bytes.Equal(newContent, oldContent) {
+			idToIgnoreNew[newNote.id] = true
+			continue
+		}
+		// if content doesn't match, mark this note for renaming
+		idToRenameNew[newNote.id] = name
+	}
 
 	for _, rec := range newRecs {
 		switch rec.Kind {
 		case kStoreCreateNote:
 			// meta is "noteId:name"
-			parts := strings.SplitN(rec.Meta, ":", 2)
+			meta := rec.Meta
+			parts := strings.SplitN(meta, ":", 2)
 			id := parts[0]
-			note := idToNote[id]
+			note := idToNoteOld[id]
 			if note != nil {
-				logf("replayBrowserStoreZip: note %s already exists, skipping create\n", id)
+				logf("replayBrowserStoreZip: note %s already exists, skipping create\n", meta)
 				continue
 			}
 			name := parts[1]
@@ -114,12 +171,18 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				ignore = true
 			}
 			if ignore {
-				ignoreNotes[id] = true
-				logf("replayBrowserStoreZip: note %s already exists, skipping create\n", id)
+				idToIgnoreNew[id] = true
+				logf("replayBrowserStoreZip: note %s already exists, skipping create\n", meta)
 				continue
 			}
-			store.AppendRecord(kStoreCreateNote, nil, rec.Meta)
-			idToNote[id] = &Note{
+			if name, ok := idToRenameNew[id]; ok {
+				newName := genUniqueNoteName(name, nameToNoteOld)
+				logf("replayBrowserStoreZip: renaming note %s to %s\n", meta, newName)
+				meta = fmt.Sprintf("%s:%s", id, newName)
+				idToRenameNew[id] = newName // remember so that we can handle kStoreSetNoteMeta
+			}
+			store.AppendRecord(kStoreCreateNote, nil, meta)
+			idToNoteOld[id] = &Note{
 				id:        id,
 				name:      name,
 				createdAt: rec.TimestampMs,
@@ -127,33 +190,40 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 			logf("replayBrowserStoreZip: created note %s with name %s\n", id, parts[1])
 		case kStoreSetNoteMeta:
 			var noteMeta NoteMeta
-			meta := rec.Meta
-			err := json.Unmarshal([]byte(meta), &noteMeta)
+			// meta is JSON serialized note metadata
+			meta := []byte(rec.Meta)
+			err := json.Unmarshal(meta, &noteMeta)
 			if err != nil {
 				logErrorf("replayBrowserStoreZip: applyMetadata: failed to unmarshal note meta: %s, err: %s\n", meta, err)
 				return err
 			}
 			id := noteMeta.Id
-			if ignoreNotes[id] {
+			if idToIgnoreNew[id] {
 				logf("replayBrowserStoreZip: note %s already exists, skipping meta update\n", id)
 				continue
 			}
-			note := idToNote[id]
+			note := idToNoteOld[id]
 			if note == nil {
 				logf("replayBrowserStoreZip: note %s does not exist, skipping meta update\n", noteMeta.Id)
 				continue
 			}
-			store.AppendRecord(kStoreSetNoteMeta, nil, rec.Meta)
+			if newName, ok := idToRenameNew[id]; ok {
+				if noteMeta.Name != newName {
+					noteMeta.Name = newName
+					meta, _ = json.Marshal(noteMeta)
+				}
+			}
+			store.AppendRecord(kStoreSetNoteMeta, nil, string(meta))
 			logf("replayBrowserStoreZip: updated meta for note %s: %+v\n", id, noteMeta)
 
 		case kStoreDeleteNote:
 			id := rec.Meta
-			if ignoreNotes[id] {
+			if idToIgnoreNew[id] {
 				logf("replayBrowserStoreZip: note %s already exists, skipping meta update\n", id)
 				continue
 			}
 
-			note := idToNote[id]
+			note := idToNoteOld[id]
 			if note == nil {
 				logf("replayBrowserStoreZip: note %s does not exist, skipping delete\n", id)
 				continue
@@ -169,11 +239,11 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 		case kStorePut:
 			verId := rec.Meta // verId is id:verId
 			id := strings.SplitN(rec.Meta, ":", 2)[0]
-			if ignoreNotes[id] {
+			if idToIgnoreNew[id] {
 				logf("replayBrowserStoreZip: note %s already exists, skipping meta update\n", id)
 				continue
 			}
-			note := idToNote[id]
+			note := idToNoteOld[id]
 			if note == nil {
 				logf("replayBrowserStoreZip: note %s does not exist, skipping content update\n", id)
 				continue

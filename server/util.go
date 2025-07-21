@@ -37,6 +37,18 @@ func sliceRemoveAt[S ~[]E, E any](s *S, i int) {
 	*s = append((*s)[:i], (*s)[i+1:]...)
 }
 
+func sliceLast[S ~[]E, E any](s S) E {
+	return s[len(s)-1]
+}
+
+func sliceLastOrZero[S ~[]E, E any](s S) E {
+	if len(s) == 0 {
+		var zero E
+		return zero
+	}
+	return s[len(s)-1]
+}
+
 func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {
 	cmd := exec.Command(exe, args...)
 	cmd.Dir = dir
