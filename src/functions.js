@@ -117,7 +117,7 @@ export const fnMain = main;
     type: "text/javascript",
   });
   const url = URL.createObjectURL(blobData);
-  const mod = await import(url);
+  const mod = await import(/* @vite-ignore */ url);
   console.log(mod);
   await mod.fnMain(arg);
 }

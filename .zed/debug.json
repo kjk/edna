@@ -13,5 +13,15 @@
     "args": ["-run-dev"],
     "buildFlags": [],
     "env": {}
+  },
+  {
+    "adapter": "JavaScript",
+    "label": "Debug in Chrome",
+    "type": "chrome",
+    "request": "launch",
+    "file": "$ZED_WORKTREE_ROOT/src/index.html",
+    "webRoot": "$ZED_WORKTREE_ROOT/src",
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**"]
   }
 ]
