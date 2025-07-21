@@ -6,7 +6,8 @@ async function getCurrencyData() {
   const response = await fetch("/api/currency_rates.json", {
     cache: "no-cache",
   });
-  currencyData = JSON.parse(await response.text());
+  let s = await response.text();
+  currencyData = JSON.parse(s);
   return currencyData;
 }
 

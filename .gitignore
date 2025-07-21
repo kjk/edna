@@ -11,3 +11,4 @@ secrets.env
 elaris-*
 data/
 dist/
+__debug_bin*

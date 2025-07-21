@@ -19,7 +19,7 @@
     "label": "Debug in Chrome",
     "type": "chrome",
     "request": "launch",
-    "file": "$ZED_WORKTREE_ROOT/src/index.html",
+    "url": "http://localhost:9339/",
     "webRoot": "$ZED_WORKTREE_ROOT/src",
     "console": "integratedTerminal",
     "skipFiles": ["<node_internals>/**"]
