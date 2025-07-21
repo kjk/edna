@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -60,7 +62,7 @@ const kStoreSetNoteMeta = "note-meta"
 const kStorePut = "put"
 const kStorePutOverwrite = "put-o"
 
-type NoteInfo struct {
+type Note struct {
 	id          string
 	name        string
 	createdAt   int64
@@ -80,7 +82,7 @@ type NoteMeta struct {
 	AltShortcut string `json:"altShortcut,omitempty"`
 }
 
-func applyMetadata(ni *NoteInfo, noteMeta *NoteMeta) error {
+func applyMetadata(ni *Note, noteMeta *NoteMeta) error {
 	ni.name = noteMeta.Name
 	ni.isArchived = noteMeta.IsArchived
 	ni.isStarred = noteMeta.IsStarred
@@ -88,9 +90,17 @@ func applyMetadata(ni *NoteInfo, noteMeta *NoteMeta) error {
 	return nil
 }
 
-func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, error) {
+func notesFromRedords(records []*appendstore.Record) ([]*Note, error) {
+	idToNote, err := idToNoteFromRecords(records)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Collect(maps.Values(idToNote)), nil
+}
+
+func idToNoteFromRecords(records []*appendstore.Record) (map[string]*Note, error) {
 	logf("notesFromStoreLog: processing %d records\n", len(records))
-	notes := make(map[string]*NoteInfo)
+	idToNote := make(map[string]*Note)
 	for _, rec := range records {
 		switch rec.Kind {
 		case kStoreCreateNote:
@@ -98,16 +108,16 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			parts := strings.SplitN(rec.Meta, ":", 2)
 			id := parts[0]
 			name := parts[1]
-			ni := &NoteInfo{
+			ni := &Note{
 				id:        id,
 				name:      name,
 				createdAt: rec.TimestampMs,
 			}
-			if notes[id] != nil {
+			if idToNote[id] != nil {
 				logf("note with id %s already exists", id)
 				return nil, fmt.Errorf("kStoreCreateNote: note with id %s already exists", id)
 			}
-			notes[id] = ni
+			idToNote[id] = ni
 		case kStoreSetNoteMeta:
 			var noteMeta NoteMeta
 			meta := rec.Meta
@@ -117,7 +127,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 				return nil, err
 			}
 			id := noteMeta.Id
-			note := notes[id]
+			note := idToNote[id]
 			if note == nil {
 				logf("note %s does not exist, skipping meta update\n", id)
 				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s does not exist", id)
@@ -127,7 +137,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s is deleted", id)
 			}
 			if noteMeta.AltShortcut != "" {
-				for _, n := range notes {
+				for _, n := range idToNote {
 					if n.altShortcut == noteMeta.AltShortcut {
 						n.altShortcut = ""
 					}
@@ -138,7 +148,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 			note.modifiedAt = rec.TimestampMs
 		case kStoreDeleteNote:
 			id := rec.Meta
-			note := notes[id]
+			note := idToNote[id]
 			if note == nil {
 				logf("note %s does not exist, skipping delete\n", id)
 				return nil, fmt.Errorf("kStoreDeleteNote: note %s does not exist", id)
@@ -151,7 +161,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 		case kStorePut:
 			verId := rec.Meta // verId is id:verId
 			id := strings.SplitN(rec.Meta, ":", 2)[0]
-			note := notes[id]
+			note := idToNote[id]
 			if note == nil {
 				logf("note %s does not exist, skipping put\n", id)
 				return nil, fmt.Errorf("kStorePut: note %s does not exist", id)
@@ -164,7 +174,7 @@ func notesFromStoreLog(records []*appendstore.Record) (map[string]*NoteInfo, err
 		}
 	}
 
-	return notes, nil
+	return idToNote, nil
 }
 
 type GetMultiRequest struct {
@@ -263,7 +273,7 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		return
 	}
 
-	notes, err := notesFromStoreLog(recs)
+	notes, err := notesFromRedords(recs)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to get notes: %s", err), http.StatusInternalServerError)
 		return

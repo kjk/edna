@@ -74,31 +74,33 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 		}
 	}
 	recs := store.Records()
-	notes, err := notesFromStoreLog(recs)
+	idToNote, err := idToNoteFromRecords(recs)
 	if err != nil {
 		return fmt.Errorf("failed to read existing notes from store: %w", err)
 	}
-	var hasScratch, hasInbox, hasDailyNote bool
-	for _, note := range notes {
-		switch note.name {
-		case "scratch":
-			hasScratch = true
-		case "inbox":
-			hasInbox = true
-		case "daily journal":
-			hasDailyNote = true
-		}
+	nameToNote := make(map[string]*Note)
+	for _, note := range idToNote {
+		nameToNote[note.name] = note
 	}
+	hasScratch := nameToNote["scratch"] != nil
+	hasInbox := nameToNote["inbox"] != nil
+	hasDailyNote := nameToNote["daily journal"] != nil
 
 	// key is id of note to ignore
 	ignoreNotes := map[string]bool{}
+
+	// skip duplicates when importing
+	// for both recs and newRecs calculate map from name of the note
+	// to verId of latest version
+	// then
+
 	for _, rec := range newRecs {
 		switch rec.Kind {
 		case kStoreCreateNote:
 			// meta is "noteId:name"
 			parts := strings.SplitN(rec.Meta, ":", 2)
 			id := parts[0]
-			note := notes[id]
+			note := idToNote[id]
 			if note != nil {
 				logf("replayBrowserStoreZip: note %s already exists, skipping create\n", id)
 				continue
@@ -117,7 +119,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				continue
 			}
 			store.AppendRecord(kStoreCreateNote, nil, rec.Meta)
-			notes[id] = &NoteInfo{
+			idToNote[id] = &Note{
 				id:        id,
 				name:      name,
 				createdAt: rec.TimestampMs,
@@ -136,7 +138,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				logf("replayBrowserStoreZip: note %s already exists, skipping meta update\n", id)
 				continue
 			}
-			note := notes[id]
+			note := idToNote[id]
 			if note == nil {
 				logf("replayBrowserStoreZip: note %s does not exist, skipping meta update\n", noteMeta.Id)
 				continue
@@ -151,7 +153,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				continue
 			}
 
-			note := notes[id]
+			note := idToNote[id]
 			if note == nil {
 				logf("replayBrowserStoreZip: note %s does not exist, skipping delete\n", id)
 				continue
@@ -171,7 +173,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				logf("replayBrowserStoreZip: note %s already exists, skipping meta update\n", id)
 				continue
 			}
-			note := notes[id]
+			note := idToNote[id]
 			if note == nil {
 				logf("replayBrowserStoreZip: note %s does not exist, skipping content update\n", id)
 				continue
