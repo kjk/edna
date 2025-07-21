@@ -190,6 +190,9 @@ export class EdnaEditor {
     return this.view.state.sliceDoc();
   }
 
+  /**
+   * @param {string} noteName
+   */
   async loadNote(noteName) {
     //console.log("loadNote:", noteName)
     this.noteName = noteName;
@@ -202,6 +205,9 @@ export class EdnaEditor {
     this.setReadOnly(false);
   }
 
+  /**
+   * @param {string} content
+   */
   setContent(content) {
     return new Promise((resolve) => {
       // set buffer content
@@ -242,6 +248,10 @@ export class EdnaEditor {
     let meta = getMetadata();
     let noteMeta = meta.notes[note.id];
     if (!noteMeta) {
+      this.view.dispatch({
+        selection: EditorSelection.single(0),
+        scrollIntoView: true,
+      });
       return;
     }
     let savedSelection = appState.noteSelectionState.get(note.id);

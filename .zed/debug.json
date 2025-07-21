@@ -5,12 +5,12 @@
 [
   {
     "adapter": "Delve",
-    "label": "go run server",
+    "label": "run go server",
     "request": "launch",
     "mode": "debug",
     "program": ".",
     "cwd": "${ZED_WORKTREE_ROOT}",
-    "args": ["-run-dev"],
+    "args": ["-run-dev", "-no-open"],
     "buildFlags": [],
     "env": {}
   },
