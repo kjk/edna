@@ -489,7 +489,7 @@
     {#if showDelete && !canDeleteSelected}
       <div class="kbd">Ctrl + Delete</div>
       <div class="red truncate">
-        can't trash <span class="font-bold">{selectedName}</span>
+        can't delete <span class="font-bold">{selectedName}</span>
       </div>
     {/if}
 

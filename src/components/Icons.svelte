@@ -29,10 +29,33 @@
     IconTablerTrash,
     IconTablerArchive,
     IconGrokIconDown,
+    IconTablerFold,
   };
 </script>
 
-<!-- 
+<!--
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
+
+https://icones.js.org/collection/tabler?s=fold&icon=tabler:fold
+-->
+{#snippet IconTablerFold()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+  >
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M12 3v6l3-3M9 6l3 3m0 12v-6l3 3m-6 0l3-3m-8-3h1m4 0h1m4 0h1m4 0h1"
+    /></svg
+  >
+{/snippet}
+<!--
 Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
 
 https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-right
@@ -50,7 +73,7 @@ https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-right
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
 
 https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-left
@@ -161,8 +184,8 @@ https://icones.js.org/collection/tabler?s=archive&icon=tabler:trash
   >
 {/snippet}
 
-<!-- 
-Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE 
+<!--
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=archive&icon=tabler:archive
 -->
 {#snippet IconTablerArchive()}
@@ -182,8 +205,8 @@ https://icones.js.org/collection/tabler?s=archive&icon=tabler:archive
   >
 {/snippet}
 
-<!-- 
-Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE 
+<!--
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=plus&icon=tabler:plus
 -->
 {#snippet IconTablerPlus()}
@@ -226,8 +249,8 @@ https://icones.js.org/collection/tabler?s=left&icon=tabler:layout-sidebar-left-e
   >
 {/snippet}
 
-<!-- 
-Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE 
+<!--
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
 https://icones.js.org/collection/tabler?s=left&icon=tabler:layout-sidebar-left-collapse
 -->
@@ -249,7 +272,7 @@ https://icones.js.org/collection/tabler?s=left&icon=tabler:layout-sidebar-left-c
     ></svg
   >
 {/snippet}
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -273,7 +296,7 @@ https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:star
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -296,7 +319,7 @@ https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:arrow-up
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -320,7 +343,7 @@ https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:arrow-down
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -344,7 +367,7 @@ https://icones.js.org/collection/tabler?s=case&icon=tabler:letter-case
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -368,7 +391,7 @@ https://icones.js.org/collection/tabler?s=select&icon=tabler:select-all
 {/snippet}
 
 <!--
-Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE 
+Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE
 https://icones.js.org/collection/all?s=text-select&icon=lucide:text-select
 -->
 {#snippet IconLucideTextSelect()}
@@ -388,7 +411,7 @@ https://icones.js.org/collection/all?s=text-select&icon=lucide:text-select
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -411,7 +434,7 @@ https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-down
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -434,7 +457,7 @@ https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-up
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -457,7 +480,7 @@ https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-right
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -480,7 +503,7 @@ https://icones.js.org/collection/tabler?s=select&icon=tabler:x
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -504,7 +527,7 @@ https://icones.js.org/collection/tabler?s=replace&icon=tabler:replace
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna
 https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
@@ -523,7 +546,7 @@ https://icones.js.org/collection/tabler?s=replace&icon=tabler:replace-filled
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE
 
 https://icones.js.org/collection/fluent?s=whole-word&icon=fluent:text-whole-word-16-regular
@@ -542,7 +565,7 @@ https://icones.js.org/collection/fluent?s=whole-word&icon=fluent:text-whole-word
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
 
 https://icones.js.org/collection/all?s=regex&icon=tabler:regex
@@ -567,7 +590,7 @@ https://icones.js.org/collection/all?s=regex&icon=tabler:regex
 {/snippet}
 
 <!--
-Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE 
+Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE
 
 https://icones.js.org/collection/all?s=type&icon=lucide:type
 -->
@@ -589,7 +612,7 @@ https://icones.js.org/collection/all?s=type&icon=lucide:type
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE
 
 https://icones.js.org/collection/all?s=replace-all&icon=lucide:replace-all
@@ -620,7 +643,7 @@ https://icones.js.org/collection/all?s=replace-all&icon=lucide:replace-all
   >
 {/snippet}
 
-<!-- 
+<!--
 Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE
 
 https://icones.js.org/collection/all?s=replace-all&icon=lucide:replace

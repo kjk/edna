@@ -162,6 +162,55 @@ export function foldGutterExtension() {
   ];
 }
 
+export const toggleBlockFoldN = (view, n) => {
+  const state = view.state;
+  const folds = foldedRanges(state);
+
+  const foldEffects = [];
+  const unfoldEffects = [];
+  let numFolded = 0,
+    numUnfolded = 0;
+
+  let allBlocks = getBlocks(view.state);
+  let blocks = [allBlocks[n]];
+  for (const block of blocks) {
+    const firstLine = state.doc.lineAt(block.content.from);
+    let blockIsFolded = false;
+    const blockFolds = [];
+    folds.between(block.content.from, block.content.to, (from, to) => {
+      if (from <= firstLine.to && to === block.content.to) {
+        blockIsFolded = true;
+        blockFolds.push({ from, to });
+      }
+    });
+    if (blockIsFolded) {
+      unfoldEffects.push(...blockFolds.map((range) => unfoldEffect.of(range)));
+      numFolded++;
+    } else {
+      const lastLine = state.doc.lineAt(block.content.to);
+      // skip single-line blocks, since they are not folded
+      if (firstLine.from != lastLine.from) {
+        const range = {
+          from: Math.min(firstLine.to, block.content.from + FOLD_LABEL_LENGTH),
+          to: block.content.to,
+        };
+        if (range.to > range.from) {
+          foldEffects.push(foldEffect.of(range));
+        }
+        numUnfolded++;
+      }
+    }
+  }
+
+  if (foldEffects.length > 0 || unfoldEffects.length > 0) {
+    // if multiple blocks are selected, instead of flipping the fold state of all blocks,
+    // we'll fold all blocks if more blocks are unfolded than folded, and unfold all blocks otherwise
+    view.dispatch({
+      effects: [...(numUnfolded >= numFolded ? foldEffects : unfoldEffects)],
+    });
+  }
+};
+
 export const toggleBlockFold = (editor) => (view) => {
   const state = view.state;
   const folds = foldedRanges(state);
@@ -171,10 +220,8 @@ export const toggleBlockFold = (editor) => (view) => {
   let numFolded = 0,
     numUnfolded = 0;
 
-  for (const block of getNoteBlocksFromRangeSet(
-    state,
-    state.selection.ranges,
-  )) {
+  let blocks = getNoteBlocksFromRangeSet(state, state.selection.ranges);
+  for (const block of blocks) {
     const firstLine = state.doc.lineAt(block.content.from);
     let blockIsFolded = false;
     const blockFolds = [];
@@ -216,10 +263,8 @@ export const foldBlock = (editor) => (view) => {
   const state = view.state;
   const blockRanges = [];
 
-  for (const block of getNoteBlocksFromRangeSet(
-    state,
-    state.selection.ranges,
-  )) {
+  let blocks = getNoteBlocksFromRangeSet(state, state.selection.ranges);
+  for (const block of blocks) {
     const line = state.doc.lineAt(block.content.from);
     // fold the block content, but only the first line
     const from = Math.min(line.to, block.content.from + FOLD_LABEL_LENGTH);

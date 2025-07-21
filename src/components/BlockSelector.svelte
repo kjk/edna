@@ -8,7 +8,9 @@
 </script>
 
 <script>
-  import { focus } from "../actions";
+  import { EditorView } from "@codemirror/view";
+  import { focus, tooltip } from "../actions";
+  import { toggleBlockFoldN } from "../editor/fold-gutter";
   import {
     findMatchingItems,
     getKeyEventNumber,
@@ -16,14 +18,16 @@
     len,
     makeHilightRegExp,
   } from "../util";
+  import { IconTablerFold } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{
-   blocks: Item[],
-   selectBlock: (block : Item) => void,
-   initialSelection?: number,
+    view: EditorView,
+    blocks: Item[],
+    selectBlock: (block : Item) => void,
+    initialSelection?: number,
   }}*/
-  let { blocks, selectBlock, initialSelection = 0 } = $props();
+  let { view, blocks, selectBlock, initialSelection = 0 } = $props();
 
   /** @type {string} */
   let filter = $state("");
@@ -79,7 +83,16 @@
     listboxRef.onkeydown(ev, filter === "");
   }
 
+  /** @type {ListBox} */
   let listboxRef;
+
+  /**
+   * @param {number} idx
+   */
+  function toggleFold(idx) {
+    console.log("toggleFold:", idx);
+    toggleBlockFoldN(view, idx);
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -116,6 +129,28 @@
         {@const s = `Ctrl + ${idx}`}
         <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap">{s}</div>
       {/if}
+      <button
+        {@attach tooltip}
+        onclick={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          toggleFold(idx);
+        }}
+        data-tooltip="toggle block fold"
+        class="clickable-icon">{@render IconTablerFold()}</button
+      >
     {/snippet}
   </ListBox>
 </form>
+
+<style>
+  @reference "../main.css";
+
+  .clickable-icon {
+    @apply cursor-pointer px-1 py-1;
+
+    &:hover {
+      @apply bg-gray-200 dark:bg-gray-500;
+    }
+  }
+</style>

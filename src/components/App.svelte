@@ -534,6 +534,7 @@
 
   /** @type {import("./BlockSelector.svelte").Item[]} */
   let blockItems = $state([]);
+  let blockView = $state(null);
   let initialBlockSelection = $state(0);
 
   function openBlockSelector(fn = selectBlock) {
@@ -561,6 +562,7 @@
       blockNo++;
     }
     blockItems = items;
+    blockView = getEditorView();
     initialBlockSelection = currBlockNo;
     showingBlockSelector = true;
   }
@@ -2124,6 +2126,7 @@
 {#if showingBlockSelector}
   <Overlay onclose={closeDialogs} blur={true}>
     <BlockSelector
+      view={blockView}
       blocks={blockItems}
       selectBlock={fnSelectBlock}
       initialSelection={initialBlockSelection}
