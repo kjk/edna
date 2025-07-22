@@ -104,7 +104,8 @@
 </script>
 
 <script>
-  import { focus } from "../actions";
+  import { tooltips } from "@codemirror/view";
+  import { focus, tooltip } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
   import { Note } from "../note";
   import {
@@ -412,11 +413,12 @@
       class="link">command palette</button
     >
     <button
+      {@attach tooltip}
       onclick={(ev) => {
         ev.preventDefault();
         switchToWideNoteSelector();
       }}
-      title="switch to wide note selector"
+      data-tooltip="switch to wide note selector"
       class="link">wide</button
     >
     <button
@@ -424,7 +426,6 @@
         ev.preventDefault();
         toggleInfoPanelCollapsed();
       }}
-      title="show help"
       class="link"
     >
       show help</button
@@ -436,11 +437,12 @@
   <div class="selector-info">
     <div class="flex flex-col items-right absolute bottom-3 right-4">
       <button
+        {@attach tooltip}
         onclick={(ev) => {
           ev.preventDefault();
           switchToWideNoteSelector();
         }}
-        title="switch to wide note selector"
+        data-tooltip="switch to wide note selector"
         class="link mb-1 text-right">wide</button
       >
       <button
@@ -448,7 +450,6 @@
           ev.preventDefault();
           toggleInfoPanelCollapsed();
         }}
-        title="hide help"
         class="link"
       >
         hide help</button
@@ -545,7 +546,7 @@
   >
     {#snippet renderItem(noteInfo)}
       {@const hili = hilightText(noteInfo.name, hiliRegExp)}
-      <div class="flex w-full relative group">
+      <div class="flex w-full items-center group">
         <button
           tabindex="-1"
           class="ml-[-6px] cursor-pointer hover:text-yellow-600"
@@ -568,12 +569,13 @@
         </div>
 
         <div
-          class="absolute top-[-2px] right-[8px] opacity-0 invisible group-hover:visible group-hover:opacity-100 flex items-center self-center bg-gray-100"
+          class="mt-[0px] opacity-0 invisible group-hover:visible group-hover:opacity-100 flex items-center self-center bg-gray-100"
         >
           {#if isNoteArchivable(noteInfo.name)}
             {#if isNoteArchived(noteInfo.name)}
               <button
-                title="unarchive note"
+                {@attach tooltip}
+                data-tooltip="unarchive note"
                 class="clickable-icon"
                 onclick={(ev) => {
                   ev.preventDefault();
@@ -583,7 +585,8 @@
               >
             {:else}
               <button
-                title="archive note"
+                {@attach tooltip}
+                data-tooltip="archive note"
                 class="clickable-icon"
                 onclick={(ev) => {
                   ev.preventDefault();
@@ -592,6 +595,15 @@
                 }}>{@render IconTablerArchive()}</button
               >
             {/if}
+          {:else}
+            <button
+              class="clickable-icon opacity-0"
+              onclick={(ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                archiveNote(noteInfo.name);
+              }}>{@render IconTablerArchive()}</button
+            >
           {/if}
           <!-- {#if isNoteTrashable(noteInfo.name)}
             <button
