@@ -63,6 +63,10 @@ export class LocalStore {
   /** @type {AppendStore} */
   store;
 
+  // if true, this is a partial store used to store changes
+  // when we're offline
+  isPartial = false;
+
   /**
    * @param {AppendStore} apstore
    */
@@ -276,6 +280,10 @@ export function validateIndex(s) {
  * @param {LocalStore} localStore
  */
 async function validateLocalStoreIndex(localStore) {
+  if (localStore.isPartial) {
+    // partial store cannot be validated
+    return;
+  }
   let s = await localStore.store.getIndexAsString();
   try {
     validateIndex(s);

@@ -1,6 +1,11 @@
-import { AppendStore, AppendStoreRecord, toBytes } from "./appendstore";
+import {
+  AppendStore,
+  AppendStoreRecord,
+  kFileSystemWorkerOFS,
+  toBytes,
+} from "./appendstore";
 import { Note } from "./note";
-import { findPutRecord, kStorePut } from "./store-local";
+import { findPutRecord, kStorePut, LocalStore } from "./store-local";
 import { len } from "./util";
 
 export class ContentCache {
@@ -53,15 +58,19 @@ export class ContentCache {
 export class BackendStore {
   /** @type {ContentCache} */
   contentCache;
+  /** @type {LocalStore} */
+  offlineStore;
 
   /** @type {Note[]} */
   notes;
 
   /**
    * @param {ContentCache} contentCache
+   * @param {LocalStore} offlineStore
    */
-  constructor(contentCache) {
+  constructor(contentCache, offlineStore) {
     this.contentCache = contentCache;
+    this.offlineStore = offlineStore;
   }
 
   /**
@@ -170,8 +179,14 @@ export class BackendStore {
       noteId +
       "&name=" +
       encodeURIComponent(name);
-    let rsp = await fetch(uri);
-    console.log("createNote rsp:", rsp);
+    try {
+      let rsp = await fetch(uri);
+      console.log("createNote rsp:", rsp);
+    } catch (e) {
+      console.error("createNote error:", e);
+      let store = this.offlineStore;
+      store.createNote(noteId, name);
+    }
   }
 
   /**
@@ -327,6 +342,13 @@ export async function createBackendStore() {
   let contentCacheStore = await AppendStore.create("cache_store");
   console.log(`cache_store has ${contentCacheStore.records().length} records`);
   let contentCache = new ContentCache(contentCacheStore);
-  let store = new BackendStore(contentCache);
+  let offlineStoreStore = await AppendStore.create(
+    "offline_store",
+    kFileSystemWorkerOFS,
+    false,
+  );
+  let offlineStore = new LocalStore(offlineStoreStore);
+  offlineStore.isPartial = true;
+  let store = new BackendStore(contentCache, offlineStore);
   return store;
 }
