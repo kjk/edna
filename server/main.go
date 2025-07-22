@@ -172,16 +172,16 @@ func Main() {
 	}
 
 	if false {
-		testReplayBrowserStoreZip()
+		testReplyZipAdHoc()
 		return
 	}
 
 	if flgAdHoc {
 		if true {
 			testReplyZipAdHoc()
-			return
 		} else {
-			// make it reachable for compilation
+			// make those reachable to avoid dead code warnings
+			testReplayBrowserStoreZip()
 			testRunServerProd()
 			testReplayBrowserStoreZip()
 			testCompress()

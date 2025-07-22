@@ -48,6 +48,32 @@ func copyFileOverwrite(src, dst string) error {
 	return nil
 }
 
+func testReplyZipAdHoc() {
+	dir := filepath.Join("data", "kkowalczyk@gmail.com")
+	zipName := "notes_store.zip"
+	zipPath := filepath.Join(dir, zipName)
+	zipData, err := os.ReadFile(zipPath)
+	if err != nil {
+		logf("zip file %s does not exist, skipping test\n", zipPath)
+		return
+	}
+	indexFileName := "reply_browser_index.txt"
+	dataFileName := "reply_browser_data.bin"
+	os.Remove(filepath.Join(dir, indexFileName))
+	os.Remove(filepath.Join(dir, dataFileName))
+	store := &appendstore.Store{
+		DataDir:                    dir,
+		IndexFileName:              indexFileName,
+		DataFileName:               dataFileName,
+		OverWriteDataExpandPercent: 100,
+	}
+	err = appendstore.OpenStore(store)
+	must(err)
+	logf("store opened: %s\n", filepath.Join(store.DataDir, store.IndexFileName))
+	err = replayBrowserStoreZip("", store, zipData, false)
+	must(err)
+}
+
 func testReplayBrowserStoreZip() {
 	dir := filepath.Join("data", "kkowalczyk@gmail.com")
 	{
@@ -61,9 +87,10 @@ func testReplayBrowserStoreZip() {
 		copyFileOverwrite(srcPath, dstPath)
 	}
 	store := &appendstore.Store{
-		DataDir:       dir,
-		IndexFileName: "index_tmp.txt",
-		DataFileName:  "data_tmp.bin",
+		DataDir:                    dir,
+		IndexFileName:              "index_tmp.txt",
+		DataFileName:               "data_tmp.bin",
+		OverWriteDataExpandPercent: 100,
 	}
 	err := appendstore.OpenStore(store)
 	must(err)
@@ -295,7 +322,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 		// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
 		case kStoreWriteFile:
 			content := data[rec.Offset : rec.Offset+rec.Size]
-			store.AppendRecord(kStoreWriteFile, content, rec.Meta)
+			store.OverwriteRecord(kStoreWriteFile, content, rec.Meta)
 			// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
 		default:
 			logf("replayBrowserStoreZip: unknown record kind %s\n", rec.Kind)
@@ -304,29 +331,4 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 	}
 	logf("replayBrowserStoreZip: replayed %d records\n", len(newRecs))
 	return nil
-}
-
-func testReplyZipAdHoc() {
-	dir := filepath.Join("data", "kkowalczyk@gmail.com")
-	zipName := "notes_store.zip"
-	zipPath := filepath.Join(dir, zipName)
-	zipData, err := os.ReadFile(zipPath)
-	if err != nil {
-		logf("zip file %s does not exist, skipping test\n", zipPath)
-		return
-	}
-	indexFileName := "reply_browser_index.txt"
-	dataFileName := "reply_browser_data.bin"
-	os.Remove(filepath.Join(dir, indexFileName))
-	os.Remove(filepath.Join(dir, dataFileName))
-	store := &appendstore.Store{
-		DataDir:       dir,
-		IndexFileName: indexFileName,
-		DataFileName:  dataFileName,
-	}
-	err = appendstore.OpenStore(store)
-	must(err)
-	logf("store opened: %s\n", filepath.Join(store.DataDir, store.IndexFileName))
-	err = replayBrowserStoreZip("", store, zipData, false)
-	must(err)
 }

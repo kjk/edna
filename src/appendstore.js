@@ -99,7 +99,7 @@ export class AppendStore {
   // 0 means no expansion.
   // 40 means we expand the data by 40%
   // 100 means we expand the data by 100%
-  overWriteDataExpandPercent = 140;
+  overWriteDataExpandPercent = 100;
 
   /**
    * @param {string} fileNamePrefix
@@ -268,8 +268,8 @@ export class AppendStore {
     if (recToOverwriteIdx == -1) {
       // no record to overwrite, append a new one with potentially padding
       // for future overwrites
-      let op = this.overWriteDataExpandPercent;
-      let additionalBytes = (neededSize * op) / 100;
+      let expandPerc = this.overWriteDataExpandPercent;
+      let additionalBytes = Math.round((neededSize * expandPerc) / 100);
       await this.appendRecord(kind, bytes, meta, additionalBytes);
       return;
     }

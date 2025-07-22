@@ -516,7 +516,7 @@ func handleStoreWriteFile(w http.ResponseWriter, r *http.Request, userInfo *User
 	meta, _ := json.Marshal(map[string]string{
 		"name": name,
 	})
-	if err := userInfo.Store.AppendRecord(kStoreWriteFile, d, string(meta)); err != nil {
+	if err := userInfo.Store.OverwriteRecord(kStoreWriteFile, d, string(meta)); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to write file %s: %s", name, err), http.StatusInternalServerError)
 		return
 	}
