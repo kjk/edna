@@ -11,6 +11,8 @@ import { getLocalStorageAsJSON, setLocalStorageFromJSON } from "./util";
 
 // returns user info if logged in, null if not logged in
 
+const kCachedUserKey = "elaris:cacheduser";
+
 /**
  * @returns {Promise<UserInfo|null>}
  */
@@ -24,11 +26,16 @@ export async function getLoggedUser() {
     user = await rsp.json();
   } catch (e) {
     error("getLoggedUser: error:", e);
-    return null;
+    let s = localStorage.getItem(kCachedUserKey);
+    if (s) {
+      user = JSON.parse(s);
+    }
+    return user;
   }
   if (user.error) {
     log("getLoggedUser: error:", user.error);
     return null;
   }
+  localStorage.setItem(kCachedUserKey, JSON.stringify(user));
   return user;
 }

@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+// https://vite-pwa-org.netlify.app/
 let pwaPlugin = VitePWA({
   // build-time config only – you still register the SW at runtime
   registerType: "autoUpdate",
