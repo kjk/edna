@@ -1,3 +1,5 @@
+import { len } from "./util";
+
 /**
  * @param {string} path
  * @returns {Promise<number>}
@@ -100,24 +102,38 @@ export async function ofsDeleteFiles(files = null) {
   }
 }
 
-export async function ofsListFiles() {
+/**
+ * @param {boolean} recursive
+ * @param {FileSystemDirectoryHandle} dirHandle
+ * @param {string} dir
+ */
+export async function ofsListFiles(
+  recursive = false,
+  dirHandle = null,
+  dir = "",
+) {
+  if (dirHandle == null) {
+    dirHandle = await navigator.storage.getDirectory();
+    dir = "";
+  }
   try {
-    const root = await navigator.storage.getDirectory();
-    console.log("OPFS Root Contents:");
-
     // @ts-ignore
-    for await (const [name, handle] of root.entries()) {
+    for await (const [name, handle] of dirHandle.entries()) {
       if (handle.kind === "file") {
         let f = await handle.getFile();
         console.log(
-          `File: ${name}, size: ${f.size} bytes, modified: ${f.lastModifiedDate}`,
+          `File: ${dir}/${name}, size: ${f.size} bytes, modified: ${f.lastModifiedDate}`,
         );
       } else if (handle.kind === "directory") {
         console.log(`Directory: ${name}`);
+        if (recursive) {
+          let newDir = dir ? `${dir}/${name}` : name;
+          await ofsListFiles(recursive, handle, newDir);
+        }
       }
     }
   } catch (error) {
-    console.error("Error accessing OPFS:", error);
+    console.error("ofsListFiles: error:", error);
   }
 }
 
