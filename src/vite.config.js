@@ -3,6 +3,22 @@ import path from "path";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
+
+let pwaPlugin = VitePWA({
+  // build-time config only – you still register the SW at runtime
+  registerType: "autoUpdate",
+  strategies: "injectManifest",
+  srcDir: ".",
+  outDir: "../dist",
+  filename: "sw.js",
+  // 🎯 the precache manifest is produced from Vite’s whole output
+  workbox: {
+    // you can tweak the strategy or add runtime rules, but no list
+    // of filenames is required – it’s all detected automatically
+    globPatterns: ["**/*.{js,css,html,ico,png,svg}"], // optional override
+  },
+});
 
 /**
  * @param {string} id
@@ -146,6 +162,7 @@ function manualChunks(id) {
 export default defineConfig({
   publicDir: "./public",
 
+  //plugins: [svelte(), tailwindcss(), pwaPlugin],
   plugins: [svelte(), tailwindcss()],
 
   build: {

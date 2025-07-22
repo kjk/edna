@@ -12,3 +12,4 @@ elaris-*
 data/
 dist/
 __debug_bin*
+.DS_Store

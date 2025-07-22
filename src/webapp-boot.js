@@ -112,6 +112,18 @@ export async function boot() {
   setupWindowDebug();
   // await testFuncs();
 
+  if ("serviceWorker" in navigator) {
+    if (!isDev()) {
+      if (false) {
+        navigator.serviceWorker.register("/sw.js");
+      }
+      if (false) {
+        const svURL = new URL("./sw.js", import.meta.url);
+        navigator.serviceWorker.register(svURL);
+      }
+    }
+  }
+
   getSettings();
   let user = await getLoggedUser();
   console.log("user:", user);
