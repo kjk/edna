@@ -1,17 +1,15 @@
-import { ofsDeleteFiles, ofsListFiles } from "./fs-ofs";
-import { kMetadataName } from "./metadata";
+import { ofsListFiles } from "./fs-ofs";
 import { closeLocalStore, openLocalStore } from "./store";
-import { validateIndex } from "./store-local";
+import { deleteLocalStore, LocalStore, validateIndex } from "./store-local";
 import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
-import { addBinaryBlob, addTextFile } from "./ziputil";
+import { addBinaryBlob } from "./ziputil";
 
 /**
+ * @param {LocalStore} localStore
  * @param {boolean} validate
- * @returns {Promise<Blob|null>}
+ * @returns {Promise<Blob | null>}
  */
-async function createLocalStoreZip(validate = false) {
-  let localStore = await openLocalStore();
-
+export async function createLocalStoreZip(localStore, validate = false) {
   let indexContent = await localStore.store.getIndexContent();
   if (len(indexContent) === 0) {
     console.warn(
@@ -48,7 +46,12 @@ async function createLocalStoreZip(validate = false) {
 }
 
 export async function maybeMigrateNotesLocalToBackend() {
-  const blob = await createLocalStoreZip(true);
+  let localStore = await openLocalStore();
+  let recs = localStore.store.records();
+  if (len(recs) === 0) {
+    return;
+  }
+  const blob = await createLocalStoreZip(localStore, true);
   if (!blob) {
     return;
   }
@@ -66,19 +69,19 @@ export async function maybeMigrateNotesLocalToBackend() {
     // root.removeEntry(dataFileName);
   } catch (e) {
     console.error(
-      "maybeUploadAppendStoreZip: error uploading append store zip:",
+      "maybeMigrateNotesLocalToBackend: error uploading append store zip:",
       e,
     );
   }
-  let toDelete = ["notes_store_data.bin", "notes_store_index.txt"];
-  await ofsDeleteFiles(toDelete);
+  await deleteLocalStore();
   await ofsListFiles();
   console.warn("maybeMigrateNotesLocalToBackend: migration completed");
 }
 
 export async function downloadBrowserStoreAsZip() {
   console.log("downloadBrowserStoreAsZip");
-  const blob = await createLocalStoreZip(true);
+  let localStore = await openLocalStore();
+  const blob = await createLocalStoreZip(localStore, true);
   if (!blob) {
     return;
   }

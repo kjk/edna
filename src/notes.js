@@ -165,8 +165,7 @@ export async function saveNote(name, content) {
 export async function createNoteWithName(name, content = null) {
   content = fixUpNoteContent(content);
   let noteId = mkRandomNoteId();
-  await storeCreateNote(noteId, name);
-  let note = new Note(noteId, name);
+  let note = await storeCreateNote(noteId, name);
   if (content) {
     let verId = mkRandomContentId(noteId);
     await storeWriteNoteContent(verId, content);
@@ -178,7 +177,7 @@ export async function createNoteWithName(name, content = null) {
   return note.id;
 }
 
-/*
+/**
  * @param {string} name
  * @param {string} content
  * @returns {Promise<void>}
@@ -212,7 +211,7 @@ export async function createNoteWithUniqueName(name, content = null) {
     }
   }
   let newName = pickUniqueName(name, names);
-  await createNoteWithName(newName);
+  await createNoteWithName(newName, content);
   return newName;
 }
 
@@ -284,19 +283,8 @@ export function canDeleteNote(name) {
  * @param {string} name
  * @returns {boolean}
  */
-export function isNoteTrashable(name) {
-  if (name === kScratchNoteName) {
-    return false;
-  }
-  return !isSystemNoteName(name);
-}
-
-/**
- * @param {string} name
- * @returns {boolean}
- */
 export function isNoteArchivable(name) {
-  return isNoteTrashable(name);
+  return canDeleteNote(name);
 }
 
 /**

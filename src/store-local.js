@@ -143,6 +143,7 @@ export class LocalStore {
   /**
    * @param {string} noteId
    * @param {string} name
+   * @return {Promise<Note>}
    */
   async createNote(noteId, name) {
     // console.log("createNote:", noteId, name);
@@ -150,6 +151,15 @@ export class LocalStore {
     let meta = `${noteId}:${name}`;
     await store.appendRecord(kStoreCreateNote, null, meta);
     await debugValidateLocalStoreIndex(this);
+    let notes = await this.getAllNotes();
+    for (let i = 0; i < notes.length; i++) {
+      if (notes[i].id === noteId) {
+        return notes[i];
+      }
+    }
+    throw new Error(
+      `createNote: note not found after being created: id:${noteId} name:${name}`,
+    );
   }
 
   /**
@@ -157,15 +167,16 @@ export class LocalStore {
    */
   async getAllNotes() {
     let store = this.store;
-    return notesFromStoreLog(store.records());
+    return notesFromStoreLog(store.records(), this.isPartial);
   }
 }
 
 /**
  * @param {AppendStoreRecord[]} records
+ * @param {boolean} isPartial
  * @returns {Note[]}
  */
-function notesFromStoreLog(records) {
+function notesFromStoreLog(records, isPartial) {
   let res = [];
   let m = new Map();
   for (let rec of records) {
@@ -176,12 +187,15 @@ function notesFromStoreLog(records) {
       let name = rec.meta.substring(idx + 1);
       let note = new Note(noteId, name);
       note.createdAt = rec.timestampMs;
+      note.updatedAt = note.createdAt;
       m.set(note.id, note);
     } else if (rec.kind === kStoreSetNoteMeta) {
       let meta = JSON.parse(rec.meta);
       let note = m.get(meta.id);
       if (!note) {
-        console.warn("kStoreKindNoteMeta: no notefor meta record:", meta);
+        if (!isPartial) {
+          console.warn("kStoreKindNoteMeta: no notefor meta record:", meta);
+        }
         continue;
       }
       if (meta.altShortcut !== "") {
@@ -198,7 +212,9 @@ function notesFromStoreLog(records) {
       let noteId = rec.meta;
       let note = m.get(noteId);
       if (!note) {
-        console.warn("kStoreKindDeleteNote: no note for meta:", rec.meta);
+        if (!isPartial) {
+          console.warn("kStoreKindDeleteNote: no note for meta:", rec.meta);
+        }
         continue;
       }
       m.delete(noteId);
@@ -207,7 +223,9 @@ function notesFromStoreLog(records) {
       let noteId = noteIdFromVerId(verId);
       let note = m.get(noteId);
       if (!note) {
-        console.warn("kStorePut: no note for meta:", verId);
+        if (!isPartial) {
+          console.warn("kStorePut: no note for meta:", verId);
+        }
         continue;
       }
       note.versionIds.push(verId);
@@ -222,14 +240,25 @@ function notesFromStoreLog(records) {
   return res;
 }
 
+const kLocalStorePrefix = "notes_store";
+const kLocalStoreFS = kFileSystemWorkerOFS;
+
 export async function createLocalStore() {
   let apstore = await AppendStore.create(
-    "notes_store",
-    kFileSystemWorkerOFS,
+    kLocalStorePrefix,
+    kLocalStoreFS,
     false,
   );
-  console.log(`notes_store has ${apstore.records().length} records`);
+  console.log(`${kLocalStorePrefix} has ${apstore.records().length} records`);
   return new LocalStore(apstore);
+}
+
+export async function deleteLocalStore() {
+  let apstore = await AppendStore.create(
+    kLocalStorePrefix,
+    kLocalStoreFS,
+    true,
+  );
 }
 
 /**

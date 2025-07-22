@@ -346,7 +346,13 @@ func maybeSaveUploadedZip(dataDir string, zipData []byte) {
 	logf("maybeSaveUploadedZip: wrote zip to %s\n", zipPath)
 }
 
-// /api/store/bulkUpload
+// POST /api/store/uploadOfflineChanges
+func handleStoreUploadOfflineChanges(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	// it's the same implementation. might be different at some point?
+	handleStoreBulkUpload(w, r, userInfo)
+}
+
+// POST /api/store/bulkUpload
 func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	if !verifyPOSTRequest(w, r) {
 		return
@@ -354,6 +360,7 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 
 	zipData, err := io.ReadAll(r.Body)
 	if err != nil {
+		logf("handleStoreBulkUpload(): failed to read request body, error: %v", err)
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
@@ -550,6 +557,10 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 
 	if uri == "/api/store/bulkUpload" {
 		handleStoreBulkUpload(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/uploadOfflineChanges" {
+		handleStoreUploadOfflineChanges(w, r, userInfo)
 		return
 	}
 	if uri == "/api/store/getNotes" {

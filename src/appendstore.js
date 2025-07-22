@@ -174,7 +174,7 @@ export class AppendStore {
    */
   async _writeDataAtOffset(offset, data, kind, meta) {
     // high-precision UTC time in milliseconds
-    const timestampMs = Math.round(performance.timeOrigin + performance.now());
+    const timestampMs = currTimestampMs();
     let bytes = toBytes(data);
     let size = len(bytes);
     throwIf(size === 0, "Data size must be greater than 0");
@@ -191,7 +191,7 @@ export class AppendStore {
    */
   async _writeBytes(bytes, kind, meta, additionalBytes = 0) {
     // high-precision UTC time in milliseconds
-    const timestampMs = Math.round(performance.timeOrigin + performance.now());
+    const timestampMs = currTimestampMs();
     let size = len(bytes);
     if (size === 0) {
       // it's ok for data to be empty
@@ -274,7 +274,7 @@ export class AppendStore {
       return;
     }
 
-    const timestampMs = Math.round(performance.timeOrigin + performance.now());
+    const timestampMs = currTimestampMs();
 
     let recOverwritten = this._allRecords[recToOverwriteIdx];
     let offset = recOverwritten.offset;
@@ -426,6 +426,11 @@ function validateKindAndMeta(kind, meta) {
   if (meta && meta.includes("\n")) {
     throw new Error("Meta cannot contain newline characters");
   }
+}
+
+export function currTimestampMs() {
+  // new Date().valueOf()
+  return Math.round(performance.timeOrigin + performance.now());
 }
 
 export async function dumpIndex() {

@@ -43,9 +43,10 @@ export async function storeDeleteNote(noteId) {
 /**
  * @param {string} noteId
  * @param {string} name
+ * @returns {Promise<Note>}
  */
 export async function storeCreateNote(noteId, name) {
-  await store.createNote(noteId, name);
+  return await store.createNote(noteId, name);
 }
 
 /**

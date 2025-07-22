@@ -42,6 +42,7 @@ func serve500IfError(w http.ResponseWriter, err error) bool {
 
 func verifyPOSTRequest(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodPost {
+		logf("verifyPOSTRequest(): must be POST request, is: '%s'", r.Method)
 		http.Error(w, "must be POST request", http.StatusBadRequest)
 		return false
 	}
