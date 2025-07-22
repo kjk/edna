@@ -16,6 +16,7 @@ import {
 import { appState, findNoteByName } from "../appstate.svelte.js";
 import { getMetadata } from "../metadata.js";
 import {
+  isSystemNoteName,
   loadNoteContent,
   maybeSaveNoteSelectionAndFoldedRanges,
   saveNote,
@@ -237,6 +238,9 @@ export class EdnaEditor {
   }
 
   async saveFoldedState() {
+    if (isSystemNoteName(this.noteName)) {
+      return;
+    }
     let note = findNoteByName(this.noteName);
     let foldedRanges = getFoldedRanges(this.view);
     let selection = this.view.state.selection.toJSON();
@@ -244,6 +248,9 @@ export class EdnaEditor {
   }
 
   restoreSelectionAndRanges() {
+    if (isSystemNoteName(this.noteName)) {
+      return;
+    }
     let note = findNoteByName(this.noteName);
     let meta = getMetadata();
     let noteMeta = meta.notes[note.id];

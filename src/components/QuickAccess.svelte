@@ -2,14 +2,14 @@
   import { focus } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
   import { Note } from "../note";
-  import { toggleNoteStarred } from "../notes";
+  import { isSystemNoteName, toggleNoteStarred } from "../notes";
   import { getSettings } from "../settings.svelte";
   import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
-  /** @type {{ 
+  /** @type {{
     openNote: (name: string, newTab?: boolean) => void,
     forHistory: boolean,
   }} */
@@ -48,6 +48,10 @@
 
     // history can repeat the names
     for (let noteName of history) {
+      // TODO: could construct a fake Note object for it
+      if (isSystemNoteName(noteName)) {
+        continue;
+      }
       let note = findNoteByName(noteName);
       let item = buildNoteInfo(note);
       item.altShortcut = 0;
