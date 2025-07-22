@@ -171,6 +171,11 @@ func Main() {
 		flag.Parse()
 	}
 
+	if false {
+		testReplayBrowserStoreZip()
+		return
+	}
+
 	if flgAdHoc {
 		if true {
 			testReplyZipAdHoc()
@@ -178,6 +183,7 @@ func Main() {
 		} else {
 			// make it reachable for compilation
 			testRunServerProd()
+			testReplayBrowserStoreZip()
 			testCompress()
 			clean()
 		}

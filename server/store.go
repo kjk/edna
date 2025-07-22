@@ -91,14 +91,14 @@ func applyMetadata(ni *Note, noteMeta *NoteMeta) error {
 }
 
 func notesFromRedords(records []*appendstore.Record) ([]*Note, error) {
-	idToNote, err := idToNoteFromRecords(records)
+	idToNote, err := idToNoteFromRecords(records, false)
 	if err != nil {
 		return nil, err
 	}
 	return slices.Collect(maps.Values(idToNote)), nil
 }
 
-func idToNoteFromRecords(records []*appendstore.Record) (map[string]*Note, error) {
+func idToNoteFromRecords(records []*appendstore.Record, isPartial bool) (map[string]*Note, error) {
 	logf("notesFromStoreLog: processing %d records\n", len(records))
 	idToNote := make(map[string]*Note)
 	for _, rec := range records {
@@ -129,6 +129,9 @@ func idToNoteFromRecords(records []*appendstore.Record) (map[string]*Note, error
 			id := noteMeta.Id
 			note := idToNote[id]
 			if note == nil {
+				if isPartial {
+					continue
+				}
 				logf("note %s does not exist, skipping meta update\n", id)
 				return nil, fmt.Errorf("kStoreSetNoteMeta: note %s does not exist", id)
 			}
@@ -150,6 +153,9 @@ func idToNoteFromRecords(records []*appendstore.Record) (map[string]*Note, error
 			id := rec.Meta
 			note := idToNote[id]
 			if note == nil {
+				if isPartial {
+					continue
+				}
 				logf("note %s does not exist, skipping delete\n", id)
 				return nil, fmt.Errorf("kStoreDeleteNote: note %s does not exist", id)
 			}
@@ -163,6 +169,9 @@ func idToNoteFromRecords(records []*appendstore.Record) (map[string]*Note, error
 			id := strings.SplitN(rec.Meta, ":", 2)[0]
 			note := idToNote[id]
 			if note == nil {
+				if isPartial {
+					continue
+				}
 				logf("note %s does not exist, skipping put\n", id)
 				return nil, fmt.Errorf("kStorePut: note %s does not exist", id)
 			}
@@ -171,6 +180,11 @@ func idToNoteFromRecords(records []*appendstore.Record) (map[string]*Note, error
 				return nil, fmt.Errorf("kStorePut: note %s is deleted", id)
 			}
 			note.versionIds = append(note.versionIds, verId)
+		case kStoreWriteFile:
+			// do nothing
+		default:
+			logf("unknown operation %d\n", rec.Kind)
+			return nil, fmt.Errorf("unknown operation %d", rec.Kind)
 		}
 	}
 
@@ -360,7 +374,7 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 
 	zipData, err := io.ReadAll(r.Body)
 	if err != nil {
-		logf("handleStoreBulkUpload(): failed to read request body, error: %v", err)
+		logf("handleStoreBulkUpload: failed to read request body, error: %v", err)
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
@@ -368,13 +382,12 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 
 	maybeSaveUploadedZip(userInfo.DataDir, zipData)
 
-	logf("handleStoreBulkUpload: replaying browser store zip with %d bytes\n", len(zipData))
-	err = replayBrowserStoreZip(userInfo.DataDir, userInfo.Store, zipData)
+	err = replayBrowserStoreZip(userInfo.DataDir, userInfo.Store, zipData, false)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	logf("handleStoreBulkUpload: replayed %d records\n", len(userInfo.Store.Records()))
+	logf("handleStoreBulkUpload: after replaying we have %d records\n", len(userInfo.Store.Records()))
 	var rsp struct {
 		Message string `json:"message"`
 	}

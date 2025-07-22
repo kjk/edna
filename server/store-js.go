@@ -27,8 +27,54 @@ func genUniqueNoteName(name string, nameToNote map[string]*Note) string {
 	}
 }
 
-func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData []byte) error {
-	logf("replayBrowserStoreZip: replaying browser store zip with %d bytes\n", len(zipData))
+func copyFileOverwrite(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func testReplayBrowserStoreZip() {
+	dir := filepath.Join("data", "kkowalczyk@gmail.com")
+	{
+		srcPath := filepath.Join(dir, "index.txt")
+		dstPath := filepath.Join(dir, "index_tmp.txt")
+		copyFileOverwrite(srcPath, dstPath)
+	}
+	{
+		srcPath := filepath.Join(dir, "data.bin")
+		dstPath := filepath.Join(dir, "data_tmp.bin")
+		copyFileOverwrite(srcPath, dstPath)
+	}
+	store := &appendstore.Store{
+		DataDir:       dir,
+		IndexFileName: "index_tmp.txt",
+		DataFileName:  "data_tmp.bin",
+	}
+	err := appendstore.OpenStore(store)
+	must(err)
+	zipPath := filepath.Join(dir, "notes_store-1.zip")
+	zipData, err := os.ReadFile(zipPath)
+	must(err)
+	replayBrowserStoreZip(dir, store, zipData, true)
+}
+
+func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData []byte, isPartial bool) error {
+	logf("replayBrowserStoreZip: replaying browser store zip with %d bytes, existing records: %d, isPartial: %t\n", len(zipData), len(store.Records()), isPartial)
 
 	zipReader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
@@ -79,7 +125,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 		}
 	}
 	oldRecs := store.Records()
-	idToNoteOld, err := idToNoteFromRecords(oldRecs)
+	idToNoteOld, err := idToNoteFromRecords(oldRecs, false)
 	if err != nil {
 		return fmt.Errorf("failed to read existing notes from store: %w", err)
 	}
@@ -94,7 +140,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 	// key is id of note to ignore
 	idToIgnoreNew := map[string]bool{}
 
-	idToNoteNew, err := idToNoteFromRecords(newRecs)
+	idToNoteNew, err := idToNoteFromRecords(newRecs, isPartial)
 	if err != nil {
 		return fmt.Errorf("failed to read new notes from store: %w", err)
 	}
@@ -246,7 +292,14 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 			}
 			content := data[rec.Offset : rec.Offset+rec.Size]
 			store.AppendRecord(kStorePut, content, verId)
+		// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
+		case kStoreWriteFile:
+			content := data[rec.Offset : rec.Offset+rec.Size]
+			store.AppendRecord(kStoreWriteFile, content, rec.Meta)
 			// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
+		default:
+			logf("replayBrowserStoreZip: unknown record kind %s\n", rec.Kind)
+			return fmt.Errorf("unknown record kind %s", rec.Kind)
 		}
 	}
 	logf("replayBrowserStoreZip: replayed %d records\n", len(newRecs))
@@ -274,6 +327,6 @@ func testReplyZipAdHoc() {
 	err = appendstore.OpenStore(store)
 	must(err)
 	logf("store opened: %s\n", filepath.Join(store.DataDir, store.IndexFileName))
-	err = replayBrowserStoreZip("", store, zipData)
+	err = replayBrowserStoreZip("", store, zipData, false)
 	must(err)
 }
