@@ -61,7 +61,6 @@ export async function storeCreateNote(noteId, name) {
  * @param {string} content
  */
 export async function storeWriteNoteContent(verId, content) {
-  let isEncrypted = false;
   let pwdHash = getPasswordHash();
   if (!pwdHash) {
     await store.put(verId, content, false);

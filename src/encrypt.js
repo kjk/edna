@@ -41,6 +41,14 @@ export function getPasswordHash() {
 }
 
 /**
+ * @returns {boolean}
+ */
+export function isUsingEncryption() {
+  let pwdHash = getPasswordHash();
+  return pwdHash ? true : false;
+}
+
+/**
  * @param {string} msg
  * @returns {Promise<string>}
  */

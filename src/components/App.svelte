@@ -62,6 +62,7 @@
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages";
+  import { isUsingEncryption } from "../encrypt";
   import { fromFileName, isValidFileName, toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, supportsFileSystem } from "../fileutil";
   import { parseUserFunctions, runBoopFunction } from "../functions";
@@ -89,7 +90,9 @@
     createNoteWithName,
     createNoteWithUniqueName,
     createUniqueScratchNote,
+    decryptAllNotes,
     deleteNote,
+    encryptAllNotes,
     isNoteArchivable,
     isNoteArchived,
     isSystemNoteName,
@@ -429,7 +432,7 @@
   function onEncryptPassword(pwd) {
     console.log("got encryption password:", pwd);
     closeEncryptPassword();
-    // encryptAllNotes(pwd);
+    encryptAllNotes(pwd);
   }
 
   /**
@@ -992,6 +995,7 @@
       ["Block", menuBlock],
       ["Run code", menuRun],
       ["Notes storage", menuStorage],
+      ["Encryption", menuEncrypt],
     ];
     contextMenu.push(
       ["Settings", kCmdSettings],
@@ -1154,10 +1158,9 @@
     } else if (mid == kCmdSwitchToLocalStorage) {
       return kMenuStatusRemoved;
     } else if (mid === kCmdEncryptNotes) {
-      // return isUsingEncryption() ? kMenuStatusDisabled : kMenuStatusNormal;
-      return kMenuStatusRemoved;
+      return isUsingEncryption() ? kMenuStatusDisabled : kMenuStatusNormal;
     } else if (mid === kCmdDecryptNotes) {
-      // return isUsingEncryption() ? kMenuStatusNormal : kMenuStatusDisabled;
+      return isUsingEncryption() ? kMenuStatusNormal : kMenuStatusDisabled;
       return kMenuStatusRemoved;
     } else if (mid === kCmdRenameCurrentNote) {
       if (noteName === kScratchNoteName) {
@@ -1393,7 +1396,7 @@
     } else if (cmdId === kCmdEncryptNotes) {
       openEncryptPassword();
     } else if (cmdId === kCmdDecryptNotes) {
-      // decryptAllNotes();
+      decryptAllNotes();
     } else if (cmdId === kCmdEncryptionHelp) {
       showHTMLHelp("#encryption");
     } else if (cmdId === kCmdOpenRecent) {

@@ -431,3 +431,36 @@ export async function maybeSaveNoteSelectionAndFoldedRanges(
   }
   await saveAppMetadata();
 }
+
+// TODO: get all versions, encrypt, rewrite the index
+/**
+ * @param {string} pwd
+ */
+export async function encryptAllNotes(pwd) {
+  // rememberPassword(pwd);
+  // let pwdHash = saltPassword(pwd);
+  // await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
+  //   if (isEncr) {
+  //     return;
+  //   }
+  //   let msg = `Encrypting <b>${name}</b>`;
+  //   showModalMessageHTML(msg, 0);
+  //   await encryptNoteFS(dh, fileName, pwdHash);
+  // });
+  // clearModalMessage();
+  // await loadNoteNames();
+}
+
+export async function decryptAllNotes() {
+  // await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
+  //   if (!isEncr) {
+  //     return;
+  //   }
+  //   let msg = `Decrypting <b>${name}</b>`;
+  //   showModalMessageHTML(msg, 0);
+  //   await decryptNoteFS(dh, fileName);
+  // });
+  // clearModalMessage();
+  // removePassword();
+  // await loadNoteNames();
+}
