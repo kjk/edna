@@ -4,6 +4,7 @@ import {
   kFileSystemWorkerOFS,
   parseIndexCb,
 } from "./appendstore";
+import { keyValueMarshal, keyValueUnmarshal } from "./appendstore_kv";
 import { Note, noteIdFromVerId } from "./note";
 import { isDev, len, throwIf } from "./util";
 
@@ -45,14 +46,21 @@ export function findWriteFileRecord(records, name) {
   // searching from the end should be faster on average
   // we're more likely to search for recent content
   let lastIdx = len(records) - 1;
+  let meta = keyValueMarshal("name", name);
   for (let idx = lastIdx; idx >= 0; idx--) {
     let rec = records[idx];
     if (rec.kind !== kStoreWriteFile) {
       continue;
     }
-    let m = JSON.parse(rec.meta);
-    if (m?.name !== name) {
+    if (!rec.meta.includes(meta)) {
+      // fast negative check
       continue;
+    }
+    let kv = keyValueUnmarshal(rec.meta);
+    for (let i = 0; i < kv.length; i += 2) {
+      if (kv[i] === "name" && kv[i + 1] === name) {
+        return rec;
+      }
     }
     return rec;
   }
@@ -103,9 +111,7 @@ export class LocalStore {
   async writeFile(name, content) {
     // console.log("putStringOverwrite:", meta, content?.substring(0, 20));
     let store = this.store;
-    let meta = JSON.stringify({
-      name: name,
-    });
+    let meta = keyValueMarshal("name", name);
     await store.overWriteRecord(kStoreWriteFile, meta, content);
     await debugValidateLocalStoreIndex(this);
   }

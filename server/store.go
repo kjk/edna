@@ -569,6 +569,19 @@ func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		"message": "Note content written successfully"})
 }
 
+func findWriteFileRecord(recs []*appendstore.Record, name string) (*appendstore.Record, error) {
+	meta, err := appendstore.KeyValueMarshal("name", name)
+	if err != nil {
+		return nil, err
+	}
+	for _, rec := range slices.Backward(recs) {
+		if rec.Kind == kStoreWriteFile && rec.Meta == meta {
+			return rec, nil
+		}
+	}
+	return nil, nil
+}
+
 // GET /api/store/readFile?name=<fileName>
 func handleStoreReadFile(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	name := r.FormValue("name")
@@ -576,14 +589,16 @@ func handleStoreReadFile(w http.ResponseWriter, r *http.Request, userInfo *UserI
 		http.Error(w, "Missing or invalid name", http.StatusBadRequest)
 		return
 	}
-	path := filepath.Join(userInfo.DataDir, ToValidFileName(name))
-	d, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			http.Error(w, fmt.Sprintf("File %s does not exist", name), http.StatusNotFound)
-			return
-		}
-		http.Error(w, fmt.Sprintf("Failed to read file %s: %s", name, err), http.StatusInternalServerError)
+	rec, err := findWriteFileRecord(userInfo.Store.Records(), name)
+	if serve400TextIfError(w, err, "handleStoreReadFile: findWriteFileRecord failed for name '%s' with error '%s'", name, err) {
+		return
+	}
+	if rec == nil {
+		serve404Text(w, "File '%s' doesn't exist", name)
+		return
+	}
+	d, err := userInfo.Store.ReadRecord(rec)
+	if serve500TextIfError(w, err, "handleStoreReadFile: ReadRecord failed for name '%s' with error '%s'", name, err) {
 		return
 	}
 	logf("handleStoreReadFile: user %s, fileName: %s, size: %d\n", userInfo.Email, name, len(d))
@@ -603,10 +618,11 @@ func handleStoreWriteFile(w http.ResponseWriter, r *http.Request, userInfo *User
 		http.Error(w, "Missing or invalid name", http.StatusBadRequest)
 		return
 	}
-	meta, _ := json.Marshal(map[string]string{
-		"name": name,
-	})
-	if err := userInfo.Store.OverwriteRecord(kStoreWriteFile, string(meta), d); err != nil {
+	meta, err := appendstore.KeyValueMarshal("name", name)
+	if serve400TextIfError(w, err, "handleStoreWriteFile: KeyValueMarshal() failed with '%s'", err) {
+		return
+	}
+	if err := userInfo.Store.OverwriteRecord(kStoreWriteFile, meta, d); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to write file %s: %s", name, err), http.StatusInternalServerError)
 		return
 	}

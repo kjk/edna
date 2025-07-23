@@ -57,6 +57,19 @@ func serve401TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
 	return true
 }
 
+func serve400TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
+	if err == nil {
+		return false
+	}
+	msg := fmtSmartNL(err.Error())
+	if len(fmtMsg) > 0 {
+		msg = fmtSmartNL(fmtMsg...)
+	}
+	logErrorf(msg)
+	http.Error(w, msg, http.StatusBadRequest)
+	return true
+}
+
 func serve400Text(w http.ResponseWriter, fmtMsg ...any) {
 	msg := fmtSmartNL(fmtMsg...)
 	logf(msg)
