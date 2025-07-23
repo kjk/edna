@@ -103,3 +103,11 @@ export async function openBackendStore() {
   store = backendStore;
   return backendStore;
 }
+
+export async function storeDumpIndex() {
+  if (!store) {
+    console.log("store not initialized");
+    return;
+  }
+  store.dumpIndex();
+}

@@ -417,6 +417,10 @@ function parseIndex(s) {
   return records;
 }
 
+/**
+ * @param {string} kind
+ * @param {string} meta
+ */
 function validateKindAndMeta(kind, meta) {
   if (!kind || kind.includes(" ") || kind.includes("\n")) {
     throw new Error(
@@ -431,17 +435,4 @@ function validateKindAndMeta(kind, meta) {
 export function currTimestampMs() {
   // new Date().valueOf()
   return Math.round(performance.timeOrigin + performance.now());
-}
-
-export async function dumpIndex() {
-  // TODO: now that store can have a different file system,
-  // needs store instance
-  // const path = "notes_store_index.txt";
-  // const d = await ofsReadFile(path);
-  // if (!d) {
-  //   console.log("no index file exists");
-  //   return;
-  // }
-  // const s = new TextDecoder().decode(d);
-  // console.log("index:", s);
 }

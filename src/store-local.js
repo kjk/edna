@@ -175,6 +175,12 @@ export class LocalStore {
     let store = this.store;
     return notesFromStoreLog(store.records(), this.isPartial);
   }
+
+  async dumpIndex() {
+    console.log("LocalStore.dumpIndex");
+    let s = await this.store.getIndexAsString();
+    console.log("index:", s);
+  }
 }
 
 /**

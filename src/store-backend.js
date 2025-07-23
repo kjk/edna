@@ -289,6 +289,16 @@ export class BackendStore {
     this.notes = null;
     await this.getAllNotes();
   }
+
+  async dumpIndex() {
+    console.log("BackendStore.dumpIndex");
+    let s = await this.offlineStore.store.getIndexAsString();
+    console.log("offlineStore:");
+    console.log(s);
+    s = await this.contentCache.store.getIndexAsString();
+    console.log("contentCache:");
+    console.log(s);
+  }
 }
 
 export async function isOnlineForSure() {

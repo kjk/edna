@@ -4,7 +4,6 @@ import "highlight.js/styles/github.css";
 import "tippy.js/themes/light-border.css";
 import "tippy.js/themes/light.css";
 import { mount, unmount } from "svelte";
-import { dumpIndex } from "./appendstore";
 import { testAppendStore } from "./apppendstore.test";
 import { appState, findNoteByName } from "./appstate.svelte";
 import App from "./components/App.svelte";
@@ -23,7 +22,7 @@ import {
   reassignNoteShortcut,
 } from "./notes";
 import { getSettings } from "./settings.svelte";
-import { openBackendStore, openLocalStore } from "./store";
+import { openBackendStore, openLocalStore, storeDumpIndex } from "./store";
 import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
 import { isDev, len } from "./util";
 
@@ -53,7 +52,7 @@ function setupWindowDebug() {
     listBrowserStorage: ofsListFiles,
     deleteBrowserStorage: ofsDeleteFiles,
     resetApp: resetApp,
-    dumpIndex: dumpIndex,
+    dumpIndex: storeDumpIndex,
     testAppendStore: testAppendStore,
   };
 }
