@@ -1,4 +1,5 @@
 interface GlobalThis {
+  __WB_MANIFEST: any;
   math: any;
   deubg: {
     listBrowserStorage: () => Promise<void>;
@@ -7,4 +8,8 @@ interface GlobalThis {
     dumpIndex: () => Promise<void>;
     testAppendStore: () => Promise<void>;
   };
+}
+
+interface Window {
+  __WB_MANIFEST: any;
 }

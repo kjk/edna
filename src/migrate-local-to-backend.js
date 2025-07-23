@@ -1,4 +1,5 @@
 import { ofsListFiles } from "./fs-ofs";
+import { elarisFetch } from "./httputil";
 import { closeLocalStore, openLocalStore } from "./store";
 import { deleteLocalStore, LocalStore, validateIndex } from "./store-local";
 import { browserDownloadBlob, formatDateYYYYMMDD, len } from "./util";
@@ -56,7 +57,7 @@ export async function maybeMigrateNotesLocalToBackend() {
     return;
   }
   try {
-    let rsp = await fetch("/api/store/bulkUpload", {
+    let rsp = await elarisFetch("/api/store/bulkUpload", {
       method: "POST",
       headers: {
         "Content-Type": "application/octet-stream",

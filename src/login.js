@@ -1,4 +1,5 @@
 import { appState } from "./appstate.svelte";
+import { elarisFetch } from "./httputil";
 import { error, log } from "./log";
 import { getLocalStorageAsJSON, setLocalStorageFromJSON } from "./util";
 
@@ -19,7 +20,7 @@ const kCachedUserKey = "elaris:cacheduser";
 export async function getLoggedUser() {
   let user = null;
   try {
-    let rsp = await fetch("/auth/user");
+    let rsp = await elarisFetch("/auth/user");
     if (rsp.status !== 200) {
       return null;
     }

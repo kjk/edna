@@ -6,6 +6,7 @@ import {
   toBytes,
 } from "./appendstore";
 import { ofsListFiles } from "./fs-ofs";
+import { elarisFetch } from "./httputil";
 import { createLocalStoreZip } from "./migrate-local-to-backend";
 import { Note } from "./note";
 import { findPutRecord, kStorePut, LocalStore } from "./store-local";
@@ -89,7 +90,7 @@ export class BackendStore {
       return await store.readRecord(rec);
     }
     let uri = "/api/store/get?key=" + encodeURIComponent(key);
-    let rsp = await fetch(uri);
+    let rsp = await elarisFetch(uri);
     let d = await rsp.arrayBuffer();
     return new Uint8Array(d);
   }
@@ -101,10 +102,10 @@ export class BackendStore {
   async put(key, content) {
     await this.flushOfflineChanges();
 
-    let uri = "/api/store/put?key=" + encodeURIComponent(key);
     let body = toBytes(content);
+    let uri = "/api/store/put?key=" + encodeURIComponent(key);
     try {
-      let rsp = await fetch(uri, {
+      let rsp = await elarisFetch(uri, {
         method: "POST",
         headers: {
           "Content-Type": "application/octet-stream",
@@ -128,11 +129,10 @@ export class BackendStore {
   async writeFile(fileName, content) {
     await this.flushOfflineChanges();
 
-    let uri = "/api/store/writeFile?name=" + encodeURIComponent(fileName);
     let body = toBytes(content);
-
+    let uri = "/api/store/writeFile?name=" + encodeURIComponent(fileName);
     try {
-      let rsp = await fetch(uri, {
+      let rsp = await elarisFetch(uri, {
         method: "POST",
         headers: {
           "Content-Type": "application/octet-stream",
@@ -161,10 +161,10 @@ export class BackendStore {
       return body;
     }
 
-    let uri = "/api/store/readFile?name=" + encodeURIComponent(fileName);
     let ab;
+    let uri = "/api/store/readFile?name=" + encodeURIComponent(fileName);
     try {
-      let rsp = await fetch(uri);
+      let rsp = await elarisFetch(uri);
       if (rsp.status === 404) {
         console.warn(`File ${fileName} not found`);
         return null;
@@ -192,7 +192,7 @@ export class BackendStore {
     let meta = encodeURIComponent(JSON.stringify(m));
     let uri = "/api/store/writeNoteMeta?meta=" + meta;
     try {
-      let rsp = await fetch(uri);
+      let rsp = await elarisFetch(uri);
       console.log("writeNoteMeta rsp:", rsp);
       // TODO: update metadata for this note
       return;
@@ -211,7 +211,7 @@ export class BackendStore {
 
     let uri = "/api/store/deleteNote?noteId=" + noteId;
     try {
-      let rsp = await fetch(uri);
+      let rsp = await elarisFetch(uri);
       console.log("deleteNote rsp:", rsp);
       let notes = this.notes;
       for (let i = 0; i < notes.length; i++) {
@@ -239,7 +239,7 @@ export class BackendStore {
     let encName = encodeURI(name);
     let uri = "/api/store/createNote?noteId=" + noteId + "&name=" + encName;
     try {
-      let rsp = await fetch(uri);
+      let rsp = await elarisFetch(uri);
       console.log("createNote rsp:", rsp);
       let note = new Note(noteId, name);
       note.createdAt = currTimestampMs();
@@ -294,7 +294,7 @@ export class BackendStore {
 export async function isOnlineForSure() {
   let uri = "/ping";
   try {
-    let rsp = await fetch(uri);
+    let rsp = await elarisFetch(uri);
     if (!rsp.ok) {
       console.error("isOnlineForSure failed:", rsp.status);
       return false;
@@ -318,7 +318,7 @@ async function uploadOfflineStore(localStore) {
   }
   let uri = "/api/store/uploadOfflineChanges";
   try {
-    let rsp = await fetch(uri, {
+    let rsp = await elarisFetch(uri, {
       method: "POST",
       headers: {
         "Content-Type": "application/octet-stream",
@@ -394,7 +394,7 @@ async function getLatestNotes() {
   let s = localStorage.getItem(kKeyLatestNotes);
   let curr = parseLatestNotes(s);
   let notes = notesFromCompact(curr.NotesCompact);
-  let rsp = await fetch(
+  let rsp = await elarisFetch(
     "/api/store/getNotes?lastChangeID=" + curr.LastChangeID,
   );
   // must check before rsp.ok because it's false for 304 (seems wrong)
@@ -439,7 +439,7 @@ async function cacheLatestNoteVersions(notes, cache) {
   let arg = {
     VerIDs: neededVerIds,
   };
-  let rsp = await fetch("/api/store/getNotesMultiContent", {
+  let rsp = await elarisFetch("/api/store/getNotesMultiContent", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
