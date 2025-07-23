@@ -185,7 +185,7 @@ func idToNoteFromRecords(records []*appendstore.Record, isPartial bool) (map[str
 			// do nothing
 		default:
 			logf("unknown operation %d\n", rec.Kind)
-			return nil, fmt.Errorf("unknown operation %d", rec.Kind)
+			return nil, fmt.Errorf("unknown operation %s", rec.Kind)
 		}
 	}
 
@@ -196,12 +196,93 @@ type GetMultiRequest struct {
 	VerIDs []string
 }
 
-func dumpPutRecords(recs []*appendstore.Record) {
+func serializeRecord(rec *appendstore.Record) string {
+	sz := ""
+	if rec.SizeInFile > 0 {
+		sz = fmt.Sprintf("%d:%d", rec.Size, rec.SizeInFile)
+	} else {
+		sz = fmt.Sprintf("%d", rec.Size)
+	}
+	overWritten := ""
+	if rec.Overwritten {
+		overWritten = " :overwritten"
+	}
+	return fmt.Sprintf("%d %s %s %s%s\n", rec.Offset, sz, rec.Kind, rec.Meta, overWritten)
+}
+
+func dumpRecords(recs []*appendstore.Record, limitKind string) {
+	type row struct {
+		offset      string
+		size        string
+		kind        string
+		meta        string
+		overwritten string
+	}
+
+	var rows []row
 	for _, rec := range recs {
-		if rec.Kind == kStorePut {
-			logf("%s: %s\n", rec.Kind, rec.Meta)
+		if limitKind != "" && rec.Kind != limitKind {
+			continue
+		}
+		sz := ""
+		if rec.SizeInFile > 0 {
+			sz = fmt.Sprintf("%d:%d", rec.Size, rec.SizeInFile)
+		} else {
+			sz = fmt.Sprintf("%d", rec.Size)
+		}
+		overWritten := ""
+		if rec.Overwritten {
+			overWritten = "overwritten"
+		}
+		rows = append(rows, row{
+			offset:      fmt.Sprintf("%d", rec.Offset),
+			size:        sz,
+			kind:        rec.Kind,
+			meta:        rec.Meta,
+			overwritten: overWritten,
+		})
+	}
+
+	if len(rows) == 0 {
+		return
+	}
+
+	maxOffset := len("Offset")
+	maxSize := len("Size")
+	maxKind := len("Kind")
+	maxMeta := len("Meta")
+	maxOverwritten := len("Overwritten")
+
+	for _, r := range rows {
+		if len(r.offset) > maxOffset {
+			maxOffset = len(r.offset)
+		}
+		if len(r.size) > maxSize {
+			maxSize = len(r.size)
+		}
+		if len(r.kind) > maxKind {
+			maxKind = len(r.kind)
+		}
+		if len(r.meta) > maxMeta {
+			maxMeta = len(r.meta)
+		}
+		if len(r.overwritten) > maxOverwritten {
+			maxOverwritten = len(r.overwritten)
 		}
 	}
+
+	format := fmt.Sprintf("%%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds\n", maxOffset, maxSize, maxKind, maxMeta, maxOverwritten)
+
+	fmt.Printf(format, "Offset", "Size", "Kind", "Meta", "Overwritten")
+	fmt.Println(strings.Repeat("-", maxOffset+maxSize+maxKind+maxMeta+maxOverwritten+8)) // 4 pipes and 4 spaces
+
+	for _, r := range rows {
+		fmt.Printf(format, r.offset, r.size, r.kind, r.meta, r.overwritten)
+	}
+}
+
+func dumpPutRecords(recs []*appendstore.Record) {
+	dumpRecords(recs, kStorePut)
 }
 
 func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {

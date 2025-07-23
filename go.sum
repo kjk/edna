@@ -26,8 +26,8 @@ github.com/gorilla/securecookie v1.1.2 h1:YCIWL56dvtr73r6715mJs5ZvhtnY73hBvEF8kX
 github.com/gorilla/securecookie v1.1.2/go.mod h1:NfCASbcHqRSY+3a8tlWJwsQap2VX5pwzwo4h3eOamfo=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
-github.com/kjk/common v0.0.0-20250723132033-109c13a70ed1 h1:HQKwgCqvlHwWcOaeJGTZiNujBNuMVr9mHDb33zahOg8=
-github.com/kjk/common v0.0.0-20250723132033-109c13a70ed1/go.mod h1:Egc9bcSZtKlXh9v3+ZsqdTSR+SyY6N2oDbIkt1hiZ2k=
+github.com/kjk/common v0.0.0-20250723135031-654f35c177f1 h1:c2r9A5XS/vvtuMyMPhfL21FfWfymVpR2BwfKfbkwF4k=
+github.com/kjk/common v0.0.0-20250723135031-654f35c177f1/go.mod h1:Egc9bcSZtKlXh9v3+ZsqdTSR+SyY6N2oDbIkt1hiZ2k=
 github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481 h1:ht+9buMmt/SieQzlbgt2U8RILVkX31hG1ZMGcM5sF1w=
 github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481/go.mod h1:WTeAZWB9Z8/qT51M+MscwaSK7D/aI2pKs2CHx6DyKj4=
 github.com/klauspost/compress v1.18.0 h1:c/Cqfb0r+Yi+JtIEq73FWXVkRonBlf0CRNYc8Zttxdo=
