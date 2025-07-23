@@ -12,14 +12,16 @@ export class Note {
   id;
   /** @type {string} */
   name;
-  /** @type {string[]} */
-  versionIds = [];
   /** @type {boolean} */
   isArchived;
   /** @type {boolean} */
   isStarred;
   /** @type {string}  */
   altShortcut;
+
+  // those are transient i.e. not saved in metadata
+  /** @type {string[]} */
+  versionIds = [];
   /** @type {number} */
   createdAt;
   /** @type {number} */

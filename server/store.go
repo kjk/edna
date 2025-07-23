@@ -61,6 +61,7 @@ const kStoreCreateNote = "note-create"
 const kStoreDeleteNote = "note-delete"
 const kStoreSetNoteMeta = "note-meta"
 const kStorePut = "put"
+const kStorePutEncrypted = "put-e"
 const kStoreWriteFile = "write-file"
 
 type Note struct {
@@ -285,15 +286,18 @@ func dumpPutRecords(recs []*appendstore.Record) {
 	dumpRecords(recs, kStorePut)
 }
 
-func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
+func findPutRecord(recs []*appendstore.Record, key string) (*appendstore.Record, string) {
 	// searching from the is faster bcause we're likely looking
 	// for recent record
 	for _, rec := range slices.Backward(recs) {
-		if rec.Meta == key && rec.Kind == kStorePut {
-			return rec
+		if rec.Meta != key {
+			continue
+		}
+		if rec.Kind == kStorePut || rec.Kind == kStorePutEncrypted {
+			return rec, rec.Kind
 		}
 	}
-	return nil
+	return nil, ""
 }
 
 // POST /api/store/getNotesMultiContent
@@ -317,7 +321,7 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 	zipFile := zip.NewWriter(&buf)
 	recs := store.Records()
 	for _, verID := range req.VerIDs {
-		rec := findPutRecord(recs, verID)
+		rec, kind := findPutRecord(recs, verID)
 		if rec == nil {
 			dumpPutRecords(recs)
 			serve404Text(w, "version %s does not exist", verID)
@@ -327,6 +331,10 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 		if err != nil {
 			serve500Text(w, "failed to get note content %s: %v", verID, err)
 			return
+		}
+		isEncrypted := kind == kStorePutEncrypted
+		if isEncrypted {
+			verID = "e:" + verID
 		}
 		header := &zip.FileHeader{
 			Name:   verID,
@@ -494,7 +502,7 @@ func handleStoreGet(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		return
 	}
 	recs := userInfo.Store.Records()
-	rec := findPutRecord(recs, key)
+	rec, kind := findPutRecord(recs, key)
 	if rec == nil {
 		http.Error(w, fmt.Sprintf("No content for key '%s'", key), http.StatusNotFound)
 		return
@@ -506,6 +514,10 @@ func handleStoreGet(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		return
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
+	isEncrypted := kind == kStorePutEncrypted
+	if isEncrypted {
+		w.Header().Set("X-Elaris-Encrypted", "true")
+	}
 	w.Write(content)
 	logf("handleStoreGetString: finished\n")
 }
@@ -552,7 +564,7 @@ func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *
 		"message": "Note meta set"})
 }
 
-// POST /api/store/put?key=<key>
+// POST /api/store/put?key=<key>&isEncrypted=<true|false>
 func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	d, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -564,7 +576,16 @@ func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		http.Error(w, "Missing or invalid verId", http.StatusBadRequest)
 		return
 	}
-	userInfo.Store.AppendRecord(kStorePut, key, d)
+	isEncrypted := r.FormValue("isEncrypted")
+	if isEncrypted == "" {
+		http.Error(w, "Missing or invalid isEncrypted", http.StatusBadRequest)
+		return
+	}
+	kind := kStorePut
+	if isEncrypted == "true" {
+		kind = kStorePutEncrypted
+	}
+	userInfo.Store.AppendRecord(kind, key, d)
 	serve200JSON(w, map[string]string{
 		"message": "Note content written successfully"})
 }

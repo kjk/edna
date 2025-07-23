@@ -20,19 +20,6 @@ import {
 } from "./system-notes";
 import { len, objectEqualDeep, throwIf } from "./util";
 
-const kLSPassowrdKey = "elaris-password";
-
-/**
- * @param {string} pwd
- */
-function rememberPassword(pwd) {
-  localStorage.setItem(kLSPassowrdKey, pwd);
-}
-
-function removePassword() {
-  localStorage.removeItem(kLSPassowrdKey);
-}
-
 export const kScratchNoteName = "scratch";
 export const kDailyJournalNoteName = "daily journal";
 export const kInboxNoteName = "inbox";
@@ -143,6 +130,10 @@ function pickUniqueName(base, existingNames) {
   return name;
 }
 
+/**
+ * @param {string} name
+ * @param {string} content
+ */
 export async function saveNote(name, content) {
   console.log("note name:", name);
   if (isSystemNoteName(name)) {

@@ -561,6 +561,10 @@ export function hilightText(s, regexp) {
   return s.replace(regexp, '<span class="hili">$1</span>');
 }
 
+/**
+ * @param {object} src
+ * @param {string[]} keys
+ */
 export function copyObj(src, keys) {
   let res = {};
   for (let k of keys) {

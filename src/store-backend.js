@@ -9,7 +9,12 @@ import { ofsListFiles } from "./fs-ofs";
 import { elarisFetch, hdrContentType, mimeApplicationJson } from "./httputil";
 import { createLocalStoreZip } from "./migrate-local-to-backend";
 import { Note } from "./note";
-import { findPutRecord, kStorePut, LocalStore } from "./store-local";
+import {
+  findPutRecord,
+  kStorePut,
+  kStorePutEncrypted,
+  LocalStore,
+} from "./store-local";
 import { len } from "./util";
 
 export class ContentCache {
@@ -79,31 +84,45 @@ export class BackendStore {
 
   /**
    * @param {string} key
-   * @returns {Promise<Uint8Array|null>}
+   * @returns {Promise<{content: Uint8Array, isEncrypted: boolean}|null>}
    */
   async get(key) {
     // check in cache first
     let store = this.contentCache.store;
-    let rec = findPutRecord(store.records(), key);
+    let rec = findPutRecord(store.records(), key, kStorePut);
     if (rec) {
       console.warn(`got ${key} from cache`);
-      return await store.readRecord(rec);
+      let content = await store.readRecord(rec);
+      return content ? { content, isEncrypted: false } : null;
+    }
+    rec = findPutRecord(store.records(), key, kStorePutEncrypted);
+    if (rec) {
+      console.warn(`got ${key} from cache, encrypted`);
+      let content = await store.readRecord(rec);
+      return content ? { content, isEncrypted: true } : null;
     }
     let uri = "/api/store/get?key=" + encodeURIComponent(key);
     let rsp = await elarisFetch(uri);
+    let isEncrypted = rsp.headers.has("X-Elaris-Encrypted");
     let d = await rsp.arrayBuffer();
-    return new Uint8Array(d);
+    let content = new Uint8Array(d);
+    return content ? { content, isEncrypted } : null;
   }
 
   /**
    * @param {string} key
    * @param {string|Uint8Array} content
+   * @param {boolean} isEncrypted
    */
-  async put(key, content) {
+  async put(key, content, isEncrypted) {
     await this.flushOfflineChanges();
 
     let body = toBytes(content);
-    let uri = "/api/store/put?key=" + encodeURIComponent(key);
+    let uri =
+      "/api/store/put?isEncrypted=" +
+      (isEncrypted ? "1" : "0") +
+      "&key=" +
+      encodeURIComponent(key);
     try {
       let rsp = await elarisFetch(uri, {
         method: "POST",
@@ -118,7 +137,7 @@ export class BackendStore {
     } catch (error) {
       console.error("Error putting key:", key, error);
     }
-    await this.offlineStore.put(key, content);
+    await this.offlineStore.put(key, content, isEncrypted);
     await this.contentCache.put(key, body);
   }
 

@@ -1,4 +1,11 @@
+import { decryptBlobAsString, encryptStringAsBlob } from "kiss-crypto";
 import { AppendStore } from "./appendstore";
+import {
+  getPasswordHash,
+  getPasswordHashMust,
+  kLSPassowrdKey,
+  removePassword,
+} from "./encrypt";
 import { Note } from "./note";
 import { BackendStore, createBackendStore } from "./store-backend";
 import { createLocalStore, LocalStore } from "./store-local";
@@ -54,24 +61,51 @@ export async function storeCreateNote(noteId, name) {
  * @param {string} content
  */
 export async function storeWriteNoteContent(verId, content) {
-  await store.put(verId, content);
+  let isEncrypted = false;
+  let pwdHash = getPasswordHash();
+  if (!pwdHash) {
+    await store.put(verId, content, false);
+    return;
+  }
+  let d = encryptStringAsBlob({ key: pwdHash, plaintext: content });
+  await store.put(verId, content, true);
 }
 
 /**
+ * TODO: test returning null and handle that in the UI
  * @param {string} contentId
- * @returns {Promise<Uint8Array|null>}
- */
-export async function storeGet(contentId) {
-  return await store.get(contentId);
-}
-
-/**
- * @param {string} contentId
- * @returns {Promise<string>}
+ * @returns {Promise<string|null>}
  */
 export async function storeGetString(contentId) {
-  let res = await store.get(contentId);
-  return res ? utf8Decoder.decode(res) : null;
+  let { content, isEncrypted } = await store.get(contentId);
+  if (!isEncrypted) {
+    return content ? utf8Decoder.decode(content) : null;
+  }
+  // ask for a valid password
+  let msg = "";
+  while (true) {
+    let pwdHash = await getPasswordHashMust(msg);
+    let s = null;
+    try {
+      s = decryptBlobAsString({ key: pwdHash, cipherblob: d });
+    } catch (e) {
+      console.log(e);
+      s = null;
+    }
+    if (s !== null) {
+      return s;
+    }
+    let pwd = localStorage.getItem(kLSPassowrdKey);
+    if (!pwd) {
+      msg = "Please enter password to decrypt files";
+    } else {
+      msg = `Password '${pwd}' is not correct. Please enter valid password.`;
+    }
+    // password was likely incorrect so remove it so that getPasswordHashMust()
+    // asks the user
+    removePassword();
+  }
+  return null;
 }
 
 /** @type { LocalStore } */

@@ -215,8 +215,8 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 			idToIgnoreNew[newNote.id] = true
 			continue
 		}
-		contentRecNew := findPutRecord(newRecs, newLastVerId)
-		contentRecOld := findPutRecord(oldRecs, oldNoteVerId)
+		contentRecNew, _ := findPutRecord(newRecs, newLastVerId)
+		contentRecOld, _ := findPutRecord(oldRecs, oldNoteVerId)
 		if contentRecOld == nil {
 			// shouldn't happen but ignore
 			idToIgnoreNew[newNote.id] = true

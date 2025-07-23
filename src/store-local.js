@@ -13,20 +13,22 @@ const kStoreCreateNote = "note-create";
 const kStoreDeleteNote = "note-delete";
 const kStoreSetNoteMeta = "note-meta";
 export const kStorePut = "put";
+export const kStorePutEncrypted = "put-e";
 const kStoreWriteFile = "write-file";
 
 /**
  * @param {AppendStoreRecord[]} records
  * @param {string} key
+ * @param {string} kind
  * @returns {AppendStoreRecord|null}
  */
-export function findPutRecord(records, key) {
+export function findPutRecord(records, key, kind) {
   // searching from the end should be faster on average
   // we're more likely to search for recent content
   let lastIdx = len(records) - 1;
   for (let idx = lastIdx; idx >= 0; idx--) {
     let rec = records[idx];
-    if (rec.kind !== kStorePut) {
+    if (rec.kind !== kind) {
       continue;
     }
     if (rec.meta !== key) {
@@ -84,23 +86,47 @@ export class LocalStore {
 
   /**
    * @param {string} key
-   * @returns {Promise<Uint8Array|null>} returns null if doesn't exist
+   * @returns {Promise<{content:Uint8Array, isEncrypted:boolean}|null>} returns null if doesn't exist
    */
   async get(key) {
     let store = this.store;
-    let rec = findPutRecord(store.records(), key);
-    let content = rec ? await store.readRecord(rec) : null;
-    return content;
+    let recs = store.records();
+    let rec = findPutRecord(recs, key, kStorePut);
+    if (rec) {
+      let content = await store.readRecord(rec);
+      return content
+        ? {
+            content,
+            isEncrypted: false,
+          }
+        : null;
+    }
+    rec = findPutRecord(recs, key, kStorePutEncrypted);
+    if (!rec) {
+      return null;
+    }
+    let content = await store.readRecord(rec);
+    return content
+      ? {
+          content,
+          isEncrypted: true,
+        }
+      : null;
   }
 
   /**
    * @param {string} key
    * @param {string|Uint8Array} content
+   * @param {boolean} isEncrypted
    */
-  async put(key, content) {
+  async put(key, content, isEncrypted) {
+    if (isEncrypted) {
+      debugger;
+    }
     // console.log("putString:", key, content?.substring(0, 20));
     let store = this.store;
-    await store.appendRecord(kStorePut, key, content);
+    let kind = isEncrypted ? kStorePutEncrypted : kStorePut;
+    await store.appendRecord(kind, key, content);
     await debugValidateLocalStoreIndex(this);
   }
 
@@ -230,7 +256,7 @@ function notesFromStoreLog(records, isPartial) {
         continue;
       }
       m.delete(noteId);
-    } else if (rec.kind === kStorePut) {
+    } else if (rec.kind === kStorePut || rec.kind === kStorePutEncrypted) {
       let verId = rec.meta; // verId is noteId:verId
       let noteId = noteIdFromVerId(verId);
       let note = m.get(noteId);
