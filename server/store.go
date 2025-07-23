@@ -196,11 +196,18 @@ type GetMultiRequest struct {
 	VerIDs []string
 }
 
+func dumpPutRecords(recs []*appendstore.Record) {
+	for _, rec := range recs {
+		if rec.Kind == kStorePut {
+			logf("%s: %s\n", rec.Kind, rec.Meta)
+		}
+	}
+}
+
 func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
 	// searching from the is faster bcause we're likely looking
 	// for recent record
-	for i := len(recs) - 1; i >= 0; i-- {
-		rec := recs[i]
+	for _, rec := range slices.Backward(recs) {
 		if rec.Meta == key && rec.Kind == kStorePut {
 			return rec
 		}
@@ -208,20 +215,20 @@ func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
 	return nil
 }
 
-// GET /api/store/getNotesMultiContent
+// POST /api/store/getNotesMultiContent
 func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	logf("handleStoreGetNotesMultiContent: user %s\n", userInfo.Email)
-	d, err := io.ReadAll(r.Body)
-	if serve500TextIfError(w, fmt.Errorf("handleStoreGetNotesMultiContent: failed to read request body: %v", err)) {
+	jsonData, err := io.ReadAll(r.Body)
+	if serve500TextIfError(w, err, "handleStoreGetNotesMultiContent: failed to read request body: %v", err) {
 		return
 	}
-	req := &GetMultiRequest{}
-	err = json.Unmarshal(d, req)
-	if serve500TextIfError(w, fmt.Errorf("handleStoreGetNotesMultiContent: failed to unmarshal request body: %v", err)) {
+	var req GetMultiRequest
+	err = json.Unmarshal(jsonData, &req)
+	if serve500TextIfError(w, err, "handleStoreGetNotesMultiContent: failed to unmarshal request body\n%s\n error: %v", string(jsonData), err) {
 		return
 	}
 	if len(req.VerIDs) == 0 {
-		serve400Text(w, fmt.Sprintf("no note ids provided in JSON: '%s'", string(d)))
+		serve400Text(w, fmt.Sprintf("no note ids provided in JSON: '%s'", string(jsonData)))
 		return
 	}
 	store := userInfo.Store
@@ -231,7 +238,8 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 	for _, verID := range req.VerIDs {
 		rec := findPutRecord(recs, verID)
 		if rec == nil {
-			serve404Text(w, "note %s does not exist", verID)
+			dumpPutRecords(recs)
+			serve404Text(w, "version %s does not exist", verID)
 			return
 		}
 		d, err := store.ReadRecord(rec)

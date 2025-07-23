@@ -172,7 +172,7 @@ func Main() {
 	}
 
 	if false {
-		testReplyZipAdHoc()
+		testOpenStore()
 		return
 	}
 

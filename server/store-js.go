@@ -48,6 +48,21 @@ func copyFileOverwrite(src, dst string) error {
 	return nil
 }
 
+func testOpenStore() {
+	dir := filepath.Join("data", "kkowalczyk@gmail.com")
+	indexFileName := "index.txt"
+	dataFileName := "data.bin"
+	store := &appendstore.Store{
+		DataDir:                    dir,
+		IndexFileName:              indexFileName,
+		DataFileName:               dataFileName,
+		OverWriteDataExpandPercent: 100,
+	}
+	err := appendstore.OpenStore(store)
+	must(err)
+	dumpPutRecords(store.Records())
+}
+
 func testReplyZipAdHoc() {
 	dir := filepath.Join("data", "kkowalczyk@gmail.com")
 	zipName := "notes_store.zip"

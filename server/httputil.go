@@ -39,7 +39,7 @@ func serve500TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
 	if len(fmtMsg) > 0 {
 		msg = fmtSmartNL(fmtMsg...)
 	}
-	logErrorf(msg)
+	logErrorf("%s", msg)
 	http.Error(w, msg, http.StatusInternalServerError)
 	return true
 }
