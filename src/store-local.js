@@ -92,7 +92,7 @@ export class LocalStore {
   async put(key, content) {
     // console.log("putString:", key, content?.substring(0, 20));
     let store = this.store;
-    await store.appendRecord(kStorePut, content, key);
+    await store.appendRecord(kStorePut, key, content);
     await debugValidateLocalStoreIndex(this);
   }
 
@@ -106,7 +106,7 @@ export class LocalStore {
     let meta = JSON.stringify({
       name: name,
     });
-    await store.overWriteRecord(content, kStoreWriteFile, meta);
+    await store.overWriteRecord(kStoreWriteFile, meta, content);
     await debugValidateLocalStoreIndex(this);
   }
 
@@ -127,7 +127,7 @@ export class LocalStore {
     let store = this.store;
     // we expect m to be small so storing in index as meta
     let meta = JSON.stringify(m);
-    await store.appendRecord(kStoreSetNoteMeta, null, meta);
+    await store.appendRecord(kStoreSetNoteMeta, meta, null);
     await debugValidateLocalStoreIndex(this);
   }
 
@@ -136,7 +136,7 @@ export class LocalStore {
    */
   async deleteNote(noteId) {
     let store = this.store;
-    await store.appendRecord(kStoreDeleteNote, null, noteId);
+    await store.appendRecord(kStoreDeleteNote, noteId, null);
     await debugValidateLocalStoreIndex(this);
   }
 
@@ -149,7 +149,7 @@ export class LocalStore {
     // console.log("createNote:", noteId, name);
     let store = this.store;
     let meta = `${noteId}:${name}`;
-    await store.appendRecord(kStoreCreateNote, null, meta);
+    await store.appendRecord(kStoreCreateNote, meta, null);
     await debugValidateLocalStoreIndex(this);
     let notes = await this.getAllNotes();
     for (let i = 0; i < notes.length; i++) {

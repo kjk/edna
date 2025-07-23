@@ -6,7 +6,7 @@ import {
   toBytes,
 } from "./appendstore";
 import { ofsListFiles } from "./fs-ofs";
-import { elarisFetch } from "./httputil";
+import { elarisFetch, hdrContentType, mimeApplicationJson } from "./httputil";
 import { createLocalStoreZip } from "./migrate-local-to-backend";
 import { Note } from "./note";
 import { findPutRecord, kStorePut, LocalStore } from "./store-local";
@@ -46,7 +46,7 @@ export class ContentCache {
    * @returns {Promise<void>}
    */
   async put(key, value) {
-    await this.store.appendRecord(kStorePut, value, key);
+    await this.store.appendRecord(kStorePut, key, value);
   }
 
   /**

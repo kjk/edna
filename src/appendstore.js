@@ -225,7 +225,7 @@ export class AppendStore {
    * @param {number} additionalBytes
    * @return {Promise<void>}
    */
-  async appendRecord(kind, data, meta = null, additionalBytes = 0) {
+  async appendRecord(kind, meta, data, additionalBytes = 0) {
     validateKindAndMeta(kind, meta);
     let bytes = toBytes(data);
     let rec = await this._writeBytes(bytes, kind, meta, additionalBytes);
@@ -244,7 +244,7 @@ export class AppendStore {
    * @param {string} meta
    * @return {Promise<void>}
    */
-  async overWriteRecord(data, kind, meta) {
+  async overWriteRecord(kind, meta, data) {
     // const startTime = performance.now();
     validateKindAndMeta(kind, meta);
 
@@ -270,7 +270,7 @@ export class AppendStore {
       // for future overwrites
       let expandPerc = this.overWriteDataExpandPercent;
       let additionalBytes = Math.round((neededSize * expandPerc) / 100);
-      await this.appendRecord(kind, bytes, meta, additionalBytes);
+      await this.appendRecord(kind, meta, bytes, additionalBytes);
       return;
     }
 

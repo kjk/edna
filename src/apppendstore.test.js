@@ -66,7 +66,7 @@ export async function testAppendOverwrite(fsType, prefix) {
   let kind = "file";
   let meta = "foo.txt";
   let d = "lala";
-  await store.overWriteRecord(kind, d, meta);
+  await store.overWriteRecord(kind, meta, d);
 
   let rec1 = getLastRecord(store);
   {
@@ -82,7 +82,7 @@ export async function testAppendOverwrite(fsType, prefix) {
     );
   }
   d = "lalalala2";
-  await store.overWriteRecord(kind, d, meta);
+  await store.overWriteRecord(kind, meta, d);
   {
     let rec = getLastRecord(store);
     let data = await store.readRecordAsString(rec);
@@ -97,7 +97,7 @@ export async function testAppendOverwrite(fsType, prefix) {
   }
 
   d = "lolahi";
-  await store.overWriteRecord(kind, d, meta);
+  await store.overWriteRecord(kind, meta, d);
   {
     let rec = getLastRecord(store);
     let data = await store.readRecordAsString(rec);
@@ -137,7 +137,7 @@ async function testAppendMany(fsType, prefix) {
   let store = await AppendStore.create(prefix, fsType, true);
   let i = 0;
   for (let rec of trecs) {
-    await store.appendRecord(rec.kind, rec.data, rec.meta);
+    await store.appendRecord(rec.kind, rec.meta, rec.data);
     if (i % 250 === 0) {
       logDur(startTime, `appended ${i} records`);
     }
