@@ -266,7 +266,7 @@
     bind:this={listboxRef}
     items={itemsFiltered}
     {selectionChanged}
-    onclick={(item, ev) => emitOpenNote(item, ev?.ctrlKey)}
+    onclick={(item, ev) => emitOpenNote(item, ev?.ctrlKey || ev?.metaKey)}
   >
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}

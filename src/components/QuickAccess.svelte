@@ -135,7 +135,7 @@
     bind:this={listboxRef}
     items={quickAccessNotes}
     onclick={(noteInfo, ev) => {
-      openNote(noteInfo.name, ev.ctrlKey);
+      openNote(noteInfo.name, ev.ctrlKey || ev.metaKey);
     }}
     {initialSelection}
     compact={true}
