@@ -39,7 +39,7 @@
   $effect(() => {
     /* TODO: it's not reactive if I do:
       editor?.setLineNumberGutter(settings.showLineNumberGutter);
-      also, reactive breaks if I do: 
+      also, reactive breaks if I do:
       if (!editor) { return; }
     */
     let showLineNumberGutter = settings.showLineNumberGutter;
@@ -104,7 +104,7 @@
     let fontFamily = settings.fontFamily;
     let fontSize = settings.fontSize;
 
-    let noteName = settings.currentNoteName;
+    let noteName = settings.currentTab;
     let useTabs = settings.indentType == "tabs";
     let tabSize = settings.tabSize;
 

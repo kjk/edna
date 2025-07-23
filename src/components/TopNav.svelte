@@ -7,7 +7,6 @@
   import { isSystemNoteName } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { getAltChar, len } from "../util.js";
-  import GitHub from "./GitHub.svelte";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
     IconGrokIconDown,
@@ -44,10 +43,31 @@
   let altChar = getAltChar();
 
   /**
-   * @param {string} noteName
+   * @param {string} tabName
    * @returns {string}
    */
-  function getNameWithShortcut(noteName) {
+  function tabTitle(tabName) {
+    if (tabName.startsWith("url:")) {
+      let uri = tabName.substring(4);
+      if (uri.startsWith("/")) {
+        return uri.substring(1);
+      }
+    }
+    return tabName;
+  }
+
+  /**
+   * @param {string} tab
+   * @returns {string}
+   */
+  function getTabTooltip(tab) {
+    if (tab.startsWith("url:")) {
+      let uri = tab.substring(4);
+      if (uri.startsWith("/")) {
+        return uri.substring(1);
+      }
+    }
+    let noteName = tab;
     let note = findNoteByName(noteName);
     if (note && note.altShortcut) {
       return `${noteName}  (${altChar} + ${note.altShortcut})`;
@@ -88,7 +108,11 @@
       return;
     }
     if (!url.startsWith("http")) {
-      url = window.location.origin + url;
+      let tab = "url:" + url;
+      settings.addTab(tab);
+      settings.currentTab = tab;
+      return;
+      // url = window.location.origin + url;
     }
     window.open(url, "_blank");
   }
@@ -107,15 +131,32 @@
   }
 
   /**
-   * @param {string} name
+   * @param {string} tab
+   * @return {string}
    */
-  function noteCls(name) {
-    let note = findNoteByName(name);
+  function tabCls(tab) {
+    if (tab.startsWith("url:")) {
+      return "";
+    }
+    let noteName = tab;
+    let note = findNoteByName(noteName);
     let isArchived = note && note.isArchived;
-    if (isSystemNoteName(name) || isArchived) {
+    if (isSystemNoteName(noteName) || isArchived) {
       return "italic";
     }
     return "";
+  }
+
+  /**
+   * @param {string} tab
+   */
+  function openTab(tab) {
+    if (tab.startsWith("url:")) {
+      settings.currentTab = tab;
+      return;
+    }
+    let noteName = tab;
+    openNote(noteName, false);
   }
 </script>
 
@@ -189,19 +230,22 @@
 
   {#key settings.tabs}
     <div class="flex items-center overflow-hidden">
-      {#each settings.tabs as noteName}
-        {@const isSelected = noteName == settings.currentNoteName}
+      {#each settings.tabs as tab}
+        {@const isSelected = tab == settings.currentTab}
+        {@const title = tabTitle(tab)}
+        {@const tt = getTabTooltip(tab)}
         {@const cls = isSelected
           ? "bg-white hover:bg-white! dark:bg-gray-800 dark:hover:bg-gray-800!"
           : "bg-sky-200 dark:bg-gray-500! hover:bg-sky-100! cursor-pointer"}
-        {@const noteNameCls = noteCls(noteName)}
+        {@const noteNameCls = tabCls(tab)}
         <button
+          {@attach tooltip}
           class="truncate justify-between items-center whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 group {cls}"
-          onclick={() => openNote(noteName, false)}
-          title={getNameWithShortcut(noteName)}
+          onclick={() => openTab(tab)}
+          data-tooltip={tt}
         >
           <div class="max-w-32 truncate {noteNameCls}">
-            {noteName}
+            {title}
           </div>
           {#if len(settings.tabs) > 1}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -209,7 +253,7 @@
             <div
               onclick={(ev) => {
                 ev.stopPropagation();
-                closeTab(noteName);
+                closeTab(tab);
               }}
               class="hover:bg-red-300 hover:text-red-600 invisible group-hover:visible flex"
             >

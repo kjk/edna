@@ -150,7 +150,7 @@ export async function boot() {
   let toOpenAtStartup = kScratchNoteName; // default if nothing else matches
   let nameFromURLHash = window.location.hash.slice(1);
   nameFromURLHash = decodeURIComponent(nameFromURLHash);
-  let nameFromSettings = settings.currentNoteName;
+  let nameFromSettings = settings.currentTab;
 
   /**
    * @param {string} name
@@ -184,13 +184,17 @@ export async function boot() {
   }
 
   // will open this note in Editor.vue on mounted()
-  settings.currentNoteName = toOpenAtStartup;
+  settings.currentTab = toOpenAtStartup;
   settings.addTab(toOpenAtStartup);
 
   // remove non-existing notes from tabs
   let nTabs = settings.tabs.length;
   for (let i = nTabs - 1; i >= 0; i--) {
-    let noteName = settings.tabs[i];
+    let tab = settings.tabs[i];
+    if (tab.startsWith("url:")) {
+      continue;
+    }
+    let noteName = tab;
     if (!isValidNote(noteName)) {
       console.warn(`removing tab ${noteName} becase no note of that name`);
       settings.tabs.splice(i, 1);

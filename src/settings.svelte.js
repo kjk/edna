@@ -13,7 +13,7 @@ import {
 
 const settingsKeys = [
   "bracketClosing",
-  "currentNoteName",
+  "currentTab",
   "tabs",
   "emacsMetaKey",
   "fontFamily",
@@ -36,7 +36,7 @@ const settingsKeys = [
 
 export class Settings {
   bracketClosing = $state(true);
-  currentNoteName = $state(kScratchNoteName);
+  currentTab = $state(kScratchNoteName);
   tabs = $state([]);
   emacsMetaKey = $state("alt");
   /** @type { string} */
@@ -68,11 +68,17 @@ export class Settings {
       }
     }
   }
-  addTab(noteName) {
-    pushIfNotExists(this.tabs, noteName);
+  /**
+   * @param {string} tab
+   */
+  addTab(tab) {
+    pushIfNotExists(this.tabs, tab);
   }
-  removeTab(noteName) {
-    arrayRemove(this.tabs, noteName);
+  /**
+   * @param {string} tab
+   */
+  removeTab(tab) {
+    arrayRemove(this.tabs, tab);
   }
   toJSON() {
     return copyObj(this, settingsKeys);
@@ -173,8 +179,8 @@ export function getSettings() {
   settings.starredModels = removeUnknownAiModels(settings.starredModels || []);
 
   // console.log("getSettings: settings:", app
-  if (!settings.currentNoteName) {
-    settings.currentNoteName = kScratchNoteName;
+  if (!settings.currentTab) {
+    settings.currentTab = kScratchNoteName;
   }
   lastSettingsRaw = $state.snapshot(settings.toJSON());
 
@@ -203,7 +209,7 @@ function updateWebsiteTheme() {
  * @returns {boolean}
  */
 function saveSettings(newSettings) {
-  throwIf(!newSettings.currentNoteName);
+  throwIf(!newSettings.currentTab);
   newSettings.tabSize = validateTabSize(newSettings.tabSize);
   let settingsRaw = $state.snapshot(newSettings.toJSON());
   let changed = [];

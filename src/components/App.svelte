@@ -167,8 +167,30 @@
   let language = $state("text");
   let languageAuto = $state(true);
   let line = $state(1);
-  let noteName = $derived(settings.currentNoteName);
+  let currTab = $derived(settings.currentTab);
+  let currNoteName = $derived(noteNameFromTab(currTab));
+  let currURL = $derived(urlFromTab(currTab));
   let selectionSize = $state(0);
+
+  /**
+   * @param {string} tab
+   */
+  function noteNameFromTab(tab) {
+    if (tab.startsWith("url:")) {
+      return "";
+    }
+    return tab;
+  }
+
+  /**
+   * @param {string} tab
+   */
+  function urlFromTab(tab) {
+    if (tab.startsWith("url:")) {
+      return tab.slice(4);
+    }
+    return null;
+  }
 
   let showingContextMenu = $state(false);
   let showingLanguageSelector = $state(false);
@@ -311,7 +333,7 @@
       }
       let name = state.noteName;
       console.log("popstate:", name, state);
-      if (name === noteName) {
+      if (name === currNoteName) {
         console.log("smae as noteName, nothing to do");
         return;
       }
@@ -373,7 +395,7 @@
       if (altN) {
         let notes = appState.regularNotes;
         for (let note of notes) {
-          if (note.altShortcut == altN && note.name !== noteName) {
+          if (note.altShortcut == altN && note.name !== currNoteName) {
             // console.log("onKeyDown: opening note: ", o.name, " altN:", altN, " e:", e)
             openNote(note.name);
             showingHistorySelector = false;
@@ -464,7 +486,7 @@
     let bi = getBlocksInfo(editor.view.state);
     let block = getActiveNoteBlock(editor.view.state);
     let ext = extForLang(block.language.name);
-    let name = toFileName(settings.currentNoteName) + `-${bi.active}.` + ext;
+    let name = toFileName(settings.currentTab) + `-${bi.active}.` + ext;
     let { from, to } = block.content;
     let s = editor.view.state.sliceDoc(from, to);
     console.log("exportCurrentBlock:", name);
@@ -474,7 +496,7 @@
 
   async function exportCurrentNote() {
     let settings = getSettings();
-    let fileName = toFileName(settings.currentNoteName) + ".elaris.txt";
+    let fileName = toFileName(settings.currentTab) + ".elaris.txt";
     let editor = getEditor();
     let s = editor.getContent();
     console.log("exportCurrentNote:", fileName);
@@ -901,7 +923,7 @@
   function buildMenuDef() {
     // let starAction = "Star";
     let starAction = "Add to favorites";
-    let note = findNoteByName(noteName);
+    let note = findNoteByName(currNoteName);
     if (note && note.isStarred) {
       //starAction = "Un-star";
       starAction = "Remove from favorites";
@@ -1080,7 +1102,7 @@
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
     }
-    let noteName = settings.currentNoteName;
+    let noteName = settings.currentTab;
     // console.log("menuItemStatus:", mi);
     // console.log("s:", s, "mid:", mid);
     // note: this is called for each menu item so should be fast
@@ -1247,13 +1269,13 @@
     } else if (cmdId === kCmdRenameCurrentNote) {
       showingRenameNote = true;
     } else if (cmdId == kCmdPermanentlyDeleteNote) {
-      deleteNotePermanently(settings.currentNoteName, true);
+      deleteNotePermanently(settings.currentTab, true);
       view.focus();
     } else if (cmdId === kCmdArchiveCurrentNote) {
-      archiveNote(settings.currentNoteName);
+      archiveNote(settings.currentTab);
       view.focus();
     } else if (cmdId === kCmdUnArchiveCurrentNote) {
-      unArchiveNote(settings.currentNoteName);
+      unArchiveNote(settings.currentTab);
       view.focus();
     } else if (cmdId === kCmdCreateScratchNote) {
       await createScratchNote();
@@ -1486,7 +1508,7 @@
     }
     if (id === kCmdNoteToggleStarred) {
       let starAction = "Add current note to favorites";
-      let note = findNoteByName(noteName);
+      let note = findNoteByName(currNoteName);
       if (note && note.isStarred) {
         //starAction = "Un-star";
         starAction = "Remove current note from favorites";
@@ -1551,7 +1573,7 @@
   }
 
   function closeTab(noteName) {
-    if (noteName != settings.currentNoteName) {
+    if (noteName != settings.currentTab) {
       settings.removeTab(noteName);
       return;
     }
@@ -1568,7 +1590,7 @@
     if (len(settings.tabs) < 2) {
       return;
     }
-    closeTab(settings.currentNoteName);
+    closeTab(settings.currentTab);
   }
 
   function openAskAI() {
@@ -1625,7 +1647,7 @@
   }
 
   function toggleCurrentNoteStar() {
-    toggleNoteStarred(noteName);
+    toggleNoteStarred(currNoteName);
     getEditor().focus();
   }
 
@@ -1838,11 +1860,17 @@
     if (anchor != "") {
       uri += anchor;
     }
-    window.open(uri, "_blank");
+    let tab = "url:" + uri;
+    settings.addTab(tab);
+    settings.currentTab = tab;
+    // window.open(uri, "_blank");
   }
 
+  /**
+   * @param {string} newName
+   */
   async function onRename(newName) {
-    let noteName = settings.currentNoteName;
+    let noteName = settings.currentTab;
     closeDialogs();
     await renameNote(noteName, newName);
     await openNote(newName, true);
@@ -1861,7 +1889,7 @@
     let forceNewTab = appState.forceNewTab;
 
     closeDialogs();
-    if (name == settings.currentNoteName) {
+    if (name == settings.currentTab) {
       return;
     }
     if (forceNewTab) {
@@ -1873,7 +1901,7 @@
         return;
       }
       // replace current tab with new note
-      let idx = settings.tabs.indexOf(settings.currentNoteName);
+      let idx = settings.tabs.indexOf(settings.currentTab);
       if (idx >= 0) {
         // openNote() will change settings.currentNoteName to
         settings.tabs[idx] = name;
@@ -1966,7 +1994,7 @@
     }
     // if deleting current note, first switch to scratch note
     // TODO: maybe switch to the most recently opened
-    if (name === settings.currentNoteName || len(settings.tabs) == 0) {
+    if (name === settings.currentTab || len(settings.tabs) == 0) {
       await openNote(kScratchNoteName);
     }
 
@@ -2043,7 +2071,7 @@
       addNoteToBrowserHistory(name);
       addNoteToHistory(name);
     }
-    settings.currentNoteName = name;
+    settings.currentTab = name;
     if (name == kDailyJournalNoteName) {
       // doesn't work without delay
       setTimeout(() => autoCreateDayInJournal(editor), 100);
@@ -2089,6 +2117,11 @@
     {docDidChange}
     bind:this={editorRef}
   />
+  {#if currURL}
+    <div class="row-start-2 col-start-2 z-10 bg-white">
+      <iframe title="Preview" src={currURL} class="w-full h-full"></iframe>
+    </div>
+  {/if}
 </div>
 
 {#if !settings.alwaysShowTopNav}
@@ -2192,7 +2225,11 @@
 
 {#if showingRenameNote}
   <Overlay onclose={closeDialogs} blur={true}>
-    <RenameNote onclose={closeDialogs} rename={onRename} oldName={noteName} />
+    <RenameNote
+      onclose={closeDialogs}
+      rename={onRename}
+      oldName={currNoteName}
+    />
   </Overlay>
 {/if}
 
