@@ -265,6 +265,9 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		case "/api/verify_login_code":
 			handleAPIVerifyLoginCode(w, r)
 			return
+		case "/api/events":
+			handleEvents(w, r)
+			return
 
 		case "/math.js.map":
 			http.NotFound(w, r)

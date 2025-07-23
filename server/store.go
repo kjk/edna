@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/kjk/common/appendstore"
 )
@@ -211,12 +212,12 @@ func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
 func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	logf("handleStoreGetNotesMultiContent: user %s\n", userInfo.Email)
 	d, err := io.ReadAll(r.Body)
-	if serve500IfError(w, fmt.Errorf("handleStoreGetNotesMultiContent: failed to read request body: %v", err)) {
+	if serve500TextIfError(w, fmt.Errorf("handleStoreGetNotesMultiContent: failed to read request body: %v", err)) {
 		return
 	}
 	req := &GetMultiRequest{}
 	err = json.Unmarshal(d, req)
-	if serve500IfError(w, fmt.Errorf("handleStoreGetNotesMultiContent: failed to unmarshal request body: %v", err)) {
+	if serve500TextIfError(w, fmt.Errorf("handleStoreGetNotesMultiContent: failed to unmarshal request body: %v", err)) {
 		return
 	}
 	if len(req.VerIDs) == 0 {
@@ -528,8 +529,7 @@ func handleStoreWriteFile(w http.ResponseWriter, r *http.Request, userInfo *User
 func handleStore(w http.ResponseWriter, r *http.Request) {
 	uri := r.URL.Path
 	userInfo, err := getLoggedUser(r, w)
-	if serve500IfError(w, err) {
-		logf("handleStore: %s, err: %s\n", uri, err)
+	if serve500TextIfError(w, err, "handleStore: %s, err: %v", uri, err) {
 		return
 	}
 	logf("handleStore: %s, userEmail: %s\n", uri, userInfo.Email)
@@ -586,4 +586,71 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	serve404(w, "Unknown store operation: "+uri)
+}
+
+type updateFromUser struct {
+	UserInfo  *UserInfo
+	Type      string
+	SessionID string
+}
+
+var (
+	chUpdateFromUser = make(chan *updateFromUser)
+)
+
+func notifyAboutNotesUpdates(user *UserInfo, sessionID string) {
+	chUpdateFromUser <- &updateFromUser{
+		UserInfo:  user,
+		Type:      "notes-updated",
+		SessionID: sessionID,
+	}
+}
+
+// SSE /api/events?sessionId=<sessionId>
+func handleEvents(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.Path
+	userInfo, err := getLoggedUser(r, w)
+	if serve500TextIfError(w, err, "handleStore: %s, err: %v", uri, err) {
+		return
+	}
+	sessionID := r.URL.Query().Get("sessionId")
+	if sessionID == "" {
+		http.Error(w, "sessionId is required", http.StatusBadRequest)
+		return
+	}
+	logf("handleEvents: userEmail: %s, sessionId: %s\n", userInfo.Email, sessionID)
+
+	// Set required headers for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*") // Optional: Allow cross-origin if needed
+
+	// Get the flusher to send data immediately
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
+		return
+	}
+	for {
+		select {
+		case update := <-chUpdateFromUser:
+			// notify this user about changes made from other browser sessions
+			// so that they can update their cached notes
+			if update.UserInfo.Email == userInfo.Email {
+				// don't send if update came from ourselves
+				if update.SessionID != sessionID {
+					_, err = fmt.Fprintf(w, "data: %s\n\n", update.Type)
+				}
+			}
+		case <-time.After(5 * time.Second):
+			// wake up every 5 seconds, write a ping to keep alive
+			// and detect broken connection
+			_, err = fmt.Fprint(w, "data: ping\n\n")
+		}
+		if err != nil {
+			break
+		}
+		flusher.Flush()
+	}
 }

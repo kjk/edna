@@ -31,13 +31,30 @@ func serve200JSON(w http.ResponseWriter, v any) {
 	logIfErrf(err)
 }
 
-func serve500IfError(w http.ResponseWriter, err error) bool {
-	if err != nil {
-		logErrorf("%s\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return true
+func serve500TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
+	if err == nil {
+		return false
 	}
-	return false
+	msg := fmtSmartNL(err.Error())
+	if len(fmtMsg) > 0 {
+		msg = fmtSmartNL(fmtMsg...)
+	}
+	logErrorf(msg)
+	http.Error(w, msg, http.StatusInternalServerError)
+	return true
+}
+
+func serve401TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
+	if err == nil {
+		return false
+	}
+	msg := fmtSmartNL(err.Error())
+	if len(fmtMsg) > 0 {
+		msg = fmtSmartNL(fmtMsg...)
+	}
+	logErrorf(msg)
+	http.Error(w, msg, http.StatusUnauthorized)
+	return true
 }
 
 func serve400Text(w http.ResponseWriter, fmtMsg ...any) {
