@@ -261,7 +261,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				meta = fmt.Sprintf("%s:%s", id, newName)
 				idToRenameNew[id] = newName // remember so that we can handle kStoreSetNoteMeta
 			}
-			store.AppendRecord(kStoreCreateNote, nil, meta)
+			store.AppendRecord(kStoreCreateNote, meta, nil)
 			idToNoteOld[id] = &Note{
 				id:        id,
 				name:      name,
@@ -293,7 +293,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 					meta, _ = json.Marshal(noteMeta)
 				}
 			}
-			store.AppendRecord(kStoreSetNoteMeta, nil, string(meta))
+			store.AppendRecord(kStoreSetNoteMeta, string(meta), nil)
 			logf("replayBrowserStoreZip: updated meta for note %s: %+v\n", id, noteMeta)
 
 		case kStoreDeleteNote:
@@ -312,7 +312,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				logf("replayBrowserStoreZip: note %s is already deleted, skipping delete\n", id)
 				continue
 			}
-			store.AppendRecord(kStoreDeleteNote, nil, id)
+			store.AppendRecord(kStoreDeleteNote, id, nil)
 			note.isDeleted = true
 			// logf("replayBrowserStoreZip: deleted note %s\n", noteId)
 
@@ -333,11 +333,11 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 				continue
 			}
 			content := data[rec.Offset : rec.Offset+rec.Size]
-			store.AppendRecord(kStorePut, content, verId)
+			store.AppendRecord(kStorePut, verId, content)
 		// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
 		case kStoreWriteFile:
 			content := data[rec.Offset : rec.Offset+rec.Size]
-			store.OverwriteRecord(kStoreWriteFile, content, rec.Meta)
+			store.OverwriteRecord(kStoreWriteFile, rec.Meta, content)
 			// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
 		default:
 			logf("replayBrowserStoreZip: unknown record kind %s\n", rec.Kind)

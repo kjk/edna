@@ -436,7 +436,7 @@ func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 		http.Error(w, "Missing or invalid noteId", http.StatusBadRequest)
 		return
 	}
-	userInfo.Store.AppendRecord(kStoreDeleteNote, nil, noteId)
+	userInfo.Store.AppendRecord(kStoreDeleteNote, noteId, nil)
 	serve200JSON(w, map[string]string{
 		"message": "Note created"})
 }
@@ -454,7 +454,7 @@ func handleStoreCreateNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 		return
 	}
 	meta := fmt.Sprintf("%s:%s", noteId, name)
-	userInfo.Store.AppendRecord(kStoreCreateNote, nil, meta)
+	userInfo.Store.AppendRecord(kStoreCreateNote, meta, nil)
 	serve200JSON(w, map[string]string{
 		"message": "Note created"})
 }
@@ -466,7 +466,7 @@ func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *
 		return
 	}
 	// TODO: verify meta is valid JSON
-	userInfo.Store.AppendRecord(kStoreSetNoteMeta, nil, meta)
+	userInfo.Store.AppendRecord(kStoreSetNoteMeta, meta, nil)
 	serve200JSON(w, map[string]string{
 		"message": "Note meta set"})
 }
@@ -483,7 +483,7 @@ func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		http.Error(w, "Missing or invalid verId", http.StatusBadRequest)
 		return
 	}
-	userInfo.Store.AppendRecord(kStorePut, d, key)
+	userInfo.Store.AppendRecord(kStorePut, key, d)
 	serve200JSON(w, map[string]string{
 		"message": "Note content written successfully"})
 }
@@ -525,7 +525,7 @@ func handleStoreWriteFile(w http.ResponseWriter, r *http.Request, userInfo *User
 	meta, _ := json.Marshal(map[string]string{
 		"name": name,
 	})
-	if err := userInfo.Store.OverwriteRecord(kStoreWriteFile, d, string(meta)); err != nil {
+	if err := userInfo.Store.OverwriteRecord(kStoreWriteFile, string(meta), d); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to write file %s: %s", name, err), http.StatusInternalServerError)
 		return
 	}
