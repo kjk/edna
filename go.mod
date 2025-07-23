@@ -10,6 +10,7 @@ require (
 	github.com/kjk/common v0.0.0-20250716221453-c9bc43d8b14a
 	github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481
 	github.com/klauspost/compress v1.18.0
+	github.com/mailgun/mailgun-go/v4 v4.23.0
 	github.com/melbahja/goph v1.4.0
 	github.com/pkg/sftp v1.13.9
 	github.com/sanity-io/litter v1.5.8
@@ -17,7 +18,7 @@ require (
 
 require (
 	github.com/carlmjohnson/requests v0.24.3 // indirect
-	github.com/go-chi/chi/v5 v5.2.1 // indirect
+	github.com/go-chi/chi/v5 v5.2.2 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -25,10 +26,9 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/mailgun/errors v0.4.0 // indirect
-	github.com/mailgun/mailgun-go/v4 v4.23.0 // indirect
 	github.com/minio/crc64nvme v1.0.2 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
-	github.com/minio/minio-go/v7 v7.0.94 // indirect
+	github.com/minio/minio-go/v7 v7.0.95 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
