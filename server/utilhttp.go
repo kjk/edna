@@ -33,11 +33,38 @@ func serve200JSON(w http.ResponseWriter, v any) {
 
 func serve500IfError(w http.ResponseWriter, err error) bool {
 	if err != nil {
-		logErrorf("serveIfError(): %s\n", err)
+		logErrorf("%s\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return true
 	}
 	return false
+}
+
+func serve400Text(w http.ResponseWriter, fmtMsg ...any) {
+	msg := fmtSmartNL(fmtMsg...)
+	logf(msg)
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusBadRequest)
+	_, err := w.Write([]byte(msg))
+	logIfErrf(err)
+}
+
+func serve404Text(w http.ResponseWriter, fmtMsg ...any) {
+	msg := fmtSmartNL(fmtMsg...)
+	logf(msg)
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusNotFound)
+	_, err := w.Write([]byte(msg))
+	logIfErrf(err)
+}
+
+func serve500Text(w http.ResponseWriter, fmtMsg ...any) {
+	msg := fmtSmartNL(fmtMsg...)
+	logf(msg)
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusInternalServerError)
+	_, err := w.Write([]byte(msg))
+	logIfErrf(err)
 }
 
 func verifyPOSTRequest(w http.ResponseWriter, r *http.Request) bool {
@@ -89,18 +116,6 @@ func getURLParams(urlVals url.Values, args ...any) error {
 		}
 	}
 	return nil
-}
-
-func fmtSmart(msg ...any) string {
-	if len(msg) == 0 {
-		return ""
-	}
-	s, ok := msg[0].(string)
-	if !ok {
-		return fmt.Sprintf("%v", msg[0])
-	}
-	args := msg[1:]
-	return fmt.Sprintf(s, args...)
 }
 
 func serve400JSONIfErr(w http.ResponseWriter, err error, msgFormat ...any) bool {

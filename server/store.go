@@ -207,20 +207,20 @@ func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
 	return nil
 }
 
+// GET /api/store/getNotesMultiContent
 func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	logf("handleStoreGetNotesMultiContent: user %s\n", userInfo.Email)
 	d, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to read request body: %v", err), http.StatusInternalServerError)
+	if serve500IfError(w, fmt.Errorf("handleStoreGetNotesMultiContent: failed to read request body: %v", err)) {
 		return
 	}
 	req := &GetMultiRequest{}
-	if err := json.Unmarshal(d, req); err != nil {
-		http.Error(w, fmt.Sprintf("failed to unmarshal request body: %v", err), http.StatusBadRequest)
+	err = json.Unmarshal(d, req)
+	if serve500IfError(w, fmt.Errorf("handleStoreGetNotesMultiContent: failed to unmarshal request body: %v", err)) {
 		return
 	}
 	if len(req.VerIDs) == 0 {
-		http.Error(w, "no note ids provided", http.StatusBadRequest)
+		serve400Text(w, fmt.Sprintf("no note ids provided in JSON: '%s'", string(d)))
 		return
 	}
 	store := userInfo.Store
@@ -230,12 +230,12 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 	for _, verID := range req.VerIDs {
 		rec := findPutRecord(recs, verID)
 		if rec == nil {
-			http.Error(w, fmt.Sprintf("note %s does not exist", verID), http.StatusNotFound)
+			serve404Text(w, "note %s does not exist", verID)
 			return
 		}
 		d, err := store.ReadRecord(rec)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("failed to get note content %s: %v", verID, err), http.StatusInternalServerError)
+			serve500Text(w, "failed to get note content %s: %v", verID, err)
 			return
 		}
 		header := &zip.FileHeader{
@@ -244,22 +244,22 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 		}
 		zipWriter, err := zipFile.CreateHeader(header)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("failed to create zip file entry for %s: %v", verID, err), http.StatusInternalServerError)
+			serve500Text(w, "failed to create zip file entry for %s: %v", verID, err)
 			return
 		}
 		if _, err := zipWriter.Write(d); err != nil {
-			http.Error(w, fmt.Sprintf("failed to write note content %s to zip file: %v", verID, err), http.StatusInternalServerError)
+			serve500Text(w, "failed to write note content %s to zip file: %v", verID, err)
 			return
 		}
 	}
 	if err := zipFile.Close(); err != nil {
-		http.Error(w, fmt.Sprintf("failed to close zip file, error: %v", err), http.StatusInternalServerError)
+		serve500Text(w, "failed to close zip file, error: %v", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.WriteHeader(http.StatusOK)
 	w.Write(buf.Bytes())
-	logf("handleStoreGetNotesMultiContent: finished\n")
+	logf("handleStoreGetNotesMultiContent: returned %d files\n", len(req.VerIDs))
 }
 
 // as an optimization, we only send the last version id of note content

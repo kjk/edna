@@ -49,6 +49,26 @@ func sliceLastOrZero[S ~[]E, E any](s S) E {
 	return s[len(s)-1]
 }
 
+func fmtSmart(msg ...any) string {
+	if len(msg) == 0 {
+		return ""
+	}
+	s, ok := msg[0].(string)
+	if !ok {
+		return fmt.Sprintf("%v", msg[0])
+	}
+	args := msg[1:]
+	return fmt.Sprintf(s, args...)
+}
+
+func fmtSmartNL(msg ...any) string {
+	s := fmtSmart(msg...)
+	if !strings.HasSuffix(s, "\n") {
+		s += "\n"
+	}
+	return s
+}
+
 func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {
 	cmd := exec.Command(exe, args...)
 	cmd.Dir = dir
