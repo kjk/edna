@@ -180,18 +180,19 @@
       </div>
     {/snippet}
   </ListBox>
+  <div class="border-b mt-2"></div>
   <div
     class="flex flex-col text-xs justify-between ml-2 mr-3 mt-2 text-gray-500"
   >
     <div class="flex justify-between">
-      <div>
+      <div class="whitespace-nowrap">
         {modChar} + H
       </div>
-      <div>invoke</div>
+      <div class="ml-2">invoke</div>
     </div>
-    <div class="flex justify-between">
-      <div>Ctrl + click</div>
-      <div>open in new tab</div>
+    <div class="flex justify-between flex-nowrap">
+      <div class="whitespace-nowrap">{modChar} + click</div>
+      <div class="whitespace-nowrap ml-2">open in new tab</div>
     </div>
     <a
       target="_blank"
