@@ -5,7 +5,7 @@
   import { OverlayScrollbars } from "overlayscrollbars";
   import { getOverlayScrollbarOptions } from "../settings.svelte";
 
-  /** @type {{ 
+  /** @type {{
     items: any[],
     itemKey?: (item) => any,
     onclick: (item: any, ev: any) => void,
@@ -65,7 +65,11 @@
     prevItemsLen = n;
     // reset selection if changing items
     if (n > 0) {
-      select(0);
+      if (selectedIdx >= 0 && selectedIdx < n) {
+        select(selectedIdx);
+      } else {
+        select(0);
+      }
       selectedItem = items[0];
     } else {
       select(-1);

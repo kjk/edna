@@ -104,6 +104,7 @@
 </script>
 
 <script>
+  import { tick } from "svelte";
   import { tooltips } from "@codemirror/view";
   import { focus, tooltip } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
@@ -128,11 +129,7 @@
     makeHilightRegExp,
     noOp,
   } from "../util";
-  import {
-    IconTablerArchive,
-    IconTablerStar,
-    IconTablerTrash,
-  } from "./Icons.svelte";
+  import Icons, { IconTablerArchive, IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{
@@ -174,17 +171,6 @@
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
-
-  // TODO: why is this no longer needed?
-  // function updateNoteInfos() {
-  //   // actions like re-assigning quick access shortcut do
-  //   // not modify appState.noteNames so we have to force
-  //   // rebuilding of items
-  //   noteInfos = localBuildNoteInfos(
-  //     appState.regularNotes,
-  //     appState.showingArchived ? appState.archivedNotes : [],
-  //   );
-  // }
 
   let sanitizedFilter = $derived.by(() => {
     return sanitizeNoteName(filter);
@@ -253,6 +239,7 @@
    * @param {number} idx
    */
   function selectionChanged(item, idx) {
+    console.log("selectionChanged: item:", item, "idx:", idx);
     selectedNote = item;
     selectedName = item ? selectedNote.name : "";
     recalcAvailableActions(item, sanitizedFilter);
@@ -310,8 +297,15 @@
       ev.preventDefault();
       if (canDeleteSelected && selectedNote) {
         // console.log("delete note", name);
-        await deleteNote(selectedNote.name, false);
-        // .then(updateNoteInfos);
+        let currSelectedIdx = -1;
+        for (let i = 0; i < noteInfos.length; i++) {
+          let n = noteInfos[i];
+          if (n.name === selectedNote.name) {
+            currSelectedIdx = i;
+            break;
+          }
+        }
+        deleteNote(selectedNote.name, false);
       }
       return;
     }
@@ -584,8 +578,9 @@
                   ev.preventDefault();
                   ev.stopPropagation();
                   unArchiveNote(noteInfo.name);
-                }}>{@render IconTablerArchive()}</button
-              >
+                }}
+                >{@render IconTablerArchive()}
+              </button>
             {:else}
               <button
                 {@attach tooltip}
@@ -608,17 +603,6 @@
               }}>{@render IconTablerArchive()}</button
             >
           {/if}
-          <!-- {#if isNoteTrashable(noteInfo.name)}
-            <button
-              title={"permanently delete"}
-              class="clickable-icon text-red-400"
-              onclick={(ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
-                deleteNote(noteInfo.name, false);
-              }}>{@render IconTablerTrash()}</button
-            >
-          {/if} -->
         </div>
       </div>
     {/snippet}
