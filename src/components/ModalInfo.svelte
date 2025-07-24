@@ -14,7 +14,9 @@
     canClose = $state(false);
 
     /** @type {HTMLElement} */
-    overlayRef;
+    overlayRef = $state(null);
+    /** @type {HTMLButtonElement} */
+    closeButtonRef = $state(null);
 
     /**
      * @param {string} msgHTML
@@ -81,6 +83,12 @@
     // autoAddMessage();
   });
 
+  $effect(() => {
+    if (modalInfoState && modalInfoState.canClose) {
+      modalInfoState.closeButtonRef.focus();
+    }
+  });
+
   function maybeClose() {
     if (modalInfoState.canClose) {
       modalInfoState.hide();
@@ -125,7 +133,11 @@
     </div>
     {#if modalInfoState.canClose}
       <div class="flex justify-end py-2">
-        <button class="button-outline" onclick={maybeClose}>Close</button>
+        <button
+          bind:this={modalInfoState.closeButtonRef}
+          class="button-outline"
+          onclick={maybeClose}>Close</button
+        >
       </div>
     {/if}
   </div>

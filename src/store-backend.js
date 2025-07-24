@@ -34,7 +34,7 @@ export class ContentCache {
    */
   findRecordForKey(key) {
     let recs = this.store.records();
-    return findPutRecord(recs, key);
+    return findPutRecord(recs, key, kStorePut);
   }
 
   /**

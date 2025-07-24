@@ -92,6 +92,15 @@ async function ofsWriteToFileAtOffset(path, offset, blob) {
 /**
  * @param {string} path
  * @param {Uint8Array} blob
+ */
+async function ofsWriteFile(path, blob) {
+  await ofsDeleteFile(path);
+  await ofsWriteToFileAtOffset(path, 0, blob);
+}
+
+/**
+ * @param {string} path
+ * @param {Uint8Array} blob
  * @returns {Promise<number>}
  */
 async function ofsAppendToFile(path, blob) {
@@ -121,6 +130,17 @@ async function ofsDeleteFile(path) {
     // it's ok if the file doesn't exist
     return false;
   }
+}
+
+/**
+ * @param {any} oldPath
+ * @param {any} newPath
+ */
+async function ofsRenameFile(oldPath, newPath) {
+  let d = await ofsReadFile(oldPath);
+  let u8 = new Uint8Array(d);
+  await ofsWriteFile(newPath, u8);
+  await ofsDeleteFile(oldPath);
 }
 
 let lastMsgs = [];
@@ -180,6 +200,10 @@ self.onmessage = async function (e) {
 
       case "deleteFile":
         result = await ofsDeleteFile(args.path);
+        break;
+
+      case "renameFile":
+        result = await ofsRenameFile(args.oldPath, args.newPath);
         break;
 
       default:

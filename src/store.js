@@ -1,4 +1,5 @@
 import {
+  decryptBlob,
   decryptBlobAsString,
   encryptBlob,
   encryptStringAsBlob,
@@ -11,10 +12,12 @@ import {
   kLSPassowrdKey,
   removePassword,
 } from "./encrypt";
+import { getFileSystemWorkerOfs } from "./fs-worker-ofs";
 import { Note } from "./note";
 import { BackendStore, createBackendStore } from "./store-backend";
 import {
   createLocalStore,
+  kLocalStorePrefix,
   kStoreCreateNote,
   kStoreDeleteNote,
   kStorePut,
@@ -102,7 +105,7 @@ export async function storeGetString(contentId) {
     let pwdHash = await getPasswordHashMust(msg);
     let s = null;
     try {
-      s = decryptBlobAsString({ key: pwdHash, cipherblob: d });
+      s = decryptBlobAsString({ key: pwdHash, cipherblob: content });
     } catch (e) {
       console.log(e);
       s = null;
@@ -130,7 +133,7 @@ export let localStore;
  * @returns {Promise<LocalStore>}
  */
 export async function openLocalStore() {
-  throwIf(store != undefined, "store already opened");
+  throwIf(!!store, "store already opened");
   localStore = await createLocalStore();
   store = localStore;
   return localStore;
@@ -148,6 +151,7 @@ export let backendStore;
  * @returns {Promise<BackendStore>}
  */
 export async function openBackendStore() {
+  throwIf(!!store, "store already opened");
   backendStore = await createBackendStore();
   store = backendStore;
   return backendStore;
@@ -162,6 +166,118 @@ export async function storeDumpIndex() {
 }
 
 /**
+ * @param {Uint8Array} blob
+ * @returns {Promise<Uint8Array>}
+ */
+async function decryptBlobInteractive(blob) {
+  let msg = "";
+  while (true) {
+    let pwdHash = await getPasswordHashMust(msg);
+    let decryptedBlob = null;
+    try {
+      decryptedBlob = decryptBlob({ key: pwdHash, cipherblob: blob });
+    } catch (e) {
+      console.log(e);
+      decryptedBlob = null;
+    }
+    if (decryptedBlob !== null) {
+      return decryptedBlob;
+    }
+    let pwd = localStorage.getItem(kLSPassowrdKey);
+    if (!pwd) {
+      msg = "Please enter password to decrypt files";
+    } else {
+      msg = `Password '${pwd}' is not correct. Please enter valid password.`;
+    }
+    // password was likely incorrect so remove it so that getPasswordHashMust()
+    // asks the user
+    removePassword();
+  }
+}
+
+const kDecryptedPrefix = "decrypted_store";
+/**
+ * @returns {Promise<number>}
+ */
+export async function localStoreDecryptAllNotes() {
+  let currStore = localStore.store;
+  let recs = currStore.records();
+  let decryptedStore = await AppendStore.create(
+    kDecryptedPrefix,
+    kFileSystemOFS,
+    true,
+  );
+  let nDecrypted = 0;
+
+  /** @type {Map<string, Note>} */
+  let idToNote = new Map();
+  let data;
+  // TODO: could skip deleted notes
+  for (let rec of recs) {
+    switch (rec.kind) {
+      case kStoreCreateNote:
+        {
+          let [id, name] = parseCreateNoteMeta(rec.meta);
+          idToNote.set(id, new Note(id, name));
+        }
+        break;
+      case kStoreDeleteNote:
+        {
+          let id = rec.meta;
+          let n = idToNote.get(id);
+          n.isDeleted = true;
+        }
+        break;
+      case kStoreSetNoteMeta:
+        {
+          let m = JSON.parse(rec.meta);
+          let n = idToNote.get(m.id);
+          n.name = m.name;
+        }
+        break;
+    }
+    switch (rec.kind) {
+      case kStoreCreateNote:
+      case kStoreDeleteNote:
+      case kStoreSetNoteMeta:
+        await decryptedStore.appendRecordPreserveTimestamp(rec, null);
+        break;
+      case kStoreWriteFile:
+      case kStorePut:
+        data = await currStore.readRecord(rec);
+        await decryptedStore.appendRecordPreserveTimestamp(rec, data);
+        break;
+      case kStorePutEncrypted:
+        let [id, _] = parsePutMeta(rec.meta);
+        let name = idToNote.get(id).name;
+        data = await currStore.readRecord(rec);
+        let decryptedBlob = await decryptBlobInteractive(data);
+        rec.kind = kStorePut;
+        await decryptedStore.appendRecordPreserveTimestamp(rec, decryptedBlob);
+        nDecrypted++;
+        modalInfoState.addMessage(`Decrypted note ${name} version ${rec.meta}`);
+        break;
+      default:
+        throw new Error(`unknown record kind: ${rec.kind}`);
+    }
+  }
+
+  let fs = await getFileSystemWorkerOfs();
+  await fs.renameFile(
+    kDecryptedPrefix + "_index.txt",
+    kLocalStorePrefix + "_index.txt",
+  );
+  await fs.renameFile(
+    kDecryptedPrefix + "_data.bin",
+    kLocalStorePrefix + "_data.bin",
+  );
+  store = null;
+  await openLocalStore();
+  return nDecrypted;
+}
+
+const kEncryptedPrefix = "encrypted_store";
+/**
  * @param {string} pwdHash
  * @returns {Promise<number>}
  */
@@ -169,7 +285,7 @@ export async function localStoreEncryptAllNotes(pwdHash) {
   let currStore = localStore.store;
   let recs = currStore.records();
   let encryptedStore = await AppendStore.create(
-    "encrypted_store",
+    kEncryptedPrefix,
     kFileSystemOFS,
     true,
   );
@@ -217,9 +333,9 @@ export async function localStoreEncryptAllNotes(pwdHash) {
         let [id, _] = parsePutMeta(rec.meta);
         let name = idToNote.get(id).name;
         data = await currStore.readRecord(rec);
-        encryptBlob({ key: pwdHash, plainblob: data });
+        let dataEncrypted = encryptBlob({ key: pwdHash, plainblob: data });
         rec.kind = kStorePutEncrypted;
-        await encryptedStore.appendRecordPreserveTimestamp(rec, data);
+        await encryptedStore.appendRecordPreserveTimestamp(rec, dataEncrypted);
         nEncrypted++;
         modalInfoState.addMessage(`Encrypted note ${name} version ${rec.meta}`);
         break;
@@ -227,7 +343,17 @@ export async function localStoreEncryptAllNotes(pwdHash) {
         throw new Error(`unknown record kind: ${rec.kind}`);
     }
   }
-  // TODO: replace local store with encrypted one
+  let fs = await getFileSystemWorkerOfs();
+  await fs.renameFile(
+    kEncryptedPrefix + "_index.txt",
+    kLocalStorePrefix + "_index.txt",
+  );
+  await fs.renameFile(
+    kEncryptedPrefix + "_data.bin",
+    kLocalStorePrefix + "_data.bin",
+  );
+  store = null;
+  await openLocalStore();
   return nEncrypted;
 }
 
@@ -237,6 +363,13 @@ export async function localStoreEncryptAllNotes(pwdHash) {
  */
 export async function backendStoreEncryptAllNotes(pwdHash) {
   // get store index / data from the server
+  return 0;
+}
+
+/**
+ * @returns {Promise<number>}
+ */
+export async function backendStoreDecryptAllNotes() {
   return 0;
 }
 
@@ -255,6 +388,25 @@ export async function storeEncryptAllNotes(pwdHash) {
 
   if (store === backendStore) {
     return await backendStoreEncryptAllNotes(pwdHash);
+  }
+
+  console.error("neither local nor backend store");
+}
+
+/**
+ * @returns {Promise<number>}
+ */
+export async function storeDecryptAllNotes() {
+  if (!store) {
+    console.error("store not initialized");
+    return;
+  }
+  if (store === localStore) {
+    return await localStoreDecryptAllNotes();
+  }
+
+  if (store === backendStore) {
+    return await backendStoreDecryptAllNotes();
   }
 
   console.error("neither local nor backend store");

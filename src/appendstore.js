@@ -1,6 +1,6 @@
 import { FileSystemMem } from "./fs-mem";
 import { FileSystemOFS } from "./fs-ofs";
-import { FileSystemWorkerOFS } from "./fs-worker-ofs";
+import { FileSystemWorkerOFS, getFileSystemWorkerOfs } from "./fs-worker-ofs";
 import { len, logDur, throwIf } from "./util";
 
 export class AppendStoreRecord {
@@ -120,8 +120,7 @@ export class AppendStore {
     } else if (fsType === kFileSystemMem) {
       res.fs = new FileSystemMem();
     } else if (fsType === kFileSystemWorkerOFS) {
-      let fs = new FileSystemWorkerOFS();
-      await fs.initWorker();
+      let fs = await getFileSystemWorkerOfs();
       res.fs = fs;
     } else {
       throw new Error(

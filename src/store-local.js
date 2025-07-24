@@ -171,9 +171,6 @@ export class LocalStore {
    * @param {boolean} isEncrypted
    */
   async put(key, content, isEncrypted) {
-    if (isEncrypted) {
-      debugger;
-    }
     // console.log("putString:", key, content?.substring(0, 20));
     let store = this.store;
     let kind = isEncrypted ? kStorePutEncrypted : kStorePut;
@@ -326,7 +323,7 @@ function notesFromStoreLog(records, isPartial) {
   return res;
 }
 
-const kLocalStorePrefix = "notes_store";
+export const kLocalStorePrefix = "notes_store";
 const kLocalStoreFS = kFileSystemWorkerOFS;
 
 export async function createLocalStore() {
@@ -369,7 +366,7 @@ export function validateIndex(s) {
         `Deleting non-existing note: ${noteId}, line: ${line}`,
       );
       m.delete(noteId);
-    } else if (k === kStorePut) {
+    } else if (k === kStorePut || k === kStorePutEncrypted) {
       let [noteId, verId] = parsePutMeta(meta);
       throwIf(
         !m.has(noteId),

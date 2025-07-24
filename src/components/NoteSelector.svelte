@@ -239,7 +239,7 @@
    * @param {number} idx
    */
   function selectionChanged(item, idx) {
-    console.log("selectionChanged: item:", item, "idx:", idx);
+    // console.log("selectionChanged: item:", item, "idx:", idx);
     selectedNote = item;
     selectedName = item ? selectedNote.name : "";
     recalcAvailableActions(item, sanitizedFilter);

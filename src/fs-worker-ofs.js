@@ -41,6 +41,10 @@ export class FileSystemWorkerOFS {
     };
   }
 
+  /**
+   * @param {string} method
+   * @param {any} args
+   */
   async sendMessage(method, args) {
     await this.initPromise;
 
@@ -132,6 +136,17 @@ export class FileSystemWorkerOFS {
   }
 
   /**
+   * @param {any} oldPath
+   * @param {any} newPath
+   */
+  async renameFile(oldPath, newPath) {
+    await this.sendMessage("renameFile", {
+      oldPath,
+      newPath,
+    });
+  }
+
+  /**
    * Terminate the worker and clean up resources
    */
   destroy() {
@@ -146,4 +161,17 @@ export class FileSystemWorkerOFS {
     }
     this.pendingRequests.clear();
   }
+}
+
+let fs;
+
+/**
+ * @returns {Promise<FileSystemWorkerOFS>}
+ */
+export async function getFileSystemWorkerOfs() {
+  if (!fs) {
+    fs = new FileSystemWorkerOFS();
+    await fs.initWorker();
+  }
+  return fs;
 }

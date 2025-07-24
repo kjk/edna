@@ -13,6 +13,7 @@ import { mkRandomContentId, mkRandomNoteId, Note } from "./note";
 import { getSettings } from "./settings.svelte";
 import {
   storeCreateNote,
+  storeDecryptAllNotes,
   storeDeleteNote,
   storeEncryptAllNotes,
   storeGetString,
@@ -451,7 +452,6 @@ export async function maybeSaveNoteSelectionAndFoldedRanges(
  * @param {string} pwd
  */
 export async function encryptAllNotes(pwd) {
-  rememberPassword(pwd);
   let pwdHash = saltPassword(pwd);
   modalInfoState.clear();
   modalInfoState.title = "Encrypting notes";
@@ -459,20 +459,16 @@ export async function encryptAllNotes(pwd) {
   let nEncrypted = await storeEncryptAllNotes(pwdHash);
   modalInfoState.addMessage(`Finished encrypting ${nEncrypted} versions`);
   modalInfoState.canClose = true;
+  rememberPassword(pwd);
 }
 
 export async function decryptAllNotes() {
-  // await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-  //   if (!isEncr) {
-  //     return;
-  //   }
-  //   let msg = `Decrypting <b>${name}</b>`;
-  //   showModalMessageHTML(msg, 0);
-  //   await decryptNoteFS(dh, fileName);
-  // });
-  // clearModalMessage();
-  // removePassword();
-  // await loadNoteNames();
+  modalInfoState.clear();
+  modalInfoState.title = "Decrypting notes";
+  modalInfoState.canClose = false;
+  let nDecrypted = await storeDecryptAllNotes();
+  modalInfoState.addMessage(`Finished decrypting ${nDecrypted} versions`);
+  modalInfoState.canClose = true;
 }
 
 /**
