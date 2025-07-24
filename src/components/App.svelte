@@ -14,8 +14,8 @@
   import { EditorSelection, EditorState } from "@codemirror/state";
   import {
     appState,
-    appStateUpdateAfterNotesChange,
     findNoteByName,
+    updateAppStateAfterNotesChange,
   } from "../appstate.svelte";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
   import {
@@ -258,7 +258,7 @@
 
   function updateAfterNoteStateChange() {
     tick().then(() => {
-      appStateUpdateAfterNotesChange();
+      updateAppStateAfterNotesChange();
       // re-assign tabs to redraw the state of the note in title
       settings.tabs = [...settings.tabs];
     });

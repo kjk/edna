@@ -56,8 +56,21 @@ class AppState {
   showingLogin = $state(false);
 }
 
+/**
+ * @param {Note} note
+ */
+export function removeNoteFromAppState(note) {
+  for (let i = 0; i < appState.allNotes.length; i++) {
+    if (appState.allNotes[i].id === note.id) {
+      appState.allNotes.splice(i, 1);
+      updateAppStateAfterNotesChange();
+      break;
+    }
+  }
+}
+
 // TODO: maybe convert to $effect() on appState.notes
-export function appStateUpdateAfterNotesChange() {
+export function updateAppStateAfterNotesChange() {
   appState.regularNotes = [];
   appState.archivedNotes = [];
   appState.starredNotes = [];

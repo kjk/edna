@@ -17,7 +17,7 @@
 }} GlobalFuncs
 */
 
-import { appStateUpdateAfterNotesChange } from "./appstate.svelte";
+import { updateAppStateAfterNotesChange } from "./appstate.svelte";
 import { formatDurationShort } from "./util";
 
 let sessionStart = performance.now();
@@ -98,7 +98,7 @@ export function updateAfterNoteStateChange() {
   if (!globalFunctions) {
     // is called from boot(), before App.Svelte has a chance
     // to register global functions
-    appStateUpdateAfterNotesChange();
+    updateAppStateAfterNotesChange();
     return;
   }
   globalFunctions?.updateAfterNoteStateChange();

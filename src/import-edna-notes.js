@@ -1,4 +1,5 @@
 import { findNoteByName } from "./appstate.svelte";
+import { modalInfoState } from "./components/ModalInfo.svelte";
 import {
   hideModalMessage,
   showModalMessageHTML,
@@ -99,6 +100,10 @@ export async function importEdnaNotesFromZipFile() {
     return name.trim();
   }
 
+  modalInfoState.clear();
+  modalInfoState.title = "Importing notes";
+  modalInfoState.canClose = false;
+  let nImported = 0;
   for (let e of entries) {
     let fileName = e.filename;
     if (!fileName.endsWith(".edna.txt")) {
@@ -106,7 +111,7 @@ export async function importEdnaNotesFromZipFile() {
     }
     let name = noteNameFromFileNameFS(fileName);
     let msg = `Importing <b>${name}</b>`;
-    showModalMessageHTML(msg, 0);
+    modalInfoState.addMessage(msg);
     let textWriter = new libZip.TextWriter();
     await e.getData(textWriter);
     let content = await textWriter.getData();
@@ -114,10 +119,11 @@ export async function importEdnaNotesFromZipFile() {
     if (note) {
       let existingContent = await loadNoteContent(name);
       if (existingContent === content) {
-        console.warn(`Skipping ${name}, already exists`);
+        modalInfoState.addMessage(`Skipping ${name}, already exists`);
         continue;
       }
     }
+    nImported++;
     let realName = await createNoteWithUniqueName(name);
     await saveNote(realName, content);
     console.log(
@@ -149,5 +155,6 @@ export async function importEdnaNotesFromZipFile() {
       m.foldedRanges,
     );
   }
-  hideModalMessage();
+  modalInfoState.addMessage(`Imported ${nImported} notes`);
+  modalInfoState.canClose = true;
 }

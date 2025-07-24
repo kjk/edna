@@ -10,38 +10,48 @@
     messages = $state([]);
     /** @type {HTMLElement} */
     listBoxRef = $state(null);
+    title = $state("");
+    canClose = $state(false);
+
+    /** @type {HTMLElement} */
+    overlayRef;
 
     /**
      * @param {string} msgHTML
      */
-    addMsg(msgHTML) {
-      this.messages.push(msgHTML);
+    addMessage(msgHTML) {
+      this.messages.unshift(msgHTML);
       this.isShowing = true;
       // scroll to bottom
       if (this.listBoxRef) {
-        this.listBoxRef.scrollTop = this.listBoxRef.scrollHeight;
+        // this.listBoxRef.scrollTop = this.listBoxRef.scrollHeight;
       }
     }
+
     /**
      * @param {string} msgHTML
      * @param {number} delay
      */
-    addMessage(msgHTML, delay = 0) {
+    addMessageDeilayed(msgHTML, delay) {
       clearTimeout(timerID);
       timerID = null;
       if (delay <= 0) {
-        this.addMsg(msgHTML);
+        this.addMessage(msgHTML);
         return;
       }
       timerID = setTimeout(() => {
-        this.addMsg(msgHTML);
+        this.addMessage(msgHTML);
       }, delay);
     }
 
-    hide() {
+    clear() {
       this.messages = [];
       clearTimeout(timerID);
       timerID = null;
+    }
+
+    hide() {
+      this.clear();
       this.isShowing = false;
     }
   }
@@ -49,6 +59,7 @@
   export let modalInfoState = new ModalInfoState();
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <script>
   import { focus, smartfocus, trapfocus } from "../actions";
 
@@ -59,35 +70,61 @@
       if (n < 100) {
         autoAddMessage();
       }
-    }, 1000);
+    }, 300);
   }
 
   onMount(() => {
     // autoAddMessage();
   });
+
+  function maybeClose() {
+    if (modalInfoState.canClose) {
+      modalInfoState.hide();
+    }
+  }
+
+  /**
+   * @param {MouseEvent} ev
+   */
+  function onclick(ev) {
+    if (ev.target === modalInfoState.overlayRef) {
+      maybeClose();
+    }
+  }
 </script>
 
-<div class="fixed inset-0 overflow-hidden">
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="z-10" tabindex="-1" use:smartfocus use:trapfocus>
-    <form
-      class="selector center-x-with-translate z-20 absolute top-[2rem] min-w-[75vw] h-[20vh] max-h-[40vh]"
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<div
+  {onclick}
+  bind:this={modalInfoState.overlayRef}
+  tabindex="-1"
+  use:smartfocus
+  use:trapfocus
+  class="fixed inset-0 overflow-hidden z-10 bg-blur flex flex-col justify-center items-center"
+>
+  <div
+    class="flex flex-col bg-white px-4 py-4 w-[60ch] max-w-[80vw] h-[60ch] max-h-[80vh]"
+  >
+    <div class="text-lg font-semibold py-2 pl-4 self-center">
+      {modalInfoState.title}
+    </div>
+
+    <div
+      bind:this={modalInfoState.listBoxRef}
+      class="grow flex flex-col-reverse overflow-scroll px-2 py-4"
     >
-      <div
-        bind:this={modalInfoState.listBoxRef}
-        class="bg-white overflow-y-auto px-2 py-4 max-h-[100%]"
-      >
-        {#each modalInfoState.messages as message, idx (idx)}
-          <div class="text-sm text-black px-4">
-            {@html message}
-          </div>
-        {/each}
+      {#each modalInfoState.messages as message, idx (idx)}
+        <div class="text-sm px-4">
+          {@html message}
+        </div>
+      {/each}
+    </div>
+    {#if modalInfoState.canClose}
+      <div class="flex justify-end py-2">
+        <button class="button-outline" onclick={maybeClose}>Close</button>
       </div>
-    </form>
+    {/if}
   </div>
-  <!-- this captures the click outside of the actual element -->
-  <button class="absolute inset-0 z-10" class:bg-blur={true} aria-label="close"
-  ></button>
 </div>
 
 <style>

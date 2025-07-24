@@ -223,6 +223,9 @@
     return `${n} of ${nItems} notes`;
   });
 
+  /**
+   * @param {string} name
+   */
   function recalcAvailableActions(item, name) {
     canOpenSelected = !!selectedNote;
     canCreateWithEnter = !(len(name) == 0) && !canOpenSelected;
@@ -307,7 +310,7 @@
       ev.preventDefault();
       if (canDeleteSelected && selectedNote) {
         // console.log("delete note", name);
-        deleteNote(selectedNote.name, false);
+        await deleteNote(selectedNote.name, false);
         // .then(updateNoteInfos);
       }
       return;

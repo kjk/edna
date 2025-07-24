@@ -1,4 +1,9 @@
-import { appState, findNoteByName, getNotes } from "./appstate.svelte";
+import {
+  appState,
+  findNoteByName,
+  getNotes,
+  removeNoteFromAppState,
+} from "./appstate.svelte";
 import { updateAfterNoteStateChange } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import { getMetadata, saveAppMetadata } from "./metadata";
@@ -283,9 +288,14 @@ export function isNoteArchivable(name) {
  * @param {string} name
  */
 export async function deleteNote(name) {
+  console.log("deleteNote:", name);
   let note = findNoteByName(name);
-  storeDeleteNote(note.id);
+  // optimistically remove first to minimize chances note selector
+  // will try to delete twice
+  removeNoteFromAppState(note);
+  await storeDeleteNote(note.id);
   removeNoteFromHistory(name);
+  console.log(`deleteNote: ${name} finished`);
 }
 
 /**
