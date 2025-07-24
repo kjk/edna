@@ -18,6 +18,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
+import { parseTab } from "./tab";
 import { len, objectEqualDeep, throwIf } from "./util";
 
 export const kScratchNoteName = "scratch";
@@ -463,4 +464,41 @@ export async function decryptAllNotes() {
   // clearModalMessage();
   // removePassword();
   // await loadNoteNames();
+}
+
+/**
+ * @param {string} tabStr
+ * @returns {boolean}
+ */
+export function isValidTab(tabStr) {
+  if (!tabStr) {
+    return false;
+  }
+  let tab = parseTab(tabStr);
+  if (tab.isURL()) {
+    return true;
+  }
+  if (!tab.isNote()) {
+    throw new Error(`Invalid tab: ${tabStr}`);
+  }
+  let noteName = tab.value;
+  let note = findNoteByName(noteName);
+  if (note) {
+    return true;
+  }
+  return isSystemNoteName(noteName);
+}
+
+/**
+ * @param {string} noteName
+ */
+export function isValidNoteName(noteName) {
+  if (!noteName) {
+    return false;
+  }
+  let note = findNoteByName(noteName);
+  if (note) {
+    return true;
+  }
+  return isSystemNoteName(noteName);
 }

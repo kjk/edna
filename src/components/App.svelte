@@ -96,6 +96,8 @@
     isNoteArchivable,
     isNoteArchived,
     isSystemNoteName,
+    isValidNoteName,
+    isValidTab,
     kBuiltInFunctionsNoteName,
     kDailyJournalNoteName,
     kHelpSystemNoteName,
@@ -114,8 +116,9 @@
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import { getSettings } from "../settings.svelte";
   import { getMyFunctionsNote } from "../system-notes";
+  import { parseTab, Tab } from "../tab";
   import {
-    addNoteToBrowserHistory,
+    addTabToBrowserHistory,
     browserDownloadBlob,
     formatDateYYYYMMDDDay,
     getClipboardText,
@@ -167,30 +170,12 @@
   let language = $state("text");
   let languageAuto = $state(true);
   let line = $state(1);
-  let currTab = $derived(settings.currentTab);
-  let currNoteName = $derived(noteNameFromTab(currTab));
-  let currURL = $derived(urlFromTab(currTab));
+  let currTabStr = $derived(settings.currentTab);
+
+  /** @type {Tab} */
+  let currTab = $derived(parseTab(currTabStr));
+
   let selectionSize = $state(0);
-
-  /**
-   * @param {string} tab
-   */
-  function noteNameFromTab(tab) {
-    if (tab.startsWith("url:")) {
-      return "";
-    }
-    return tab;
-  }
-
-  /**
-   * @param {string} tab
-   */
-  function urlFromTab(tab) {
-    if (tab.startsWith("url:")) {
-      return tab.slice(4);
-    }
-    return null;
-  }
 
   let showingContextMenu = $state(false);
   let showingLanguageSelector = $state(false);
@@ -324,24 +309,28 @@
 
     window.addEventListener("popstate", function (ev) {
       let state = ev.state;
-      if (!state || !state.noteName) {
-        console.log(
-          "popstate: state is null or has no 'noteName' field:",
-          state,
-        );
+      if (!state || !state.tabStr) {
+        console.log("popstate: state is null or has no 'tabStr' field:", state);
         return;
       }
-      let name = state.noteName;
-      console.log("popstate:", name, state);
-      if (name === currNoteName) {
-        console.log("smae as noteName, nothing to do");
+      let tabStr = state.tabStr;
+      console.log("popstate:", tabStr, state);
+      if (currTabStr === tabStr) {
+        console.log("same as currTabStr, nothing to do");
         return;
       }
-      if (!noteExists(name)) {
-        console.log(`Note with name '${name}' doesn't exist`);
+      let noPushHistory = true;
+      let tab = parseTab(tabStr);
+      if (tab.isURL()) {
+        openURLInTab(tab.value, noPushHistory);
         return;
       }
-      openNote(name, false /* skip save */, true /* noPushHistory */);
+      let noteName = tab.value;
+      if (!isValidNoteName(noteName)) {
+        console.error(`note '${noteName}' doesn't exist`);
+        return;
+      }
+      openNote(noteName, false /* skip save */, noPushHistory);
     });
 
     logAppOpen();
@@ -395,7 +384,7 @@
       if (altN) {
         let notes = appState.regularNotes;
         for (let note of notes) {
-          if (note.altShortcut == altN && note.name !== currNoteName) {
+          if (note.altShortcut == altN && !isShowingNote(note.name)) {
             // console.log("onKeyDown: opening note: ", o.name, " altN:", altN, " e:", e)
             openNote(note.name);
             showingHistorySelector = false;
@@ -415,6 +404,13 @@
         ev.preventDefault();
       }
     }
+  }
+
+  /**
+   * @param {string} name
+   */
+  function isShowingNote(name) {
+    return currTab.isNote() && name === currTab.value;
   }
 
   let closeDecryptPassword = $state(null);
@@ -921,7 +917,10 @@
   const kCmdAskAI = nmid();
 
   function buildMenuDef() {
-    // let starAction = "Star";
+    if (!currTab.isNote()) {
+      return [];
+    }
+    let currNoteName = currTab.value;
     let starAction = "Add to favorites";
     let note = findNoteByName(currNoteName);
     if (note && note.isStarred) {
@@ -1385,7 +1384,7 @@
       toggleSpellCheck();
       view.focus();
     } else if (cmdId === kCmdShowHelp) {
-      showHTMLHelp();
+      showHTMLHelpInTab();
       view.focus();
     } else if (cmdId === kCmdShowHelpAsNote) {
       openNote(kHelpSystemNoteName);
@@ -1394,7 +1393,7 @@
     } else if (cmdId === kCmdShowWelcomeNote) {
       openNote(kWelcomeSystemNoteName);
     } else if (cmdId === kCmdRunHelp) {
-      showHTMLHelp("#running-code");
+      showHTMLHelpInTab("#running-code");
     } else if (cmdId == kCmdShowWelcomeDevNote) {
       openNote(kWelcomeDevSystemNoteName);
     } else if (cmdId === kCmdMoveNotesToDirectory) {
@@ -1412,7 +1411,7 @@
     } else if (cmdId === kCmdNoteToggleStarred) {
       toggleCurrentNoteStar();
     } else if (cmdId === kCmdShowStorageHelp) {
-      showHTMLHelp("#storing-notes-on-disk");
+      showHTMLHelpInTab("#storing-notes-on-disk");
     } else if (cmdId === kCmdSettings) {
       openSettings();
     } else if (cmdId === kCmdEncryptNotes) {
@@ -1420,7 +1419,7 @@
     } else if (cmdId === kCmdDecryptNotes) {
       decryptAllNotes();
     } else if (cmdId === kCmdEncryptionHelp) {
-      showHTMLHelp("#encryption");
+      showHTMLHelpInTab("#encryption");
     } else if (cmdId === kCmdOpenRecent) {
       openHistorySelector();
     } else if (cmdId === kCmdRunBlock) {
@@ -1493,7 +1492,15 @@
     showingContextMenu = true;
   }
 
+  /**
+   * @param {number} id
+   * @param {string} [name]
+   */
   function commandNameOverride(id, name) {
+    if (!currTab.isNote()) {
+      return name;
+    }
+    let currNoteName = currTab.value;
     if (id === kCmdToggleSpellChecking) {
       return (isSpellChecking ? "Disable" : "Enable") + " spell checking";
     }
@@ -1572,18 +1579,48 @@
     commandsDef = cmds;
   }
 
-  function closeTab(noteName) {
-    if (noteName != settings.currentTab) {
-      settings.removeTab(noteName);
+  /**
+   * @param {string} url
+   */
+  function openURLInTab(url, noPushHistory = false) {
+    let tabStr = "url:" + url;
+    settings.addTab(tabStr);
+    settings.currentTab = tabStr;
+    if (!noPushHistory) {
+      addTabToBrowserHistory(tabStr);
+    }
+  }
+
+  /**
+   * @param {string} tabStr
+   */
+  function openTab(tabStr) {
+    let tab = parseTab(tabStr);
+    if (tab.isURL()) {
+      settings.currentTab = tabStr;
+      addTabToBrowserHistory(tabStr);
       return;
     }
-    let idx = settings.tabs.indexOf(noteName);
-    settings.removeTab(noteName);
+    throwIf(!tab.isNote(), `Invalid tabStr: '${tabStr}'`);
+    let noteName = tab.value;
+    openNote(noteName, false);
+  }
+
+  /**
+   * @param {string} tabStr
+   */
+  function closeTab(tabStr) {
+    if (tabStr != settings.currentTab) {
+      settings.removeTab(tabStr);
+      return;
+    }
+    let idx = settings.tabs.indexOf(tabStr);
+    settings.removeTab(tabStr);
     if (idx >= len(settings.tabs)) {
       idx = len(settings.tabs) - 1;
     }
     let toOpen = settings.tabs[idx];
-    openNote(toOpen, false);
+    openTab(toOpen);
   }
 
   function closeCurrentTab() {
@@ -1609,6 +1646,9 @@
     showingCommandPalette = true;
   }
 
+  /**
+   * @param {number} cmdId
+   */
   async function executeCommand(cmdId) {
     // console.log("executeCommand:", cmdId);
     showingCommandPalette = false;
@@ -1647,7 +1687,8 @@
   }
 
   function toggleCurrentNoteStar() {
-    toggleNoteStarred(currNoteName);
+    let noteName = currTab.value;
+    toggleNoteStarred(noteName);
     getEditor().focus();
   }
 
@@ -1854,15 +1895,13 @@
   /**
    * @param {string} anchor
    */
-  function showHTMLHelp(anchor = "") {
+  function showHTMLHelpInTab(anchor = "") {
     // let uri = window.location.origin + "/help"
     let uri = "/help";
     if (anchor != "") {
       uri += anchor;
     }
-    let tab = "url:" + uri;
-    settings.addTab(tab);
-    settings.currentTab = tab;
+    openURLInTab(uri);
     // window.open(uri, "_blank");
   }
 
@@ -1927,6 +1966,10 @@
     getEditorComp().focus();
   }
 
+  /**
+   * @param {string} name
+   * @param {number} pos
+   */
   function openNoteFromFind(name, pos) {
     closeDialogs();
     openNote(name).then(() => {
@@ -2068,7 +2111,7 @@
     editor.setReadOnly(readOnly);
     window.document.title = name;
     if (!noPushHistory) {
-      addNoteToBrowserHistory(name);
+      addTabToBrowserHistory(name);
       addNoteToHistory(name);
     }
     settings.currentTab = name;
@@ -2095,6 +2138,7 @@
   {#if settings.alwaysShowTopNav}
     <TopNav
       class="row-start-1 col-start-1 col-span-2"
+      {openTab}
       openNote={onOpenNote}
       {closeTab}
       {menuItemStatus}
@@ -2117,15 +2161,17 @@
     {docDidChange}
     bind:this={editorRef}
   />
-  {#if currURL}
+  {#if currTab.isURL()}
     <div class="row-start-2 col-start-2 z-10 bg-white">
-      <iframe title="Preview" src={currURL} class="w-full h-full"></iframe>
+      <iframe title="Preview" src={currTab.value} class="w-full h-full"
+      ></iframe>
     </div>
   {/if}
 </div>
 
 {#if !settings.alwaysShowTopNav}
   <TopNav
+    {openTab}
     openNote={onOpenNote}
     {closeTab}
     {menuItemStatus}
@@ -2228,7 +2274,7 @@
     <RenameNote
       onclose={closeDialogs}
       rename={onRename}
-      oldName={currNoteName}
+      oldName={currTab.value}
     />
   </Overlay>
 {/if}

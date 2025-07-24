@@ -230,15 +230,15 @@ export function isAltNumEvent(e) {
 }
 
 /**
- * @param {string} noteName
+ * @param {string} tabStr
  */
-export function addNoteToBrowserHistory(noteName) {
+export function addTabToBrowserHistory(tabStr) {
   // @ts-ignore
   let url = new URL(window.location);
-  url.hash = encodeURIComponent(noteName);
+  url.hash = encodeURIComponent(tabStr);
   // update browser's URL without reloading the page
-  window.history.pushState({ noteName: noteName }, noteName, url);
-  console.log("window.history.pushState:", noteName);
+  window.history.pushState({ tabStr: tabStr }, tabStr, url);
+  console.log("window.history.pushState:", tabStr);
 }
 
 let sleepSetTimeout_ctrl;

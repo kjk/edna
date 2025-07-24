@@ -5,8 +5,10 @@
   import { appState } from "../appstate.svelte.js";
   import { loadCurrencies } from "../currency.js";
   import { EdnaEditor } from "../editor/editor.js";
+  import { kScratchNoteName } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
   import { rememberEditor } from "../state.js";
+  import { parseTab } from "../tab.js";
   import { throwIf } from "../util.js";
 
   /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
@@ -104,7 +106,10 @@
     let fontFamily = settings.fontFamily;
     let fontSize = settings.fontSize;
 
-    let noteName = settings.currentTab;
+    // hack: if initial tab is non-note, load scratch note as it's always available
+    let tabStr = settings.currentTab;
+    let tab = parseTab(tabStr);
+    let noteName = tab.isURL() ? kScratchNoteName : tab.value;
     let useTabs = settings.indentType == "tabs";
     let tabSize = settings.tabSize;
 

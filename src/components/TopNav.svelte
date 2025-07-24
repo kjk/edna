@@ -6,6 +6,7 @@
   import { isMoving } from "../mouse-track.svelte.js";
   import { isSystemNoteName } from "../notes.js";
   import { getSettings } from "../settings.svelte.js";
+  import { parseTab } from "../tab.js";
   import { getAltChar, len } from "../util.js";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
@@ -23,6 +24,7 @@
 
   /** @type {{
     class?: string,
+    openTab: (tabStr: string) => void,
     openNote: (name: string, newTab: boolean) => void,
     closeTab: (name: string) => void,
 
@@ -33,6 +35,7 @@
   }} */
   let {
     class: klass = "",
+    openTab,
     openNote,
     closeTab,
     buildMenuDef,
@@ -42,18 +45,23 @@
 
   let altChar = getAltChar();
 
+  let settings = getSettings();
+  let menuTriggerCls = $derived(
+    parseTab(settings.currentTab).isNote() ? "" : "invisible",
+  );
   /**
-   * @param {string} tabName
+   * @param {string} tabStr
    * @returns {string}
    */
-  function tabTitle(tabName) {
-    if (tabName.startsWith("url:")) {
-      let uri = tabName.substring(4);
+  function tabTitle(tabStr) {
+    let tab = parseTab(tabStr);
+    if (tab.isURL()) {
+      let uri = tab.value;
       if (uri.startsWith("/")) {
         return uri.substring(1);
       }
     }
-    return tabName;
+    return tab.value;
   }
 
   /**
@@ -84,7 +92,6 @@
     openNote(noteName, newTab);
   }
 
-  let settings = getSettings();
   let showingQuickAccess = $state(false);
   let cls = $derived.by(() => {
     if (settings.alwaysShowTopNav) {
@@ -108,9 +115,8 @@
       return;
     }
     if (!url.startsWith("http")) {
-      let tab = "url:" + url;
-      settings.addTab(tab);
-      settings.currentTab = tab;
+      let tabStr = "url:" + url;
+      openTab(tabStr);
       return;
       // url = window.location.origin + url;
     }
@@ -131,32 +137,20 @@
   }
 
   /**
-   * @param {string} tab
+   * @param {string} tabStr
    * @return {string}
    */
-  function tabCls(tab) {
-    if (tab.startsWith("url:")) {
+  function tabCls(tabStr) {
+    if (tabStr.startsWith("url:")) {
       return "";
     }
-    let noteName = tab;
+    let noteName = tabStr;
     let note = findNoteByName(noteName);
     let isArchived = note && note.isArchived;
     if (isSystemNoteName(noteName) || isArchived) {
       return "italic";
     }
     return "";
-  }
-
-  /**
-   * @param {string} tab
-   */
-  function openTab(tab) {
-    if (tab.startsWith("url:")) {
-      settings.currentTab = tab;
-      return;
-    }
-    let noteName = tab;
-    openNote(noteName, false);
   }
 </script>
 
@@ -195,7 +189,7 @@
         focusEditor();
       }
     }}
-    class="clickable-icon relative"
+    class="clickable-icon relative {menuTriggerCls}"
   >
     {@render IconMenu()}
     {#if showingMenu}

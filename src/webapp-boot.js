@@ -16,6 +16,7 @@ import { Note } from "./note";
 import {
   createIfNotExists,
   isSystemNoteName,
+  isValidTab,
   kDailyJournalNoteName,
   kInboxNoteName,
   kScratchNoteName,
@@ -24,6 +25,7 @@ import {
 import { getSettings } from "./settings.svelte";
 import { openBackendStore, openLocalStore, storeDumpIndex } from "./store";
 import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
+import { parseTab } from "./tab";
 import { isDev, len } from "./util";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
@@ -152,34 +154,19 @@ export async function boot() {
   nameFromURLHash = decodeURIComponent(nameFromURLHash);
   let nameFromSettings = settings.currentTab;
 
-  /**
-   * @param {string} name
-   * @returns {boolean}
-   */
-  function isValidNote(name) {
-    if (!name) {
-      return false;
-    }
-    let note = findNoteByName(name);
-    if (note) {
-      return true;
-    }
-    return isSystemNoteName(name);
-  }
-
   // need to do this twice to make sure hashName takes precedence over settings.currentNoteName
-  if (isValidNote(nameFromSettings)) {
+  if (isValidTab(nameFromSettings)) {
     toOpenAtStartup = nameFromSettings;
     console.log(
       "will open note from settings.currentNoteName:",
       nameFromSettings,
     );
   }
-  if (isValidNote(nameFromURLHash)) {
+  if (isValidTab(nameFromURLHash)) {
     toOpenAtStartup = nameFromURLHash;
     console.log("will open note from url #hash:", nameFromURLHash);
   }
-  if (!isValidNote(nameFromSettings)) {
+  if (!isValidTab(nameFromSettings)) {
     toOpenAtStartup = kScratchNoteName;
   }
 
@@ -190,13 +177,9 @@ export async function boot() {
   // remove non-existing notes from tabs
   let nTabs = settings.tabs.length;
   for (let i = nTabs - 1; i >= 0; i--) {
-    let tab = settings.tabs[i];
-    if (tab.startsWith("url:")) {
-      continue;
-    }
-    let noteName = tab;
-    if (!isValidNote(noteName)) {
-      console.warn(`removing tab ${noteName} becase no note of that name`);
+    let tabStr = settings.tabs[i];
+    if (!isValidTab(tabStr)) {
+      console.warn(`removing tab ${tabStr} because no note of that name`);
       settings.tabs.splice(i, 1);
     }
   }
