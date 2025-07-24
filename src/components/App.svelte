@@ -69,8 +69,7 @@
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
   import { importEdnaNotesFromZipFile } from "../import-edna-notes";
-  import { log, logAppExit, logAppOpen, logNoteOp } from "../log";
-  import { getLoggedUser } from "../login";
+  import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import Menu, {
     kMenuIdJustText,
     kMenuSeparator,
@@ -88,7 +87,6 @@
     canDeleteNote,
     createIfNotExists,
     createNoteWithName,
-    createNoteWithUniqueName,
     createUniqueScratchNote,
     decryptAllNotes,
     deleteNote,
@@ -142,8 +140,9 @@
   import FunctionSelector from "./FunctionSelector.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
   import Login from "./Login.svelte";
+  import ModalInfo, { modalInfoState } from "./ModalInfo.svelte";
   import ModalMessage, {
-    clearModalMessage,
+    hideModalMessage,
     modalMessageState,
     showModalMessageHTML,
   } from "./ModalMessage.svelte";
@@ -423,7 +422,7 @@
   async function getPassword(msg = "") {
     showingDecryptPassword = true;
     showingDecryptMessage = msg;
-    clearModalMessage();
+    hideModalMessage();
     return new Promise((resolve, reject) => {
       onDecryptPassword = (pwd) => {
         resolve(pwd);
@@ -802,7 +801,7 @@
       await runBoopFunctionWithBlockContent(view, fdef, replace);
       logNoteOp("runFunction");
     }
-    clearModalMessage();
+    hideModalMessage();
     view.focus();
   }
 
@@ -1736,7 +1735,7 @@
       output = `Error: invalid block lang ${lang.token}`;
     }
     setReadOnly(view, false);
-    clearModalMessage();
+    hideModalMessage();
 
     output = evalResultToString(res);
     if (!output) {
@@ -1791,7 +1790,7 @@
       };
     }
     setReadOnly(view, false);
-    clearModalMessage();
+    hideModalMessage();
 
     let output = evalResultToString(res);
     if (!output) {
@@ -1962,7 +1961,7 @@
     let editor = getEditorComp();
     await editor.openNote(name, skipSave, noPushHistory);
     // await sleep(400);
-    clearModalMessage();
+    hideModalMessage();
     getEditorComp().focus();
   }
 
@@ -2263,6 +2262,10 @@
   <Overlay onclose={closeDialogs} blur={true}>
     <LanguageSelector selectLanguage={onSelectLanguage} />
   </Overlay>
+{/if}
+
+{#if modalInfoState.isShowing}
+  <ModalInfo />
 {/if}
 
 {#if modalMessageState.isShowing}

@@ -1,6 +1,6 @@
 import { findNoteByName } from "./appstate.svelte";
 import {
-  clearModalMessage,
+  hideModalMessage,
   showModalMessageHTML,
 } from "./components/ModalMessage.svelte";
 import { fromFileName, isValidFileName } from "./filenamify";
@@ -149,5 +149,5 @@ export async function importEdnaNotesFromZipFile() {
       m.foldedRanges,
     );
   }
-  clearModalMessage();
+  hideModalMessage();
 }

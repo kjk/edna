@@ -27,7 +27,7 @@
     }, delay);
   }
 
-  export function clearModalMessage() {
+  export function hideModalMessage() {
     modalMessageHTML = "";
     clearTimeout(timerID);
     timerID = null;
