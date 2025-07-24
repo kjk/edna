@@ -66,6 +66,7 @@
     "highlight.js": "^11.11.1",
     "idb": "^8.0.3",
     "kiss-crypto": "^0.3.4",
+    "mathjs": "^14.5.3",
     "overlayscrollbars": "^2.11.4",
     "prettier": "^3.6.2",
     "tippy.js": "^6.3.7",

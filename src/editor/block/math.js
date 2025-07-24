@@ -1,10 +1,8 @@
-import { ViewPlugin } from "@codemirror/view";
-import { Decoration } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { WidgetType } from "@codemirror/view";
-
+import { Decoration, ViewPlugin, WidgetType } from "@codemirror/view";
+import * as math from "mathjs";
+import { CURRENCIES_LOADED, transactionsHasAnnotation } from "../annotation";
 import { getNoteBlockFromPos } from "./block";
-import { transactionsHasAnnotation, CURRENCIES_LOADED } from "../annotation";
 
 class MathResult extends WidgetType {
   constructor(displayResult, copyResult) {
@@ -56,7 +54,7 @@ function mathDeco(view) {
         // get math.js parser and cache it for this block
         let { parser, prev } = mathParsers.get(block) || {};
         if (!parser) {
-          parser = window.math.parser();
+          parser = math.parser();
           mathParsers.set(block, { parser, prev });
         }
 
@@ -95,7 +93,7 @@ function mathDeco(view) {
               }),
               math.format(result, {
                 notation: "fixed",
-              })
+              }),
             );
           }
           builder.add(
@@ -104,7 +102,7 @@ function mathDeco(view) {
             Decoration.widget({
               widget: resultWidget,
               side: 1,
-            })
+            }),
           );
         }
       }
@@ -137,5 +135,5 @@ export const mathBlock = ViewPlugin.fromClass(
   },
   {
     decorations: (v) => v.decorations,
-  }
+  },
 );

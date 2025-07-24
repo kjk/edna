@@ -1,6 +1,5 @@
 interface GlobalThis {
   __WB_MANIFEST: any;
-  math: any;
   deubg: {
     listBrowserStorage: () => Promise<void>;
     deleteBrowserStorage: () => Promise<void>;

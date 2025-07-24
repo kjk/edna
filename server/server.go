@@ -269,9 +269,6 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			handleEvents(w, r)
 			return
 
-		case "/math.js.map":
-			http.NotFound(w, r)
-			return
 		case "/api/currency_rates.json":
 			serverApiCurrencyRates(w, r)
 			return
