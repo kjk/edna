@@ -103,7 +103,7 @@
   class="fixed inset-0 overflow-hidden z-10 bg-blur flex flex-col justify-center items-center"
 >
   <div
-    class="flex flex-col bg-white px-4 py-4 w-[60ch] max-w-[80vw] h-[60ch] max-h-[80vh]"
+    class="flex flex-col bg-white px-4 py-4 w-[80ch] max-w-[80vw] h-[60ch] max-h-[80vh]"
   >
     <div class="text-lg font-semibold py-2 pl-4 self-center">
       {modalInfoState.title}

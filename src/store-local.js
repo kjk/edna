@@ -5,16 +5,67 @@ import {
   parseIndexCb,
 } from "./appendstore";
 import { keyValueMarshal, keyValueUnmarshal } from "./appendstore_kv";
-import { Note, noteIdFromVerId } from "./note";
+import { Note } from "./note";
 import { isDev, len, throwIf } from "./util";
 
 // must match store.go
-const kStoreCreateNote = "note-create";
-const kStoreDeleteNote = "note-delete";
-const kStoreSetNoteMeta = "note-meta";
+export const kStoreCreateNote = "note-create";
+export const kStoreDeleteNote = "note-delete";
+export const kStoreSetNoteMeta = "note-meta";
 export const kStorePut = "put";
 export const kStorePutEncrypted = "put-e";
-const kStoreWriteFile = "write-file";
+export const kStoreWriteFile = "write-file";
+
+/**
+ * @param {string} id
+ * @param {string} name
+ */
+function mkCreateNoteMeta(id, name) {
+  return `${id}:${name}`;
+}
+
+/**
+ * @param {string} meta
+ * @returns {string[]}
+ */
+export function parseCreateNoteMeta(meta) {
+  let idx = meta.indexOf(":");
+  if (idx === -1) {
+    throw new Error(`invalid create note meta: ${meta}`);
+  }
+  return [meta.slice(0, idx), meta.slice(idx + 1)];
+}
+
+/**
+ * @param {string} id
+ * @param {any} verId
+ */
+function mkPutMeta(id, verId) {
+  return `${id}:${verId}`;
+}
+
+/**
+ * @param {string} meta
+ * @returns {string[]}
+ */
+export function parsePutMeta(meta) {
+  let idx = meta.indexOf(":");
+  if (idx === -1) {
+    throw new Error(`invalid put meta: ${meta}`);
+  }
+  return [meta.slice(0, idx), meta];
+}
+
+/**
+ * @param {string} verId
+ */
+export function noteIdFromVerId(verId) {
+  let idx = verId.indexOf(":");
+  if (idx < 0) {
+    throw new Error("invalid contentId: " + verId);
+  }
+  return verId.substring(0, idx);
+}
 
 /**
  * @param {AppendStoreRecord[]} records
@@ -180,7 +231,7 @@ export class LocalStore {
   async createNote(noteId, name) {
     // console.log("createNote:", noteId, name);
     let store = this.store;
-    let meta = `${noteId}:${name}`;
+    let meta = mkCreateNoteMeta(noteId, name);
     await store.appendRecord(kStoreCreateNote, meta, null);
     await debugValidateLocalStoreIndex(this);
     let notes = await this.getAllNotes();
@@ -220,9 +271,7 @@ function notesFromStoreLog(records, isPartial) {
   for (let rec of records) {
     if (rec.kind === kStoreCreateNote) {
       // meta is "noteId:name"
-      let idx = rec.meta.indexOf(":");
-      let noteId = rec.meta.substring(0, idx);
-      let name = rec.meta.substring(idx + 1);
+      let [noteId, name] = parseCreateNoteMeta(rec.meta);
       let note = new Note(noteId, name);
       note.createdAt = rec.timestampMs;
       note.updatedAt = note.createdAt;
@@ -257,8 +306,7 @@ function notesFromStoreLog(records, isPartial) {
       }
       m.delete(noteId);
     } else if (rec.kind === kStorePut || rec.kind === kStorePutEncrypted) {
-      let verId = rec.meta; // verId is noteId:verId
-      let noteId = noteIdFromVerId(verId);
+      let [noteId, verId] = parsePutMeta(rec.meta);
       let note = m.get(noteId);
       if (!note) {
         if (!isPartial) {
@@ -308,7 +356,7 @@ export function validateIndex(s) {
     let k = record.kind;
     let meta = record.meta;
     if (k === kStoreCreateNote) {
-      let noteId = meta.split(":")[0];
+      let [noteId, _] = parseCreateNoteMeta(meta);
       throwIf(
         m.has(noteId),
         `Duplicate note id in index: ${noteId}, line: ${line}`,
@@ -322,8 +370,7 @@ export function validateIndex(s) {
       );
       m.delete(noteId);
     } else if (k === kStorePut) {
-      let verId = meta; // verId is noteId:verId
-      let noteId = noteIdFromVerId(verId);
+      let [noteId, verId] = parsePutMeta(meta);
       throwIf(
         !m.has(noteId),
         `Putting non-existing note: ${noteId}, line: ${line}`,

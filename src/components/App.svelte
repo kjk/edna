@@ -188,6 +188,7 @@
   let showingHistorySelector = $state(false);
   let showingBlockSelector = $state(false);
   let showingFindInNotes = $state(false);
+  let showingEncryptPassword = $state(false);
   let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
   let showingAskAI = $state(false);
@@ -227,6 +228,8 @@
     showingFindInNotes = false;
     showingAskAI = false;
     appState.showingLogin = false;
+    showingDecryptPassword = false;
+    showingEncryptPassword = false;
 
     appState.forceNewTab = false;
 
@@ -435,20 +438,16 @@
     });
   }
 
-  let showingEncryptPassword = $state(false);
   function openEncryptPassword() {
     showingEncryptPassword = true;
   }
 
-  function closeEncryptPassword() {
-    showingEncryptPassword = false;
-    let view = getEditorView();
-    view.focus();
-  }
-
+  /**
+   * @param {string} pwd
+   */
   function onEncryptPassword(pwd) {
     console.log("got encryption password:", pwd);
-    closeEncryptPassword();
+    closeDialogs();
     encryptAllNotes(pwd);
   }
 
@@ -2021,6 +2020,7 @@
 
   /**
    * @param {string} name
+   * @param {boolean} showNotif
    */
   async function deleteNotePermanently(name, showNotif) {
     if (!canDeleteNote(name)) {
@@ -2313,16 +2313,14 @@
 {/if}
 
 {#if showingEncryptPassword}
-  <Overlay onclose={closeEncryptPassword} blur={true}>
-    <EnterEncryptPassword
-      onclose={closeEncryptPassword}
-      onpassword={onEncryptPassword}
+  <Overlay onclose={closeDialogs} blur={true}>
+    <EnterEncryptPassword onclose={closeDialogs} onpassword={onEncryptPassword}
     ></EnterEncryptPassword>
   </Overlay>
 {/if}
 
 {#if showingDecryptPassword}
-  <Overlay onclose={closeDecryptPassword} blur={true}>
+  <Overlay onclose={closeDialogs} blur={true}>
     <EnterDecryptPassword
       msg={showingDecryptMessage}
       onpassword={onDecryptPassword}

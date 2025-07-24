@@ -1,5 +1,10 @@
-import { decryptBlobAsString, encryptStringAsBlob } from "kiss-crypto";
-import { AppendStore } from "./appendstore";
+import {
+  decryptBlobAsString,
+  encryptBlob,
+  encryptStringAsBlob,
+} from "kiss-crypto";
+import { AppendStore, kFileSystemOFS } from "./appendstore";
+import { modalInfoState } from "./components/ModalInfo.svelte";
 import {
   getPasswordHash,
   getPasswordHashMust,
@@ -8,7 +13,18 @@ import {
 } from "./encrypt";
 import { Note } from "./note";
 import { BackendStore, createBackendStore } from "./store-backend";
-import { createLocalStore, LocalStore } from "./store-local";
+import {
+  createLocalStore,
+  kStoreCreateNote,
+  kStoreDeleteNote,
+  kStorePut,
+  kStorePutEncrypted,
+  kStoreSetNoteMeta,
+  kStoreWriteFile,
+  LocalStore,
+  parseCreateNoteMeta,
+  parsePutMeta,
+} from "./store-local";
 import { throwIf } from "./util";
 
 /** @type { LocalStore | BackendStore } */
@@ -143,4 +159,103 @@ export async function storeDumpIndex() {
     return;
   }
   store.dumpIndex();
+}
+
+/**
+ * @param {string} pwdHash
+ * @returns {Promise<number>}
+ */
+export async function localStoreEncryptAllNotes(pwdHash) {
+  let currStore = localStore.store;
+  let recs = currStore.records();
+  let encryptedStore = await AppendStore.create(
+    "encrypted_store",
+    kFileSystemOFS,
+    true,
+  );
+  let nEncrypted = 0;
+
+  /** @type {Map<string, Note>} */
+  let idToNote = new Map();
+  let data;
+  // TODO: could skip deleted notes
+  for (let rec of recs) {
+    switch (rec.kind) {
+      case kStoreCreateNote:
+        {
+          let [id, name] = parseCreateNoteMeta(rec.meta);
+          idToNote.set(id, new Note(id, name));
+        }
+        break;
+      case kStoreDeleteNote:
+        {
+          let id = rec.meta;
+          let n = idToNote.get(id);
+          n.isDeleted = true;
+        }
+        break;
+      case kStoreSetNoteMeta:
+        {
+          let m = JSON.parse(rec.meta);
+          let n = idToNote.get(m.id);
+          n.name = m.name;
+        }
+        break;
+    }
+    switch (rec.kind) {
+      case kStoreCreateNote:
+      case kStoreDeleteNote:
+      case kStoreSetNoteMeta:
+        await encryptedStore.appendRecordPreserveTimestamp(rec, null);
+        break;
+      case kStorePutEncrypted:
+      case kStoreWriteFile:
+        data = await currStore.readRecord(rec);
+        await encryptedStore.appendRecordPreserveTimestamp(rec, data);
+        break;
+      case kStorePut:
+        let [id, _] = parsePutMeta(rec.meta);
+        let name = idToNote.get(id).name;
+        data = await currStore.readRecord(rec);
+        encryptBlob({ key: pwdHash, plainblob: data });
+        rec.kind = kStorePutEncrypted;
+        await encryptedStore.appendRecordPreserveTimestamp(rec, data);
+        nEncrypted++;
+        modalInfoState.addMessage(`Encrypted note ${name} version ${rec.meta}`);
+        break;
+      default:
+        throw new Error(`unknown record kind: ${rec.kind}`);
+    }
+  }
+  // TODO: replace local store with encrypted one
+  return nEncrypted;
+}
+
+/**
+ * @param {string} pwdHash
+ * @returns {Promise<number>}
+ */
+export async function backendStoreEncryptAllNotes(pwdHash) {
+  // get store index / data from the server
+  return 0;
+}
+
+/**
+ * @param {string} pwdHash
+ * @returns {Promise<number>}
+ */
+export async function storeEncryptAllNotes(pwdHash) {
+  if (!store) {
+    console.error("store not initialized");
+    return;
+  }
+  if (store === localStore) {
+    return await localStoreEncryptAllNotes(pwdHash);
+  }
+
+  if (store === backendStore) {
+    return await backendStoreEncryptAllNotes(pwdHash);
+  }
+
+  console.error("neither local nor backend store");
 }

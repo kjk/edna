@@ -4,6 +4,8 @@ import {
   getNotes,
   removeNoteFromAppState,
 } from "./appstate.svelte";
+import { modalInfoState } from "./components/ModalInfo.svelte";
+import { rememberPassword, saltPassword } from "./encrypt";
 import { updateAfterNoteStateChange } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import { getMetadata, saveAppMetadata } from "./metadata";
@@ -12,6 +14,7 @@ import { getSettings } from "./settings.svelte";
 import {
   storeCreateNote,
   storeDeleteNote,
+  storeEncryptAllNotes,
   storeGetString,
   storeWriteNoteContent,
   storeWriteNoteMeta,
@@ -448,18 +451,14 @@ export async function maybeSaveNoteSelectionAndFoldedRanges(
  * @param {string} pwd
  */
 export async function encryptAllNotes(pwd) {
-  // rememberPassword(pwd);
-  // let pwdHash = saltPassword(pwd);
-  // await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-  //   if (isEncr) {
-  //     return;
-  //   }
-  //   let msg = `Encrypting <b>${name}</b>`;
-  //   showModalMessageHTML(msg, 0);
-  //   await encryptNoteFS(dh, fileName, pwdHash);
-  // });
-  // clearModalMessage();
-  // await loadNoteNames();
+  rememberPassword(pwd);
+  let pwdHash = saltPassword(pwd);
+  modalInfoState.clear();
+  modalInfoState.title = "Encrypting notes";
+  modalInfoState.canClose = false;
+  let nEncrypted = await storeEncryptAllNotes(pwdHash);
+  modalInfoState.addMessage(`Finished encrypting ${nEncrypted} versions`);
+  modalInfoState.canClose = true;
 }
 
 export async function decryptAllNotes() {

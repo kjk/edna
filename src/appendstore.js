@@ -219,6 +219,20 @@ export class AppendStore {
   }
 
   /**
+   *
+   * @param {AppendStoreRecord} rec
+   * @param {string|Uint8Array|null} data
+   */
+  async appendRecordPreserveTimestamp(rec, data) {
+    let { kind, meta } = rec;
+    validateKindAndMeta(kind, meta);
+    let bytes = toBytes(data);
+    let recNew = await this._writeBytes(bytes, kind, meta, 0);
+    recNew.timestampMs = rec.timestampMs;
+    await this._writeRecordToIndex(recNew);
+  }
+
+  /**
    * @param {string} kind
    * @param {string|Uint8Array|null} data
    * @param {string} meta

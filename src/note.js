@@ -27,6 +27,9 @@ export class Note {
   /** @type {number} */
   updatedAt;
 
+  /** @type {boolean} */
+  isDeleted;
+
   getMetadata() {
     // by using toUndef() we make JSON-serialized version
     // smaller and easier to read
@@ -79,15 +82,4 @@ export function mkRandomNoteId() {
  */
 export function mkRandomContentId(noteID) {
   return noteID + ":" + nanoid(kNoteCotentIdLen);
-}
-
-/**
- * @param {string} verId
- */
-export function noteIdFromVerId(verId) {
-  let idx = verId.indexOf(":");
-  if (idx < 0) {
-    throw new Error("invalid contentId: " + verId);
-  }
-  return verId.substring(0, idx);
 }

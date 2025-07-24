@@ -11,7 +11,7 @@ const kElarisSalt = "360180182a560f063c6acf4a10462817dbd";
 /**
  * @param {string} pwd
  */
-function rememberPassword(pwd) {
+export function rememberPassword(pwd) {
   localStorage.setItem(kLSPassowrdKey, pwd);
 }
 
@@ -23,7 +23,7 @@ export function removePassword() {
  * @param {string} pwd
  * @returns {string}
  */
-function saltPassword(pwd) {
+export function saltPassword(pwd) {
   let pwdHash = hash({ key: pwd, salt: kElarisSalt });
   return pwdHash;
 }
