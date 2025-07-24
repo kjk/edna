@@ -63,14 +63,18 @@
 <script>
   import { focus, smartfocus, trapfocus } from "../actions";
 
+  let msg = "Auto added message";
   function autoAddMessage() {
     setTimeout(() => {
       let n = len(modalInfoState.messages) + 1;
-      modalInfoState.addMessage(`Auto-added message ${n}`);
+      modalInfoState.addMessage(`${msg}`);
+      if (n < 14) {
+        msg += " lalabore";
+      }
       if (n < 100) {
         autoAddMessage();
       }
-    }, 300);
+    }, 200);
   }
 
   onMount(() => {
@@ -103,7 +107,7 @@
   class="fixed inset-0 overflow-hidden z-10 bg-blur flex flex-col justify-center items-center"
 >
   <div
-    class="flex flex-col bg-white px-4 py-4 w-[80ch] max-w-[80vw] h-[60ch] max-h-[80vh]"
+    class="w-fit min-w-[40ch] max-w-[90vw] flex flex-col bg-white px-4 py-4 h-[60ch] max-h-[80vh]"
   >
     <div class="text-lg font-semibold py-2 pl-4 self-center">
       {modalInfoState.title}
@@ -111,7 +115,7 @@
 
     <div
       bind:this={modalInfoState.listBoxRef}
-      class="grow flex flex-col-reverse overflow-scroll px-2 py-4"
+      class="w-fit flex flex-col-reverse overflow-scroll px-2 py-4"
     >
       {#each modalInfoState.messages as message, idx (idx)}
         <div class="text-sm px-4">
