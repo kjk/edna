@@ -34,7 +34,7 @@ type UserInfo struct {
 // we wait up to 10 minutes
 // during that time we refuse changing data from a different session
 // it's probably not good enough to truly prevent bad things
-func (u *UserInfo) isLocked() bool {
+func (u *UserInfo) isWaitingForUpload() bool {
 	if u.waitingForUpload.IsZero() {
 		return false
 	}
@@ -480,7 +480,27 @@ func handleStoreUploadOfflineChanges(w http.ResponseWriter, r *http.Request, use
 	handleStoreBulkUpload(w, r, userInfo)
 }
 
+func logStoreInfo(store *appendstore.Store) {
+	logf("store info: dataDir: %s, indexFileName: %s, dataFileName: %s, records: %d",
+		store.DataDir, store.IndexFileName, store.DataFileName, len(store.Records()))
+}
+
+func getZipWithPutRecordsTest() {
+	dir := filepath.Join("data", "kkowalczyk@gmail.com")
+	store := &appendstore.Store{
+		DataDir:       dir,
+		IndexFileName: "index.txt",
+		DataFileName:  "data.bin",
+	}
+	err := appendstore.OpenStore(store)
+	must(err)
+	zipData, err := getZipWithPutRecords(store, kStorePut)
+	must(err)
+	logf("getZipWithPutRecordsTest: zip size: %d\n", len(zipData))
+}
+
 func getZipWithPutRecords(store *appendstore.Store, kind string) ([]byte, error) {
+	logf("getZipWithPutRecords: kind: '%s'\n", kind)
 	buf := bytes.Buffer{}
 	zipFile := zip.NewWriter(&buf)
 	recs := store.Records()
@@ -488,8 +508,10 @@ func getZipWithPutRecords(store *appendstore.Store, kind string) ([]byte, error)
 		if rec.Kind != kind {
 			continue
 		}
+		logf("getZipWithPutRecords: adding record %s\n", rec.Meta)
 		d, err := store.ReadRecord(rec)
 		if err != nil {
+			logStoreInfo(store)
 			return nil, err
 		}
 		file, err := zipFile.Create(rec.Meta)
@@ -510,17 +532,12 @@ func getZipWithPutRecords(store *appendstore.Store, kind string) ([]byte, error)
 // GET /api/store/getVersionsToEncrypt
 func handleStoreGetVersionsToEncrypt(w http.ResponseWriter, _ *http.Request, userInfo *UserInfo) {
 	logf("handleStoreGetVersionsToEncrypt: user %s\n", userInfo.Email)
-	userInfo.Lock()
-	defer userInfo.Unlock()
-	if userInfo.isLocked() {
-		serve403Text(w, "User store is locked, please try again later")
-		return
-	}
 
 	zipData, err := getZipWithPutRecords(userInfo.Store, kStorePut)
 	if serve500TextIfError(w, err, "failed to create zip file for %s records, error: %v", kStorePut, err) {
 		return
 	}
+	logf("handleStoreGetVersionsToEncrypt: user %s, zip size: %d\n", userInfo.Email, len(zipData))
 
 	w.Header().Set("Content-Type", "application/zip")
 	// w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s.zip", userInfo.Email))
@@ -531,17 +548,11 @@ func handleStoreGetVersionsToEncrypt(w http.ResponseWriter, _ *http.Request, use
 func handleStoreGetVersionsToDecrypt(w http.ResponseWriter, _ *http.Request, userInfo *UserInfo) {
 	logf("handleStoreGetVersionsToDecrypt: user %s\n", userInfo.Email)
 
-	userInfo.Lock()
-	defer userInfo.Unlock()
-	if userInfo.isLocked() {
-		serve403Text(w, "User store is locked, please try again later")
-		return
-	}
-
 	zipData, err := getZipWithPutRecords(userInfo.Store, kStorePutEncrypted)
 	if serve500TextIfError(w, err, "failed to create zip file for %s records, error: %v", kStorePut, err) {
 		return
 	}
+	logf("handleStoreGetVersionsToDecrypt: user %s, zip size: %d\n", userInfo.Email, len(zipData))
 
 	w.Header().Set("Content-Type", "application/zip")
 	// w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s.zip", userInfo.Email))
@@ -928,6 +939,25 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	userInfo.mu.Lock()
 	defer userInfo.mu.Unlock()
 
+	mustWaitForUpload := []string{
+		"/api/store/put",
+		"/api/store/createNote",
+		"/api/store/deleteNote",
+		"/api/store/writeNoteMeta",
+		"/api/store/writeFile",
+		"/api/store/bulkUpload",
+		"/api/store/uploadOfflineChanges",
+		"/api/store/getVersionsToEncrypt",
+		"/api/store/getVersionsToDecrypt",
+	}
+
+	if slices.Contains(mustWaitForUpload, uri) {
+		if userInfo.isWaitingForUpload() {
+			serve403Text(w, "User store is locked, please try again later")
+			return
+		}
+	}
+
 	if uri == "/api/store/get" {
 		handleStoreGet(w, r, userInfo)
 		return
@@ -975,19 +1005,23 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if uri == "/api/store/getVersionsToEncrypt" {
+		userInfo.waitingForUpload = time.Now()
 		handleStoreGetVersionsToEncrypt(w, r, userInfo)
 		return
 	}
 	if uri == "/api/store/uploadEncrypted" {
 		handleStoreUploadEncrypted(w, r, userInfo)
+		userInfo.waitingForUpload = time.Time{}
 		return
 	}
 	if uri == "/api/store/getVersionsToDecrypt" {
+		userInfo.waitingForUpload = time.Now()
 		handleStoreGetVersionsToDecrypt(w, r, userInfo)
 		return
 	}
 	if uri == "/api/store/uploadDecrypted" {
 		handleStoreUploadDecrypted(w, r, userInfo)
+		userInfo.waitingForUpload = time.Time{}
 		return
 	}
 

@@ -172,15 +172,16 @@ func Main() {
 	}
 
 	if false {
-		testOpenStore()
 		return
 	}
 
 	if flgAdHoc {
 		if true {
-			testReplyZipAdHoc()
+			getZipWithPutRecordsTest()
 		} else {
 			// make those reachable to avoid dead code warnings
+			testReplyZipAdHoc()
+			testOpenStore()
 			testReplayBrowserStoreZip()
 			testRunServerProd()
 			testReplayBrowserStoreZip()

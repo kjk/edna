@@ -50,6 +50,7 @@ export async function maybeMigrateNotesLocalToBackend() {
   let localStore = await openLocalStore();
   let recs = localStore.store.records();
   if (len(recs) === 0) {
+    closeLocalStore();
     return;
   }
   const blob = await createLocalStoreZip(localStore, true);
