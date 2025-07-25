@@ -464,6 +464,90 @@ func handleStoreUploadOfflineChanges(w http.ResponseWriter, r *http.Request, use
 	handleStoreBulkUpload(w, r, userInfo)
 }
 
+func getZipWithPutRecords(store *appendstore.Store, kind string) ([]byte, error) {
+	buf := bytes.Buffer{}
+	zipFile := zip.NewWriter(&buf)
+	recs := store.Records()
+	for _, rec := range recs {
+		if rec.Kind != kind {
+			continue
+		}
+		d, err := store.ReadRecord(rec)
+		if err != nil {
+			return nil, err
+		}
+		file, err := zipFile.Create(rec.Meta)
+		if err != nil {
+			return nil, err
+		}
+		_, err = file.Write(d)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if err := zipFile.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// GET /api/store/getVersionsToEncrypt
+func handleStoreGetVersionsToEncrypt(w http.ResponseWriter, _ *http.Request, userInfo *UserInfo) {
+	logf("handleStoreGetVersionsToEncrypt: user %s\n", userInfo.Email)
+	userInfo.Lock()
+	defer userInfo.Unlock()
+
+	zipData, err := getZipWithPutRecords(userInfo.Store, kStorePut)
+	if serve500TextIfError(w, err, "failed to create zip file for %s records, error: %v", kStorePut, err) {
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/zip")
+	// w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s.zip", userInfo.Email))
+	w.Write(zipData)
+}
+
+// GET /api/store/getVersionsToDecrypt
+func handleStoreGetVersionsToDecrypt(w http.ResponseWriter, _ *http.Request, userInfo *UserInfo) {
+	logf("handleStoreGetVersionsToDecrypt: user %s\n", userInfo.Email)
+
+	userInfo.Lock()
+	defer userInfo.Unlock()
+
+	zipData, err := getZipWithPutRecords(userInfo.Store, kStorePutEncrypted)
+	if serve500TextIfError(w, err, "failed to create zip file for %s records, error: %v", kStorePut, err) {
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/zip")
+	// w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s.zip", userInfo.Email))
+	w.Write(zipData)
+}
+
+// POST /api/store/uploadEncrypted
+func handleStoreUploadEncrypted(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	if !verifyPOSTRequest(w, r) {
+		return
+	}
+	zipData, err := io.ReadAll(r.Body)
+	if serve400TextIfError(w, err, "handleStoreUploadEncrypted: failed to read request body, error: %v", err) {
+		return
+	}
+	logf("handleStoreUploadEncrypted: user %s, zip size: %d\n", userInfo.Email, len(zipData))
+}
+
+// POST /api/store/uploadDecrypted
+func handleStoreUploadDecrypted(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	if !verifyPOSTRequest(w, r) {
+		return
+	}
+	zipData, err := io.ReadAll(r.Body)
+	if serve400TextIfError(w, err, "handleStoreUploadDecrypted: failed to read request body, error: %v", err) {
+		return
+	}
+	logf("handleStoreUploadDecrypted: user %s, zip size: %d\n", userInfo.Email, len(zipData))
+}
+
 // POST /api/store/bulkUpload
 func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	if !verifyPOSTRequest(w, r) {
@@ -471,9 +555,7 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 	}
 
 	zipData, err := io.ReadAll(r.Body)
-	if err != nil {
-		logf("handleStoreBulkUpload: failed to read request body, error: %v", err)
-		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+	if serve400TextIfError(w, err, "handleStoreBulkUpload: failed to read request body, error: %v", err) {
 		return
 	}
 	logf("handleStoreBulkUpload: user %s, zip size: %d\n", userInfo.Email, len(zipData))
@@ -708,6 +790,23 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	}
 	if uri == "/api/store/getNotesMultiContent" {
 		handleStoreGetNotesMultiContent(w, r, userInfo)
+		return
+	}
+
+	if uri == "/api/store/getVersionsToEncrypt" {
+		handleStoreGetVersionsToEncrypt(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/uploadEncrypted" {
+		handleStoreUploadEncrypted(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/getVersionsToDecrypt" {
+		handleStoreGetVersionsToDecrypt(w, r, userInfo)
+		return
+	}
+	if uri == "/api/store/uploadDecrypted" {
+		handleStoreUploadDecrypted(w, r, userInfo)
 		return
 	}
 
