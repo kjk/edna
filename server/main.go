@@ -177,7 +177,8 @@ func Main() {
 
 	if flgAdHoc {
 		if true {
-			getZipWithPutRecordsTest()
+			testOpenStore()
+			//			getZipWithPutRecordsTest()
 		} else {
 			// make those reachable to avoid dead code warnings
 			testReplyZipAdHoc()

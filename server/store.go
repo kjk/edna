@@ -481,7 +481,7 @@ func handleStoreUploadOfflineChanges(w http.ResponseWriter, r *http.Request, use
 }
 
 func logStoreInfo(store *appendstore.Store) {
-	logf("store info: dataDir: %s, indexFileName: %s, dataFileName: %s, records: %d",
+	logf("store info: dataDir: %s, indexFileName: %s, dataFileName: %s, records: %d\n",
 		store.DataDir, store.IndexFileName, store.DataFileName, len(store.Records()))
 }
 
@@ -504,11 +504,11 @@ func getZipWithPutRecords(store *appendstore.Store, kind string) ([]byte, error)
 	buf := bytes.Buffer{}
 	zipFile := zip.NewWriter(&buf)
 	recs := store.Records()
-	for _, rec := range recs {
+	for _, rec := range slices.Backward(recs) {
 		if rec.Kind != kind {
 			continue
 		}
-		logf("getZipWithPutRecords: adding record %s\n", rec.Meta)
+		logf("getZipWithPutRecords: adding record %s. Offset: %d, size: %d, end: %d\n", rec.Meta, rec.Offset, rec.Size, rec.Offset+rec.Size)
 		d, err := store.ReadRecord(rec)
 		if err != nil {
 			logStoreInfo(store)
@@ -964,22 +964,27 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	}
 	if uri == "/api/store/put" {
 		handleStorePut(w, r, userInfo)
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 	if uri == "/api/store/createNote" {
 		handleStoreCreateNote(w, r, userInfo)
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 	if uri == "/api/store/deleteNote" {
 		handleStoreDeleteNote(w, r, userInfo)
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 	if uri == "/api/store/writeNoteMeta" {
 		handleStoreWriteNoteMeta(w, r, userInfo)
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 	if uri == "/api/store/writeFile" {
 		handleStoreWriteFile(w, r, userInfo)
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 	if uri == "/api/store/readFile" {
@@ -989,10 +994,12 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 
 	if uri == "/api/store/bulkUpload" {
 		handleStoreBulkUpload(w, r, userInfo)
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 	if uri == "/api/store/uploadOfflineChanges" {
 		handleStoreUploadOfflineChanges(w, r, userInfo)
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 	if uri == "/api/store/getNotes" {
@@ -1012,6 +1019,7 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	if uri == "/api/store/uploadEncrypted" {
 		handleStoreUploadEncrypted(w, r, userInfo)
 		userInfo.waitingForUpload = time.Time{}
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 	if uri == "/api/store/getVersionsToDecrypt" {
@@ -1022,6 +1030,7 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	if uri == "/api/store/uploadDecrypted" {
 		handleStoreUploadDecrypted(w, r, userInfo)
 		userInfo.waitingForUpload = time.Time{}
+		validateStoreRecordsLog(userInfo.Store)
 		return
 	}
 
