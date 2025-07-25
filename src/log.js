@@ -17,7 +17,7 @@ export function logEvent(o) {
       if (!response.ok) {
         console.error("failed to log event:", response.statusText);
       } else {
-        console.log("event logged:", o);
+        // console.log("event logged:", o);
       }
     })
     .catch((err) => {

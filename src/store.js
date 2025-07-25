@@ -86,7 +86,7 @@ export async function storeWriteNoteContent(verId, content) {
     return;
   }
   let d = encryptStringAsBlob({ key: pwdHash, plaintext: content });
-  await store.put(verId, content, true);
+  await store.put(verId, d, true);
 }
 
 /**

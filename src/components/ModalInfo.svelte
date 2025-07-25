@@ -53,8 +53,10 @@
     }
 
     hide() {
-      this.clear();
       this.isShowing = false;
+    }
+    show() {
+      this.isShowing = true;
     }
   }
 

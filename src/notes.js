@@ -145,7 +145,7 @@ function pickUniqueName(base, existingNames) {
  * @param {string} content
  */
 export async function saveNote(name, content) {
-  console.log("note name:", name);
+  // console.log("saveNot:", name);
   if (isSystemNoteName(name)) {
     console.log("skipped saving system note", name);
     return;
@@ -409,7 +409,6 @@ export function isNoteArchived(name) {
  */
 export async function saveNoteMetadata(note) {
   let m = note.getMetadata();
-  console.log("saveNoteMetadata:", m);
   await storeWriteNoteMeta(m);
 }
 

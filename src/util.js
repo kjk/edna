@@ -238,7 +238,7 @@ export function addTabToBrowserHistory(tabStr) {
   url.hash = encodeURIComponent(tabStr);
   // update browser's URL without reloading the page
   window.history.pushState({ tabStr: tabStr }, tabStr, url);
-  console.log("window.history.pushState:", tabStr);
+  //console.log("window.history.pushState:", tabStr);
 }
 
 let sleepSetTimeout_ctrl;

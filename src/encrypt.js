@@ -1,4 +1,5 @@
 import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
+import { modalInfoState } from "./components/ModalInfo.svelte";
 import { getPasswordFromUser } from "./globals";
 
 export const kLSPassowrdKey = "elaris-password";
@@ -61,8 +62,10 @@ export async function getPasswordHashMust(msg) {
   if (pwdHash) {
     return pwdHash;
   }
+  modalInfoState.hide();
   let pwd = await getPasswordFromUser(msg);
   // TODO: we don't know yet if password is correct, maybe move this somewhere else
   rememberPassword(pwd);
+  modalInfoState.show();
   return saltPassword(pwd);
 }
