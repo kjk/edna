@@ -341,12 +341,12 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 		rec, kind := findPutRecord(recs, verID)
 		if rec == nil {
 			dumpPutRecords(recs)
-			serve404Text(w, "version %s does not exist", verID)
+			serve404Text(w, "version '%s' does not exist", verID)
 			return
 		}
 		d, err := store.ReadRecord(rec)
 		if err != nil {
-			serve500Text(w, "failed to get note content %s: %v", verID, err)
+			serve500Text(w, "failed to get note version '%s': %v", verID, err)
 			return
 		}
 		isEncrypted := kind == kStorePutEncrypted
