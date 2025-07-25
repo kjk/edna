@@ -31,6 +31,15 @@ func serve200JSON(w http.ResponseWriter, v any) {
 	logIfErrf(err)
 }
 
+func serve200Text(w http.ResponseWriter, fmtMsg ...any) {
+	msg := fmtSmartNL(fmtMsg...)
+	logf(msg)
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	_, err := w.Write([]byte(msg))
+	logIfErrf(err)
+}
+
 func serve500TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
 	if err == nil {
 		return false
@@ -75,6 +84,15 @@ func serve400Text(w http.ResponseWriter, fmtMsg ...any) {
 	logf(msg)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusBadRequest)
+	_, err := w.Write([]byte(msg))
+	logIfErrf(err)
+}
+
+func serve403Text(w http.ResponseWriter, fmtMsg ...any) {
+	msg := fmtSmartNL(fmtMsg...)
+	logf(msg)
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusForbidden)
 	_, err := w.Write([]byte(msg))
 	logIfErrf(err)
 }

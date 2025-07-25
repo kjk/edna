@@ -25,8 +25,24 @@ type UserInfo struct {
 	Store   *appendstore.Store
 	DataDir string
 
-	logInData *logInData
-	mu        sync.Mutex
+	waitingForUpload time.Time
+	mu               sync.Mutex
+}
+
+// returns true if user called /api/store/getVersionsToDecrypt or /api/store/getVersionsToEncrypt
+// but didn't call /api/store/uploadEncrypted or /api/store/uploadDecrypted yet
+// we wait up to 10 minutes
+// during that time we refuse changing data from a different session
+// it's probably not good enough to truly prevent bad things
+func (u *UserInfo) isLocked() bool {
+	if u.waitingForUpload.IsZero() {
+		return false
+	}
+	if time.Now().After(u.waitingForUpload.Add(10 * time.Minute)) {
+		u.waitingForUpload = time.Time{}
+		return false
+	}
+	return true
 }
 
 func (u *UserInfo) Lock() {
@@ -496,6 +512,10 @@ func handleStoreGetVersionsToEncrypt(w http.ResponseWriter, _ *http.Request, use
 	logf("handleStoreGetVersionsToEncrypt: user %s\n", userInfo.Email)
 	userInfo.Lock()
 	defer userInfo.Unlock()
+	if userInfo.isLocked() {
+		serve403Text(w, "User store is locked, please try again later")
+		return
+	}
 
 	zipData, err := getZipWithPutRecords(userInfo.Store, kStorePut)
 	if serve500TextIfError(w, err, "failed to create zip file for %s records, error: %v", kStorePut, err) {
@@ -513,6 +533,10 @@ func handleStoreGetVersionsToDecrypt(w http.ResponseWriter, _ *http.Request, use
 
 	userInfo.Lock()
 	defer userInfo.Unlock()
+	if userInfo.isLocked() {
+		serve403Text(w, "User store is locked, please try again later")
+		return
+	}
 
 	zipData, err := getZipWithPutRecords(userInfo.Store, kStorePutEncrypted)
 	if serve500TextIfError(w, err, "failed to create zip file for %s records, error: %v", kStorePut, err) {
@@ -524,6 +548,153 @@ func handleStoreGetVersionsToDecrypt(w http.ResponseWriter, _ *http.Request, use
 	w.Write(zipData)
 }
 
+func isValidVerId(verId string) bool {
+	idx := strings.IndexByte(verId, ':')
+	if idx < 0 {
+		return false
+	}
+	// TODO: check that both parts are 4 characters long?
+
+	return true
+}
+
+// kind is the kind to use for new store
+func rewriteStoreWithPutRecordsFromZip(userInfo *UserInfo, zipData []byte, kind string) error {
+	if kind != kStorePut && kind != kStorePutEncrypted {
+		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: unsupported kind %s", kind)
+	}
+	idToContent := make(map[string][]byte)
+	zipReader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+	if err != nil {
+		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to create zip reader, error: %v", err)
+	}
+	for _, f := range zipReader.File {
+		if f.UncompressedSize64 > 100*1024*1024 {
+			return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: file %s is too large (%d bytes), max size is 100MB", f.Name, f.UncompressedSize64)
+		}
+		verId := f.Name
+		if !isValidVerId(verId) {
+			return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: file %s does not have a valid verId format (expected noteId:verId)", f.Name)
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to open file %s, error: %v", f.Name, err)
+		}
+		data, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to read file %s, error: %v", f.Name, err)
+		}
+		idToContent[verId] = data
+	}
+
+	submittedIds := slices.Collect(maps.Keys(idToContent))
+	slices.Sort(submittedIds)
+	existingKind := kStorePutEncrypted
+	if kind == kStorePutEncrypted {
+		existingKind = kStorePut
+	}
+
+	var wantedIds []string
+	recs := userInfo.Store.Records()
+	for _, rec := range recs {
+		if rec.Kind != existingKind {
+			continue
+		}
+		push(&wantedIds, rec.Meta)
+	}
+	slices.Sort(wantedIds)
+	if !slices.Equal(submittedIds, wantedIds) {
+		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: submitted ids %v do not match existing ids %v", submittedIds, wantedIds)
+	}
+	indexName := "temp_store_index.txt"
+	dataName := "temp_store_data.bin"
+	{
+		p1 := filepath.Join(userInfo.DataDir, indexName)
+		os.Remove(p1)
+		p2 := filepath.Join(userInfo.DataDir, dataName)
+		os.Remove(p2)
+	}
+	newStore := appendstore.Store{
+		DataDir:       userInfo.DataDir,
+		IndexFileName: indexName,
+		DataFileName:  dataName,
+	}
+	err = appendstore.OpenStore(&newStore)
+	if err != nil {
+		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to open new store, error: %v", err)
+	}
+	for _, rec := range recs {
+		switch rec.Kind {
+		case kStoreCreateNote, kStoreDeleteNote, kStoreSetNoteMeta:
+			// these are not changed, so we can just copy them
+			err = newStore.AppendRecordWithTimestamp(rec.Kind, rec.Meta, nil, rec.TimestampMs)
+			if err != nil {
+				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to copy record %s, error: %v", rec.Kind, err)
+			}
+		case kStorePut, kStorePutEncrypted:
+			d, err := userInfo.Store.ReadRecord(rec)
+			if err != nil {
+				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to read record %s, error: %v", rec.Kind, err)
+			}
+			if rec.Kind == existingKind {
+				// rewrite as kind
+				err = newStore.AppendRecordWithTimestamp(kind, rec.Meta, d, rec.TimestampMs)
+			} else {
+				// copy data without changing kind
+				err = newStore.AppendRecordWithTimestamp(rec.Kind, rec.Meta, d, rec.TimestampMs)
+			}
+			if err != nil {
+				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to copy record %s, error: %v", rec.Kind, err)
+			}
+		case kStoreWriteFile:
+			d, err := userInfo.Store.ReadRecord(rec)
+			if err != nil {
+				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to read record %s, error: %v", rec.Kind, err)
+			}
+			// copy data without changing kind
+			err = newStore.OverwriteRecordWithTimestamp(rec.Kind, rec.Meta, d, rec.TimestampMs)
+			if err != nil {
+				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to copy record %s, error: %v", rec.Kind, err)
+			}
+		}
+	}
+	// use the new store
+	oldIndexName := "index.txt"
+	oldDataName := "data.bin"
+	renameFiles(userInfo.DataDir, []string{indexName, dataName}, []string{oldIndexName, oldDataName})
+	userInfo.Store = &appendstore.Store{
+		DataDir:                    userInfo.DataDir,
+		IndexFileName:              "index.txt",
+		DataFileName:               "data.bin",
+		OverWriteDataExpandPercent: 100,
+	}
+	err = appendstore.OpenStore(userInfo.Store)
+	if err != nil {
+		// well, we're fucked here
+		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to open user store, error: %v", err)
+	}
+	logf("rewriteStoreWithPutRecordsFromZip: user %s, rewrote store with %d records\n", userInfo.Email, len(newStore.Records()))
+	return nil
+}
+
+// TODO: make it atomic so that if one of renames fails, we go back to the old state
+func renameFiles(dir string, src []string, dst []string) error {
+	if len(src) != len(dst) {
+		return fmt.Errorf("renameFiles: src and dst must have the same length")
+	}
+	for i, s := range src {
+		srcPath := filepath.Join(dir, s)
+		dstPath := filepath.Join(dir, dst[i])
+		os.Remove(dstPath) // remove existing dst file if any
+		err := os.Rename(srcPath, dstPath)
+		if err != nil {
+			return fmt.Errorf("renameFiles: failed to rename %s to %s, error: %v", srcPath, dstPath, err)
+		}
+	}
+	return nil
+}
+
 // POST /api/store/uploadEncrypted
 func handleStoreUploadEncrypted(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	if !verifyPOSTRequest(w, r) {
@@ -533,7 +704,12 @@ func handleStoreUploadEncrypted(w http.ResponseWriter, r *http.Request, userInfo
 	if serve400TextIfError(w, err, "handleStoreUploadEncrypted: failed to read request body, error: %v", err) {
 		return
 	}
+	err = rewriteStoreWithPutRecordsFromZip(userInfo, zipData, kStorePutEncrypted)
+	if serve500TextIfError(w, err, "handleStoreUploadEncrypted: failed to rewrite store with put records from zip, error: %v", err) {
+		return
+	}
 	logf("handleStoreUploadEncrypted: user %s, zip size: %d\n", userInfo.Email, len(zipData))
+	serve200Text(w, "Successfully uploaded encrypted records")
 }
 
 // POST /api/store/uploadDecrypted
@@ -545,7 +721,12 @@ func handleStoreUploadDecrypted(w http.ResponseWriter, r *http.Request, userInfo
 	if serve400TextIfError(w, err, "handleStoreUploadDecrypted: failed to read request body, error: %v", err) {
 		return
 	}
+	err = rewriteStoreWithPutRecordsFromZip(userInfo, zipData, kStorePutEncrypted)
+	if serve500TextIfError(w, err, "handleStoreUploadDecrypted: failed to rewrite store with put records from zip, error: %v", err) {
+		return
+	}
 	logf("handleStoreUploadDecrypted: user %s, zip size: %d\n", userInfo.Email, len(zipData))
+	serve200Text(w, "Successfully uploaded decrypted records")
 }
 
 // POST /api/store/bulkUpload
