@@ -95,7 +95,12 @@ export async function storeWriteNoteContent(verId, content) {
  * @returns {Promise<string|null>}
  */
 export async function storeGetString(contentId) {
-  let { content, isEncrypted } = await store.get(contentId);
+  let res = await store.get(contentId);
+  if (!res) {
+    console.error(`storeGetString: no content for id ${contentId}`);
+    return null;
+  }
+  let { content, isEncrypted } = res;
   if (!isEncrypted) {
     return content ? utf8Decoder.decode(content) : null;
   }
