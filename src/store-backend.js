@@ -282,9 +282,7 @@ export class BackendStore {
       return this.notes;
     }
     this.notes = await getLatestNotes();
-    // start a process to download content of all notes
-    // TODO: do I need to await to ensure no race in file access?
-    cacheLatestNoteVersions(this.notes, this.contentCache);
+    await cacheLatestNoteVersions(this.notes, this.contentCache);
     return this.notes;
   }
 

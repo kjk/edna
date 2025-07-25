@@ -117,7 +117,7 @@ func notesFromRedords(records []*appendstore.Record) ([]*Note, error) {
 }
 
 func idToNoteFromRecords(records []*appendstore.Record, isPartial bool) (map[string]*Note, error) {
-	logf("notesFromStoreLog: processing %d records\n", len(records))
+	logf("idToNoteFromRecords: processing %d records\n", len(records))
 	idToNote := make(map[string]*Note)
 	for _, rec := range records {
 		switch rec.Kind {
@@ -183,6 +183,7 @@ func idToNoteFromRecords(records []*appendstore.Record, isPartial bool) (map[str
 			}
 			note.isDeleted = true
 		case kStorePut:
+		case kStorePutEncrypted:
 			verId := rec.Meta // verId is id:verId
 			id := strings.SplitN(rec.Meta, ":", 2)[0]
 			note := idToNote[id]
@@ -201,7 +202,7 @@ func idToNoteFromRecords(records []*appendstore.Record, isPartial bool) (map[str
 		case kStoreWriteFile:
 			// do nothing
 		default:
-			logf("unknown operation %d\n", rec.Kind)
+			logf("unknown operation %s\n", rec.Kind)
 			return nil, fmt.Errorf("unknown operation %s", rec.Kind)
 		}
 	}
@@ -504,10 +505,12 @@ func getZipWithPutRecords(store *appendstore.Store, kind string) ([]byte, error)
 	buf := bytes.Buffer{}
 	zipFile := zip.NewWriter(&buf)
 	recs := store.Records()
+	nRecs := 0
 	for _, rec := range slices.Backward(recs) {
 		if rec.Kind != kind {
 			continue
 		}
+		nRecs++
 		logf("getZipWithPutRecords: adding record %s. Offset: %d, size: %d, end: %d\n", rec.Meta, rec.Offset, rec.Size, rec.Offset+rec.Size)
 		d, err := store.ReadRecord(rec)
 		if err != nil {
@@ -526,6 +529,7 @@ func getZipWithPutRecords(store *appendstore.Store, kind string) ([]byte, error)
 	if err := zipFile.Close(); err != nil {
 		return nil, err
 	}
+	logf("getZipWithPutRecords: created zip with %d records\n", nRecs)
 	return buf.Bytes(), nil
 }
 
@@ -609,29 +613,28 @@ func rewriteStoreWithPutRecordsFromZip(userInfo *UserInfo, zipData []byte, kind 
 	var wantedIds []string
 	recs := userInfo.Store.Records()
 	for _, rec := range recs {
-		if rec.Kind != existingKind {
-			continue
+		if rec.Kind == existingKind {
+			push(&wantedIds, rec.Meta)
 		}
-		push(&wantedIds, rec.Meta)
 	}
 	slices.Sort(wantedIds)
 	if !slices.Equal(submittedIds, wantedIds) {
 		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: submitted ids %v do not match existing ids %v", submittedIds, wantedIds)
 	}
-	indexName := "temp_store_index.txt"
-	dataName := "temp_store_data.bin"
+	tempIndexName := "temp_store_index.txt"
+	tempDataName := "temp_store_data.bin"
 	{
-		p1 := filepath.Join(userInfo.DataDir, indexName)
+		p1 := filepath.Join(userInfo.DataDir, tempIndexName)
 		os.Remove(p1)
-		p2 := filepath.Join(userInfo.DataDir, dataName)
+		p2 := filepath.Join(userInfo.DataDir, tempDataName)
 		os.Remove(p2)
 	}
-	newStore := appendstore.Store{
+	tempStore := appendstore.Store{
 		DataDir:       userInfo.DataDir,
-		IndexFileName: indexName,
-		DataFileName:  dataName,
+		IndexFileName: tempIndexName,
+		DataFileName:  tempDataName,
 	}
-	err = appendstore.OpenStore(&newStore)
+	err = appendstore.OpenStore(&tempStore)
 	if err != nil {
 		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to open new store, error: %v", err)
 	}
@@ -639,24 +642,31 @@ func rewriteStoreWithPutRecordsFromZip(userInfo *UserInfo, zipData []byte, kind 
 		switch rec.Kind {
 		case kStoreCreateNote, kStoreDeleteNote, kStoreSetNoteMeta:
 			// these are not changed, so we can just copy them
-			err = newStore.AppendRecordWithTimestamp(rec.Kind, rec.Meta, nil, rec.TimestampMs)
+			err = tempStore.AppendRecordWithTimestamp(rec.Kind, rec.Meta, nil, rec.TimestampMs)
 			if err != nil {
 				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to copy record %s, error: %v", rec.Kind, err)
 			}
 		case kStorePut, kStorePutEncrypted:
-			d, err := userInfo.Store.ReadRecord(rec)
-			if err != nil {
-				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to read record %s, error: %v", rec.Kind, err)
-			}
 			if rec.Kind == existingKind {
-				// rewrite as kind
-				err = newStore.AppendRecordWithTimestamp(kind, rec.Meta, d, rec.TimestampMs)
+				// rewrite as the opposite kind
+				newValue, ok := idToContent[rec.Meta]
+				if !ok {
+					return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: record %s not found in idToContent", rec.Meta)
+				}
+				err = tempStore.AppendRecordWithTimestamp(kind, rec.Meta, newValue, rec.TimestampMs)
+				if err != nil {
+					return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to write record '%s' for '%s', error: %v", rec.Kind, rec.Meta, err)
+				}
 			} else {
-				// copy data without changing kind
-				err = newStore.AppendRecordWithTimestamp(rec.Kind, rec.Meta, d, rec.TimestampMs)
-			}
-			if err != nil {
-				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to copy record %s, error: %v", rec.Kind, err)
+				// copy record without changing kind
+				d, err := userInfo.Store.ReadRecord(rec)
+				if err != nil {
+					return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to read record %s, error: %v", rec.Kind, err)
+				}
+				err = tempStore.AppendRecordWithTimestamp(rec.Kind, rec.Meta, d, rec.TimestampMs)
+				if err != nil {
+					return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to copy record %s, error: %v", rec.Kind, err)
+				}
 			}
 		case kStoreWriteFile:
 			d, err := userInfo.Store.ReadRecord(rec)
@@ -664,20 +674,25 @@ func rewriteStoreWithPutRecordsFromZip(userInfo *UserInfo, zipData []byte, kind 
 				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to read record %s, error: %v", rec.Kind, err)
 			}
 			// copy data without changing kind
-			err = newStore.OverwriteRecordWithTimestamp(rec.Kind, rec.Meta, d, rec.TimestampMs)
+			err = tempStore.OverwriteRecordWithTimestamp(rec.Kind, rec.Meta, d, rec.TimestampMs)
 			if err != nil {
 				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to copy record %s, error: %v", rec.Kind, err)
 			}
 		}
 	}
+	tempStore.CloseFiles()
+
 	// use the new store
 	oldIndexName := "index.txt"
 	oldDataName := "data.bin"
-	renameFiles(userInfo.DataDir, []string{indexName, dataName}, []string{oldIndexName, oldDataName})
+	err = renameFiles(userInfo.DataDir, []string{tempIndexName, tempDataName}, []string{oldIndexName, oldDataName})
+	if err != nil {
+		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to rename files, error: %v", err)
+	}
 	userInfo.Store = &appendstore.Store{
 		DataDir:                    userInfo.DataDir,
-		IndexFileName:              "index.txt",
-		DataFileName:               "data.bin",
+		IndexFileName:              oldIndexName,
+		DataFileName:               oldDataName,
 		OverWriteDataExpandPercent: 100,
 	}
 	err = appendstore.OpenStore(userInfo.Store)
@@ -685,7 +700,7 @@ func rewriteStoreWithPutRecordsFromZip(userInfo *UserInfo, zipData []byte, kind 
 		// well, we're fucked here
 		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to open user store, error: %v", err)
 	}
-	logf("rewriteStoreWithPutRecordsFromZip: user %s, rewrote store with %d records\n", userInfo.Email, len(newStore.Records()))
+	logf("rewriteStoreWithPutRecordsFromZip: user %s, rewrote store with %d records\n", userInfo.Email, len(tempStore.Records()))
 	return nil
 }
 
@@ -694,11 +709,14 @@ func renameFiles(dir string, src []string, dst []string) error {
 	if len(src) != len(dst) {
 		return fmt.Errorf("renameFiles: src and dst must have the same length")
 	}
-	for i, s := range src {
-		srcPath := filepath.Join(dir, s)
+	for i := range src {
+		srcPath := filepath.Join(dir, src[i])
 		dstPath := filepath.Join(dir, dst[i])
-		os.Remove(dstPath) // remove existing dst file if any
-		err := os.Rename(srcPath, dstPath)
+		err := os.Remove(dstPath)
+		if err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("renameFiles: os.Remove('%s') failed with: %v", dstPath, err)
+		}
+		err = os.Rename(srcPath, dstPath)
 		if err != nil {
 			return fmt.Errorf("renameFiles: failed to rename %s to %s, error: %v", srcPath, dstPath, err)
 		}
@@ -958,33 +976,36 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	store := userInfo.Store
 	if uri == "/api/store/get" {
 		handleStoreGet(w, r, userInfo)
 		return
 	}
 	if uri == "/api/store/put" {
 		handleStorePut(w, r, userInfo)
-		validateStoreRecordsLog(userInfo.Store)
+		store.CloseFiles()
+		validateStoreRecordsLog(store)
 		return
 	}
 	if uri == "/api/store/createNote" {
 		handleStoreCreateNote(w, r, userInfo)
-		validateStoreRecordsLog(userInfo.Store)
+		validateStoreRecordsLog(store)
 		return
 	}
 	if uri == "/api/store/deleteNote" {
 		handleStoreDeleteNote(w, r, userInfo)
-		validateStoreRecordsLog(userInfo.Store)
+		validateStoreRecordsLog(store)
 		return
 	}
 	if uri == "/api/store/writeNoteMeta" {
 		handleStoreWriteNoteMeta(w, r, userInfo)
-		validateStoreRecordsLog(userInfo.Store)
+		validateStoreRecordsLog(store)
 		return
 	}
 	if uri == "/api/store/writeFile" {
 		handleStoreWriteFile(w, r, userInfo)
-		validateStoreRecordsLog(userInfo.Store)
+		store.CloseFiles()
+		validateStoreRecordsLog(store)
 		return
 	}
 	if uri == "/api/store/readFile" {
@@ -994,12 +1015,14 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 
 	if uri == "/api/store/bulkUpload" {
 		handleStoreBulkUpload(w, r, userInfo)
-		validateStoreRecordsLog(userInfo.Store)
+		store.CloseFiles()
+		validateStoreRecordsLog(store)
 		return
 	}
 	if uri == "/api/store/uploadOfflineChanges" {
 		handleStoreUploadOfflineChanges(w, r, userInfo)
-		validateStoreRecordsLog(userInfo.Store)
+		store.CloseFiles()
+		validateStoreRecordsLog(store)
 		return
 	}
 	if uri == "/api/store/getNotes" {
@@ -1019,7 +1042,8 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	if uri == "/api/store/uploadEncrypted" {
 		handleStoreUploadEncrypted(w, r, userInfo)
 		userInfo.waitingForUpload = time.Time{}
-		validateStoreRecordsLog(userInfo.Store)
+		store.CloseFiles()
+		validateStoreRecordsLog(store)
 		return
 	}
 	if uri == "/api/store/getVersionsToDecrypt" {
@@ -1030,7 +1054,8 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	if uri == "/api/store/uploadDecrypted" {
 		handleStoreUploadDecrypted(w, r, userInfo)
 		userInfo.waitingForUpload = time.Time{}
-		validateStoreRecordsLog(userInfo.Store)
+		store.CloseFiles()
+		validateStoreRecordsLog(store)
 		return
 	}
 

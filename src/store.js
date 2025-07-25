@@ -368,10 +368,6 @@ export async function localStoreEncryptAllNotes(pwdHash) {
  * @returns {Promise<number>}
  */
 export async function backendStoreEncryptAllNotes(pwdHash) {
-  modalInfoState.clear();
-  modalInfoState.title = "Encrypting notes";
-  modalInfoState.canClose = false;
-
   let rsp = await elarisFetch("/api/store/getVersionsToEncrypt");
   if (!rsp.ok) {
     console.error(
@@ -394,16 +390,15 @@ export async function backendStoreEncryptAllNotes(pwdHash) {
   for (let e of entries) {
     let name = e.filename;
     modalInfoState.addMessage(`Encrypting <b>${name}</b>`);
-    let writer = new libZip.BlobWriter();
-    await e.getData(writer);
-    let data = await writer.getData();
+    let data = await e.getData(new libZip.BlobWriter());
     let dataUint8 = new Uint8Array(await data.arrayBuffer());
     let dataEncrypted = encryptBlob({ key: pwdHash, plainblob: dataUint8 });
     let dataEncryptedBlob = new Blob([dataEncrypted]);
-    zipWriter.add(name, new libZip.BlobReader(dataEncryptedBlob));
+    await zipWriter.add(name, new libZip.BlobReader(dataEncryptedBlob));
   }
   let body = await zipWriter.close();
 
+  modalInfoState.addMessage("Uploading encrypted versions");
   rsp = await elarisFetch("/api/store/uploadEncrypted", {
     method: "POST",
     body: body,
@@ -413,14 +408,12 @@ export async function backendStoreEncryptAllNotes(pwdHash) {
       "backendStoreEncryptAllNotes: failed to upload encrypted notes",
     );
     modalInfoState.addMessage("Failed to upload encrypted notes");
-    modalInfoState.canClose = true;
     return 0;
   }
   modalInfoState.addMessage(
     `Finished encrypting ${nEntries} versions of notes`,
   );
-  // TODO: reload info about notes
-  modalInfoState.canClose = true;
+  // TODO: reload info about notes?
   return 0;
 }
 
@@ -428,10 +421,6 @@ export async function backendStoreEncryptAllNotes(pwdHash) {
  * @returns {Promise<number>}
  */
 export async function backendStoreDecryptAllNotes() {
-  modalInfoState.clear();
-  modalInfoState.title = "Decrypting notes";
-  modalInfoState.canClose = false;
-
   let rsp = await elarisFetch("/api/store/getVersionsToDecrypt");
   if (!rsp.ok) {
     console.error(
@@ -454,16 +443,15 @@ export async function backendStoreDecryptAllNotes() {
   for (let e of entries) {
     let name = e.filename;
     modalInfoState.addMessage(`Encrypting <b>${name}</b>`);
-    let writer = new libZip.BlobWriter();
-    await e.getData(writer);
-    let data = await writer.getData();
+    let data = await e.getData(new libZip.BlobWriter());
     let dataUint8 = new Uint8Array(await data.arrayBuffer());
     let dataDecrypted = await decryptBlobInteractive(dataUint8);
     let dataDecryptedBlob = new Blob([dataDecrypted]);
-    zipWriter.add(name, new libZip.BlobReader(dataDecryptedBlob));
+    await zipWriter.add(name, new libZip.BlobReader(dataDecryptedBlob));
   }
   let body = await zipWriter.close();
 
+  modalInfoState.addMessage("Uploading decrypted versions");
   rsp = await elarisFetch("/api/store/uploadDecrypted", {
     method: "POST",
     body: body,
@@ -473,14 +461,12 @@ export async function backendStoreDecryptAllNotes() {
       "backendStoreDecryptAllNotes: failed to upload decrypted notes",
     );
     modalInfoState.addMessage("Failed to upload decrypted notes");
-    modalInfoState.canClose = true;
     return 0;
   }
   modalInfoState.addMessage(
     `Finished decrypting ${nEntries} versions of notes`,
   );
-  // TODO: reload info about notes
-  modalInfoState.canClose = true;
+  // TODO: reload info about notes?
   return 0;
 }
 

@@ -453,7 +453,7 @@ export async function maybeSaveNoteSelectionAndFoldedRanges(
 export async function encryptAllNotes(pwd) {
   let pwdHash = saltPassword(pwd);
   modalInfoState.clear();
-  modalInfoState.title = "Encrypting notes";
+  modalInfoState.title = "Encrypting all notes";
   modalInfoState.canClose = false;
   let nEncrypted = await storeEncryptAllNotes(pwdHash);
   modalInfoState.addMessage(`Finished encrypting ${nEncrypted} versions`);
@@ -463,7 +463,7 @@ export async function encryptAllNotes(pwd) {
 
 export async function decryptAllNotes() {
   modalInfoState.clear();
-  modalInfoState.title = "Decrypting notes";
+  modalInfoState.title = "Decrypting all notes";
   modalInfoState.canClose = false;
   let nDecrypted = await storeDecryptAllNotes();
   modalInfoState.addMessage(`Finished decrypting ${nDecrypted} versions`);
