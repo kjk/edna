@@ -112,9 +112,9 @@ export async function importEdnaNotesFromZipFile() {
     let name = noteNameFromFileNameFS(fileName);
     let msg = `Importing <b>${name}</b>`;
     modalInfoState.addMessage(msg);
-    let textWriter = new libZip.TextWriter();
-    await e.getData(textWriter);
-    let content = await textWriter.getData();
+    let writer = new libZip.TextWriter();
+    await e.getData(writer);
+    let content = await writer.getData();
     let note = findNoteByName(name, true);
     if (note) {
       let existingContent = await loadNoteContent(name);

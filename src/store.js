@@ -13,6 +13,7 @@ import {
   removePassword,
 } from "./encrypt";
 import { getFileSystemWorkerOfs } from "./fs-worker-ofs";
+import { elarisFetch } from "./httputil";
 import { Note } from "./note";
 import { BackendStore, createBackendStore } from "./store-backend";
 import {
@@ -367,7 +368,59 @@ export async function localStoreEncryptAllNotes(pwdHash) {
  * @returns {Promise<number>}
  */
 export async function backendStoreEncryptAllNotes(pwdHash) {
-  // get store index / data from the server
+  modalInfoState.clear();
+  modalInfoState.title = "Encrypting notes";
+  modalInfoState.canClose = false;
+
+  let rsp = await elarisFetch("/api/store/getVersionsToEncrypt");
+  if (!rsp.ok) {
+    console.error(
+      "backendStoreEncryptAllNotes: failed to get versions to encrypt",
+    );
+    modalInfoState.addMessage("Failed to get versions to encrypt");
+    modalInfoState.canClose = true;
+    return 0;
+  }
+  modalInfoState.addMessage("Got notes to encrypt, starting encryption");
+  let blob = await rsp.blob();
+  let libZip = await import("@zip.js/zip.js");
+  let blobReader = new libZip.BlobReader(blob);
+  let zipReader = new libZip.ZipReader(blobReader);
+
+  let zipWriter = new libZip.ZipWriter(new libZip.BlobWriter());
+
+  let entries = await zipReader.getEntries();
+  let nEntries = entries.length;
+  for (let e of entries) {
+    let name = e.filename;
+    modalInfoState.addMessage(`Encrypting <b>${name}</b>`);
+    let writer = new libZip.BlobWriter();
+    await e.getData(writer);
+    let data = await writer.getData();
+    let dataUint8 = new Uint8Array(await data.arrayBuffer());
+    let dataEncrypted = encryptBlob({ key: pwdHash, plainblob: dataUint8 });
+    let dataEncryptedBlob = new Blob([dataEncrypted]);
+    zipWriter.add(name, new libZip.BlobReader(dataEncryptedBlob));
+  }
+  let body = await zipWriter.close();
+
+  rsp = await elarisFetch("/api/store/uploadEncrypted", {
+    method: "POST",
+    body: body,
+  });
+  if (!rsp.ok) {
+    console.error(
+      "backendStoreEncryptAllNotes: failed to upload encrypted notes",
+    );
+    modalInfoState.addMessage("Failed to upload encrypted notes");
+    modalInfoState.canClose = true;
+    return 0;
+  }
+  modalInfoState.addMessage(
+    `Finished encrypting ${nEntries} versions of notes`,
+  );
+  // TODO: reload info about notes
+  modalInfoState.canClose = true;
   return 0;
 }
 
@@ -375,6 +428,59 @@ export async function backendStoreEncryptAllNotes(pwdHash) {
  * @returns {Promise<number>}
  */
 export async function backendStoreDecryptAllNotes() {
+  modalInfoState.clear();
+  modalInfoState.title = "Decrypting notes";
+  modalInfoState.canClose = false;
+
+  let rsp = await elarisFetch("/api/store/getVersionsToDecrypt");
+  if (!rsp.ok) {
+    console.error(
+      "backendStoreDecryptAllNotes: failed to get versions to decrypt",
+    );
+    modalInfoState.addMessage("Failed to get versions to decrypt");
+    modalInfoState.canClose = true;
+    return 0;
+  }
+  modalInfoState.addMessage("Got notes to decrypt, starting decryption");
+  let blob = await rsp.blob();
+  let libZip = await import("@zip.js/zip.js");
+  let blobReader = new libZip.BlobReader(blob);
+  let zipReader = new libZip.ZipReader(blobReader);
+
+  let zipWriter = new libZip.ZipWriter(new libZip.BlobWriter());
+
+  let entries = await zipReader.getEntries();
+  let nEntries = entries.length;
+  for (let e of entries) {
+    let name = e.filename;
+    modalInfoState.addMessage(`Encrypting <b>${name}</b>`);
+    let writer = new libZip.BlobWriter();
+    await e.getData(writer);
+    let data = await writer.getData();
+    let dataUint8 = new Uint8Array(await data.arrayBuffer());
+    let dataDecrypted = await decryptBlobInteractive(dataUint8);
+    let dataDecryptedBlob = new Blob([dataDecrypted]);
+    zipWriter.add(name, new libZip.BlobReader(dataDecryptedBlob));
+  }
+  let body = await zipWriter.close();
+
+  rsp = await elarisFetch("/api/store/uploadDecrypted", {
+    method: "POST",
+    body: body,
+  });
+  if (!rsp.ok) {
+    console.error(
+      "backendStoreDecryptAllNotes: failed to upload decrypted notes",
+    );
+    modalInfoState.addMessage("Failed to upload decrypted notes");
+    modalInfoState.canClose = true;
+    return 0;
+  }
+  modalInfoState.addMessage(
+    `Finished decrypting ${nEntries} versions of notes`,
+  );
+  // TODO: reload info about notes
+  modalInfoState.canClose = true;
   return 0;
 }
 
