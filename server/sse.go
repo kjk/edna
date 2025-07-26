@@ -110,7 +110,7 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 		case <-time.After(5 * time.Second):
 			// wake up every 5 seconds, write a ping to keep alive
 			// and detect broken connection
-			logf("handleEvents: userEmail: %s, sessionId: %s, sending ping\n", userInfo.Email, sessionID)
+			// logf("handleEvents: userEmail: %s, sessionId: %s, sending ping\n", userInfo.Email, sessionID)
 			_, err = fmt.Fprint(w, "data: ping\n\n")
 		}
 		if err != nil {

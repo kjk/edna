@@ -1,5 +1,13 @@
 import { appState } from "./appstate.svelte";
 import { sessionId } from "./httputil";
+import { storeReloadNotes } from "./store";
+import {
+  kStoreCreateNote,
+  kStoreDeleteNote,
+  kStorePut,
+  kStoreWriteFile,
+} from "./store-local";
+import { len, splitStringN } from "./util";
 
 let eventSource;
 
@@ -19,19 +27,28 @@ export function startServerSideEvents() {
     if (event.data === "ping") {
       return;
     }
-    // TODO: reload notes and their content.
-    // maybe need more granular messages other than "something changed"
-    // e.g. note-content-changed or note-mete-changed or note-deleted
-    // that way I'll be able to properly update the UI
-    // e.g. if editing a note whose content or title changed, reload the note
-    // and show latest content
-    // if note in any tab has been deleted, remove the tab
+    storeReloadNotes().then(() => {
+      console.warn("storeReloadNotes done");
+      let parts = splitStringN(event.data, " ", 2);
+      let kind = parts[0];
+      // let meta = len(parts) > 1 ? parts[1] : "";
+      switch (kind) {
+        case kStorePut:
+          console.warn(`SSE: ${kind}`);
+          // TODO: reload if current note is affected
+          break;
+        case kStoreWriteFile:
+          console.warn(`SSE: ${kind}`);
+          break;
+        case kStoreCreateNote:
+          console.warn(`SSE: ${kind}`);
+          break;
+        case kStoreDeleteNote:
+          console.warn(`SSE: ${kind}`);
+          break;
+      }
+    });
   };
-
-  // Handle custom events (if you send 'event: myEvent' from server)
-  // eventSource.addEventListener('myEvent', function(event) {
-  //     console.log('Custom event received:', event.data);
-  // });
 
   eventSource.onopen = function () {
     console.log("SSE connection opened");

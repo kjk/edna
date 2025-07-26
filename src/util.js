@@ -695,3 +695,26 @@ export function* stringIter(s, sep) {
     yield s.slice(start);
   }
 }
+
+/**
+ * @param {string | any[]} s
+ * @param {string} sep
+ * @param {number} n
+ */
+export function splitStringN(s, sep, n) {
+  if (n <= 0) {
+    return [];
+  }
+  let parts = [];
+  let idx = 0;
+  while (parts.length < n - 1) {
+    let nextIdx = s.indexOf(sep, idx);
+    if (nextIdx === -1) {
+      break;
+    }
+    parts.push(s.slice(idx, nextIdx));
+    idx = nextIdx + len(sep);
+  }
+  parts.push(s.slice(idx));
+  return parts;
+}

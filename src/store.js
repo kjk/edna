@@ -5,6 +5,7 @@ import {
   encryptStringAsBlob,
 } from "kiss-crypto";
 import { AppendStore, kFileSystemOFS } from "./appendstore";
+import { appState } from "./appstate.svelte";
 import { modalInfoState } from "./components/ModalInfo.svelte";
 import {
   getPasswordHash,
@@ -13,6 +14,7 @@ import {
   removePassword,
 } from "./encrypt";
 import { getFileSystemWorkerOfs } from "./fs-worker-ofs";
+import { updateAfterNoteStateChange } from "./globals";
 import { elarisFetch } from "./httputil";
 import { Note } from "./note";
 import { BackendStore, createBackendStore } from "./store-backend";
@@ -29,7 +31,7 @@ import {
   parseCreateNoteMeta,
   parsePutMeta,
 } from "./store-local";
-import { throwIf } from "./util";
+import { len, throwIf } from "./util";
 
 /** @type { LocalStore | BackendStore } */
 let store;
@@ -483,4 +485,15 @@ export async function storeDecryptAllNotes() {
   }
 
   console.error("neither local nor backend store");
+}
+
+export async function storeReloadNotes() {
+  if (!store) {
+    console.error("store not initialized");
+    return;
+  }
+  console.warn("storeReloadNotes");
+  appState.allNotes = await store.getAllNotes();
+  console.warn(`storeReloadNotes: got all ${len(appState.allNotes)} notes`);
+  updateAfterNoteStateChange();
 }
