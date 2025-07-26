@@ -117,7 +117,7 @@
   class="fixed inset-0 overflow-hidden z-10 bg-blur flex flex-col justify-center items-center"
 >
   <div
-    class="w-fit min-w-[40ch] max-w-[90vw] flex flex-col bg-white px-4 py-4 h-[60ch] max-h-[80vh]"
+    class="w-fit h-[60ch] max-h-[80vh] min-w-[40ch] max-w-[90vw] flex flex-col bg-white px-4 py-4"
   >
     <div class="text-lg font-semibold py-2 pl-4 self-center">
       {modalInfoState.title}
@@ -125,7 +125,7 @@
 
     <div
       bind:this={modalInfoState.listBoxRef}
-      class="w-fit flex flex-col-reverse overflow-scroll px-2 py-4"
+      class="w-fit grow flex flex-col-reverse overflow-scroll px-2 py-4"
     >
       {#each modalInfoState.messages as message, idx (idx)}
         <div class="text-sm px-4">
