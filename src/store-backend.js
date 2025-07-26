@@ -7,9 +7,9 @@ import {
 } from "./appendstore";
 import { ofsListFiles } from "./fs-ofs";
 import { elarisFetch, hdrContentType, mimeApplicationJson } from "./httputil";
-import { createLocalStoreZip } from "./migrate-local-to-backend";
 import { Note } from "./note";
 import {
+  createLocalStoreZip,
   findPutRecord,
   kStorePut,
   kStorePutEncrypted,
@@ -300,7 +300,15 @@ export class BackendStore {
       return;
     }
     await uploadOfflineStore(this.offlineStore);
-    await deleteOfflineStore();
+    // delete offline store by re-creating it
+    let offlineStoreStore = await AppendStore.create(
+      "offline_store",
+      kFileSystemWorkerOFS,
+      false,
+    );
+    this.offlineStore = new LocalStore(offlineStoreStore);
+    this.offlineStore.isPartial = true;
+
     this.notes = null;
     await this.getAllNotes();
   }
@@ -357,7 +365,7 @@ async function uploadOfflineStore(localStore) {
   } catch (e) {
     console.error("uploadOfflineStore: error uploading append store zip:", e);
   }
-  await deleteOfflineStore();
+
   await ofsListFiles();
   console.warn("uploadOfflineStore: migration completed");
 }
@@ -497,10 +505,6 @@ async function cacheLatestNoteVersions(notes, cache) {
       " bytes",
     );
   }
-}
-
-async function deleteOfflineStore() {
-  await AppendStore.create("offline_store", kFileSystemWorkerOFS, true);
 }
 
 export async function createBackendStore() {

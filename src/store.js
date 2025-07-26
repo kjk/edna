@@ -138,6 +138,7 @@ export async function openBackendStore() {
   throwIf(!!store, "store already opened");
   backendStore = await createBackendStore();
   store = backendStore;
+  await store.flushOfflineChanges();
   return backendStore;
 }
 
@@ -255,7 +256,7 @@ export async function localStoreDecryptAllNotes() {
     kDecryptedPrefix + "_data.bin",
     kLocalStorePrefix + "_data.bin",
   );
-  store = null;
+  closeLocalStore();
   await openLocalStore();
   return nDecrypted;
 }
@@ -336,7 +337,7 @@ export async function localStoreEncryptAllNotes(pwdHash) {
     kEncryptedPrefix + "_data.bin",
     kLocalStorePrefix + "_data.bin",
   );
-  store = null;
+  closeLocalStore();
   await openLocalStore();
   return nEncrypted;
 }
@@ -442,7 +443,7 @@ export async function backendStoreDecryptAllNotes() {
     `Finished decrypting ${nEntries} versions of notes`,
   );
   // TODO: reload info about notes?
-  return 0;
+  return nEntries;
 }
 
 /**

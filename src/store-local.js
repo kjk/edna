@@ -7,6 +7,7 @@ import {
 import { keyValueMarshal, keyValueUnmarshal } from "./appendstore_kv";
 import { Note } from "./note";
 import { isDev, len, throwIf } from "./util";
+import { addBinaryBlob } from "./ziputil";
 
 // must match store.go
 export const kStoreCreateNote = "note-create";
@@ -398,4 +399,44 @@ async function debugValidateLocalStoreIndex(localStore) {
   if (isDev()) {
     await validateLocalStoreIndex(localStore);
   }
+}
+
+/**
+ * @param {LocalStore} localStore
+ * @param {boolean} validate
+ * @returns {Promise<Blob | null>}
+ */
+export async function createLocalStoreZip(localStore, validate = false) {
+  let indexContent = await localStore.store.getIndexContent();
+  if (len(indexContent) === 0) {
+    console.warn(
+      "createLocalStoreZip: index file is empty, skipping migration",
+    );
+    return null;
+  }
+  let dataContent = await localStore.store.getDataContent();
+  if (len(dataContent) === 0) {
+    console.warn("createLocalStoreZip: data file is empty, skipping migration");
+    return null;
+  }
+
+  if (validate) {
+    let s = new TextDecoder().decode(indexContent);
+    try {
+      validateIndex(s);
+    } catch (e) {
+      console.error(e);
+      console.error(s);
+      // throw e;
+      return null;
+    }
+  }
+
+  let libZip = await import("@zip.js/zip.js");
+  let blobWriter = new libZip.BlobWriter("application/zip");
+  let zipWriter = new libZip.ZipWriter(blobWriter);
+  await addBinaryBlob(libZip, zipWriter, "index.txt", new Blob([indexContent]));
+  await addBinaryBlob(libZip, zipWriter, "data.bin", new Blob([dataContent]));
+  let blob = await zipWriter.close();
+  return blob;
 }
