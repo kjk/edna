@@ -735,7 +735,7 @@ func handleStoreUploadDecrypted(w http.ResponseWriter, r *http.Request, userInfo
 	if serve400TextIfError(w, err, "handleStoreUploadDecrypted: failed to read request body, error: %v", err) {
 		return
 	}
-	err = rewriteStoreWithPutRecordsFromZip(userInfo, zipData, kStorePutEncrypted)
+	err = rewriteStoreWithPutRecordsFromZip(userInfo, zipData, kStorePut)
 	if serve500TextIfError(w, err, "handleStoreUploadDecrypted: failed to rewrite store with put records from zip, error: %v", err) {
 		return
 	}
