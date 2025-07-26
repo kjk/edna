@@ -302,7 +302,7 @@ func dumpPutRecords(recs []*appendstore.Record) {
 	dumpRecords(recs, kStorePut)
 }
 
-func findPutRecord(recs []*appendstore.Record, key string) (*appendstore.Record, string) {
+func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
 	// searching from the is faster bcause we're likely looking
 	// for recent record
 	for _, rec := range slices.Backward(recs) {
@@ -310,10 +310,10 @@ func findPutRecord(recs []*appendstore.Record, key string) (*appendstore.Record,
 			continue
 		}
 		if rec.Kind == kStorePut || rec.Kind == kStorePutEncrypted {
-			return rec, rec.Kind
+			return rec
 		}
 	}
-	return nil, ""
+	return nil
 }
 
 // POST /api/store/getNotesMultiContent
@@ -337,7 +337,7 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 	zipFile := zip.NewWriter(&buf)
 	recs := store.Records()
 	for _, verID := range req.VerIDs {
-		rec, kind := findPutRecord(recs, verID)
+		rec := findPutRecord(recs, verID)
 		if rec == nil {
 			dumpPutRecords(recs)
 			serve404Text(w, "version '%s' does not exist", verID)
@@ -348,7 +348,7 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 			serve500Text(w, "failed to get note version '%s': %v", verID, err)
 			return
 		}
-		isEncrypted := kind == kStorePutEncrypted
+		isEncrypted := rec.Kind == kStorePutEncrypted
 		if isEncrypted {
 			verID = "e:" + verID
 		}
@@ -779,7 +779,7 @@ func handleStoreGet(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		return
 	}
 	recs := userInfo.Store.Records()
-	rec, kind := findPutRecord(recs, key)
+	rec := findPutRecord(recs, key)
 	if rec == nil {
 		http.Error(w, fmt.Sprintf("No content for key '%s'", key), http.StatusNotFound)
 		return
@@ -791,7 +791,7 @@ func handleStoreGet(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		return
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
-	isEncrypted := kind == kStorePutEncrypted
+	isEncrypted := rec.Kind == kStorePutEncrypted
 	if isEncrypted {
 		w.Header().Set("X-Elaris-Encrypted", "true")
 	}
