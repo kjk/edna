@@ -48,7 +48,7 @@ export class ContentCache {
   /**
    * @param {string} key
    * @param {string | Uint8Array} value
-   * @param {boolean} [isEncrypted]
+   * @param {boolean} isEncrypted
    * @returns {Promise<void>}
    */
   async put(key, value, isEncrypted) {
@@ -136,7 +136,7 @@ export class BackendStore {
       console.error("Error putting key:", key, error);
     }
     await this.offlineStore.put(key, content, isEncrypted);
-    await this.contentCache.put(key, body);
+    await this.contentCache.put(key, body, isEncrypted);
   }
 
   /**
@@ -158,7 +158,7 @@ export class BackendStore {
       });
       console.log("rsp:", rsp);
       let fkey = "__file:" + fileName;
-      await this.contentCache.put(fkey, body);
+      await this.contentCache.put(fkey, body, false);
       return;
     } catch (error) {
       console.error("Error writing file:", fileName, error);
@@ -192,7 +192,7 @@ export class BackendStore {
       }
       ab = await rsp.arrayBuffer();
       let res = new Uint8Array(ab);
-      await this.contentCache.put(fkey, res);
+      await this.contentCache.put(fkey, res, false);
       return res;
     } catch (e) {
       console.warn("readFile error:", e);
