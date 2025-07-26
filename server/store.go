@@ -474,12 +474,6 @@ func maybeSaveUploadedZip(dataDir string, zipData []byte) {
 	logf("maybeSaveUploadedZip: wrote zip to %s\n", zipPath)
 }
 
-// POST /api/store/uploadOfflineChanges
-func handleStoreUploadOfflineChanges(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
-	// it's the same implementation. might be different at some point?
-	handleStoreBulkUpload(w, r, userInfo)
-}
-
 func logStoreInfo(store *appendstore.Store) {
 	logf("store info: dataDir: %s, indexFileName: %s, dataFileName: %s, records: %d\n",
 		store.DataDir, store.IndexFileName, store.DataFileName, len(store.Records()))
@@ -763,6 +757,33 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 		return
 	}
 	logf("handleStoreBulkUpload: after replaying we have %d records\n", len(userInfo.Store.Records()))
+	var rsp struct {
+		Message string `json:"message"`
+	}
+	rsp.Message = fmt.Sprintf("Successfully uploaded %d records", len(userInfo.Store.Records()))
+	serve200JSON(w, rsp)
+}
+
+// POST /api/store/uploadOfflineChanges
+func handleStoreUploadOfflineChanges(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
+	if !verifyPOSTRequest(w, r) {
+		return
+	}
+
+	zipData, err := io.ReadAll(r.Body)
+	if serve400TextIfError(w, err, "handleStoreUploadOfflineChanges: failed to read request body, error: %v", err) {
+		return
+	}
+	logf("handleStoreUploadOfflineChanges: user %s, zip size: %d\n", userInfo.Email, len(zipData))
+
+	maybeSaveUploadedZip(userInfo.DataDir, zipData)
+
+	err = replayBrowserStoreZip(userInfo.DataDir, userInfo.Store, zipData, true)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	logf("handleStoreUploadOfflineChanges: after replaying we have %d records\n", len(userInfo.Store.Records()))
 	var rsp struct {
 		Message string `json:"message"`
 	}
