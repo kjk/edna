@@ -493,7 +493,7 @@ export async function storeReloadNotes() {
     return;
   }
   console.warn("storeReloadNotes");
-  appState.allNotes = await store.getAllNotes();
+  appState.allNotes = await store.getAllNotes(true);
   console.warn(`storeReloadNotes: got all ${len(appState.allNotes)} notes`);
   updateAfterNoteStateChange();
 }

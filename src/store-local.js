@@ -231,9 +231,10 @@ export class LocalStore {
   }
 
   /**
+   * @param {boolean} forceUpdate
    * @returns {Promise<Note[]>}
    */
-  async getAllNotes() {
+  async getAllNotes(forceUpdate = false) {
     let store = this.store;
     return notesFromStoreLog(store.records(), this.isPartial);
   }

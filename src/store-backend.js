@@ -273,10 +273,11 @@ export class BackendStore {
   }
 
   /**
+   * @param {boolean} forceUpdate
    * @returns {Promise<Note[]>}
    */
-  async getAllNotes() {
-    if (this.notes) {
+  async getAllNotes(forceUpdate = false) {
+    if (this.notes && !forceUpdate) {
       return this.notes;
     }
     this.notes = await getLatestNotes();
