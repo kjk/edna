@@ -280,11 +280,11 @@
       ev.preventDefault();
       let name = sanitizedFilter;
       if (canCreateWithEnter) {
-        emitCreateNote(name);
+        createNote(name);
         return;
       }
       if (ev.ctrlKey && canCreate) {
-        emitCreateNote(sanitizedFilter);
+        createNote(sanitizedFilter);
         return;
       }
       if (selectedNote) {
@@ -320,14 +320,6 @@
   function emitOpenNote(noteInfo, newTab) {
     // console.log("emitOpenNote", noteInfo.name, "newTab:", newTab);
     openNote(noteInfo.name, newTab);
-  }
-
-  /**
-   * @param {string} name
-   */
-  function emitCreateNote(name) {
-    // log("create note", name);
-    createNote(name);
   }
 
   /**
@@ -610,7 +602,9 @@
 
   <div class="flex justify-center mt-2">
     {#if canCreate}
-      <button class="truncate button-outline cursor-pointer max-w-[80%]"
+      <button
+        onclick={() => createNote(sanitizedFilter)}
+        class="truncate button-outline cursor-pointer max-w-[80%]"
         >Create Note <b>{filter}</b></button
       >
     {/if}
