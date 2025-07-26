@@ -410,11 +410,8 @@ export async function backendStoreEncryptAllNotes(pwdHash) {
     modalInfoState.addMessage("Failed to upload encrypted notes");
     return 0;
   }
-  modalInfoState.addMessage(
-    `Finished encrypting ${nEntries} versions of notes`,
-  );
   // TODO: reload info about notes?
-  return 0;
+  return nEntries;
 }
 
 /**

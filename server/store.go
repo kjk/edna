@@ -859,7 +859,7 @@ func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		return
 	}
 	kind := kStorePut
-	if isEncrypted == "true" {
+	if isEncrypted == "true" || isEncrypted == "1" {
 		kind = kStorePutEncrypted
 	}
 	userInfo.Store.AppendRecord(kind, key, d)
