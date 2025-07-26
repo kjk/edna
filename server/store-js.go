@@ -279,11 +279,16 @@ func validateStoreRecords(store *appendstore.Store) error {
 		dataSize = st.Size()
 	}
 
+	noteToWatch := "BlCJ"
+	noteToWatch = ""
 	recs := store.AllRecords()
 	idToNote := make(map[string]*Note)
 	for _, rec := range recs {
 		k := rec.Kind
 		recStr := serializeRecord(rec)
+		if noteToWatch != "" && strings.Contains(recStr, noteToWatch) {
+			logf("%s", recStr)
+		}
 		if rec.SizeInFile != 0 && rec.SizeInFile < rec.Size {
 			return fmt.Errorf("SizeInFile %d is smaller than Size %d, kind '%s'\n%s", rec.SizeInFile, rec.Size, rec.Kind, recStr)
 		}
@@ -312,15 +317,17 @@ func validateStoreRecords(store *appendstore.Store) error {
 		case kStoreWriteFile:
 		// do nothing
 		case kStoreCreateNote:
-			id := rec.Meta
+			parts := strings.SplitN(rec.Meta, ":", 2)
+			id := parts[0]
+			name := parts[1]
 			if _, ok := idToNote[id]; ok {
 				return fmt.Errorf("duplicate note id %s\n%s", id, recStr)
 			}
-			idToNote[id] = &Note{id: id}
+			idToNote[id] = &Note{id: id, name: name, createdAt: rec.TimestampMs}
 		case kStoreDeleteNote:
 			id := rec.Meta
 			if note, ok := idToNote[id]; !ok {
-				return fmt.Errorf("%s: note id %s not found\n%s", kStoreDeleteNote, id, recStr)
+				return fmt.Errorf("%s: note id '%s' not found\n%s", kStoreDeleteNote, id, recStr)
 			} else {
 				note.isDeleted = true
 			}

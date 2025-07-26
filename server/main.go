@@ -175,9 +175,10 @@ func Main() {
 
 	if flgAdHoc {
 		if true {
-			adHocTestGetNotes()
+			adHocTestOpenStore()
 		} else {
 			// make those reachable to avoid dead code warnings
+			adHocTestGetNotes()
 			adHocTestOpenStore()
 			adHocGetZipWithPutRecordsTest()
 			adHocTestReplyZip()
