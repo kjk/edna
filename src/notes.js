@@ -5,7 +5,7 @@ import {
   removeNoteFromAppState,
 } from "./appstate.svelte";
 import { modalInfoState } from "./components/ModalInfo.svelte";
-import { rememberPassword, saltPassword } from "./encrypt";
+import { rememberPassword, removePassword, saltPassword } from "./encrypt";
 import { updateAfterNoteStateChange } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import { getMetadata, saveAppMetadata } from "./metadata";
@@ -468,6 +468,7 @@ export async function decryptAllNotes() {
   let nDecrypted = await storeDecryptAllNotes();
   modalInfoState.addMessage(`Finished decrypting ${nDecrypted} versions`);
   modalInfoState.canClose = true;
+  removePassword();
 }
 
 /**

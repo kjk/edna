@@ -105,31 +105,9 @@ export async function storeGetString(contentId) {
   if (!isEncrypted) {
     return content ? utf8Decoder.decode(content) : null;
   }
-  // ask for a valid password
-  let msg = "";
-  while (true) {
-    let pwdHash = await getPasswordHashMust(msg);
-    let s = null;
-    try {
-      s = decryptBlobAsString({ key: pwdHash, cipherblob: content });
-    } catch (e) {
-      console.log(e);
-      s = null;
-    }
-    if (s !== null) {
-      return s;
-    }
-    let pwd = localStorage.getItem(kLSPassowrdKey);
-    if (!pwd) {
-      msg = "Please enter password to decrypt files";
-    } else {
-      msg = `Password '${pwd}' is not correct. Please enter valid password.`;
-    }
-    // password was likely incorrect so remove it so that getPasswordHashMust()
-    // asks the user
-    removePassword();
-  }
-  return null;
+  let d = await decryptBlobInteractive(content);
+  let s = utf8Decoder.decode(d);
+  return s;
 }
 
 /** @type { LocalStore } */
