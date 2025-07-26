@@ -11,9 +11,16 @@ import (
 	"strings"
 )
 
-func serve500Error(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusInternalServerError)
-	io.WriteString(w, err.Error())
+func serveJSON(w http.ResponseWriter, v any, code int) {
+	d, err := json.Marshal(v)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		io.WriteString(w, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(d)
 }
 
 func serve200JSONData(w http.ResponseWriter, data []byte) {
@@ -40,30 +47,9 @@ func serve200Text(w http.ResponseWriter, fmtMsg ...any) {
 	logIfErrf(err)
 }
 
-func serve500TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
-	if err == nil {
-		return false
-	}
-	msg := fmtSmartNL(err.Error())
-	if len(fmtMsg) > 0 {
-		msg = fmtSmartNL(fmtMsg...)
-	}
-	logErrorf("%s", msg)
-	http.Error(w, msg, http.StatusInternalServerError)
-	return true
-}
-
-func serve401TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
-	if err == nil {
-		return false
-	}
-	msg := fmtSmartNL(err.Error())
-	if len(fmtMsg) > 0 {
-		msg = fmtSmartNL(fmtMsg...)
-	}
-	logErrorf(msg)
-	http.Error(w, msg, http.StatusUnauthorized)
-	return true
+// 304: not modified
+func serve304(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotModified)
 }
 
 func serve400TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
@@ -88,6 +74,38 @@ func serve400Text(w http.ResponseWriter, fmtMsg ...any) {
 	logIfErrf(err)
 }
 
+func serve400JSONIfErr(w http.ResponseWriter, err error, msgFormat ...any) bool {
+	if err == nil {
+		return false
+	}
+	v := map[string]any{
+		"status": "error",
+		"error":  err.Error(),
+	}
+	msg := fmtSmart(msgFormat...)
+	if msg != "" {
+		v["message"] = msg
+		logf("serveJSONIfErr: Error: '%s', message: '%s'\n", err.Error(), msg)
+	} else {
+		logf("serveJSONIfErr: '%s'\n", err.Error())
+	}
+	serveJSON(w, v, http.StatusBadRequest)
+	return true
+}
+
+func serve401TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
+	if err == nil {
+		return false
+	}
+	msg := fmtSmartNL(err.Error())
+	if len(fmtMsg) > 0 {
+		msg = fmtSmartNL(fmtMsg...)
+	}
+	logErrorf(msg)
+	http.Error(w, msg, http.StatusUnauthorized)
+	return true
+}
+
 func serve403Text(w http.ResponseWriter, fmtMsg ...any) {
 	msg := fmtSmartNL(fmtMsg...)
 	logf(msg)
@@ -106,6 +124,13 @@ func serve404Text(w http.ResponseWriter, fmtMsg ...any) {
 	logIfErrf(err)
 }
 
+func serve404JSON(w http.ResponseWriter, v map[string]any) {
+	d, _ := json.Marshal(v)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotFound)
+	w.Write(d)
+}
+
 func serve500Text(w http.ResponseWriter, fmtMsg ...any) {
 	msg := fmtSmartNL(fmtMsg...)
 	logf(msg)
@@ -115,6 +140,24 @@ func serve500Text(w http.ResponseWriter, fmtMsg ...any) {
 	logIfErrf(err)
 }
 
+func serve500TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
+	if err == nil {
+		return false
+	}
+	msg := fmtSmartNL(err.Error())
+	if len(fmtMsg) > 0 {
+		msg = fmtSmartNL(fmtMsg...)
+	}
+	logErrorf("%s", msg)
+	http.Error(w, msg, http.StatusInternalServerError)
+	return true
+}
+
+func serve500Error(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	io.WriteString(w, err.Error())
+}
+
 func verifyPOSTRequest(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodPost {
 		logf("verifyPOSTRequest(): must be POST request, is: '%s'", r.Method)
@@ -122,11 +165,6 @@ func verifyPOSTRequest(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 	return true
-}
-
-// 304: not modified
-func serve304(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotModified)
 }
 
 // https://gist.github.com/dipeshdulal/40aed9c9a55ac356bf45b2eafb08424a#file-fullmapping-go
@@ -164,41 +202,6 @@ func getURLParams(urlVals url.Values, args ...any) error {
 		}
 	}
 	return nil
-}
-
-func serve400JSONIfErr(w http.ResponseWriter, err error, msgFormat ...any) bool {
-	if err == nil {
-		return false
-	}
-	v := map[string]any{
-		"status": "error",
-		"error":  err.Error(),
-	}
-	msg := fmtSmart(msgFormat...)
-	if msg != "" {
-		v["message"] = msg
-		logf("serveJSONIfErr: Error: '%s', message: '%s'\n", err.Error(), msg)
-	} else {
-		logf("serveJSONIfErr: '%s'\n", err.Error())
-	}
-	serveJSON(w, v, http.StatusBadRequest)
-	return true
-}
-
-func serveInternalError(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusInternalServerError)
-	io.WriteString(w, err.Error())
-}
-
-func serveJSON(w http.ResponseWriter, v any, code int) {
-	d, err := json.Marshal(v)
-	if err != nil {
-		serveInternalError(w, err)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(d)
 }
 
 func postWithHeaders(uri string, hdrs map[string]string) (*http.Response, error) {

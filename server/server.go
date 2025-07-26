@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"embed"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"io/fs"
@@ -19,7 +18,6 @@ import (
 	"time"
 
 	"github.com/felixge/httpsnoop"
-	"github.com/gorilla/securecookie"
 	hutil "github.com/kjk/common/httputil"
 	"github.com/kjk/common/logtastic"
 	"github.com/kjk/common/u"
@@ -41,19 +39,6 @@ var (
 	// I also have https://apilayer.com/marketplace/fixer-api account
 	// on https://apilayer.com/account
 	// which is free for 100 reqs per month
-)
-
-var (
-	cookieName   = "nckie" // noted cookie
-	secureCookie *securecookie.SecureCookie
-
-	cookieAuthKeyHexStr = "81615f1aed7f857b4cb9c539acb5f9b5a88c9d6c4e87a4141079490773d17f5b"
-	cookieEncrKeyHexStr = "00db6337a267be94a44813335bf3bd9e35868875b896fbe3758e613fbb8ec8d4"
-
-	// maps ouath secret to login info
-	oauthLoginsInProgress = map[string]string{}
-
-	emailLoginsInProgress = []*logInData{}
 )
 
 func getCurrencyRates() ([]byte, error) {
@@ -131,83 +116,6 @@ func serveChromeDevToolsJSON(w http.ResponseWriter, r *http.Request) {
 	s = strings.ReplaceAll(s, "{{uuid}}", uuid)
 	// logf("serveChromeDevToolsJSON:\n\n%s\n\n", s)
 	serve200JSONData(w, []byte(s))
-}
-
-func makeSecureCookie() {
-	cookieAuthKey, err := hex.DecodeString(cookieAuthKeyHexStr)
-	panicIfErr(err)
-	cookieEncrKey, err := hex.DecodeString(cookieEncrKeyHexStr)
-	panicIfErr(err)
-	secureCookie = securecookie.New(cookieAuthKey, cookieEncrKey)
-}
-
-func getGitHubSecrets() (string, string) {
-	if isDev() {
-		return "Ov23liHlSBA3rZzl9wHE", secretGitHub
-	}
-	return "Ov23lioGhkU0mvfQBrxI", secretGitHub
-}
-
-type SecureCookieValue struct {
-	User      string // "kjk"
-	Email     string // "kkowalczyk@gmail.com"
-	Name      string // Krzysztof Kowalczyk
-	AvatarURL string
-}
-
-func setSecureCookie(w http.ResponseWriter, c *SecureCookieValue) {
-	panicIf(c.User == "", "setSecureCookie: empty user")
-	panicIf(c.Email == "", "setSecureCookie: empty email")
-
-	logf("setSecureCookie: user: '%s', email: '%s'\n", c.User, c.Email)
-	if encoded, err := secureCookie.Encode(cookieName, c); err == nil {
-		// TODO: set expiration (Expires    time.Time) long time in the future?
-		cookie := &http.Cookie{
-			Name:  cookieName,
-			Value: encoded,
-			Path:  "/",
-		}
-		http.SetCookie(w, cookie)
-	} else {
-		panicIfErr(err)
-	}
-}
-
-// TODO: make it even longer?
-const MonthInSeconds = 60 * 60 * 24 * 31
-
-// to delete the cookie value (e.g. for logging out), we need to set an
-// invalid value
-func deleteSecureCookie(w http.ResponseWriter) {
-	cookie := &http.Cookie{
-		Name:   cookieName,
-		Value:  "deleted",
-		MaxAge: MonthInSeconds,
-		Path:   "/",
-	}
-	http.SetCookie(w, cookie)
-}
-
-func getSecureCookie(r *http.Request) *SecureCookieValue {
-	var ret SecureCookieValue
-	cookie, err := r.Cookie(cookieName)
-	if err != nil {
-		return nil
-	}
-	// detect a deleted cookie
-	if cookie.Value == "deleted" {
-		return nil
-	}
-	err = secureCookie.Decode(cookieName, cookie.Value, &ret)
-	if err != nil {
-		// most likely expired cookie, so ignore. Ideally should delete the
-		// cookie, but that requires access to http.ResponseWriter, so not
-		// convenient for us
-		return nil
-	}
-	panicIf(ret.User == "", "getSecureCookie: empty user")
-	panicIf(ret.Email == "", "getSecureCookie: empty email")
-	return &ret
 }
 
 func httpScheme(r *http.Request) string {
