@@ -34,7 +34,7 @@ export class ContentCache {
    */
   findRecordForKey(key) {
     let recs = this.store.records();
-    return findPutRecord(recs, key, kStorePut);
+    return findPutRecord(recs, key);
   }
 
   /**
@@ -47,11 +47,13 @@ export class ContentCache {
 
   /**
    * @param {string} key
-   * @param {string|Uint8Array} value
+   * @param {string | Uint8Array} value
+   * @param {boolean} [isEncrypted]
    * @returns {Promise<void>}
    */
-  async put(key, value) {
-    await this.store.appendRecord(kStorePut, key, value);
+  async put(key, value, isEncrypted) {
+    let kind = isEncrypted ? kStorePutEncrypted : kStorePut;
+    await this.store.appendRecord(kind, key, value);
   }
 
   /**
@@ -89,17 +91,13 @@ export class BackendStore {
   async get(key) {
     // check in cache first
     let store = this.contentCache.store;
-    let rec = findPutRecord(store.records(), key, kStorePut);
+    let rec = findPutRecord(store.records(), key);
     if (rec) {
       console.warn(`got ${key} from cache`);
       let content = await store.readRecord(rec);
-      return content ? { content, isEncrypted: false } : null;
-    }
-    rec = findPutRecord(store.records(), key, kStorePutEncrypted);
-    if (rec) {
-      console.warn(`got ${key} from cache, encrypted`);
-      let content = await store.readRecord(rec);
-      return content ? { content, isEncrypted: true } : null;
+      return content
+        ? { content, isEncrypted: rec.kind === kStorePutEncrypted }
+        : null;
     }
     let uri = "/api/store/get?key=" + encodeURIComponent(key);
     let rsp = await elarisFetch(uri);
@@ -132,7 +130,7 @@ export class BackendStore {
         body: body,
       });
       console.log("rsp:", rsp);
-      await this.contentCache.put(key, body);
+      await this.contentCache.put(key, body, isEncrypted);
       return;
     } catch (error) {
       console.error("Error putting key:", key, error);
@@ -484,10 +482,13 @@ async function cacheLatestNoteVersions(notes, cache) {
   let zipReader = new libZip.ZipReader(blobReader);
   let entries = await zipReader.getEntries();
   for (let entry of entries) {
-    let u8writer = new libZip.Uint8ArrayWriter();
-    await entry.getData(u8writer);
-    let content = await u8writer.getData();
-    await cache.put(entry.filename, content);
+    let content = await entry.getData(new libZip.Uint8ArrayWriter());
+    let verId = entry.filename;
+    let isEncrypted = verId.startsWith("e-");
+    if (isEncrypted) {
+      verId = verId.slice(2);
+    }
+    await cache.put(verId, content, isEncrypted);
     console.warn(
       "cached verID:",
       entry.filename,

@@ -350,7 +350,7 @@ func handleStoreGetNotesMultiContent(w http.ResponseWriter, r *http.Request, use
 		}
 		isEncrypted := rec.Kind == kStorePutEncrypted
 		if isEncrypted {
-			verID = "e:" + verID
+			verID = "e-" + verID
 		}
 		header := &zip.FileHeader{
 			Name:   verID,

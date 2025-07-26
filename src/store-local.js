@@ -70,22 +70,20 @@ export function noteIdFromVerId(verId) {
 /**
  * @param {AppendStoreRecord[]} records
  * @param {string} key
- * @param {string} kind
  * @returns {AppendStoreRecord|null}
  */
-export function findPutRecord(records, key, kind) {
+export function findPutRecord(records, key) {
   // searching from the end should be faster on average
   // we're more likely to search for recent content
   let lastIdx = len(records) - 1;
   for (let idx = lastIdx; idx >= 0; idx--) {
     let rec = records[idx];
-    if (rec.kind !== kind) {
-      continue;
-    }
     if (rec.meta !== key) {
       continue;
     }
-    return rec;
+    if (rec.kind === kStorePut || rec.kind === kStorePutEncrypted) {
+      return rec;
+    }
   }
   return null;
 }
@@ -142,27 +140,16 @@ export class LocalStore {
   async get(key) {
     let store = this.store;
     let recs = store.records();
-    let rec = findPutRecord(recs, key, kStorePut);
+    let rec = findPutRecord(recs, key);
     if (rec) {
       let content = await store.readRecord(rec);
       return content
         ? {
             content,
-            isEncrypted: false,
+            isEncrypted: rec.kind === kStorePutEncrypted,
           }
         : null;
     }
-    rec = findPutRecord(recs, key, kStorePutEncrypted);
-    if (!rec) {
-      return null;
-    }
-    let content = await store.readRecord(rec);
-    return content
-      ? {
-          content,
-          isEncrypted: true,
-        }
-      : null;
   }
 
   /**
