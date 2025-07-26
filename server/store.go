@@ -718,6 +718,7 @@ func handleStoreUploadEncrypted(w http.ResponseWriter, r *http.Request, userInfo
 	}
 	logf("handleStoreUploadEncrypted: user %s, zip size: %d\n", userInfo.Email, len(zipData))
 	serve200Text(w, "Successfully uploaded encrypted records")
+	sseNotify(r, userInfo, "upload-encrypted")
 }
 
 // POST /api/store/uploadDecrypted
@@ -735,6 +736,7 @@ func handleStoreUploadDecrypted(w http.ResponseWriter, r *http.Request, userInfo
 	}
 	logf("handleStoreUploadDecrypted: user %s, zip size: %d\n", userInfo.Email, len(zipData))
 	serve200Text(w, "Successfully uploaded decrypted records")
+	sseNotify(r, userInfo, "upload-decrypted")
 }
 
 // POST /api/store/bulkUpload
@@ -762,6 +764,7 @@ func handleStoreBulkUpload(w http.ResponseWriter, r *http.Request, userInfo *Use
 	}
 	rsp.Message = fmt.Sprintf("Successfully uploaded %d records", len(userInfo.Store.Records()))
 	serve200JSON(w, rsp)
+	sseNotify(r, userInfo, "bulk-upload")
 }
 
 // POST /api/store/uploadOfflineChanges
@@ -789,6 +792,7 @@ func handleStoreUploadOfflineChanges(w http.ResponseWriter, r *http.Request, use
 	}
 	rsp.Message = fmt.Sprintf("Successfully uploaded %d records", len(userInfo.Store.Records()))
 	serve200JSON(w, rsp)
+	sseNotify(r, userInfo, "upload-offline-changes")
 }
 
 // POST /api/store/get?key=<key>
@@ -829,7 +833,8 @@ func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 	}
 	userInfo.Store.AppendRecord(kStoreDeleteNote, noteId, nil)
 	serve200JSON(w, map[string]string{
-		"message": "Note created"})
+		"message": "Note deleted"})
+	sseNotify(r, userInfo, kStoreDeleteNote+" "+noteId)
 }
 
 // TODO: verify that there is no note with the same name or id
@@ -848,6 +853,8 @@ func handleStoreCreateNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 	userInfo.Store.AppendRecord(kStoreCreateNote, meta, nil)
 	serve200JSON(w, map[string]string{
 		"message": "Note created"})
+
+	sseNotify(r, userInfo, kStoreCreateNote+" "+meta)
 }
 
 func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
@@ -860,6 +867,7 @@ func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *
 	userInfo.Store.AppendRecord(kStoreSetNoteMeta, meta, nil)
 	serve200JSON(w, map[string]string{
 		"message": "Note meta set"})
+	sseNotify(r, userInfo, kStoreSetNoteMeta+" "+meta)
 }
 
 // POST /api/store/put?key=<key>&isEncrypted=<true|false>
@@ -886,6 +894,7 @@ func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 	userInfo.Store.AppendRecord(kind, key, d)
 	serve200JSON(w, map[string]string{
 		"message": "Note content written successfully"})
+	sseNotify(r, userInfo, kStorePut+" "+key)
 }
 
 func findWriteFileRecord(recs []*appendstore.Record, name string) (*appendstore.Record, error) {
@@ -948,6 +957,7 @@ func handleStoreWriteFile(w http.ResponseWriter, r *http.Request, userInfo *User
 
 	serve200JSON(w, map[string]string{
 		"message": fmt.Sprintf("File %s content written successfully", name)})
+	sseNotify(r, userInfo, kStoreWriteFile+" "+name)
 }
 
 func handleStore(w http.ResponseWriter, r *http.Request) {
@@ -1066,71 +1076,4 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	serve404(w, "Unknown store operation: "+uri)
-}
-
-type updateFromUser struct {
-	UserInfo  *UserInfo
-	Type      string
-	SessionID string
-}
-
-var (
-	chUpdateFromUser = make(chan *updateFromUser)
-)
-
-func notifyAboutNotesUpdates(user *UserInfo, sessionID string) {
-	chUpdateFromUser <- &updateFromUser{
-		UserInfo:  user,
-		Type:      "notes-updated",
-		SessionID: sessionID,
-	}
-}
-
-// SSE /api/events?sessionId=<sessionId>
-func handleEvents(w http.ResponseWriter, r *http.Request) {
-	uri := r.URL.Path
-	userInfo, err := getLoggedUser(r, w)
-	if serve500TextIfError(w, err, "handleStore: %s, err: %v", uri, err) {
-		return
-	}
-	sessionID := r.URL.Query().Get("sessionId")
-	if sessionID == "" {
-		http.Error(w, "sessionId is required", http.StatusBadRequest)
-		return
-	}
-	logf("handleEvents: userEmail: %s, sessionId: %s\n", userInfo.Email, sessionID)
-
-	// Set required headers for SSE
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*") // Optional: Allow cross-origin if needed
-
-	// Get the flusher to send data immediately
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
-		return
-	}
-	for {
-		select {
-		case update := <-chUpdateFromUser:
-			// notify this user about changes made from other browser sessions
-			// so that they can update their cached notes
-			if update.UserInfo.Email == userInfo.Email {
-				// don't send if update came from ourselves
-				if update.SessionID != sessionID {
-					_, err = fmt.Fprintf(w, "data: %s\n\n", update.Type)
-				}
-			}
-		case <-time.After(5 * time.Second):
-			// wake up every 5 seconds, write a ping to keep alive
-			// and detect broken connection
-			_, err = fmt.Fprint(w, "data: ping\n\n")
-		}
-		if err != nil {
-			break
-		}
-		flusher.Flush()
-	}
 }

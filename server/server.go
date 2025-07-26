@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"fmt"
 	"io"
@@ -297,14 +298,12 @@ func serverListen(httpSrv *http.Server) func() {
 		waitForSigIntOrKill()
 
 		logf("Got one of the signals. Shutting down http server\n")
-		_ = httpSrv.Shutdown(ctx())
-		select {
-		case <-chServerClosed:
-			// do nothing
-		case <-time.After(time.Second * 5):
-			// timeout
-			logf("timed out trying to shut down http server")
-		}
+		sseNotifyExit()
+
+		ctx, cancel := context.WithTimeout(ctx(), 5*time.Second)
+		defer cancel()
+		_ = httpSrv.Shutdown(ctx)
+		<-chServerClosed
 		logf("stopping logtastic\n")
 		logtastic.Stop()
 	}

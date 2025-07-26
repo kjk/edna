@@ -438,6 +438,7 @@ async function getLatestNotes() {
   }
   if (!rsp.ok) {
     console.warn("Failed to fetch latest notes:", rsp.status, rsp.statusText);
+    return notes;
   }
   curr = await rsp.json();
   if (curr.Ver !== 1) {

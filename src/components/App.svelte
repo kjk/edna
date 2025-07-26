@@ -111,6 +111,7 @@
   import { exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import { getSettings } from "../settings.svelte";
+  import { startServerSideEvents } from "../sse";
   import { getMyFunctionsNote } from "../system-notes";
   import { parseTab, Tab } from "../tab";
   import {
@@ -2125,6 +2126,9 @@
   function docDidChange() {
     updateDocSize();
   }
+  onMount(() => {
+    startServerSideEvents();
+  });
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->

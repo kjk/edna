@@ -5,7 +5,7 @@ import "tippy.js/themes/light-border.css";
 import "tippy.js/themes/light.css";
 import { mount, unmount } from "svelte";
 import { testAppendStore } from "./apppendstore.test";
-import { appState, findNoteByName } from "./appstate.svelte";
+import { appState } from "./appstate.svelte";
 import App from "./components/App.svelte";
 import { ofsDeleteFiles, ofsListFiles } from "./fs-ofs";
 import { updateAfterNoteStateChange } from "./globals";
@@ -15,7 +15,6 @@ import { maybeMigrateNotesLocalToBackend } from "./migrate-local-to-backend";
 import { Note } from "./note";
 import {
   createIfNotExists,
-  isSystemNoteName,
   isValidTab,
   kDailyJournalNoteName,
   kInboxNoteName,
@@ -25,7 +24,6 @@ import {
 import { getSettings } from "./settings.svelte";
 import { openBackendStore, openLocalStore, storeDumpIndex } from "./store";
 import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
-import { parseTab } from "./tab";
 import { isDev, len } from "./util";
 
 /** @typedef {import("./settings.svelte").Settings} Settings */
@@ -197,12 +195,6 @@ export async function boot() {
     target: document.getElementById("app"),
   };
   appSvelte = mount(App, args);
-  // app.use(Toast, {
-  //   // transition: "Vue-Toastification__bounce",
-  //   transition: "none",
-  //   maxToasts: 20,
-  //   newestOnTop: true,
-  // });
 }
 
 boot().then(() => {

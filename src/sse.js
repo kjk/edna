@@ -1,14 +1,20 @@
+import { appState } from "./appstate.svelte";
 import { sessionId } from "./httputil";
 
 let eventSource;
 
-function startServerSideEvents() {
+export function startServerSideEvents() {
+  if (!appState.user) {
+    console.warn("User not logged in, cannot start SSE");
+    return;
+  }
+  console.warn("Starting SSE connection, sessionId:" + sessionId);
   let sessionIdEnc = encodeURIComponent(sessionId);
   let uri = window.location.origin + "/api/events?sessionId=" + sessionIdEnc;
   eventSource = new EventSource(uri);
 
   eventSource.onmessage = function (event) {
-    console.log("Received SSE:", event.data);
+    console.warn("Received SSE:", event.data);
     // TODO: ignore ping messages
     if (event.data === "ping") {
       return;
