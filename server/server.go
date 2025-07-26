@@ -11,7 +11,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"slices"
@@ -536,32 +535,4 @@ func runServerProd() {
 		openBrowserForServerMust(httpSrv)
 	}
 	waitFn()
-}
-
-func testRunServerProd() {
-	if !isWinOrMac() {
-		logf("testRunServerProd: not running on Windows or Mac, skipping\n")
-		return
-	}
-	logf("testRunServerProd\n")
-
-	exeName := buildForProd(false)
-	exeSize := u.FormatSize(u.FileSize(exeName))
-	logf("created:\n%s %s\n", exeName, exeSize)
-
-	cmd := exec.Command("./"+exeName, "-run-prod")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Start()
-	must(err)
-
-	u.WaitForSigIntOrKill()
-	if cmd.ProcessState != nil && cmd.ProcessState.Exited() {
-		logf("testRunServerProd: cmd already exited\n")
-	} else {
-		logf("testRunServerProd: killing cmd\n")
-		err = cmd.Process.Kill()
-		must(err)
-	}
-	logf("testRunServerProd: cmd killed\n")
 }

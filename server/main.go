@@ -3,14 +3,12 @@ package server
 import (
 	"bytes"
 	"flag"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/andybalholm/brotli"
-	"github.com/dustin/go-humanize"
 	"github.com/kjk/common/logtastic"
 	"github.com/klauspost/compress/gzip"
 	"github.com/klauspost/compress/zstd"
@@ -177,16 +175,17 @@ func Main() {
 
 	if flgAdHoc {
 		if true {
-			testOpenStore()
-			//			getZipWithPutRecordsTest()
+			adHocTestGetNotes()
 		} else {
 			// make those reachable to avoid dead code warnings
-			testReplyZipAdHoc()
-			testOpenStore()
-			testReplayBrowserStoreZip()
-			testRunServerProd()
-			testReplayBrowserStoreZip()
-			testCompress()
+			adHocTestOpenStore()
+			adHocGetZipWithPutRecordsTest()
+			adHocTestReplyZip()
+			adHocTestOpenStore()
+			adHocTestReplayBrowserStoreZip()
+			adHocTestRunServerProd()
+			adHocTestReplayBrowserStoreZip()
+			adHocTestCompress()
 			clean()
 		}
 		return
@@ -327,31 +326,4 @@ func benchFileCompress(path string) {
 	for _, r := range results {
 		logf("%14s: %6d (%s) in %s\n", r.name, len(r.data), humanSize(len(r.data)), r.dur)
 	}
-}
-
-func humanSize(n int) string {
-	un := uint64(n)
-	return humanize.Bytes(un)
-}
-
-func testCompress() {
-	logf("testCompress()\n")
-	rebuildFrontend()
-	u.RunLoggedInDirMust(".", "bun", "run", "build")
-
-	dir := filepath.Join("dist", "assets")
-	files, err := os.ReadDir(dir)
-	panicIfErr(err)
-	var e fs.DirEntry
-	for _, f := range files {
-		if strings.HasPrefix(f.Name(), "index-") && strings.HasSuffix(f.Name(), ".js") {
-			e = f
-			break
-		}
-	}
-
-	info, _ := e.Info()
-	logf("found %s of size %d (%s)\n", e.Name(), info.Size(), humanSize(int(info.Size())))
-	path := filepath.Join(dir, e.Name())
-	benchFileCompress(path)
 }

@@ -5,7 +5,7 @@
 [
   {
     "adapter": "Delve",
-    "label": "run go server",
+    "label": "server -run-dev",
     "request": "launch",
     "mode": "debug",
     "program": ".",
@@ -23,5 +23,16 @@
     "webRoot": "$ZED_WORKTREE_ROOT/src",
     "console": "integratedTerminal",
     "skipFiles": ["<node_internals>/**"]
+  },
+  {
+    "adapter": "Delve",
+    "label": "server -ad-hoc",
+    "request": "launch",
+    "mode": "debug",
+    "program": ".",
+    "cwd": "${ZED_WORKTREE_ROOT}",
+    "args": ["-ad-hoc"],
+    "buildFlags": [],
+    "env": {}
   }
 ]

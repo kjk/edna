@@ -182,8 +182,7 @@ func idToNoteFromRecords(records []*appendstore.Record, isPartial bool) (map[str
 				return nil, fmt.Errorf("kStoreDeleteNote: note %s is deleted", id)
 			}
 			note.isDeleted = true
-		case kStorePut:
-		case kStorePutEncrypted:
+		case kStorePut, kStorePutEncrypted:
 			verId := rec.Meta // verId is id:verId
 			id := strings.SplitN(rec.Meta, ":", 2)[0]
 			note := idToNote[id]
@@ -198,7 +197,7 @@ func idToNoteFromRecords(records []*appendstore.Record, isPartial bool) (map[str
 				logf("note %s is deleted, skipping put\n", id)
 				return nil, fmt.Errorf("kStorePut: note %s is deleted", id)
 			}
-			note.versionIds = append(note.versionIds, verId)
+			push(&note.versionIds, verId)
 		case kStoreWriteFile:
 			// do nothing
 		default:
@@ -484,20 +483,6 @@ func handleStoreUploadOfflineChanges(w http.ResponseWriter, r *http.Request, use
 func logStoreInfo(store *appendstore.Store) {
 	logf("store info: dataDir: %s, indexFileName: %s, dataFileName: %s, records: %d\n",
 		store.DataDir, store.IndexFileName, store.DataFileName, len(store.Records()))
-}
-
-func getZipWithPutRecordsTest() {
-	dir := filepath.Join("data", "kkowalczyk@gmail.com")
-	store := &appendstore.Store{
-		DataDir:       dir,
-		IndexFileName: "index.txt",
-		DataFileName:  "data.bin",
-	}
-	err := appendstore.OpenStore(store)
-	must(err)
-	zipData, err := getZipWithPutRecords(store, kStorePut)
-	must(err)
-	logf("getZipWithPutRecordsTest: zip size: %d\n", len(zipData))
 }
 
 func getZipWithPutRecords(store *appendstore.Store, kind string) ([]byte, error) {

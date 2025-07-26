@@ -27,96 +27,6 @@ func genUniqueNoteName(name string, nameToNote map[string]*Note) string {
 	}
 }
 
-func copyFileOverwrite(src, dst string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func testOpenStore() {
-	dir := filepath.Join("data", "kkowalczyk@gmail.com")
-	indexFileName := "index.txt"
-	dataFileName := "data.bin"
-	store := &appendstore.Store{
-		DataDir:                    dir,
-		IndexFileName:              indexFileName,
-		DataFileName:               dataFileName,
-		OverWriteDataExpandPercent: 100,
-	}
-	err := appendstore.OpenStore(store)
-	must(err)
-	err = validateStoreRecords(store)
-	dumpRecords(store.AllRecords(), "")
-	must(err)
-}
-
-func testReplyZipAdHoc() {
-	dir := filepath.Join("data", "kkowalczyk@gmail.com")
-	zipName := "notes_store.zip"
-	zipPath := filepath.Join(dir, zipName)
-	zipData, err := os.ReadFile(zipPath)
-	if err != nil {
-		logf("zip file %s does not exist, skipping test\n", zipPath)
-		return
-	}
-	indexFileName := "reply_browser_index.txt"
-	dataFileName := "reply_browser_data.bin"
-	os.Remove(filepath.Join(dir, indexFileName))
-	os.Remove(filepath.Join(dir, dataFileName))
-	store := &appendstore.Store{
-		DataDir:                    dir,
-		IndexFileName:              indexFileName,
-		DataFileName:               dataFileName,
-		OverWriteDataExpandPercent: 100,
-	}
-	err = appendstore.OpenStore(store)
-	must(err)
-	logf("store opened: %s\n", filepath.Join(store.DataDir, store.IndexFileName))
-	err = replayBrowserStoreZip("", store, zipData, false)
-	must(err)
-}
-
-func testReplayBrowserStoreZip() {
-	dir := filepath.Join("data", "kkowalczyk@gmail.com")
-	{
-		srcPath := filepath.Join(dir, "index.txt")
-		dstPath := filepath.Join(dir, "index_tmp.txt")
-		copyFileOverwrite(srcPath, dstPath)
-	}
-	{
-		srcPath := filepath.Join(dir, "data.bin")
-		dstPath := filepath.Join(dir, "data_tmp.bin")
-		copyFileOverwrite(srcPath, dstPath)
-	}
-	store := &appendstore.Store{
-		DataDir:                    dir,
-		IndexFileName:              "index_tmp.txt",
-		DataFileName:               "data_tmp.bin",
-		OverWriteDataExpandPercent: 100,
-	}
-	err := appendstore.OpenStore(store)
-	must(err)
-	zipPath := filepath.Join(dir, "notes_store-1.zip")
-	zipData, err := os.ReadFile(zipPath)
-	must(err)
-	replayBrowserStoreZip(dir, store, zipData, true)
-}
-
 func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData []byte, isPartial bool) error {
 	logf("replayBrowserStoreZip: replaying browser store zip with %d bytes, existing records: %d, isPartial: %t\n", len(zipData), len(store.Records()), isPartial)
 
@@ -396,8 +306,11 @@ func validateStoreRecords(store *appendstore.Store) error {
 		}
 		switch k {
 		case kStorePut:
+		// do nothing
 		case kStorePutEncrypted:
+		// do nothing
 		case kStoreWriteFile:
+		// do nothing
 		case kStoreCreateNote:
 			id := rec.Meta
 			if _, ok := idToNote[id]; ok {
