@@ -95,16 +95,28 @@ export class BackendStore {
     if (rec) {
       console.warn(`got ${key} from cache`);
       let content = await store.readRecord(rec);
-      return content
-        ? { content, isEncrypted: rec.kind === kStorePutEncrypted }
-        : null;
+      if (content !== null) {
+        let isEncrypted = rec.kind === kStorePutEncrypted;
+        return { content, isEncrypted };
+      }
     }
     let uri = "/api/store/get?key=" + encodeURIComponent(key);
-    let rsp = await elarisFetch(uri);
+    let rsp;
+    try {
+      rsp = await elarisFetch(uri);
+      if (!rsp.ok) {
+        console.error("get error:", rsp.status, rsp.statusText);
+        return null;
+      }
+    } catch (e) {
+      console.error("get error:", e);
+      return null;
+    }
     let isEncrypted = rsp.headers.has("X-Elaris-Encrypted");
     let d = await rsp.arrayBuffer();
     let content = new Uint8Array(d);
-    return content ? { content, isEncrypted } : null;
+    await this.contentCache.put(key, content, isEncrypted);
+    return { content, isEncrypted };
   }
 
   /**

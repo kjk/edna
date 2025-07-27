@@ -132,11 +132,16 @@ export class AppendStore {
       await res.fs.deleteFile(dataPath);
     } else {
       res._allRecords = await res._readIndex();
+      res._calcNonOverwritten();
     }
     return res;
   }
 
   records() {
+    return this._nonOverwritten;
+  }
+
+  allRecords() {
     return this._allRecords;
   }
 
@@ -315,7 +320,7 @@ export class AppendStore {
 
     // if we write empty string, data size is 0
     if (size == 0) {
-      return null;
+      return new Uint8Array(0);
     }
     let bytes = await this.fs.readFileSegment(this.dataPath, offset, size);
     return bytes;
