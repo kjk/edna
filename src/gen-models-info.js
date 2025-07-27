@@ -66,6 +66,37 @@ async function downloadModelsJSON(force = false) {
   }
 }
 
+let skipped = [];
+
+function padStr(s, n) {
+  // Pad string s to length n with spaces
+  return s + " ".repeat(Math.max(0, n - s.length));
+}
+
+function printSkipped() {
+  skipped.sort();
+  console.log(`Skipped ${skipped.length} models:`);
+  let providerToModels = {};
+  let maxProviderLen = 0;
+  for (const modelId of skipped) {
+    let parts = modelId.split("/");
+    const provider = parts[0];
+    if (!providerToModels[provider]) {
+      providerToModels[provider] = [];
+    }
+    providerToModels[provider].push(modelId);
+    if (provider.length > maxProviderLen) {
+      maxProviderLen = provider.length;
+    }
+  }
+  let providers = Object.keys(providerToModels).sort();
+  for (const provider of providers) {
+    console.log(
+      `${padStr(provider, maxProviderLen)}: ${providerToModels[provider].join(", ")}`,
+    );
+  }
+}
+
 function parseModelsJSON() {
   let s = fs.readFileSync(modelsFilePath, "utf8");
   let json = JSON.parse(s);
@@ -77,6 +108,7 @@ function parseModelsJSON() {
     const [provider] = m.id.split("/");
     if (false || !whitelistedProviders.includes(provider)) {
       console.log(`Skipping model ${m.id} from provider ${provider}`);
+      skipped.push(m.id);
       continue;
     }
     let o = {
@@ -146,6 +178,13 @@ function genShort(models) {
     name = shortenModelName(name);
     a.push([id, providerID, name, pricePrompt, priceCompletion]);
   }
+  // sort by provider ID, then by name
+  a.sort((x, y) => {
+    if (x[1] !== y[1]) {
+      return x[1] - y[1];
+    }
+    return x[2].localeCompare(y[2]);
+  });
   let js = JSON.stringify(a, null, 2);
   let fpath = "./src/models-short.js";
   let s = `
@@ -157,10 +196,10 @@ export const kProviderQwen = 4;
 export const kProviderXAI = 5;
 export const kProviderDeepSeek = 6;
 export const kProviderPerplexity = 7;
-//export const kProviderCohere = 8;
-//export const kProviderMistralAI = 9;
+export const kProviderMoonshotAI = 8;
+export const kProviderMistralAI = 9;
 
-export const providersInfo = [
+eport const providersInfo = [
   ["openai", "OpenAI"],
   ["anthropic", "Anthropic"],
   ["google", "Google"],
@@ -169,8 +208,8 @@ export const providersInfo = [
   ["x-ai", "xAI"],
   ["deepseek", "DeepSeek"],
   ["perplexity", "Perplexity"],
-  //  ["cohere", "Cohere"],
-  //  ["mistralai", "Mistral AI"],
+  ["moonshotai", "Moonshot AI"],
+  ["mistralai", "Mistral AI"],
 ];
 
 export const kModelIDIdx = 0;
@@ -188,6 +227,7 @@ async function doit() {
   await downloadModelsJSON(true);
   let models = parseModelsJSON();
   console.log("\n");
+  printSkipped();
   printSummary(models);
   genShort(models);
 }
