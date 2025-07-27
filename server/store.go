@@ -302,10 +302,25 @@ func dumpPutRecords(recs []*appendstore.Record) {
 	dumpRecords(recs, kStorePut)
 }
 
+// same as in note.js
+const kNoteIdLen = 4
+const kNoteCotentIdLen = 4
+
 func findPutRecord(recs []*appendstore.Record, key string) *appendstore.Record {
+	// if key looks like "noteId:verId", we don't want to return put record
+	// for deleted note
+	parts := strings.Split(key, ":")
+	noteId := ""
+	if len(parts) == 2 && len(parts[0]) == kNoteIdLen && len(parts[1]) == kNoteCotentIdLen {
+		noteId = parts[0]
+	}
+
 	// searching from the is faster bcause we're likely looking
 	// for recent record
 	for _, rec := range slices.Backward(recs) {
+		if rec.Kind == kStoreDeleteNote && rec.Meta == noteId {
+			return nil
+		}
 		if rec.Meta != key {
 			continue
 		}
@@ -544,12 +559,7 @@ func handleStoreGetVersionsToDecrypt(w http.ResponseWriter, _ *http.Request, use
 
 func isValidVerId(verId string) bool {
 	idx := strings.IndexByte(verId, ':')
-	if idx < 0 {
-		return false
-	}
-	// TODO: check that both parts are 4 characters long?
-
-	return true
+	return idx == kNoteIdLen && len(verId) == kNoteIdLen+kNoteCotentIdLen+1
 }
 
 // kind is the kind to use for new store
@@ -837,13 +847,28 @@ func handleStoreDeleteNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 	sseNotify(r, userInfo, kStoreDeleteNote+" "+noteId)
 }
 
-// TODO: verify that there is no note with the same name or id
 func handleStoreCreateNote(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	noteId := r.FormValue("noteId")
 	if noteId == "" {
 		http.Error(w, "Missing or invalid noteId", http.StatusBadRequest)
 		return
 	}
+	if len(noteId) != kNoteIdLen {
+		http.Error(w, fmt.Sprintf("Invalid noteId length: %d, expected %d characters", len(noteId), kNoteIdLen), http.StatusBadRequest)
+		return
+	}
+	recs := userInfo.Store.Records()
+	for _, rec := range slices.Backward(recs) {
+		if rec.Kind == kStoreCreateNote && rec.Meta == noteId {
+			http.Error(w, fmt.Sprintf("Note with id '%s' already exists", noteId), http.StatusConflict)
+			return
+		}
+		if rec.Kind == kStoreDeleteNote && rec.Meta == noteId {
+			http.Error(w, fmt.Sprintf("Note with id '%s' is deleted", noteId), http.StatusConflict)
+			return
+		}
+	}
+
 	name := r.FormValue("name")
 	if name == "" {
 		http.Error(w, "Missing or invalid name", http.StatusBadRequest)
@@ -857,13 +882,53 @@ func handleStoreCreateNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 	sseNotify(r, userInfo, kStoreCreateNote+" "+meta)
 }
 
+func noteExists(recs []*appendstore.Record, noteId string) bool {
+	if len(noteId) != kNoteIdLen {
+		logf("noteExists: invalid noteId length: %d, expected %d characters", len(noteId), kNoteIdLen)
+		return false
+	}
+	metaPrefix := noteId + ":"
+	for _, rec := range slices.Backward(recs) {
+		if rec.Kind == kStoreCreateNote && strings.HasPrefix(rec.Meta, metaPrefix) {
+			return true
+		}
+		if rec.Kind == kStoreDeleteNote && rec.Meta == noteId {
+			return false
+		}
+	}
+	return false
+}
+
+// must match getMetadata() in note.js
+var validNoteMetaKeys = []string{"id", "name", "isArchived", "isStarred", "altShortcut"}
+
 func handleStoreWriteNoteMeta(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) {
 	meta := r.FormValue("meta")
 	if meta == "" {
 		http.Error(w, "Missing or invalid meta", http.StatusBadRequest)
 		return
 	}
-	// TODO: verify meta is valid JSON
+	var m map[string]any
+	err := json.Unmarshal([]byte(meta), &m)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid meta JSON: %s, meta: '%s'", err, meta), http.StatusBadRequest)
+		return
+	}
+	noteId, ok := m["id"].(string)
+	if !ok || len(noteId) != kNoteIdLen {
+		http.Error(w, fmt.Sprintf("Invalid noteId: %v", m["id"]), http.StatusBadRequest)
+		return
+	}
+	for key := range m {
+		if !slices.Contains(validNoteMetaKeys, key) {
+			http.Error(w, fmt.Sprintf("Invalid meta key: %s in `%s'", key, meta), http.StatusBadRequest)
+			return
+		}
+	}
+	if !noteExists(userInfo.Store.Records(), noteId) {
+		http.Error(w, fmt.Sprintf("Note with id '%s' does not exist", noteId), http.StatusNotFound)
+		return
+	}
 	userInfo.Store.AppendRecord(kStoreSetNoteMeta, meta, nil)
 	serve200JSON(w, map[string]string{
 		"message": "Note meta set"})
@@ -880,6 +945,15 @@ func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 	key := r.FormValue("key")
 	if key == "" {
 		http.Error(w, "Missing or invalid verId", http.StatusBadRequest)
+		return
+	}
+	if !isValidVerId(key) {
+		http.Error(w, fmt.Sprintf("Invalid verId format: '%s', expected noteId:verId", key), http.StatusBadRequest)
+		return
+	}
+	noteId := strings.Split(key, ":")[0]
+	if !noteExists(userInfo.Store.Records(), noteId) {
+		http.Error(w, fmt.Sprintf("Note with id '%s' does not exist", noteId), http.StatusNotFound)
 		return
 	}
 	isEncrypted := r.FormValue("isEncrypted")

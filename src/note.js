@@ -33,6 +33,8 @@ export class Note {
   getMetadata() {
     // by using toUndef() we make JSON-serialized version
     // smaller and easier to read
+
+    // keys must match validNoteMetaKeys in store.go
     return {
       id: this.id,
       name: this.name,
@@ -66,6 +68,7 @@ export class Note {
   }
 }
 
+// same as in store.go
 const kNoteIdLen = 4;
 const kNoteCotentIdLen = 4;
 

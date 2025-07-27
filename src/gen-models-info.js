@@ -199,7 +199,7 @@ export const kProviderPerplexity = 7;
 export const kProviderMoonshotAI = 8;
 export const kProviderMistralAI = 9;
 
-eport const providersInfo = [
+export const providersInfo = [
   ["openai", "OpenAI"],
   ["anthropic", "Anthropic"],
   ["google", "Google"],
