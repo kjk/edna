@@ -305,7 +305,7 @@ export class BackendStore {
     let offlineStoreStore = await AppendStore.create(
       "offline_store",
       kFileSystemWorkerOFS,
-      false,
+      true,
     );
     this.offlineStore = new LocalStore(offlineStoreStore);
     this.offlineStore.isPartial = true;
@@ -360,9 +360,6 @@ async function uploadOfflineStore(localStore) {
       body: blob,
     });
     console.warn("uploadOfflineStore: rsp:", rsp);
-    // const root = await navigator.storage.getDirectory();
-    // root.removeEntry(indexFileName);
-    // root.removeEntry(dataFileName);
   } catch (e) {
     console.error("uploadOfflineStore: error uploading append store zip:", e);
   }
