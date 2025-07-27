@@ -6,7 +6,7 @@ import {
   toBytes,
 } from "./appendstore";
 import { ofsListFiles } from "./fs-ofs";
-import { elarisFetch, hdrContentType, mimeApplicationJson } from "./httputil";
+import { elarisFetch } from "./httputil";
 import { Note } from "./note";
 import {
   createLocalStoreZip,

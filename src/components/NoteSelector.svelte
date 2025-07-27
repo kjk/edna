@@ -104,8 +104,6 @@
 </script>
 
 <script>
-  import { tick } from "svelte";
-  import { tooltips } from "@codemirror/view";
   import { focus, tooltip } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
   import { Note } from "../note";
@@ -129,7 +127,7 @@
     makeHilightRegExp,
     noOp,
   } from "../util";
-  import Icons, { IconTablerArchive, IconTablerStar } from "./Icons.svelte";
+  import { IconTablerArchive, IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{
@@ -365,6 +363,16 @@
     }
     return "";
   }
+
+  /**
+   * @param {FocusEvent} ev
+   */
+  function onblur(ev) {
+    // hack: delete note via Ctrl + Delete might trigger closing a tab
+    //  with that note and loading another note, which focuses the editor
+    // this regains focus into input field
+    inputRef?.focus();
+  }
 </script>
 
 {#snippet showArchived()}
@@ -518,6 +526,7 @@
   <div class="relative">
     <input
       use:focus
+      {onblur}
       bind:this={inputRef}
       bind:value={filter}
       type="text"

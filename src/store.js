@@ -1,9 +1,4 @@
-import {
-  decryptBlob,
-  decryptBlobAsString,
-  encryptBlob,
-  encryptStringAsBlob,
-} from "kiss-crypto";
+import { decryptBlob, encryptBlob, encryptStringAsBlob } from "kiss-crypto";
 import { AppendStore, kFileSystemOFS } from "./appendstore";
 import { appState } from "./appstate.svelte";
 import { modalInfoState } from "./components/ModalInfo.svelte";

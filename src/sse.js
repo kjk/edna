@@ -7,7 +7,7 @@ import {
   kStorePut,
   kStoreWriteFile,
 } from "./store-local";
-import { len, splitStringN } from "./util";
+import { splitStringN } from "./util";
 
 let eventSource;
 
