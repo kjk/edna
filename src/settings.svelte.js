@@ -37,9 +37,10 @@ const settingsKeys = [
 export class Settings {
   bracketClosing = $state(true);
   currentTab = $state(kScratchNoteName);
+  /** @type { string[] } */
   tabs = $state([]);
   emacsMetaKey = $state("alt");
-  /** @type { string} */
+  /** @type { string } */
   fontFamily = $state(undefined);
   /** @type { number } */
   fontSize = $state(undefined);

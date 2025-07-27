@@ -14,6 +14,7 @@
   focusEditor: () => void,
   getPassword: (msg: string) => Promise<string>,
   updateAfterNoteStateChange: () => void,
+  closeTabWithName: (name: string) => Promise<void>,
 }} GlobalFuncs
 */
 
@@ -92,6 +93,10 @@ export function smartRun() {
 
 export function focusEditor() {
   globalFunctions.focusEditor();
+}
+
+export async function closeTabWithName(name) {
+  await globalFunctions.closeTabWithName(name);
 }
 
 export function updateAfterNoteStateChange() {

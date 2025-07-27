@@ -141,3 +141,23 @@ export function findNoteByName(name, quiet = false) {
   console.warn("all notes:", names);
   return null;
 }
+
+/**
+ * @param {string} id
+ * @param {boolean} [quiet=false] set if you don't expect note to exist
+ * @returns {Note|null}
+ */
+export function findNoteById(id, quiet = false) {
+  for (let note of appState.allNotes) {
+    if (note.id === id) {
+      return note;
+    }
+  }
+  if (quiet) {
+    return null;
+  }
+  console.warn("findNoteById: no note with id:", id);
+  let ids = appState.allNotes.map((n) => n.id);
+  console.warn("all notes:", ids);
+  return null;
+}

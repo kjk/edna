@@ -697,9 +697,10 @@ export function* stringIter(s, sep) {
 }
 
 /**
- * @param {string | any[]} s
+ * @param {string} s
  * @param {string} sep
  * @param {number} n
+ * @return {string[]}
  */
 export function splitStringN(s, sep, n) {
   if (n <= 0) {

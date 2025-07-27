@@ -282,6 +282,7 @@
     smartRun: smartRun,
     focusEditor: focusEditor,
     getPassword: getPassword,
+    closeTabWithName: closeTabWithName,
   };
   setGlobalFuncs(gf);
 
@@ -2019,15 +2020,9 @@
 
   /**
    * @param {string} name
-   * @param {boolean} showNotif
+   * @returns {Promise<void>}
    */
-  async function deleteNotePermanently(name, showNotif) {
-    if (!canDeleteNote(name)) {
-      showWarning(`Can't delete special note ${name}`);
-      console.log("cannot delete note:", name);
-      return;
-    }
-
+  async function closeTabWithName(name) {
     let settings = getSettings();
     let noteTabIdx = settings.tabs.indexOf(name);
     if (noteTabIdx >= 0) {
@@ -2038,7 +2033,20 @@
     if (name === settings.currentTab || len(settings.tabs) == 0) {
       await openNote(kScratchNoteName);
     }
+  }
 
+  /**
+   * @param {string} name
+   * @param {boolean} showNotif
+   */
+  async function deleteNotePermanently(name, showNotif) {
+    if (!canDeleteNote(name)) {
+      showWarning(`Can't delete special note ${name}`);
+      console.log("cannot delete note:", name);
+      return;
+    }
+
+    await closeTabWithName(name);
     console.log("deleted note", name);
     await deleteNote(name);
     if (showNotif) {
