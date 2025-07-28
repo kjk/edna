@@ -14,6 +14,9 @@ export function len(o) {
  */
 export function throwIf(cond, msg) {
   if (cond) {
+    if (msg) {
+      console.error(msg);
+    }
     throw new Error(msg || "invalid condition");
   }
 }

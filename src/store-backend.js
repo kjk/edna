@@ -1,3 +1,4 @@
+import { re } from "mathjs";
 import {
   AppendStore,
   AppendStoreRecord,
@@ -13,9 +14,45 @@ import {
   findPutRecord,
   kStorePut,
   kStorePutEncrypted,
+  kStoreWriteFile,
   LocalStore,
 } from "./store-local";
 import { len } from "./util";
+
+const kStoreDeleteFile = "delete-file";
+
+/**
+ * @param {AppendStoreRecord[]} recs
+ * @param {string} kind
+ * @param {string} meta
+ * @returns {AppendStoreRecord | null}
+ */
+function findRecordForKey(recs, kind, meta) {
+  // searching from the end should be faster on average
+  // we're more likely to search for recent content
+  let lastIdx = len(recs) - 1;
+  for (let idx = lastIdx; idx >= 0; idx--) {
+    let rec = recs[idx];
+    if (rec.meta !== meta) {
+      continue;
+    }
+    if (kind == kStorePut) {
+      if (rec.kind === kStorePut || rec.kind === kStorePutEncrypted) {
+        return rec;
+      }
+    } else if (kind === kStoreWriteFile) {
+      if (rec.kind === kStoreDeleteFile) {
+        return null;
+      }
+      if (rec.kind === kStoreWriteFile) {
+        return rec;
+      }
+    } else {
+      throw new Error(`findRecordForKey: unexpected record kind: ${rec.kind}`);
+    }
+  }
+  return null;
+}
 
 export class ContentCache {
   /** @type {AppendStore} */
@@ -30,19 +67,11 @@ export class ContentCache {
 
   /**
    * @param {string} key
-   * @returns {AppendStoreRecord|null}
-   */
-  findRecordForKey(key) {
-    let recs = this.store.records();
-    return findPutRecord(recs, key);
-  }
-
-  /**
-   * @param {string} key
    * @returns {boolean}
    */
   has(key) {
-    return this.findRecordForKey(key) !== null;
+    let recs = this.store.records();
+    return findRecordForKey(recs, kStorePut, key) !== null;
   }
 
   /**
@@ -58,11 +87,48 @@ export class ContentCache {
 
   /**
    * @param {string} key
-   * @returns {Promise<Uint8Array|null>}
+   * @returns {Promise<{content: Uint8Array, isEncrypted: boolean}|null>}
    */
   async get(key) {
-    let rec = this.findRecordForKey(key);
-    return rec ? await this.store.readRecord(rec) : null;
+    let recs = this.store.records();
+    let rec = findRecordForKey(recs, kStorePut, key);
+    if (!rec) {
+      return null;
+    }
+    let content = await this.store.readRecord(rec);
+    if (content === null) {
+      console.warn(`ContentCache.get: no content for key: ${key}`);
+      return null;
+    }
+    let isEncrypted = rec.kind === kStorePutEncrypted;
+    return { content, isEncrypted };
+  }
+
+  /**
+   * @param {string} fileName
+   * @param {Uint8Array<ArrayBufferLike>} content
+   */
+  async writeFile(fileName, content) {
+    await this.store.appendRecord(kStoreWriteFile, fileName, content);
+  }
+  async readFile(fileName) {
+    let recs = this.store.records();
+    let rec = findRecordForKey(recs, kStoreWriteFile, fileName);
+    if (!rec) {
+      console.warn(`ContentCache.readFile: no record for file: ${fileName}`);
+      return null;
+    }
+    return await this.store.readRecord(rec);
+  }
+
+  async deleteFile(fileName) {
+    let recs = this.store.records();
+    let rec = findRecordForKey(recs, kStoreWriteFile, fileName);
+    if (!rec) {
+      // already deleted or never existed
+      return;
+    }
+    await this.store.appendRecord(kStoreDeleteFile, fileName, null);
   }
 }
 
@@ -184,8 +250,7 @@ export class BackendStore {
    */
   async readFile(fileName) {
     // TODO: what scenarios could lead to reading stale data?
-    let fkey = "__file:" + fileName;
-    let body = await this.contentCache.get(fkey);
+    let body = await this.contentCache.readFile(fileName);
     if (body) {
       return body;
     }
@@ -204,12 +269,20 @@ export class BackendStore {
       }
       ab = await rsp.arrayBuffer();
       let res = new Uint8Array(ab);
-      await this.contentCache.put(fkey, res, false);
+      await this.contentCache.writeFile(fileName, res);
       return res;
     } catch (e) {
       console.warn("readFile error:", e);
     }
     return null;
+  }
+
+  /**
+   * @param {string} fileName
+   * @returns {Promise<void>}
+   */
+  async invalidateFile(fileName) {
+    await this.contentCache.deleteFile(fileName);
   }
 
   /**

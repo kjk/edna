@@ -381,12 +381,18 @@ export class AppendStore {
 export function parseIndexCb(s, callback) {
   const lines = s.split("\n");
   let n = lines.length;
+  console.warn(`parseIndexCb: ${n} lines`);
   if (n > 0 && lines[n - 1] === "") {
     n--; // remove the last empty line
   }
   let rest, line;
   for (let i = 0; i < n; i++) {
     line = lines[i];
+    // console.warn(`i: ${i}, line: '${line}'`);
+    if (line === "") {
+      console.error(`s: ${s}`);
+      continue;
+    }
     rest = line;
     const offsetEnd = rest.indexOf(" ");
     throwIf(offsetEnd === -1, `Invalid index line: '${line}'`);

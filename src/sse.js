@@ -1,8 +1,9 @@
 import { appState, findNoteById, findNoteByName } from "./appstate.svelte";
 import { closeTabWithName, reloadIfCurrent } from "./globals";
 import { sessionId } from "./httputil";
+import { kMetadataName, loadAppMetadata } from "./metadata";
 import { Note, parseNoteIdFromVerId } from "./note";
-import { storeReloadNotes } from "./store";
+import { storeInvalidateFile, storeReloadNotes } from "./store";
 import {
   kStoreCreateNote,
   kStoreDeleteNote,
@@ -62,10 +63,20 @@ export function startServerSideEvents() {
         }
         break;
       case kStoreWriteFile:
-        // TOOD: reload metadata?
-        console.warn(`SSE: ${kind}`);
+        // TODO: alternatively could call storeReadFile(force)
+        // to force caching latest version
+        await storeInvalidateFile(meta);
+        if (meta.includes(kMetadataName)) {
+          await loadAppMetadata();
+        }
+        console.warn(`SSE: ${kind} ${meta}`);
         break;
       case kStoreCreateNote:
+      case "upload-encrypted":
+      case "upload-decrypted":
+      case "bulk-upload":
+      case "upload-offline-changes":
+        // will reload notes below
         console.warn(`SSE: ${kind}`);
         break;
     }

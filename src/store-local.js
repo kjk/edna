@@ -189,6 +189,14 @@ export class LocalStore {
   }
 
   /**
+   * @param {string} fileName
+   * @returns {Promise<void>}
+   */
+  async invalidateFile(fileName) {
+    // nothing to do because we don't cache
+  }
+
+  /**
    * @param {Object} m
    */
   async writeNoteMeta(m) {

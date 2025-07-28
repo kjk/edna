@@ -492,3 +492,12 @@ export async function storeReloadNotes() {
   console.warn(`storeReloadNotes: got all ${len(appState.allNotes)} notes`);
   updateAfterNoteStateChange();
 }
+
+export async function storeInvalidateFile(fileName) {
+  if (!store) {
+    console.error("store not initialized");
+    return;
+  }
+  console.warn(`storeInvalidateFile: ${fileName}`);
+  await store.invalidateFile(fileName);
+}
