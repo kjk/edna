@@ -96,7 +96,7 @@ export class ContentCache {
       return null;
     }
     let content = await this.store.readRecord(rec);
-    if (content === null) {
+    if (len(content) === 0) {
       console.warn(`ContentCache.get: no content for key: ${key}`);
       return null;
     }
@@ -161,7 +161,9 @@ export class BackendStore {
     if (rec) {
       console.warn(`got ${key} from cache`);
       let content = await store.readRecord(rec);
-      if (content !== null) {
+      if (len(content) !== 0) {
+        // shouldn't end up empty in the cache but if it did
+        // re-read from the server
         let isEncrypted = rec.kind === kStorePutEncrypted;
         return { content, isEncrypted };
       }
