@@ -7,6 +7,7 @@ import {
 } from "./appendstore";
 import { appState } from "./appstate.svelte";
 import { ofsListFiles } from "./fs-ofs";
+import { updateAfterNoteStateChange } from "./globals";
 import { elarisFetch } from "./httputil";
 import { Note } from "./note";
 import {
@@ -384,6 +385,7 @@ export class BackendStore {
       return this.notes;
     }
     this.notes = await getLatestNotes();
+    updateAfterNoteStateChange(this.notes);
     await cacheLatestNoteVersions(this.notes, this.contentCache);
     return this.notes;
   }
@@ -400,6 +402,10 @@ export class BackendStore {
     // not sure if should do this check or just go ahead and try
     // the actual operation?
     let isOnline = await isOnlineForSure();
+    if (!isOnline) {
+      console.warn("flushOfflineChanges: not online, skipping upload");
+      return;
+    }
     await uploadOfflineStore(this.offlineStore);
     // delete offline store by re-creating it
     let offlineStoreStore = await AppendStore.create(

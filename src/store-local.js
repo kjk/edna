@@ -424,10 +424,7 @@ export async function createLocalStoreZip(localStore, validate = false) {
     return null;
   }
   let dataContent = await localStore.store.getDataContent();
-  if (len(dataContent) === 0) {
-    console.warn("createLocalStoreZip: data file is empty, skipping migration");
-    return null;
-  }
+  // dataContent can be empty e.g. we only issues opes without any data
 
   if (validate) {
     let s = new TextDecoder().decode(indexContent);
