@@ -1,4 +1,3 @@
-import { re } from "mathjs";
 import {
   AppendStore,
   AppendStoreRecord,
@@ -6,6 +5,7 @@ import {
   kFileSystemWorkerOFS,
   toBytes,
 } from "./appendstore";
+import { appState } from "./appstate.svelte";
 import { ofsListFiles } from "./fs-ofs";
 import { elarisFetch } from "./httputil";
 import { Note } from "./note";
@@ -174,8 +174,10 @@ export class BackendStore {
         console.error("get error:", rsp.status, rsp.statusText);
         return null;
       }
+      appState.isOnline = true;
     } catch (e) {
       console.error("get error:", e);
+      appState.isOnline = false;
       return null;
     }
     let isEncrypted = rsp.headers.has("X-Elaris-Encrypted");
@@ -207,11 +209,16 @@ export class BackendStore {
         },
         body: body,
       });
-      console.log("rsp:", rsp);
+      if (!rsp.ok) {
+        console.error("put error:", rsp.status, rsp.statusText);
+        return;
+      }
       await this.contentCache.put(key, body, isEncrypted);
+      appState.isOnline = true;
       return;
     } catch (error) {
       console.error("Error putting key:", key, error);
+      appState.isOnline = false;
     }
     await this.offlineStore.put(key, content, isEncrypted);
     await this.contentCache.put(key, body, isEncrypted);
@@ -234,11 +241,12 @@ export class BackendStore {
         },
         body: body,
       });
-      console.log("rsp:", rsp);
       await this.contentCache.writeFile(fileName, body);
+      appState.isOnline = true;
       return;
     } catch (error) {
       console.error("Error writing file:", fileName, error);
+      appState.isOnline = false;
     }
 
     await this.offlineStore.writeFile(fileName, content);
@@ -259,6 +267,7 @@ export class BackendStore {
     let uri = "/api/store/readFile?name=" + encodeURIComponent(fileName);
     try {
       let rsp = await elarisFetch(uri);
+      appState.isOnline = true;
       if (rsp.status === 404) {
         console.warn(`File ${fileName} not found`);
         return null;
@@ -273,6 +282,7 @@ export class BackendStore {
       return res;
     } catch (e) {
       console.warn("readFile error:", e);
+      appState.isOnline = false;
     }
     return null;
   }
@@ -297,9 +307,11 @@ export class BackendStore {
       let rsp = await elarisFetch(uri);
       console.log("writeNoteMeta rsp:", rsp);
       // TODO: update metadata for this note
+      appState.isOnline = true;
       return;
     } catch (e) {
       console.error("writeNoteMeta error:", e);
+      appState.isOnline = false;
     }
 
     await this.offlineStore.writeNoteMeta(m);
@@ -322,9 +334,11 @@ export class BackendStore {
           break;
         }
       }
+      appState.isOnline = true;
       return;
     } catch (e) {
       console.error("deleteNote error:", e);
+      appState.isOnline = false;
     }
 
     await this.offlineStore.deleteNote(noteId);
@@ -347,9 +361,11 @@ export class BackendStore {
       note.createdAt = currTimestampMs();
       note.updatedAt = note.createdAt;
       this.notes.push(note);
+      appState.isOnline = true;
       return note;
     } catch (e) {
       console.error("createNote error:", e);
+      appState.isOnline = false;
     }
 
     let note = await this.offlineStore.createNote(noteId, name);
@@ -382,9 +398,6 @@ export class BackendStore {
     // not sure if should do this check or just go ahead and try
     // the actual operation?
     let isOnline = await isOnlineForSure();
-    if (!isOnline) {
-      return;
-    }
     await uploadOfflineStore(this.offlineStore);
     // delete offline store by re-creating it
     let offlineStoreStore = await AppendStore.create(
@@ -410,20 +423,23 @@ export class BackendStore {
   }
 }
 
+// the only definiton of online we care about is: can we reach our server and is it workding?
+// we do /ping request and expect "pong" response
 export async function isOnlineForSure() {
   let uri = "/ping";
   try {
     let rsp = await elarisFetch(uri);
     if (!rsp.ok) {
       console.error("isOnlineForSure failed:", rsp.status);
-      return false;
+      appState.isOnline = false;
     }
     let s = await rsp.text();
-    return s == "pong";
+    appState.isOnline = s == "pong";
   } catch (e) {
     console.error("isOnlineForSure error:", e);
-    return false;
+    appState.isOnline = false;
   }
+  return appState.isOnline;
 }
 
 /**
@@ -509,26 +525,32 @@ async function getLatestNotes() {
   console.log("getLatestNotes");
   let s = localStorage.getItem(kKeyLatestNotes);
   let curr = parseLatestNotes(s);
+  let cachedNotes = notesFromCompact(curr.NotesCompact);
+  try {
+    let rsp = await elarisFetch(
+      "/api/store/getNotes?lastChangeID=" + curr.LastChangeID,
+    );
+    // must check before rsp.ok because it's false for 304 (seems wrong)
+    if (rsp.status === 304) {
+      // no change
+      console.log("No change in latest notes, returning cached version");
+      return cachedNotes;
+    }
+    appState.isOnline = true;
+    if (!rsp.ok) {
+      console.warn("Failed to fetch latest notes:", rsp.status, rsp.statusText);
+      return cachedNotes;
+    }
+    curr = await rsp.json();
+    if (curr.Ver !== 1) {
+      console.warn("Unexpected version of latest notes:", curr.Ver);
+      return cachedNotes;
+    }
+  } catch (e) {
+    appState.isOnline = false;
+    return cachedNotes;
+  }
   let notes = notesFromCompact(curr.NotesCompact);
-  let rsp = await elarisFetch(
-    "/api/store/getNotes?lastChangeID=" + curr.LastChangeID,
-  );
-  // must check before rsp.ok because it's false for 304 (seems wrong)
-  if (rsp.status === 304) {
-    // no change
-    console.log("No change in latest notes, returning cached version");
-    return notes;
-  }
-  if (!rsp.ok) {
-    console.warn("Failed to fetch latest notes:", rsp.status, rsp.statusText);
-    return notes;
-  }
-  curr = await rsp.json();
-  if (curr.Ver !== 1) {
-    console.warn("Unexpected version of latest notes:", curr.Ver);
-    return notes;
-  }
-  notes = notesFromCompact(curr.NotesCompact);
   s = JSON.stringify(curr, null, 2);
   localStorage.setItem(kKeyLatestNotes, s);
   return notes;
@@ -556,19 +578,27 @@ async function cacheLatestNoteVersions(notes, cache) {
   let arg = {
     VerIDs: neededVerIds,
   };
-  let rsp = await elarisFetch("/api/store/getNotesMultiContent", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(arg),
-  });
+  let zipBlob;
+  try {
+    let rsp = await elarisFetch("/api/store/getNotesMultiContent", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(arg),
+    });
 
-  if (!rsp.ok) {
-    console.warn("Failed to fetch latest notes:", rsp.status, rsp.statusText);
+    if (!rsp.ok) {
+      console.warn("Failed to fetch latest notes:", rsp.status, rsp.statusText);
+      return;
+    }
+    zipBlob = await rsp.blob();
+    appState.isOnline = true;
+  } catch (e) {
+    console.error("Failed to fetch latest notes:", e);
+    appState.isOnline = false;
     return;
   }
-  let zipBlob = await rsp.blob();
   let libZip = await import("@zip.js/zip.js");
   let blobReader = new libZip.BlobReader(zipBlob);
   let zipReader = new libZip.ZipReader(blobReader);

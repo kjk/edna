@@ -43,7 +43,7 @@ class AppState {
   /** @type {import("./settings.svelte").Settings} */
   settings = $state(undefined); // user settings
 
-  isOffline = $state(!navigator.onLine);
+  isOnline = $state(true);
 
   // if true, next call to open a note will open in a new tab
   forceNewTab = false;
@@ -108,19 +108,6 @@ export function updateAppStateAfterNotesChange(allNotes) {
 }
 
 export const appState = new AppState();
-
-$effect.root(() => {
-  $effect(() => {
-    const goOnline = () => (appState.isOffline = false);
-    const goOffline = () => (appState.isOffline = true);
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
-    return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
-    };
-  });
-});
 
 export function getNotes() {
   return appState.allNotes;

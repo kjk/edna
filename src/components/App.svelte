@@ -79,6 +79,7 @@
   } from "../Menu.svelte";
   import { downloadBrowserStoreAsZip } from "../migrate-local-to-backend";
   import { isMoving } from "../mouse-track.svelte";
+  import { Note } from "../note";
   import {
     appendToNote,
     archiveNote,

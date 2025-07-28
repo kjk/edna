@@ -287,7 +287,7 @@
   </div>
   {#if settings.alwaysShowTopNav}
     <div class="grow"></div>
-    {#if appState.isOffline}
+    {#if !appState.isOnline}
       <div
         class="text-red-600 font-bold mr-2"
         title="Currently offline, no connection to the internet"
