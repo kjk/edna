@@ -1,9 +1,5 @@
 import { findNoteByName } from "./appstate.svelte";
 import { modalInfoState } from "./components/ModalInfo.svelte";
-import {
-  hideModalMessage,
-  showModalMessageHTML,
-} from "./components/ModalMessage.svelte";
 import { fromFileName, isValidFileName } from "./filenamify";
 import {
   createNoteWithUniqueName,
@@ -41,18 +37,14 @@ export async function importEdnaNotesFromZipFile() {
 
   console.warn("blob:", blob);
   let libZip = await import("@zip.js/zip.js");
-  let blobReader = new libZip.BlobReader(blob);
-  let zipReader = new libZip.ZipReader(blobReader);
+  let zipReader = new libZip.ZipReader(new libZip.BlobReader(blob));
   let entries = await zipReader.getEntries();
 
   async function readMetadata() {
     for (let e of entries) {
       let name = e.filename;
       if (name === "__metadata.edna.json") {
-        // TODO: read metadata
-        let textWriter = new libZip.TextWriter();
-        await e.getData(textWriter);
-        let content = await textWriter.getData();
+        let content = await e.getData(new libZip.TextWriter());
         return JSON.parse(content);
       }
     }
@@ -112,9 +104,7 @@ export async function importEdnaNotesFromZipFile() {
     let name = noteNameFromFileNameFS(fileName);
     let msg = `Importing <b>${name}</b>`;
     modalInfoState.addMessage(msg);
-    let writer = new libZip.TextWriter();
-    await e.getData(writer);
-    let content = await writer.getData();
+    let content = await e.getData(new libZip.TextWriter());
     let note = findNoteByName(name, true);
     if (note) {
       let existingContent = await loadNoteContent(name);
