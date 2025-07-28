@@ -882,6 +882,23 @@ func handleStoreCreateNote(w http.ResponseWriter, r *http.Request, userInfo *Use
 	sseNotify(r, userInfo, kStoreCreateNote+" "+meta)
 }
 
+func verIdExists(recs []*appendstore.Record, verId string) bool {
+	if !isValidVerId(verId) {
+		logf("verIdExists: invalid verId format: %s, expected noteId:verId", verId)
+		return false
+	}
+	for _, rec := range slices.Backward(recs) {
+		if rec.Meta != verId {
+			continue
+		}
+		if rec.Kind == kStorePut || rec.Kind == kStorePutEncrypted {
+			return true
+		}
+	}
+	return false
+
+}
+
 func noteExists(recs []*appendstore.Record, noteId string) bool {
 	if len(noteId) != kNoteIdLen {
 		logf("noteExists: invalid noteId length: %d, expected %d characters", len(noteId), kNoteIdLen)
@@ -951,11 +968,13 @@ func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 		http.Error(w, fmt.Sprintf("Invalid verId format: '%s', expected noteId:verId", key), http.StatusBadRequest)
 		return
 	}
+	recs := userInfo.Store.Records()
 	noteId := strings.Split(key, ":")[0]
-	if !noteExists(userInfo.Store.Records(), noteId) {
+	if !noteExists(recs, noteId) {
 		http.Error(w, fmt.Sprintf("Note with id '%s' does not exist", noteId), http.StatusNotFound)
 		return
 	}
+
 	isEncrypted := r.FormValue("isEncrypted")
 	if isEncrypted == "" {
 		http.Error(w, "Missing or invalid isEncrypted", http.StatusBadRequest)
@@ -964,6 +983,10 @@ func handleStorePut(w http.ResponseWriter, r *http.Request, userInfo *UserInfo) 
 	kind := kStorePut
 	if isEncrypted == "true" || isEncrypted == "1" {
 		kind = kStorePutEncrypted
+	}
+	if verIdExists(recs, key) {
+		http.Error(w, fmt.Sprintf("Version with id '%s' already exists", key), http.StatusConflict)
+		return
 	}
 	userInfo.Store.AppendRecord(kind, key, d)
 	serve200JSON(w, map[string]string{
