@@ -1,6 +1,7 @@
 import { appState, findNoteById, findNoteByName } from "./appstate.svelte";
-import { closeTabWithName } from "./globals";
+import { closeTabWithName, reloadIfCurrent } from "./globals";
 import { sessionId } from "./httputil";
+import { Note, parseNoteIdFromVerId } from "./note";
 import { storeReloadNotes } from "./store";
 import {
   kStoreCreateNote,
@@ -31,11 +32,14 @@ export function startServerSideEvents() {
     let parts = splitStringN(event.data, " ", 2);
     let kind = parts[0];
     let meta = len(parts) > 1 ? parts[1] : "";
+    let noteId = "";
+    /** @type {Note} */
+    let note;
     switch (kind) {
       case kStoreDeleteNote:
         // if a tab is open for this note, close it
-        let noteId = meta;
-        let note = findNoteById(noteId, true);
+        noteId = meta;
+        note = findNoteById(noteId, true);
         if (note) {
           let name = note.name;
           await closeTabWithName(name);
@@ -43,7 +47,19 @@ export function startServerSideEvents() {
         break;
       case kStorePut:
         console.warn(`SSE: ${kind}`);
-        // TODO: reload if current note is affected
+        noteId = parseNoteIdFromVerId(meta);
+        if (noteId) {
+          note = findNoteById(noteId, true);
+          if (note) {
+            // must update versions so that the reload get the latest
+            // alternatively, after storeReloadNotes() we could
+            // remove tabs for non-existing notes and reload current note
+            // if changed
+            await storeReloadNotes();
+            let name = note.name;
+            await reloadIfCurrent(name);
+          }
+        }
         break;
       case kStoreWriteFile:
         // TOOD: reload metadata?

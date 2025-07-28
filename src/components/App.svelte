@@ -283,6 +283,7 @@
     focusEditor: focusEditor,
     getPassword: getPassword,
     closeTabWithName: closeTabWithName,
+    reloadIfCurrent: reloadIfCurrent,
   };
   setGlobalFuncs(gf);
 
@@ -2032,6 +2033,21 @@
     // TODO: maybe switch to the most recently opened
     if (name === settings.currentTab || len(settings.tabs) == 0) {
       await openNote(kScratchNoteName);
+    }
+  }
+
+  /**
+   * @param {string} name
+   * @returns {Promise<void>}
+   */
+  async function reloadIfCurrent(name) {
+    let settings = getSettings();
+    let noteTabIdx = settings.tabs.indexOf(name);
+    if (noteTabIdx < 0) {
+      return;
+    }
+    if (name === settings.currentTab || len(settings.tabs) > 0) {
+      await openNote(name);
     }
   }
 

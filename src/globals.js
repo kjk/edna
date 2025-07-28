@@ -1,3 +1,6 @@
+import { updateAppStateAfterNotesChange } from "./appstate.svelte";
+import { formatDurationShort } from "./util";
+
 /** @typedef {{
   openSettings: () => void,
   openLanguageSelector: () => void,
@@ -15,11 +18,9 @@
   getPassword: (msg: string) => Promise<string>,
   updateAfterNoteStateChange: () => void,
   closeTabWithName: (name: string) => Promise<void>,
+  reloadIfCurrent: (name: string) => Promise<void>,
 }} GlobalFuncs
 */
-
-import { updateAppStateAfterNotesChange } from "./appstate.svelte";
-import { formatDurationShort } from "./util";
 
 let sessionStart = performance.now();
 /**
@@ -95,8 +96,18 @@ export function focusEditor() {
   globalFunctions.focusEditor();
 }
 
+/**
+ * @param {string} name
+ */
 export async function closeTabWithName(name) {
   await globalFunctions.closeTabWithName(name);
+}
+
+/**
+ * @param {string} name
+ */
+export async function reloadIfCurrent(name) {
+  await globalFunctions.reloadIfCurrent(name);
 }
 
 export function updateAfterNoteStateChange() {

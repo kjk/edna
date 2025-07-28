@@ -86,3 +86,14 @@ export function mkRandomNoteId() {
 export function mkRandomContentId(noteID) {
   return noteID + ":" + nanoid(kNoteCotentIdLen);
 }
+
+export function parseNoteIdFromVerId(verId) {
+  if (verId.length !== kNoteIdLen + kNoteCotentIdLen + 1) {
+    return null;
+  }
+  let idx = verId.indexOf(":");
+  if (idx != 4) {
+    return null;
+  }
+  return verId.substring(0, idx);
+}
