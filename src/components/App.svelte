@@ -258,9 +258,12 @@
     showingFindInNotes = true;
   }
 
-  function updateAfterNoteStateChange() {
+  /**
+   * @param {Note[]} allNotes
+   */
+  function updateAfterNoteStateChangeDispatch(allNotes) {
     tick().then(() => {
-      updateAppStateAfterNotesChange();
+      updateAppStateAfterNotesChange(allNotes);
       // re-assign tabs to redraw the state of the note in title
       settings.tabs = [...settings.tabs];
     });
@@ -278,7 +281,7 @@
     createScratchNote: createScratchNote,
     openBlockSelector: openBlockSelector,
     openFunctionSelector: openFunctionSelector,
-    updateAfterNoteStateChange: updateAfterNoteStateChange,
+    updateAfterNoteStateChange: updateAfterNoteStateChangeDispatch,
     smartRun: smartRun,
     focusEditor: focusEditor,
     getPassword: getPassword,

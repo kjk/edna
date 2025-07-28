@@ -60,22 +60,26 @@ class AppState {
  * @param {Note} note
  */
 export function removeNoteFromAppState(note) {
-  for (let i = 0; i < appState.allNotes.length; i++) {
-    if (appState.allNotes[i].id === note.id) {
-      appState.allNotes.splice(i, 1);
-      updateAppStateAfterNotesChange();
+  let allNotes = [...appState.allNotes];
+  for (let i = 0; i < allNotes.length; i++) {
+    if (allNotes[i].id === note.id) {
+      allNotes.splice(i, 1);
+      updateAppStateAfterNotesChange(allNotes);
       break;
     }
   }
 }
 
-// TODO: maybe convert to $effect() on appState.notes
-export function updateAppStateAfterNotesChange() {
+/**
+ * @param {Note[]} allNotes
+ */
+export function updateAppStateAfterNotesChange(allNotes) {
+  appState.allNotes = allNotes;
   appState.regularNotes = [];
   appState.archivedNotes = [];
   appState.starredNotes = [];
   appState.withShortcuts = [];
-  for (let note of appState.allNotes) {
+  for (let note of allNotes) {
     if (note.isArchived) {
       appState.archivedNotes.push(note);
     } else {
@@ -137,8 +141,6 @@ export function findNoteByName(name, quiet = false) {
     return null;
   }
   console.warn("findNoteByName: no note with name:", name);
-  let names = appState.allNotes.map((n) => n.name);
-  console.warn("all notes:", names);
   return null;
 }
 

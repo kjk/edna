@@ -134,11 +134,11 @@ export async function boot() {
   } else {
     store = await openLocalStore();
   }
-  appState.allNotes = await store.getAllNotes();
-  updateAfterNoteStateChange();
   await loadAppMetadata(); // pre-load
+  let allNotes = await store.getAllNotes();
+  updateAfterNoteStateChange(allNotes);
 
-  let createdNotes = await createDefaultNotes(appState.allNotes);
+  let createdNotes = await createDefaultNotes(allNotes);
   console.log("createdNotes:", createdNotes);
   let settings = getSettings();
   // console.log("settings:", settings);

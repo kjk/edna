@@ -488,9 +488,9 @@ export async function storeReloadNotes() {
     return;
   }
   console.warn("storeReloadNotes");
-  appState.allNotes = await store.getAllNotes(true);
-  console.warn(`storeReloadNotes: got all ${len(appState.allNotes)} notes`);
-  updateAfterNoteStateChange();
+  let allNotes = await store.getAllNotes(true);
+  console.warn(`storeReloadNotes: got all ${len(allNotes)} notes`);
+  updateAfterNoteStateChange(allNotes);
 }
 
 export async function storeInvalidateFile(fileName) {

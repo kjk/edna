@@ -173,8 +173,9 @@ export async function createNoteWithName(name, content = null) {
     note.versionIds.push(verId);
     console.log("created note", name);
   }
-  appState.allNotes.push(note);
-  updateAfterNoteStateChange();
+  let allNotes = [...appState.allNotes];
+  allNotes.push(note);
+  updateAfterNoteStateChange(allNotes);
   return note.id;
 }
 
@@ -340,8 +341,8 @@ export function getNotesCount() {
  */
 export async function reassignNoteShortcut(name, altShortcut) {
   console.log("reassignNoteShortcut:", name, altShortcut);
-  let notes = getNotes();
-  for (let note of notes) {
+  let allNotes = getNotes();
+  for (let note of allNotes) {
     if (note.name === name) {
       // same note: remove shortcut
       if (note.altShortcut === altShortcut) {
@@ -360,7 +361,7 @@ export async function reassignNoteShortcut(name, altShortcut) {
       await saveNoteMetadata(note);
     }
   }
-  updateAfterNoteStateChange();
+  updateAfterNoteStateChange(allNotes);
 }
 
 /**

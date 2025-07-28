@@ -1,4 +1,5 @@
-import { updateAppStateAfterNotesChange } from "./appstate.svelte";
+import { getNotes, updateAppStateAfterNotesChange } from "./appstate.svelte";
+import { Note } from "./note";
 import { formatDurationShort } from "./util";
 
 /** @typedef {{
@@ -16,7 +17,7 @@ import { formatDurationShort } from "./util";
   smartRun: () => void,
   focusEditor: () => void,
   getPassword: (msg: string) => Promise<string>,
-  updateAfterNoteStateChange: () => void,
+  updateAfterNoteStateChange: (notes: Note[]) => void,
   closeTabWithName: (name: string) => Promise<void>,
   reloadIfCurrent: (name: string) => Promise<void>,
 }} GlobalFuncs
@@ -110,14 +111,17 @@ export async function reloadIfCurrent(name) {
   await globalFunctions.reloadIfCurrent(name);
 }
 
-export function updateAfterNoteStateChange() {
+export function updateAfterNoteStateChange(allNotes = null) {
+  if (allNotes === null) {
+    allNotes = getNotes();
+  }
   if (!globalFunctions) {
     // is called from boot(), before App.Svelte has a chance
     // to register global functions
-    updateAppStateAfterNotesChange();
+    updateAppStateAfterNotesChange(allNotes);
     return;
   }
-  globalFunctions?.updateAfterNoteStateChange();
+  globalFunctions.updateAfterNoteStateChange(allNotes);
 }
 
 /**
