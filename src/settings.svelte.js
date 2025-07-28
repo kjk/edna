@@ -210,6 +210,10 @@ function updateWebsiteTheme() {
  * @returns {boolean}
  */
 function saveSettings(newSettings) {
+  if (!lastSettingsRaw) {
+    // prevent exeption due to HMR
+    return false;
+  }
   throwIf(!newSettings.currentTab);
   newSettings.tabSize = validateTabSize(newSettings.tabSize);
   let settingsRaw = $state.snapshot(newSettings.toJSON());

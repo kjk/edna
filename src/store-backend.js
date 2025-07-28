@@ -235,12 +235,12 @@ export class BackendStore {
         body: body,
       });
       console.log("rsp:", rsp);
-      let fkey = "__file:" + fileName;
-      await this.contentCache.put(fkey, body, false);
+      await this.contentCache.writeFile(fileName, body);
       return;
     } catch (error) {
       console.error("Error writing file:", fileName, error);
     }
+
     await this.offlineStore.writeFile(fileName, content);
   }
 

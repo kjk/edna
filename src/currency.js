@@ -1,7 +1,5 @@
 import * as math from "mathjs";
 
-console.log("math:", math);
-
 let currencyData = null;
 
 async function getCurrencyData() {
