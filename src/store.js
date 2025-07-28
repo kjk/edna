@@ -152,6 +152,9 @@ export async function storeDumpIndex() {
  * @returns {Promise<Uint8Array>}
  */
 async function decryptBlobInteractive(blob) {
+  if (blob.length === 0) {
+    return blob;
+  }
   let msg = "";
   while (true) {
     let pwdHash = await getPasswordHashMust(msg);
