@@ -856,7 +856,7 @@ async function writeMaybeEncryptedFS(dh, name, content) {
  * @returns {Promise<void>}
  */
 async function writeEncryptedFS(dh, pwdHash, fileName, s) {
-  let d = encryptStringAsBlob({ key: pwdHash, plaintext: s });
+  let d = await encryptStringAsBlob({ key: pwdHash, plaintext: s });
   let blob = blobFromUint8Array(d);
   await fsWriteBlob(dh, fileName, blob);
 }
