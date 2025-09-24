@@ -31,7 +31,7 @@ export const kProviderPerplexity = 7;
 export const kProviderMoonshotAI = 8;
 export const kProviderMistralAI = 9;
 
-const providersInfo = [
+export const providersInfo = [
   ["openai", "OpenAI"],
   ["anthropic", "Anthropic"],
   ["google", "Google"],
@@ -40,7 +40,7 @@ const providersInfo = [
   ["x-ai", "xAI"],
   ["deepseek", "DeepSeek"],
   ["perplexity", "Perplexity"],
-  ["moonshotai", "Moonshot AI"],
+  ["moonshotai", "Moonshot AI"], // kimi
   ["mistralai", "Mistral AI"],
 ];
 
@@ -157,8 +157,8 @@ export const kProviderQwen = 4;
 export const kProviderXAI = 5;
 export const kProviderDeepSeek = 6;
 export const kProviderPerplexity = 7;
-//export const kProviderCohere = 8;
-//export const kProviderMistralAI = 9;
+export const kProviderMoonshotAI = 8;
+export const kProviderMistralAI = 9;
 
 export const providersInfo = [
   ["openai", "OpenAI"],
@@ -169,8 +169,8 @@ export const providersInfo = [
   ["x-ai", "xAI"],
   ["deepseek", "DeepSeek"],
   ["perplexity", "Perplexity"],
-  //  ["cohere", "Cohere"],
-  //  ["mistralai", "Mistral AI"],
+  ["moonshotai", "Moonshot AI"], // kimi
+  ["mistralai", "Mistral AI"],
 ];
 
 export const kModelIDIdx = 0;

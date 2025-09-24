@@ -129,11 +129,59 @@ export function findModelByID(modelID) {
  */
 function validateAiModelID(modelID) {
   let model = findModelByID(modelID);
-  if (model === null) {
-    console.warn(`validateAiModelID: model not found for id: ${modelID}`);
-    return "chatgpt-4o-latest";
+  if (model) {
+    return modelID;
   }
-  return modelID;
+  console.warn(`validateAiModelID: model not found for id: ${modelID}`);
+  let freeModelID = getFreeModelID();
+  return freeModelID;
+}
+
+const freeModelsToTry = [
+  "grok-4-fast:free",
+  "kimi-k2:free",
+  "deepseek-chat-v3.1:free",
+  "gpt-oss-120b:free",
+  "gpt-oss-20b:free",
+  "qwen3-coder:free",
+  "gemma-3n-e2b-it:free",
+  "mistral-small-3.2-24b-instruct:free",
+  "kimi-dev-72b:free",
+  "deepseek-r1-0528-qwen3-8b:free",
+  "deepseek-r1-0528:free",
+  "devstral-small-2505:free",
+  "gemma-3n-e4b-it:free",
+  "llama-3.3-8b-instruct:free",
+  "qwen3-4b:free",
+  "qwen3-30b-a3b:free",
+  "qwen3-8b:free",
+  "qwen3-14b:free",
+  "qwen3-235b-a22b:free",
+  "kimi-vl-a3b-thinking:free",
+  "llama-4-maverick:free",
+  "llama-4-scout:free",
+  "qwen2.5-vl-32b-instruct:free",
+  "deepseek-chat-v3-0324:free",
+  "mistral-small-3.1-24b-instruct:free",
+  "gemma-3-4b-it:free",
+  "gemma-3-12b-it:free",
+  "gemma-3-27b-it:free",
+  "qwq-32b:free",
+  "qwen2.5-vl-72b-instruct:free",
+  "mistral-small-24b-instruct-2501:free",
+  "deepseek-r1-distill-llama-70b:free",
+  "deepseek-r1:free",
+  "gemini-2.0-flash-exp:free",
+  "llama-3.3-70b-instruct:free",
+];
+
+function getFreeModelID() {
+  for (let modelID of freeModelsToTry) {
+    let model = findModelByID(modelID);
+    if (model) {
+      return modelID;
+    }
+  }
 }
 
 /**
@@ -160,6 +208,11 @@ export function getSettings() {
   if (appState.settings) {
     // console.log("getSettings: already loaded");
     // logSettings(appState.settings);
+    let m = appState.settings.aiModelID;
+    let nm = validateAiModelID(m);
+    if (m !== nm) {
+      appState.settings.aiModelID = nm;
+    }
     return appState.settings;
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
@@ -167,6 +220,11 @@ export function getSettings() {
   let settingsRaw = d === null ? {} : JSON.parse(d);
   let settings = new Settings(settingsRaw);
   settings.tabSize = validateTabSize(settings.tabSize || 2);
+  let m = settings.aiModelID;
+  if (!findModelByID(m)) {
+    console.warn(`getSettings: model not found for id: ${m}, fixing`);
+    settings.aiModelID = getFreeModelID();
+  }
   settings.aiModelID = validateAiModelID(settings.aiModelID);
   settings.fontSize = validateFontSize(settings.fontSize);
   settings.fontFamily = settings.fontFamily || kDefaultFontFamily;

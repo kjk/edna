@@ -45,8 +45,10 @@
   function buildModels(items, filter, ignore) {
     function modelNameFn(model) {
       let name = model[kModelNameIdx];
-      let provider = providersInfo[model[kModelProviderIdx]];
-      return (provider + " " + name).toLowerCase();
+      let providerIdx = model[kModelProviderIdx];
+      let providerInfo = providersInfo[providerIdx];
+      let providerName = providerInfo[1];
+      return (providerName + " " + name).toLowerCase();
     }
 
     let res = findMatchingItemsFn(items, filter, modelNameFn);

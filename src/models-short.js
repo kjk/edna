@@ -7,8 +7,8 @@ export const kProviderQwen = 4;
 export const kProviderXAI = 5;
 export const kProviderDeepSeek = 6;
 export const kProviderPerplexity = 7;
-//export const kProviderCohere = 8;
-//export const kProviderMistralAI = 9;
+export const kProviderMoonshotAI = 8;
+export const kProviderMistralAI = 9;
 
 export const providersInfo = [
   ["openai", "OpenAI"],
@@ -19,8 +19,8 @@ export const providersInfo = [
   ["x-ai", "xAI"],
   ["deepseek", "DeepSeek"],
   ["perplexity", "Perplexity"],
-  //  ["cohere", "Cohere"],
-  //  ["mistralai", "Mistral AI"],
+  ["moonshotai", "Moonshot AI"], // kimi
+  ["mistralai", "Mistral AI"],
 ];
 
 export const kModelIDIdx = 0;
@@ -30,6 +30,48 @@ export const kModelPricePromptIdx = 3;
 export const kModelPriceCompletionIdx = 4;
 
 export const modelsShort = [
+  [
+    "qwen3-vl-235b-a22b-thinking",
+    4,
+    "Qwen3 VL 235B A22B Thinking",
+    3e-7,
+    0.000003
+  ],
+  [
+    "qwen3-vl-235b-a22b-instruct",
+    4,
+    "Qwen3 VL 235B A22B Instruct",
+    3e-7,
+    0.0000015
+  ],
+  [
+    "qwen3-max",
+    4,
+    "Qwen3 Max",
+    0.0000012,
+    0.000006
+  ],
+  [
+    "qwen3-coder-plus",
+    4,
+    "Qwen3 Coder Plus",
+    0.000001,
+    0.000005
+  ],
+  [
+    "gpt-5-codex",
+    0,
+    "GPT-5 Codex",
+    0.00000125,
+    0.00001
+  ],
+  [
+    "deepseek-v3.1-terminus",
+    6,
+    "DeepSeek V3.1 Terminus",
+    2.7e-7,
+    0.000001
+  ],
   [
     "grok-4-fast:free",
     5,
@@ -43,13 +85,6 @@ export const modelsShort = [
     "Qwen3 Coder Flash",
     3e-7,
     0.0000015
-  ],
-  [
-    "qwen3-coder-plus",
-    4,
-    "Qwen3 Coder Plus",
-    0.000001,
-    0.000005
   ],
   [
     "qwen3-next-80b-a3b-thinking",
@@ -80,13 +115,6 @@ export const modelsShort = [
     0.000004
   ],
   [
-    "qwen3-max",
-    4,
-    "Qwen3 Max",
-    0.0000012,
-    0.000006
-  ],
-  [
     "kimi-k2-0905",
     8,
     "Kimi K2 0905",
@@ -110,7 +138,7 @@ export const modelsShort = [
   [
     "gemini-2.5-flash-image-preview",
     2,
-    "Gemini 2.5 Flash Image Preview",
+    "Gemini 2.5 Flash Image (Nano Banana)",
     3e-7,
     0.0000025
   ],
@@ -160,8 +188,8 @@ export const modelsShort = [
     "gpt-5",
     0,
     "GPT-5",
-    6.25e-7,
-    0.000005
+    0.00000125,
+    0.00001
   ],
   [
     "gpt-5-mini",
@@ -265,8 +293,8 @@ export const modelsShort = [
     "qwen3-235b-a22b-2507",
     4,
     "Qwen3 235B A22B Instruct 2507",
-    1e-7,
-    1e-7
+    9e-8,
+    6e-7
   ],
   [
     "kimi-k2:free",
@@ -566,8 +594,8 @@ export const modelsShort = [
     "qwen3-14b",
     4,
     "Qwen3 14B",
-    6e-8,
-    2.4e-7
+    4e-8,
+    1.4e-7
   ],
   [
     "qwen3-32b",
@@ -815,13 +843,6 @@ export const modelsShort = [
     0.000008
   ],
   [
-    "qwq-32b:free",
-    4,
-    "QwQ 32B (free)",
-    0,
-    0
-  ],
-  [
     "qwq-32b",
     4,
     "QwQ 32B",
@@ -1056,15 +1077,8 @@ export const modelsShort = [
     "llama-3.3-70b-instruct",
     3,
     "Llama 3.3 70B Instruct",
-    1.2e-8,
-    3.6e-8
-  ],
-  [
-    "qwq-32b-preview",
-    4,
-    "QwQ 32B Preview",
-    2e-7,
-    2e-7
+    4e-8,
+    1.2e-7
   ],
   [
     "gpt-4o-2024-11-20",
@@ -1172,6 +1186,13 @@ export const modelsShort = [
     2e-8
   ],
   [
+    "llama-3.2-1b-instruct",
+    3,
+    "Llama 3.2 1B Instruct",
+    5e-9,
+    1e-8
+  ],
+  [
     "llama-3.2-90b-vision-instruct",
     3,
     "Llama 3.2 90B Vision Instruct",
@@ -1184,13 +1205,6 @@ export const modelsShort = [
     "Llama 3.2 11B Vision Instruct",
     4.9e-8,
     4.9e-8
-  ],
-  [
-    "llama-3.2-1b-instruct",
-    3,
-    "Llama 3.2 1B Instruct",
-    5e-9,
-    1e-8
   ],
   [
     "qwen-2.5-72b-instruct:free",
@@ -1207,16 +1221,16 @@ export const modelsShort = [
     2.6e-7
   ],
   [
-    "o1-mini-2024-09-12",
+    "o1-mini",
     0,
-    "o1-mini (2024-09-12)",
+    "o1-mini",
     0.0000011,
     0.0000044
   ],
   [
-    "o1-mini",
+    "o1-mini-2024-09-12",
     0,
-    "o1-mini",
+    "o1-mini (2024-09-12)",
     0.0000011,
     0.0000044
   ],
@@ -1256,13 +1270,6 @@ export const modelsShort = [
     0.000002
   ],
   [
-    "llama-3.1-70b-instruct",
-    3,
-    "Llama 3.1 70B Instruct",
-    1e-7,
-    2.8e-7
-  ],
-  [
     "llama-3.1-8b-instruct",
     3,
     "Llama 3.1 8B Instruct",
@@ -1270,18 +1277,18 @@ export const modelsShort = [
     3e-8
   ],
   [
-    "llama-3.1-405b-instruct:free",
-    3,
-    "Llama 3.1 405B Instruct (free)",
-    0,
-    0
-  ],
-  [
     "llama-3.1-405b-instruct",
     3,
     "Llama 3.1 405B Instruct",
     8e-7,
     8e-7
+  ],
+  [
+    "llama-3.1-70b-instruct",
+    3,
+    "Llama 3.1 70B Instruct",
+    1e-7,
+    2.8e-7
   ],
   [
     "mistral-nemo:free",
@@ -1298,16 +1305,16 @@ export const modelsShort = [
     4e-8
   ],
   [
-    "gpt-4o-mini-2024-07-18",
+    "gpt-4o-mini",
     0,
-    "GPT-4o-mini (2024-07-18)",
+    "GPT-4o-mini",
     1.5e-7,
     6e-7
   ],
   [
-    "gpt-4o-mini",
+    "gpt-4o-mini-2024-07-18",
     0,
-    "GPT-4o-mini",
+    "GPT-4o-mini (2024-07-18)",
     1.5e-7,
     6e-7
   ],
@@ -1368,13 +1375,6 @@ export const modelsShort = [
     3e-7
   ],
   [
-    "llama-guard-2-8b",
-    3,
-    "LlamaGuard 2 8B",
-    2e-7,
-    2e-7
-  ],
-  [
     "gpt-4o",
     0,
     "GPT-4o",
@@ -1387,6 +1387,13 @@ export const modelsShort = [
     "GPT-4o (extended)",
     0.000006,
     0.000018
+  ],
+  [
+    "llama-guard-2-8b",
+    3,
+    "LlamaGuard 2 8B",
+    2e-7,
+    2e-7
   ],
   [
     "gpt-4o-2024-05-13",
@@ -1417,18 +1424,18 @@ export const modelsShort = [
     9e-7
   ],
   [
-    "gpt-4-turbo",
-    0,
-    "GPT-4 Turbo",
-    0.00001,
-    0.00003
-  ],
-  [
     "gemini-pro-1.5",
     2,
     "Gemini 1.5 Pro",
     0.00000125,
     0.000005
+  ],
+  [
+    "gpt-4-turbo",
+    0,
+    "GPT-4 Turbo",
+    0.00001,
+    0.00003
   ],
   [
     "claude-3-haiku",
@@ -1466,18 +1473,18 @@ export const modelsShort = [
     0.00003
   ],
   [
-    "mistral-tiny",
-    9,
-    "Mistral Tiny",
-    2.5e-7,
-    2.5e-7
-  ],
-  [
     "mistral-small",
     9,
     "Mistral Small",
     2e-7,
     6e-7
+  ],
+  [
+    "mistral-tiny",
+    9,
+    "Mistral Tiny",
+    2.5e-7,
+    2.5e-7
   ],
   [
     "mixtral-8x7b-instruct",
@@ -1494,18 +1501,18 @@ export const modelsShort = [
     0.00003
   ],
   [
-    "mistral-7b-instruct-v0.1",
-    9,
-    "Mistral 7B Instruct v0.1",
-    1.1e-7,
-    1.9e-7
-  ],
-  [
     "gpt-3.5-turbo-instruct",
     0,
     "GPT-3.5 Turbo Instruct",
     0.0000015,
     0.000002
+  ],
+  [
+    "mistral-7b-instruct-v0.1",
+    9,
+    "Mistral 7B Instruct v0.1",
+    1.1e-7,
+    1.9e-7
   ],
   [
     "gpt-3.5-turbo-16k",
@@ -1515,18 +1522,18 @@ export const modelsShort = [
     0.000004
   ],
   [
-    "gpt-4",
-    0,
-    "GPT-4",
-    0.00003,
-    0.00006
-  ],
-  [
     "gpt-3.5-turbo",
     0,
     "GPT-3.5 Turbo",
     5e-7,
     0.0000015
+  ],
+  [
+    "gpt-4",
+    0,
+    "GPT-4",
+    0.00003,
+    0.00006
   ],
   [
     "gpt-4-0314",
