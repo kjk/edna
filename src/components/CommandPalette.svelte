@@ -148,7 +148,11 @@
         {@html hili}
       </div>
       <div class="grow"></div>
-      <div class="mr-2 kbd">{item.shortcut}</div>
+      {#if item.shortcut}
+        <div class="mr-2 kbd">{item.shortcut}</div>
+      {:else}
+        <div class="mr-2"></div>
+      {/if}
     {/snippet}
   </ListBox>
 </form>
