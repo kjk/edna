@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "target": "esnext",
     "module": "esnext",
     "isolatedModules": true,
@@ -22,13 +22,15 @@
     "noUncheckedIndexedAccess": true,
 
     "paths": {
-      "@/*": ["./*"],
+      "@/*": ["./*"]
     }
   },
-  // "include": ["./src", "./src/components/*.svelte"],
-  "include": ["./src/**/*.d.ts", "./src/**/*.js", "./src/**/*.svelte"],
+  "include": [
+    "./src/**/*.d.ts",
+    "./src/**/*.ts",
+    "./src/**/*.js",
+    "./src/**/*.svelte"
+  ],
 
-  "references": [
-    { "path": "./tsconfig.node.json" }
-  ]
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -9,7 +9,6 @@
   "type": "module",
   "keywords": [],
   "scripts": {
-    "preview": "vite preview",
     "build_grammar": "lezer-generator src/editor/lang-heynote/heynote.grammar -o src/editor/lang-heynote/parser.js",
     "dev": "vite src",
     "build": "vite build src",
