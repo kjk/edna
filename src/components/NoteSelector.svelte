@@ -282,7 +282,7 @@
         return;
       }
       if (ev.ctrlKey && canCreate) {
-        createNote(sanitizedFilter);
+        createNote(name);
         return;
       }
       if (selectedNote) {
@@ -614,7 +614,7 @@
       <button
         onclick={() => createNote(sanitizedFilter)}
         class="truncate button-outline cursor-pointer max-w-[80%]"
-        >Create Note <b>{filter}</b></button
+        >Create Note <b>{sanitizedFilter}</b></button
       >
     {/if}
   </div>
