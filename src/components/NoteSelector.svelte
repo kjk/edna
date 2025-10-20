@@ -292,7 +292,7 @@
         return;
       }
       if (ev.ctrlKey && canCreate) {
-        emitCreateNote(sanitizedFilter);
+        emitCreateNote(name);
         return;
       }
       if (selectedNote) {
@@ -607,8 +607,10 @@
 
   <div class="flex justify-center mt-2">
     {#if canCreate}
-      <button class="truncate button-outline cursor-pointer max-w-[80%]"
-        >Create Note <b>{filter}</b></button
+      <button
+        onclick={() => emitCreateNote(sanitizedFilter)}
+        class="truncate button-outline cursor-pointer max-w-[80%]"
+        >Create Note <b>{sanitizedFilter}</b></button
       >
     {/if}
   </div>
