@@ -247,9 +247,23 @@
     const requestBody = {
       model: modelID,
       messages: [{ role: "user", content: prompt }],
-      max_tokens: maxTokens,
       stream: true,
     };
+
+    // openai api uses max_completion_tokens, others max_tokens
+    // https://platform.openai.com/docs/api-reference/chat/create#chat_create-max_completion_tokens
+    if (baseURL.includes("openai")) {
+      requestBody.max_completion_tokens = maxTokens;
+      // some openai models need "-latest" for openai api
+      // vs. OpenRouter api
+      const modelsLatest = ["gpt-5.1-chat", "gpt-5.0-chat"];
+      if (modelsLatest.includes(modelID)) {
+        modelID += "-latest";
+        requestBody.model = modelID;
+      }
+    } else {
+      requestBody.max_tokens = maxTokens;
+    }
 
     const response = await fetch(baseURL, {
       method: "POST",
@@ -468,7 +482,7 @@
 <div
   tabindex="-1"
   use:trapfocus
-  class="selector z-20 absolute center-x-with-translate top-[1rem] flex flex-col max-h-[78vh] w-[85vw] p-2"
+  class="selector z-20 absolute center-x-with-translate top-4 flex flex-col max-h-[78vh] w-[85vw] p-2"
 >
   <div class="flex items-center">
     <div class="p-1 font-bold text-lg">Ask AI</div>
@@ -532,7 +546,7 @@
         <input
           placeholder="Enter OpenAI API key"
           bind:value={settings.openAIKey}
-          class="px-1 py-[1px]"
+          class="px-1 py-px"
         />
       </div>
     {/if}
@@ -559,7 +573,7 @@
         <input
           placeholder="Enter xAI API key"
           bind:value={settings.xAIKey}
-          class="px-1 py-[1px]"
+          class="px-1 py-px"
         />
       </div>
     {/if}
@@ -601,7 +615,7 @@
       <input
         bind:value={settings.openRouterKey}
         placeholder="Enter OpenRouter API key"
-        class="px-1 py-[1px]"
+        class="px-1 py-px"
       />
     </div>
   {/if}
@@ -610,7 +624,7 @@
     bind:value={questionText}
     bind:this={textAreaRef}
     {onkeydown}
-    class="mt-1 w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
+    class="mt-1 w-full min-h-40 max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
   ></textarea>
   {#if len(responseText) > 0}
     {#if outputMarkdownToHTML}
@@ -631,7 +645,7 @@
   {/if}
   {#if err}
     <div
-      class="flex mt-2 text-red-600 px-2 py-[2px] whitespace-pre-line overflow-auto"
+      class="flex mt-2 text-red-600 px-2 py-0.5 whitespace-pre-line overflow-auto"
     >
       {err}
     </div>
