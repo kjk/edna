@@ -21,7 +21,7 @@
   /** @type {{
     close: () => void,
     startText: string,
-    insertResponse: (string) => void,
+    insertResponse: (s: string) => void,
 }}*/
   let { close, startText, insertResponse } = $props();
 
@@ -34,7 +34,10 @@
 
   /**
    * @param {number} apiProvider
-   * @returns {{maybeValidApiKey, apiProviderToUse}}
+   * @param {string} openAIKey
+   * @param {string} xAIKey
+   * @param {string} openRouterKey
+   * @returns {{maybeValidApiKey: string, apiProviderToUse: number}}
    */
   function pickApiKeyForProvider(
     apiProvider,
@@ -225,6 +228,11 @@
     close();
   }
 
+  /**
+   * @param {string} prompt
+   * @param {string} apiKey
+   * @param {string} baseURL
+   */
   async function streamChatGPTResponse(prompt, apiKey, baseURL) {
     // console.warn("streamChatGPTResponse");
 
@@ -242,9 +250,23 @@
     const requestBody = {
       model: modelID,
       messages: [{ role: "user", content: prompt }],
-      max_tokens: maxTokens,
       stream: true,
     };
+
+    // openai api uses max_completion_tokens, others max_tokens
+    // https://platform.openai.com/docs/api-reference/chat/create#chat_create-max_completion_tokens
+    if (baseURL.includes("openai")) {
+      requestBody.max_completion_tokens = maxTokens;
+      // some openai models need "-latest" for openai api
+      // vs. OpenRouter api
+      const modelsLatest = ["gpt-5.1-chat", "gpt-5.0-chat"];
+      if (modelsLatest.includes(modelID)) {
+        modelID += "-latest";
+        requestBody.model = modelID;
+      }
+    } else {
+      requestBody.max_tokens = maxTokens;
+    }
 
     const response = await fetch(baseURL, {
       method: "POST",
