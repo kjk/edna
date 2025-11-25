@@ -1,6 +1,17 @@
 import fs from "node:fs";
 import { humanPrice } from "./util";
 
+/**
+ * @typedef {Object} Model
+ * @property {string} id - The model ID
+ * @property {string} name - The model name
+ * @property {number} price_prompt - Price for prompt
+ * @property {number} price_completion - Price for completion
+ */
+
+/**
+ * @param {Model[]} models
+ */
 function printSummary(models) {
   // Count frequency of each provider
   const providerCount = {};
@@ -66,6 +77,9 @@ async function downloadModelsJSON(force = false) {
   }
 }
 
+/**
+ * @returns {Model[]}
+ */
 function parseModelsJSON() {
   let s = fs.readFileSync(modelsFilePath, "utf8");
   let json = JSON.parse(s);
@@ -79,6 +93,7 @@ function parseModelsJSON() {
       console.log(`Skipping model ${m.id} from provider ${provider}`);
       continue;
     }
+
     let o = {
       id: m.id,
       // slug: m.slug,
@@ -91,9 +106,13 @@ function parseModelsJSON() {
       `id: ${m.id}, name: ${m.name} ${humanPrice(m.pricing.prompt)} / ${humanPrice(m.pricing.completion)}`,
     );
   }
+  res.sort((a, b) => a.name.localeCompare(b.name));
   return res;
 }
 
+/**
+ * @param {string} id
+ */
 function findProviderID(id) {
   for (let i = 0; i < providersInfo.length; i++) {
     if (id.startsWith(providersInfo[i][0])) {
@@ -129,6 +148,9 @@ function shortenModelName(name) {
   return parts[1];
 }
 
+/**
+ * @param {Model[]} models
+ */
 function genShort(models) {
   // convert to flat array
   let a = [];
