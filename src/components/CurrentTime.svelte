@@ -5,8 +5,11 @@
   } } */
   let { class: className = "", formatTime = formatTimeMyStyle } = $props();
 
-  let formattedTime = $state(formatTime(new Date()));
+  let formattedTime = $state("");
 
+  /**
+   * @param {Date} dt
+   */
   function formatTimeMyStyle(dt) {
     return dt.toLocaleString("en-US", {
       weekday: "short",
@@ -22,6 +25,7 @@
 
   $effect(() => {
     const now = new Date();
+    formattedTime = formatTime(now);
     const msUntilNextMinute =
       (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 

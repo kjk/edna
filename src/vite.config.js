@@ -72,6 +72,7 @@ export default defineConfig({
         return [];
       },
     },
+    sourcemap: true,
     minify: "terser",
     terserOptions: {
       mangle: {
@@ -88,7 +89,7 @@ export default defineConfig({
         // Preserve function names in the output
         minifyInternalExports: false,
         manualChunks: manualChunksFn,
-        sourcemap: true,
+        // sourcemap: true,
       },
     },
   },

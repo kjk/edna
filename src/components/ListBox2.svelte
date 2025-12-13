@@ -5,9 +5,9 @@
   import { OverlayScrollbars } from "overlayscrollbars";
   import { getOverlayScrollbarOptions } from "../settings.svelte";
 
-  /** @type {{ 
+  /** @type {{
     items: any[],
-    onclick: (any) => void,
+    onclick: (n: number) => void,
     renderItem: any,
     selectionChanged?: (any, number) => void,
     initialSelection?: number,
@@ -26,11 +26,12 @@
 
   let selectedIdx = $state(-1);
 
-  let n = len(items);
+  let n = 0;
   let refs = $state(new Array(n));
   let prevItemsLen = n;
 
   onMount(() => {
+    n = len(items);
     let timerId = setTimeout(() => {
       if (initialSelection > n - 1) {
         initialSelection = n - 1;

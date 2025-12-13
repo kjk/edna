@@ -1016,6 +1016,7 @@
   const kCmdSearch = nmid();
   const kCmdSearchInNotes = nmid();
   const kCmdAskAI = nmid();
+  const kCmdTestErrorTracking = nmid();
 
   function buildMenuDef() {
     // let starAction = "Star";
@@ -1165,6 +1166,7 @@
 
   /** @type {MenuItemDef[]} */
   const commandPaletteAdditions = [
+    ["Test error tracking", kCmdTestErrorTracking],
     ["Create New Scratch Note", kCmdCreateScratchNote],
     // ["Create New Note", kCmdCreateNewNote],
     ["Open recent note", kCmdOpenQuickAccess],
@@ -1556,8 +1558,11 @@
       openFindPanel();
     } else if (cmdId === kCmdFindInNotes || cmdId == kCmdSearchInNotes) {
       openFindInNotes();
+    } else if (cmdId === kCmdTestErrorTracking) {
+      console.error("test console error");
+      throw new Error("test error from menu");
     } else {
-      console.log("unknown menu cmd id");
+      console.error("unknown menu cmd id");
     }
   }
 

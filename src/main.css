@@ -71,8 +71,8 @@ html.dark body {
   transform: translate(-50%);
 }
 
+/* .no-border-outline:selected, */
 .no-border-outlineactive,
-.no-border-outline:selected,
 .no-border-outline:focus,
 .no-border-outline:focus-visible {
   border: none;

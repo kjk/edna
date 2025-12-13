@@ -30,11 +30,12 @@
 
   let selectedIdx = $state(-1);
 
-  let n = len(items);
+  let n = 0;
   let refs = $state(new Array(n));
   let prevItemsLen = n;
 
   onMount(() => {
+    n = len(items);
     let timerId = setTimeout(() => {
       if (initialSelection > n - 1) {
         initialSelection = n - 1;

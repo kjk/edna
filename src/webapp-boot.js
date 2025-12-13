@@ -157,3 +157,7 @@ if (isDev) {
     window.location.reload();
   };
 }
+// @ts-ignore
+window.testError = function () {
+  throw new Error("test error");
+};
