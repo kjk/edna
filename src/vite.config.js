@@ -175,6 +175,7 @@ export default defineConfig({
         return [];
       },
     },
+    sourcemap: true,
     minify: "terser",
     terserOptions: {
       mangle: {
