@@ -1,6 +1,6 @@
 {
   "name": "elaris",
-  "version": "1.38",
+  "version": "0.1",
   "main": "src/main.js",
   "description": "A scratch pad and note taking app for devs",
   "author": "Krzysztof Kowalczyk (https://blog.kowalczyk.info) based on Jonatan Heyman (https://heyman.info)",
@@ -33,6 +33,9 @@
     "tailwindcss": "^4.1.17",
     "vite": "^7.2.4",
     "vite-plugin-pwa": "^1.1.0"
+  },
+  "overrides": {
+    "vite": "^8.0.0-beta.2"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",
