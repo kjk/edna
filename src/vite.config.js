@@ -1,9 +1,61 @@
 import * as child from "child_process";
-
-import { defineConfig } from "vite";
 import path from "path";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
+
+function manualChunksFn(id) {
+  const prettierModules = [
+    "prettier",
+    "prettier/standalone",
+    "prettier/plugins/estree.mjs",
+    "prettier/plugins/babel.mjs",
+    "prettier/plugins/postcss.mjs",
+    "prettier/plugins/html.mjs",
+    "prettier/plugins/markdown.mjs",
+    "prettier/plugins/typescript.mjs",
+    "prettier/plugins/yaml.mjs",
+  ];
+
+  const langlegacyModules = [
+    "@codemirror/legacy-modes/mode/clojure",
+    "@codemirror/legacy-modes/mode/diff",
+    "@codemirror/legacy-modes/mode/erlang",
+    "@codemirror/legacy-modes/mode/go",
+    "@codemirror/legacy-modes/mode/groovy",
+    "@codemirror/legacy-modes/mode/clike",
+    "@codemirror/legacy-modes/mode/powershell",
+    "@codemirror/legacy-modes/mode/ruby",
+    "@codemirror/legacy-modes/mode/shell",
+    "@codemirror/legacy-modes/mode/swift",
+    "@codemirror/legacy-modes/mode/toml",
+    "@codemirror/legacy-modes/mode/yaml",
+    // "@codemirror/legacy-modes/mode/lua",
+    // "@codemirror/legacy-modes/mode/octave",
+  ];
+
+  if (prettierModules.some((mod) => id.includes(mod))) {
+    return "prettier";
+  }
+  if (id.includes("@codemirror/lang-javascript")) {
+    return "langjavascript";
+  }
+  if (id.includes("@codemirror/lang-cpp")) {
+    return "langcpp";
+  }
+  if (id.includes("@codemirror/lang-php")) {
+    return "langphp";
+  }
+  if (id.includes("@codemirror/lang-rust")) {
+    return "langrust";
+  }
+  if (langlegacyModules.some((mod) => id.includes(mod))) {
+    return "langlegacy";
+  }
+  if (id.includes("@zip.js/zip.js")) {
+    return "zipjs";
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -31,44 +83,12 @@ export default defineConfig({
         keep_classnames: true,
       },
     },
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         // Preserve function names in the output
         minifyInternalExports: false,
-        manualChunks: {
-          prettier: [
-            "prettier",
-            "prettier/standalone",
-            "prettier/plugins/estree.mjs",
-            "prettier/plugins/babel.mjs",
-            "prettier/plugins/postcss.mjs",
-            "prettier/plugins/html.mjs",
-            "prettier/plugins/markdown.mjs",
-            "prettier/plugins/typescript.mjs",
-            "prettier/plugins/yaml.mjs",
-          ],
-          langjavascript: ["@codemirror/lang-javascript"],
-          langcpp: ["@codemirror/lang-cpp"],
-          langphp: ["@codemirror/lang-php"],
-          langrust: ["@codemirror/lang-rust"],
-          langlegacy: [
-            "@codemirror/legacy-modes/mode/clojure",
-            "@codemirror/legacy-modes/mode/diff",
-            "@codemirror/legacy-modes/mode/erlang",
-            "@codemirror/legacy-modes/mode/go",
-            "@codemirror/legacy-modes/mode/groovy",
-            "@codemirror/legacy-modes/mode/clike",
-            "@codemirror/legacy-modes/mode/powershell",
-            "@codemirror/legacy-modes/mode/ruby",
-            "@codemirror/legacy-modes/mode/shell",
-            "@codemirror/legacy-modes/mode/swift",
-            "@codemirror/legacy-modes/mode/toml",
-            "@codemirror/legacy-modes/mode/yaml",
-            // "@codemirror/legacy-modes/mode/lua",
-            // "@codemirror/legacy-modes/mode/octave",
-          ],
-          zipjs: ["@zip.js/zip.js"],
-        },
+        manualChunks: manualChunksFn,
+        sourcemap: true,
       },
     },
   },
