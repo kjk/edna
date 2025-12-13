@@ -2,6 +2,7 @@ import "./main.css";
 import "./markdown-anti-tailwind.css";
 import "highlight.js/styles/github.css";
 import { mount, unmount } from "svelte";
+import posthog from "posthog-js";
 import App from "./components/App.svelte";
 import AskFSPermissions from "./components/AskFSPermissions.svelte";
 import { hasHandlePermission } from "./fileutil";
@@ -27,6 +28,11 @@ let appSvelte;
 
 export async function boot() {
   console.log("booting");
+
+  posthog.init("phc_8aJPkRJ48D27YvIX4irWubORzvFA28CoI8Y2Es9JLNw", {
+    api_host: "https://us.i.posthog.com",
+    person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+  });
 
   // await testFuncs();
 

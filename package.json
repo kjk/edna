@@ -68,6 +68,7 @@
     "idb": "^8.0.3",
     "kiss-crypto": "^0.3.4",
     "overlayscrollbars": "^2.13.0",
+    "posthog-js": "^1.306.1",
     "prettier": "^3.7.4"
   }
 }
