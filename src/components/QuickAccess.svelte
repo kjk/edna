@@ -188,7 +188,7 @@
       <div class="whitespace-nowrap">
         {modChar} + H
       </div>
-      <div class="ml-2">invoke</div>
+      <div class="ml-2">show/hide me</div>
     </div>
     <div class="flex justify-between flex-nowrap">
       <div class="whitespace-nowrap">{modChar} + click</div>
