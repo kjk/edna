@@ -26,9 +26,10 @@
 
   let settings = getSettings();
 
-  /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
   /**
+   * @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo }
    * @param {string[]} starred
+   * @param {string[]} withShortcuts
    * @param {string[]} history
    * @returns {NoteInfo[]}
    */

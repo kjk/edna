@@ -187,7 +187,6 @@
     }
     let item = items[idx];
     let metaPressed = ev.ctrlKey || ev.metaKey;
-    // prevent showing
     ev.preventDefault();
     ev.stopPropagation();
     onclick(item, metaPressed);
