@@ -215,6 +215,8 @@
     );
   });
 
+  $effect(() => console.log("isShowingDialog:", isShowingDialog));
+
   function closeDialogs() {
     showingContextMenu = false;
     showingLanguageSelector = false;
@@ -1557,6 +1559,7 @@
    * @param {MouseEvent} ev
    */
   async function oncontextmenu(ev) {
+    console.log("oncontextmenu");
     if (isShowingDialog) {
       console.log("oncontestmenu: isShowingDialog");
       return;
@@ -1584,6 +1587,10 @@
     showingContextMenu = true;
   }
 
+  /**
+   * @param {number} id
+   * @param {string} [name]
+   */
   function commandNameOverride(id, name) {
     if (id === kCmdToggleSpellChecking) {
       return (isSpellChecking ? "Disable" : "Enable") + " spell checking";
@@ -1696,6 +1703,9 @@
     showingCommandPalette = true;
   }
 
+  /**
+   * @param {number} cmdId
+   */
   async function executeCommand(cmdId) {
     // console.log("executeCommand:", cmdId);
     showingCommandPalette = false;
@@ -1950,6 +1960,9 @@
     window.open(uri, "_blank");
   }
 
+  /**
+   * @param {string} newName
+   */
   async function onRename(newName) {
     let noteName = settings.currentNoteName;
     closeDialogs();
@@ -2010,6 +2023,10 @@
     getEditorComp().focus();
   }
 
+  /**
+   * @param {string} name
+   * @param {number} pos
+   */
   function openNoteFromFind(name, pos) {
     closeDialogs();
     openNote(name).then(() => {
@@ -2062,6 +2079,7 @@
 
   /**
    * @param {string} name
+   * @param {boolean} showNotif
    */
   async function deleteNotePermanently(name, showNotif) {
     if (!canDeleteNote(name)) {

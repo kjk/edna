@@ -21,7 +21,7 @@
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{ 
+  /** @type {{
     selectModel: (model: any) => void,
     close: () => void,
   }} */
@@ -136,9 +136,7 @@
   <ListBox
     bind:this={listboxRef}
     items={models}
-    onclick={(model, ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
+    onclick={(model, metaPressed) => {
       selectModel(model);
     }}
     {itemKey}

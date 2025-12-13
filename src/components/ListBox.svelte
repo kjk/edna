@@ -5,10 +5,10 @@
   import { OverlayScrollbars } from "overlayscrollbars";
   import { getOverlayScrollbarOptions } from "../settings.svelte";
 
-  /** @type {{ 
+  /** @type {{
     items: any[],
     itemKey?: (item) => any,
-    onclick: (item: any, ev: any) => void,
+    onclick: (item: any, metaPressed: boolean) => void,
     renderItem: any,
     selectionChanged?: (any, number) => void,
     initialSelection?: number,
@@ -136,7 +136,8 @@
     let isEnter = selectedItem && key === "Enter";
     let res = true;
     if (isEnter) {
-      onclick(selectedItem, ev);
+      let metaPressed = ev.ctrlKey || ev.metaKey;
+      onclick(selectedItem, metaPressed);
     } else if (isUp) {
       up();
     } else if (isDown) {
@@ -185,7 +186,11 @@
       return;
     }
     let item = items[idx];
-    onclick(item, ev);
+    let metaPressed = ev.ctrlKey || ev.metaKey;
+    // prevent showing
+    ev.preventDefault();
+    ev.stopPropagation();
+    onclick(item, metaPressed);
     // console.log("didn't find item for ev.target:", ev.target);
   }
 

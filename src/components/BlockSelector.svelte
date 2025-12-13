@@ -103,7 +103,7 @@
   <ListBox
     bind:this={listboxRef}
     items={itemsFiltered}
-    onclick={(item) => selectBlock(item.item)}
+    onclick={(item, metaPressed) => selectBlock(item.item)}
     {initialSelection}
   >
     {#snippet renderItem(item, idx)}

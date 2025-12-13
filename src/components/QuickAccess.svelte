@@ -8,7 +8,7 @@
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
-  /** @type {{ 
+  /** @type {{
     openNote: (name: string, newTab?: boolean) => void,
     forHistory: boolean,
   }} */
@@ -127,8 +127,8 @@
   <ListBox
     bind:this={listboxRef}
     items={quickAccessNotes}
-    onclick={(noteInfo, ev) => {
-      openNote(noteInfo.name, ev.ctrlKey);
+    onclick={(noteInfo, metaPressed) => {
+      openNote(noteInfo.name, metaPressed);
     }}
     {initialSelection}
     compact={true}
@@ -150,7 +150,7 @@
       {:else if noteInfo.isStarred && historyTrigger < 0}
         <button
           tabindex="-1"
-          class="ml-[2px] cursor-pointer hover:text-yellow-600"
+          class="ml-0.5 cursor-pointer hover:text-yellow-600"
           onclick={(ev) => {
             toggleStarred(noteInfo);
             ev.preventDefault();
@@ -183,7 +183,7 @@
       <div>invoke</div>
     </div>
     <div class="flex justify-between">
-      <div>Ctrl + click</div>
+      <div>{modChar} + click</div>
       <div>open in new tab</div>
     </div>
     <a

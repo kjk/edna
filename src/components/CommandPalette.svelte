@@ -124,7 +124,7 @@
     listboxRef.onkeydown(ev, allowLeftRight);
   }}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[90vh] w-[42em] max-w-[90vw] p-2"
+  class="selector z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[42em] max-w-[90vw] p-2"
 >
   <div>
     <input
@@ -133,7 +133,7 @@
       bind:value={filter}
       class="py-1 px-2 bg-white w-full mb-2 rounded-xs relative"
     />
-    <div class="absolute right-[1rem] top-[0.75rem] italic text-gray-400">
+    <div class="absolute right-4 top-3 italic text-gray-400">
       {cmdCountMsg}
     </div>
   </div>
