@@ -342,6 +342,21 @@
    * @param {KeyboardEvent} ev
    */
   function onKeyDown(ev) {
+    // we bind Mod-h in CocdeMirror which only works if CodeMirror has
+    // focus. We have to prevent it here to disable the default
+    // behavior of hiding a window
+    if (ev.key == "h") {
+      if (ev.ctrlKey || ev.metaKey) {
+        if (isShowingDialog) {
+          ev.preventDefault();
+          if (showingQuickAccess) {
+            showingQuickAccess = false;
+            getEditor().focus();
+          }
+        }
+        return;
+      }
+    }
     if (ev.key === "Escape") {
       // console.log("Esc");
       if (isShowingDialog) {

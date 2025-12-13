@@ -425,7 +425,7 @@
   let menuRef;
   onMount(() => {
     if (pos) {
-      // invoked via mouse click
+      // <d via mouse click
       ensurevisible(menuRef);
     }
   });

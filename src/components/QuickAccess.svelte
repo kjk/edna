@@ -181,7 +181,7 @@
       <div>
         {modChar} + H
       </div>
-      <div>invoke</div>
+      <div>show/hide me</div>
     </div>
     <div class="flex justify-between">
       <div>{modChar} + click</div>
