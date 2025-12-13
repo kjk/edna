@@ -4,6 +4,7 @@ import "highlight.js/styles/github.css";
 import "tippy.js/themes/light-border.css";
 import "tippy.js/themes/light.css";
 import { mount, unmount } from "svelte";
+import posthog from "posthog-js";
 import { testAppendStore } from "./apppendstore.test";
 import { appState } from "./appstate.svelte";
 import App from "./components/App.svelte";
@@ -106,8 +107,31 @@ async function createDefaultNotes(existingNotes) {
   return createdNotes;
 }
 
+function setupPosthog() {
+  posthog.init("phc_9Wxk6imiVX44DmN7ofvp4wOBRq9CglvGGlHZQhXr5sz", {
+    api_host: "https://us.i.posthog.com",
+    person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+  });
+
+  const originalConsoleError = console.error;
+
+  console.error = function (...args) {
+    originalConsoleError.apply(console, args);
+
+    // Capture as a custom event
+    posthog.capture("console_error", { message: args.join(" ") });
+
+    // Or if it's an Error object, capture as exception
+    if (args[0] instanceof Error) {
+      posthog.captureException(args[0]);
+    }
+  };
+}
+
 export async function boot() {
   console.log("booting");
+  setupPosthog();
+
   setupWindowDebug();
   // await testFuncs();
 
