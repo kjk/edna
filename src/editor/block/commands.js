@@ -19,6 +19,10 @@ import { selectAll } from "./select-all.js";
 
 export { moveLineDown, moveLineUp, selectAll };
 
+/**
+ * @param {string} defaultToken
+ * @param {boolean} autoDetect
+ */
 export function getBlockDelimiter(defaultToken, autoDetect) {
   return `\n∞∞∞${autoDetect ? defaultToken + "-a" : defaultToken}\n`;
 }
@@ -68,11 +72,32 @@ export function addNewBlockBeforeCurrent({ state, dispatch }) {
   return true;
 }
 
+function isEmptyLineAtPosition(doc, pos) {
+  const line = doc.lineAt(pos);
+  return line.text === "";
+}
+
 export function addNewBlockAfterCurrent({ state, dispatch }) {
   if (state.readOnly) return false;
 
   const block = getActiveNoteBlock(state);
-  const delimText = "\n∞∞∞text-a\n";
+  let delimText = "\n∞∞∞text-a\n";
+
+  // if current block is not completely empty and cursor is at last
+  // line of the block and that line is empty, delete the last line
+  // in current block
+  let isBlockEmpty = block.content.from === block.content.to;
+  if (!isBlockEmpty) {
+    const selection = state.selection;
+    if (selection.ranges.length === 1) {
+      const main = selection.main;
+      if (main.empty && main.from == block.content.to) {
+        if (isEmptyLineAtPosition(state.doc, main.from)) {
+          delimText = "∞∞∞text-a\n";
+        }
+      }
+    }
+  }
 
   dispatch(
     state.update(
