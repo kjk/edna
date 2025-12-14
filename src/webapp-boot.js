@@ -26,15 +26,41 @@ import { isDev } from "./util";
 
 let appSvelte;
 
-export async function boot() {
-  console.log("booting");
+function setupPosthog() {
+  if (isDev()) {
+    return;
+  }
 
   posthog.init("phc_8aJPkRJ48D27YvIX4irWubORzvFA28CoI8Y2Es9JLNw", {
-    api_host: "https://us.i.posthog.com",
+    //api_host: "https://us.i.posthog.com",
+    api_host: "https://ph.arslexis.io",
+    ui_host: "https://us.posthog.com",
     person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
   });
 
-  // await testFuncs();
+  const originalConsoleError = console.error;
+  /**
+   * @param  {...any} args
+   */
+  function myConsoleError(...args) {
+    originalConsoleError.apply(console, args);
+
+    let err;
+    if (args.length === 1 && args[0] instanceof Error) {
+      err = args[0];
+    } else {
+      let msg = args.join(" ");
+      err = new Error("console.error: " + msg);
+    }
+    posthog.captureException(err);
+  }
+  console.error = myConsoleError;
+}
+
+export async function boot() {
+  console.log("booting");
+
+  setupPosthog();
 
   getSettings();
 
