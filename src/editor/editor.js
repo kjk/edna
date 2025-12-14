@@ -373,6 +373,10 @@ export class EdnaEditor {
     });
   }
 
+  /**
+   * @param {string} token
+   * @param {boolean?} autoDetect
+   */
   setDefaultBlockLanguage(token, autoDetect) {
     this.defaultBlockToken = token || "text";
     this.defaultBlockAutoDetect = autoDetect === undefined ? true : autoDetect;
