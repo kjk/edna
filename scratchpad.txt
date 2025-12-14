@@ -1,3 +1,17 @@
+----------------------------------------------------------------
+EditorState
+  selection EditorSelection
+
+EditorSelection
+  main SelectionRange
+  ranges []SelectionRange
+  mainIndex number
+
+SelectionRange
+    from number
+    to number
+    empty boolean
+----------------------------------------------------------------
 Idea for backing up notes: when saving, save as ${name}-${currTimeMsEncoded}.edna.txt and ${name}-${name}.edna.txt
 
 ${currTimeEncoded} is integer as milliseconds since epoch base32-encoded as a sortable string.
@@ -25,24 +39,4 @@ function encodeCurrentTimeBase32() {
 
 // Usage
 console.log(encodeCurrentTimeBase32());
-
 ----------------------------------------------------------------
-
-settings:
-
-Keymap: [default]
-
-# Input settings
-[ ] Auto-close brackets and question marks
-
-# Gutters
-[ ] Show line number
-[ ] Show fold gutter
-
-Theme: [Light]
-
-Font family:
-
-Font size:
-
-Version: 1.3
