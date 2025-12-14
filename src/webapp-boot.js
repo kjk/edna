@@ -108,24 +108,34 @@ async function createDefaultNotes(existingNotes) {
 }
 
 function setupPosthog() {
+  if (isDev()) {
+    return;
+  }
+
   posthog.init("phc_9Wxk6imiVX44DmN7ofvp4wOBRq9CglvGGlHZQhXr5sz", {
-    api_host: "https://us.i.posthog.com",
+    //api_host: "https://us.i.posthog.com",
+    api_host: "https://ph.arslexis.io",
+    ui_host: "https://us.posthog.com",
     person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
   });
 
   const originalConsoleError = console.error;
-
-  console.error = function (...args) {
+  /**
+   * @param  {...any} args
+   */
+  function myConsoleError(...args) {
     originalConsoleError.apply(console, args);
 
-    // Capture as a custom event
-    posthog.capture("console_error", { message: args.join(" ") });
-
-    // Or if it's an Error object, capture as exception
-    if (args[0] instanceof Error) {
-      posthog.captureException(args[0]);
+    let err;
+    if (args.length === 1 && args[0] instanceof Error) {
+      err = args[0];
+    } else {
+      let msg = args.join(" ");
+      err = new Error("console.error: " + msg);
     }
-  };
+    posthog.captureException(err);
+  }
+  console.error = myConsoleError;
 }
 
 export async function boot() {
