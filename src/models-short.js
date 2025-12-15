@@ -62,8 +62,8 @@ export const modelsShort = [
     "claude-3.5-sonnet",
     1,
     "Claude 3.5 Sonnet",
-    0.000003,
-    0.000015
+    0.000006,
+    0.00003
   ],
   [
     "claude-3.7-sonnet",
@@ -136,13 +136,6 @@ export const modelsShort = [
     1e-7
   ],
   [
-    "deepseek-r1-0528-qwen3-8b:free",
-    6,
-    "DeepSeek R1 0528 Qwen3 8B (free)",
-    0,
-    0
-  ],
-  [
     "deepseek-chat",
     6,
     "DeepSeek V3",
@@ -153,43 +146,50 @@ export const modelsShort = [
     "deepseek-chat-v3-0324",
     6,
     "DeepSeek V3 0324",
-    2.16e-7,
-    8.96e-7
-  ],
-  [
-    "deepseek-chat-v3-0324:free",
-    6,
-    "DeepSeek V3 0324 (free)",
-    0,
-    0
+    2e-7,
+    8.8e-7
   ],
   [
     "deepseek-chat-v3.1",
     6,
     "DeepSeek V3.1",
-    2e-7,
-    8e-7
+    1.5e-7,
+    7.5e-7
   ],
   [
     "deepseek-v3.1-terminus",
     6,
     "DeepSeek V3.1 Terminus",
-    2.16e-7,
-    8e-7
+    2.1e-7,
+    7.9e-7
   ],
   [
     "deepseek-v3.1-terminus:exacto",
     6,
     "DeepSeek V3.1 Terminus (exacto)",
-    2.16e-7,
-    8e-7
+    2.1e-7,
+    7.9e-7
+  ],
+  [
+    "deepseek-v3.2",
+    6,
+    "DeepSeek V3.2",
+    2.4e-7,
+    3.8e-7
   ],
   [
     "deepseek-v3.2-exp",
     6,
     "DeepSeek V3.2 Exp",
-    2.16e-7,
-    3.28e-7
+    2.1e-7,
+    3.2e-7
+  ],
+  [
+    "deepseek-v3.2-speciale",
+    6,
+    "DeepSeek V3.2 Speciale",
+    2.7e-7,
+    4.1e-7
   ],
   [
     "deepseek-r1",
@@ -199,25 +199,11 @@ export const modelsShort = [
     0.0000012
   ],
   [
-    "deepseek-r1:free",
-    6,
-    "R1 (free)",
-    0,
-    0
-  ],
-  [
     "deepseek-r1-0528",
     6,
     "R1 0528",
-    2e-7,
-    0.0000045
-  ],
-  [
-    "deepseek-r1-0528:free",
-    6,
-    "R1 0528 (free)",
-    0,
-    0
+    4e-7,
+    0.00000175
   ],
   [
     "deepseek-r1-distill-llama-70b",
@@ -225,13 +211,6 @@ export const modelsShort = [
     "R1 Distill Llama 70B",
     3e-8,
     1.3e-7
-  ],
-  [
-    "deepseek-r1-distill-llama-70b:free",
-    6,
-    "R1 Distill Llama 70B (free)",
-    0,
-    0
   ],
   [
     "deepseek-r1-distill-qwen-14b",
@@ -370,8 +349,8 @@ export const modelsShort = [
     "gemma-3-27b-it",
     2,
     "Gemma 3 27B",
-    7e-8,
-    5e-7
+    4e-8,
+    1.5e-7
   ],
   [
     "gemma-3-27b-it:free",
@@ -510,8 +489,8 @@ export const modelsShort = [
     "llama-3.3-70b-instruct",
     3,
     "Llama 3.3 70B Instruct",
-    1.04e-7,
-    3.12e-7
+    1e-7,
+    3.2e-7
   ],
   [
     "llama-3.3-70b-instruct:free",
@@ -524,8 +503,8 @@ export const modelsShort = [
     "llama-4-maverick",
     3,
     "Llama 4 Maverick",
-    1.36e-7,
-    6.8e-7
+    1.5e-7,
+    6e-7
   ],
   [
     "llama-4-scout",
@@ -570,13 +549,6 @@ export const modelsShort = [
     0.000006
   ],
   [
-    "mistral-small",
-    9,
-    "Mistral Small",
-    2e-7,
-    6e-7
-  ],
-  [
     "mistral-tiny",
     9,
     "Mistral Tiny",
@@ -584,18 +556,25 @@ export const modelsShort = [
     2.5e-7
   ],
   [
-    "codestral-2501",
-    9,
-    "Codestral 2501",
-    3e-7,
-    9e-7
-  ],
-  [
     "codestral-2508",
     9,
     "Codestral 2508",
     3e-7,
     9e-7
+  ],
+  [
+    "devstral-2512",
+    9,
+    "Devstral 2 2512",
+    1.5e-7,
+    6e-7
+  ],
+  [
+    "devstral-2512:free",
+    9,
+    "Devstral 2 2512 (free)",
+    0,
+    0
   ],
   [
     "devstral-medium",
@@ -619,25 +598,25 @@ export const modelsShort = [
     1.2e-7
   ],
   [
-    "magistral-medium-2506",
+    "ministral-14b-2512",
     9,
-    "Magistral Medium 2506",
-    0.000002,
-    0.000005
+    "Ministral 3 14B 2512",
+    2e-7,
+    2e-7
   ],
   [
-    "magistral-medium-2506:thinking",
+    "ministral-3b-2512",
     9,
-    "Magistral Medium 2506 (thinking)",
-    0.000002,
-    0.000005
+    "Ministral 3 3B 2512",
+    1e-7,
+    1e-7
   ],
   [
-    "magistral-small-2506",
+    "ministral-8b-2512",
     9,
-    "Magistral Small 2506",
-    5e-7,
-    0.0000015
+    "Ministral 3 8B 2512",
+    1.5e-7,
+    1.5e-7
   ],
   [
     "ministral-3b",
@@ -689,6 +668,13 @@ export const modelsShort = [
     2e-7
   ],
   [
+    "mistral-large-2512",
+    9,
+    "Mistral Large 3 2512",
+    5e-7,
+    0.0000015
+  ],
+  [
     "mistral-medium-3",
     9,
     "Mistral Medium 3",
@@ -710,25 +696,11 @@ export const modelsShort = [
     4e-8
   ],
   [
-    "mistral-nemo:free",
-    9,
-    "Mistral Nemo (free)",
-    0,
-    0
-  ],
-  [
     "mistral-small-24b-instruct-2501",
     9,
     "Mistral Small 3",
-    5e-8,
-    8e-8
-  ],
-  [
-    "mistral-small-24b-instruct-2501:free",
-    9,
-    "Mistral Small 3 (free)",
-    0,
-    0
+    3e-8,
+    1.1e-7
   ],
   [
     "mistral-small-3.1-24b-instruct",
@@ -750,13 +722,6 @@ export const modelsShort = [
     "Mistral Small 3.2 24B",
     6e-8,
     1.8e-7
-  ],
-  [
-    "mistral-small-3.2-24b-instruct:free",
-    9,
-    "Mistral Small 3.2 24B (free)",
-    0,
-    0
   ],
   [
     "mixtral-8x22b-instruct",
@@ -841,13 +806,6 @@ export const modelsShort = [
     "Kimi K2 Thinking",
     4.5e-7,
     0.00000235
-  ],
-  [
-    "kimi-linear-48b-a3b-instruct",
-    8,
-    "Kimi Linear 48B A3B Instruct",
-    5e-7,
-    6e-7
   ],
   [
     "chatgpt-4o-latest",
@@ -1095,6 +1053,13 @@ export const modelsShort = [
     0.00001
   ],
   [
+    "gpt-5.1-codex-max",
+    0,
+    "GPT-5.1-Codex-Max",
+    0.00000125,
+    0.00001
+  ],
+  [
     "gpt-5.1-codex-mini",
     0,
     "GPT-5.1-Codex-Mini",
@@ -1102,18 +1067,46 @@ export const modelsShort = [
     0.000002
   ],
   [
+    "gpt-5.2",
+    0,
+    "GPT-5.2",
+    0.00000175,
+    0.000014
+  ],
+  [
+    "gpt-5.2-chat",
+    0,
+    "GPT-5.2 Chat",
+    0.00000175,
+    0.000014
+  ],
+  [
+    "gpt-5.2-pro",
+    0,
+    "GPT-5.2 Pro",
+    0.000021,
+    0.000168
+  ],
+  [
     "gpt-oss-120b",
     0,
     "gpt-oss-120b",
-    4e-8,
-    2e-7
+    3.9e-8,
+    1.9e-7
   ],
   [
     "gpt-oss-120b:exacto",
     0,
     "gpt-oss-120b (exacto)",
-    4e-8,
-    2e-7
+    3.9e-8,
+    1.9e-7
+  ],
+  [
+    "gpt-oss-120b:free",
+    0,
+    "gpt-oss-120b (free)",
+    0,
+    0
   ],
   [
     "gpt-oss-20b",
@@ -1319,18 +1312,11 @@ export const modelsShort = [
     2.2e-7
   ],
   [
-    "qwen2.5-vl-32b-instruct:free",
-    4,
-    "Qwen2.5 VL 32B Instruct (free)",
-    0,
-    0
-  ],
-  [
     "qwen2.5-vl-72b-instruct",
     4,
     "Qwen2.5 VL 72B Instruct",
-    8e-8,
-    3.3e-7
+    3e-8,
+    1.3e-7
   ],
   [
     "qwen-2.5-vl-7b-instruct",
@@ -1345,13 +1331,6 @@ export const modelsShort = [
     "Qwen3 14B",
     5e-8,
     2.2e-7
-  ],
-  [
-    "qwen3-14b:free",
-    4,
-    "Qwen3 14B (free)",
-    0,
-    0
   ],
   [
     "qwen3-235b-a22b",
@@ -1371,8 +1350,8 @@ export const modelsShort = [
     "qwen3-235b-a22b-2507",
     4,
     "Qwen3 235B A22B Instruct 2507",
-    7.2e-8,
-    4.64e-7
+    7.1e-8,
+    4.63e-7
   ],
   [
     "qwen3-235b-a22b-thinking-2507",
@@ -1387,13 +1366,6 @@ export const modelsShort = [
     "Qwen3 30B A3B",
     6e-8,
     2.2e-7
-  ],
-  [
-    "qwen3-30b-a3b:free",
-    4,
-    "Qwen3 30B A3B (free)",
-    0,
-    0
   ],
   [
     "qwen3-30b-a3b-instruct-2507",
@@ -1448,8 +1420,8 @@ export const modelsShort = [
     "qwen3-coder:exacto",
     4,
     "Qwen3 Coder 480B A35B (exacto)",
-    0.000001,
-    0.000004
+    2.2e-7,
+    0.0000018
   ],
   [
     "qwen3-coder:free",
@@ -1483,8 +1455,8 @@ export const modelsShort = [
     "qwen3-next-80b-a3b-instruct",
     4,
     "Qwen3 Next 80B A3B Instruct",
-    1e-7,
-    8e-7
+    9e-8,
+    0.0000011
   ],
   [
     "qwen3-next-80b-a3b-thinking",
@@ -1497,8 +1469,8 @@ export const modelsShort = [
     "qwen3-vl-235b-a22b-instruct",
     4,
     "Qwen3 VL 235B A22B Instruct",
-    2.1e-7,
-    0.0000019
+    2e-7,
+    0.0000012
   ],
   [
     "qwen3-vl-235b-a22b-thinking",
@@ -1550,25 +1522,11 @@ export const modelsShort = [
     2.6e-7
   ],
   [
-    "qwen-2.5-72b-instruct:free",
-    4,
-    "Qwen2.5 72B Instruct (free)",
-    0,
-    0
-  ],
-  [
     "qwen-2.5-coder-32b-instruct",
     4,
     "Qwen2.5 Coder 32B Instruct",
-    4e-8,
-    1.6e-7
-  ],
-  [
-    "qwen-2.5-coder-32b-instruct:free",
-    4,
-    "Qwen2.5 Coder 32B Instruct (free)",
-    0,
-    0
+    3e-8,
+    1.1e-7
   ],
   [
     "grok-3",
@@ -1616,15 +1574,8 @@ export const modelsShort = [
     "grok-4.1-fast",
     5,
     "Grok 4.1 Fast",
-    0,
-    0
-  ],
-  [
-    "grok-4.1-fast:free",
-    5,
-    "Grok 4.1 Fast (free)",
-    0,
-    0
+    2e-7,
+    5e-7
   ],
   [
     "grok-code-fast-1",
