@@ -7,6 +7,7 @@
   */
 </script>
 
+<!-- svelte-ignore state_referenced_locally -->
 <script>
   import { focus } from "../actions";
   import {

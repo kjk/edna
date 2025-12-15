@@ -76,6 +76,7 @@
   let forceBadApiKey = false; // for ad-hoc testing
 
   let settings = getSettings();
+  // svelte-ignore state_referenced_locally
   let questionText = $state(startText);
   let reqFinished = $state(false);
   let err = $state("");
@@ -398,7 +399,7 @@
 <div
   tabindex="-1"
   use:trapfocus
-  class="selector z-20 absolute center-x-with-translate top-[1rem] flex flex-col max-h-[78vh] w-[85vw] p-2"
+  class="selector z-20 absolute center-x-with-translate top-4 flex flex-col max-h-[78vh] w-[85vw] p-2"
 >
   <div class="flex items-center">
     <div class="p-1 font-bold text-lg">Ask AI</div>
@@ -462,7 +463,7 @@
           placeholder="Enter OpenAI API key"
           use:focus
           bind:value={settings.openAIKey}
-          class="px-1 py-[1px]"
+          class="px-1 py-px"
         />
       </div>
     {/if}
@@ -490,7 +491,7 @@
           placeholder="Enter xAI API key"
           use:focus
           bind:value={settings.xAIKey}
-          class="px-1 py-[1px]"
+          class="px-1 py-px"
         />
       </div>
     {/if}
@@ -533,7 +534,7 @@
         use:focus
         bind:value={settings.openRouterKey}
         placeholder="Enter OpenRouter API key"
-        class="px-1 py-[1px]"
+        class="px-1 py-px"
       />
     </div>
   {/if}
@@ -543,7 +544,7 @@
     bind:this={textAreaRef}
     use:focus
     {onkeydown}
-    class="mt-1 w-full min-h-[10rem] max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
+    class="mt-1 w-full min-h-40 max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
   ></textarea>
   {#if len(responseText) > 0}
     {#if outputMarkdownToHTML}

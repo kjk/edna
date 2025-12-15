@@ -97,6 +97,7 @@
   }
 </script>
 
+<!-- svelte-ignore state_referenced_locally -->
 <script>
   import { onMount } from "svelte";
   import { ensurevisible, focus } from "./actions.js";

@@ -10,6 +10,7 @@
 }}*/
   let { oldName, onclose, rename } = $props();
 
+  // svelte-ignore state_referenced_locally
   let newName = $state(oldName);
 
   let sanitizedNewName = $derived.by(() => {

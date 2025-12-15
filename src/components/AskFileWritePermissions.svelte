@@ -7,6 +7,7 @@
   }}*/
   let { close, fileHandle } = $props();
 
+  // svelte-ignore state_referenced_locally
   let fileName = $state(fileHandle.name);
 
   async function requestPermissions() {
