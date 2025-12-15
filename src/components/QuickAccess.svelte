@@ -27,6 +27,8 @@
 
   let settings = getSettings();
 
+  const kMaxHistory = 10;
+
   /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
   /**
    * @param {Note[]} starred
@@ -46,8 +48,10 @@
       initialSelection++;
     }
 
+    let n = Math.min(len(history), kMaxHistory);
     // history can repeat the names
-    for (let noteName of history) {
+    for (let i = 0; i < n; i++) {
+      let noteName = history[i];
       // TODO: could construct a fake Note object for it
       if (isSystemNoteName(noteName)) {
         continue;
@@ -144,8 +148,8 @@
       {@const shortcut = getNoteShortcut(noteInfo)}
       {@const cls = firstInHistoryIdx == idx ? "border-t-not-good-enough" : ""}
       {@const historyTrigger = idx - firstInHistoryIdx}
-      {#if historyTrigger >= 0}
-        <div class="px-1 grow text-gray-800 font-bold dark:text-gray-400 {cls}">
+      {#if historyTrigger >= 0 && historyTrigger <= 9}
+        <div class="px-1 grow text-gray-500 dark:text-gray-400 {cls}">
           {"" + historyTrigger}
         </div>
       {:else if shortcut}
@@ -157,7 +161,7 @@
       {:else if noteInfo.isStarred && historyTrigger < 0}
         <button
           tabindex="-1"
-          class="ml-[2px] cursor-pointer hover:text-yellow-600"
+          class="ml-0.5 cursor-pointer hover:text-yellow-600"
           onclick={(ev) => {
             toggleStarred(noteInfo);
             ev.preventDefault();
