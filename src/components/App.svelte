@@ -42,7 +42,7 @@
   } from "../editor/block/format-code";
   import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
-  import { insertDateAndTime } from "../editor/date-time";
+  import { insertDateAndTime, insertTime } from "../editor/date-time";
   import { EdnaEditor, setReadOnly } from "../editor/editor";
   import {
     foldAllBlocks,
@@ -964,6 +964,7 @@
   const kCmdMoveBlock = nmid();
   const kCmdTransposeChars = nmid();
   const kCmdInsertDateAndTime = nmid();
+  const kCmdInsertTime = nmid();
   const kCmdToggleBlockFold = nmid();
   const kCmdFoldBlock = nmid();
   const kCmdUnfoldBlock = nmid();
@@ -1185,7 +1186,8 @@
     ["Edit: Move line down\tAlt-ArrowDown", kCmdMoveLineDown],
     ["Edit: Move selection up\tAlt-ArrowUp", kCmdMoveSelectionUp],
     ["Edit: Move selection down\tAlt-ArrowDown", kCmdMoveSelectionDown],
-    ["Edit: Insert date and time\tAlt-Shift-d", kCmdInsertDateAndTime],
+    ["Edit: Insert date\tAlt-Shift-d", kCmdInsertDateAndTime],
+    ["Edit: Insert time\tAlt-Shift-t", kCmdInsertTime],
     ["Edit: Unfold everything", kCmdUnfoldEverything],
     ["Edit: Toggle comment\tMod-/", kCmdToggleComment],
     ["Edit: Toggle line comment", kCmdToggleLineComment],
@@ -1428,6 +1430,9 @@
       view.focus();
     } else if (cmdId === kCmdInsertDateAndTime) {
       insertDateAndTime(view);
+      view.focus();
+    } else if (cmdId === kCmdInsertTime) {
+      insertTime(view);
       view.focus();
     } else if (cmdId === kCmdGoToPreviousBlock) {
       gotoPreviousBlock(view);
