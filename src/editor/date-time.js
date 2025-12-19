@@ -25,12 +25,13 @@ export const insertTime = ({ state, dispatch }) => {
   let now = new Date();
   // get time in 24-hour format
   // Format as 24-hour time string HH:MM
-  const s = now.toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    //seconds: "2-digit",
-    hour12: false, // Ensures 24-hour format
-  });
+  const s =
+    now.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      //seconds: "2-digit",
+      hour12: false, // Ensures 24-hour format
+    }) + " ";
   dispatch(state.replaceSelection(s), {
     scrollIntoView: true,
     userEvent: "input",
