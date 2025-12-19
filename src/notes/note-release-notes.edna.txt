@@ -2,6 +2,10 @@
 ∞∞∞markdown
 # Release notes for Edna
 
+## 1.39
+
+- add `Insert time` command
+
 ## 1.38
 
 - support for OpenAI, Grok, OpenRouter api providers
@@ -113,7 +117,7 @@
 
 ## 1.16
 
-- add `hide` / `show` button to hide info panel in note selector 
+- add `hide` / `show` button to hide info panel in note selector
 
 ## 1.15
 
