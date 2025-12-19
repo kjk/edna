@@ -149,7 +149,6 @@ func Main() {
 	var (
 		flgDeployHetzner bool
 		flgSetupAndRun   bool
-		flgUpdateGoDeps  bool
 		flgGen           bool
 		flgAdHoc         bool
 		flgBuildFrontend bool
@@ -160,7 +159,6 @@ func Main() {
 		flag.BoolVar(&flgRunProd, "run-prod", false, "run server in production")
 		flag.BoolVar(&flgDeployHetzner, "deploy", false, "deploy to hetzner")
 		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
-		flag.BoolVar(&flgUpdateGoDeps, "update-go-deps", false, "update go dependencies")
 		flag.BoolVar(&flgGen, "gen", false, "generate code")
 		flag.BoolVar(&flgAdHoc, "ad-hoc", false, "run ad-hoc code")
 		flag.Parse()
@@ -173,6 +171,7 @@ func Main() {
 			// make it reachable for compilation
 			testCompress()
 			clean()
+			updateGoDeps(true)
 		}
 		return
 	}
@@ -186,12 +185,6 @@ func Main() {
 	if GitCommitHash != "" {
 		uriBase := "https://github.com/kjk/edna/commit/"
 		logf("edna.arslexis.io, build: %s (%s)\n", GitCommitHash, uriBase+GitCommitHash)
-	}
-
-	if flgUpdateGoDeps {
-		defer measureDuration()()
-		updateGoDeps(true)
-		return
 	}
 
 	if flgDeployHetzner {
