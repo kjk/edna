@@ -7,9 +7,9 @@ import {
   openCommandPalette,
   openFindInNotes,
   openFunctionSelector,
-  openHistorySelector,
   openLanguageSelector,
   openNoteSelector,
+  openQuickAccess,
   smartRun,
 } from "../globals.js";
 import { platform } from "../util.js";
@@ -96,7 +96,7 @@ export function ednaKeymap(editor) {
     ["Mod-Shift-p", openCommandPalette],
     ["Mod-Shift-k", openCommandPalette],
     ["Mod-Shift-o", openCommandPalette],
-    ["Mod-h", openHistorySelector],
+    ["Mod-h", openQuickAccess],
     ["Mod-Shift-f", openFindInNotes],
     ["Alt-Shift-f", formatBlockContent],
     ["Mod-Alt-ArrowDown", newCursorBelow],

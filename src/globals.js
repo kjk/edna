@@ -10,7 +10,7 @@ import { formatDurationShort } from "./util";
   openCommandPalette: () => void,
   openFindInNotes: () => void,
   openContextMenu: (MouseEvent) => void,
-  openHistorySelector: () => void,
+  openQuickAccess: () => void,
   createScratchNote: () => void,
   openBlockSelector: () => void,
   openFunctionSelector: (boolean) => void,
@@ -69,8 +69,8 @@ export function openContextMenu(ev) {
   globalFunctions.openContextMenu(ev);
 }
 
-export function openHistorySelector() {
-  globalFunctions.openHistorySelector();
+export function openQuickAccess() {
+  globalFunctions.openQuickAccess();
 }
 
 export function createScratchNote() {

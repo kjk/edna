@@ -185,7 +185,7 @@
   let showingFunctionSelector = $state(false);
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
-  let showingHistorySelector = $state(false);
+  let showingQuickAccess = $state(false);
   let showingBlockSelector = $state(false);
   let showingFindInNotes = $state(false);
   let showingEncryptPassword = $state(false);
@@ -204,7 +204,7 @@
       showingFunctionSelector ||
       showingSettings ||
       showingRenameNote ||
-      showingHistorySelector ||
+      showingQuickAccess ||
       showingBlockSelector ||
       showingFindInNotes ||
       appState.showingLogin ||
@@ -223,7 +223,7 @@
     showingFunctionSelector = false;
     showingSettings = false;
     showingRenameNote = false;
-    showingHistorySelector = false;
+    showingQuickAccess = false;
     showingBlockSelector = false;
     showingFindInNotes = false;
     showingAskAI = false;
@@ -278,7 +278,7 @@
     openCommandPalette: openCommandPalette,
     openContextMenu: openContextMenu,
     openFindInNotes: openFindInNotes,
-    openHistorySelector: openHistorySelector,
+    openQuickAccess: openQuickAccess,
     createScratchNote: createScratchNote,
     openBlockSelector: openBlockSelector,
     openFunctionSelector: openFunctionSelector,
@@ -351,6 +351,22 @@
    * @param {KeyboardEvent} ev
    */
   function onKeyDown(ev) {
+    // we bind Mod-h in CocdeMirror which only works if CodeMirror has
+    // focus. We have to prevent it here to disable the default
+    // behavior of hiding a window
+    if (ev.key == "h") {
+      if (ev.ctrlKey || ev.metaKey) {
+        if (isShowingDialog) {
+          ev.preventDefault();
+          if (showingQuickAccess) {
+            showingQuickAccess = false;
+            getEditor().focus();
+          }
+        }
+        return;
+      }
+    }
+
     if (ev.key === "Escape") {
       // console.log("Esc");
       if (isShowingDialog) {
@@ -394,7 +410,7 @@
           if (note.altShortcut == altN && !isShowingNote(note.name)) {
             // console.log("onKeyDown: opening note: ", o.name, " altN:", altN, " e:", e)
             openNote(note.name);
-            showingHistorySelector = false;
+            showingQuickAccess = false;
             ev.preventDefault();
             return;
           }
@@ -897,7 +913,7 @@
   const kCmdToggleSpellChecking2 = nmid();
   const kCmdShowStorageHelp = nmid();
   const kCmdSettings = nmid();
-  const kCmdOpenRecent = nmid();
+  const kCmdOpenQuickAccess = nmid();
   const kCmdShowWelcomeNote = nmid();
   const kCmdShowWelcomeDevNote = nmid();
   const kCmdSmartRun = nmid();
@@ -1061,7 +1077,7 @@
   const commandPaletteAdditions = [
     ["Import Edna notes", kCmdImportEdnaNotes],
     ["Create New Scratch Note", kCmdCreateScratchNote],
-    ["Open recent note", kCmdOpenRecent],
+    ["Open recent note", kCmdOpenQuickAccess],
     ["Open note in new tab", kCmdOpenNoteInNewTab],
     ["Toggle Sidebar", kCmdToggleSidebar],
     ["Find", kCmdFind],
@@ -1423,8 +1439,8 @@
       decryptAllNotes();
     } else if (cmdId === kCmdEncryptionHelp) {
       showHTMLHelpInTab("#encryption");
-    } else if (cmdId === kCmdOpenRecent) {
-      openHistorySelector();
+    } else if (cmdId === kCmdOpenQuickAccess) {
+      openQuickAccess();
     } else if (cmdId === kCmdRunBlock) {
       runCurrentBlock();
     } else if (cmdId === kCmdRunBlockWithAnotherBlock) {
@@ -1919,8 +1935,8 @@
     // console.log("onRename: newName:", newName);
   }
 
-  function openHistorySelector() {
-    showingHistorySelector = true;
+  function openQuickAccess() {
+    showingQuickAccess = true;
   }
 
   /**
@@ -2221,7 +2237,7 @@
   {toggleSpellCheck}
 />
 
-{#if showingHistorySelector}
+{#if showingQuickAccess}
   <Overlay onclose={closeDialogs} blur={true}>
     <QuickAccess openNote={onOpenNote} forHistory={true} />
   </Overlay>
