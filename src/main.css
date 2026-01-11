@@ -115,7 +115,7 @@ select {
   @apply font-mono;
   @apply text-nowrap whitespace-nowrap;
   @apply text-xs px-2 py-0.5;
-  @apply border-1 border-gray-300 bg-gray-100;
+  @apply border border-gray-300 bg-gray-100;
   @apply rounded;
   @apply w-fit;
 }
@@ -124,7 +124,7 @@ select {
   /* @apply font-mono; */
   @apply text-nowrap whitespace-nowrap;
   @apply text-xs px-1!;
-  @apply border-1 border-gray-300;
+  @apply border border-gray-300;
   @apply bg-gray-100 hover:bg-gray-200;
   @apply cursor-pointer;
   /* @apply h-fit; */
