@@ -10,7 +10,7 @@ export function keyValueMarshal(...keyValues) {
   let buf = "";
   for (let i = 0; i < keyValues.length; i += 2) {
     const key = keyValues[i];
-    if (key.includes(" ") || key.includes("\n")) {
+    if (/[ \n\r\t]/.test(key)) {
       throw new Error(`key '${key}' contains space or newline`);
     }
     if (i > 0) {
