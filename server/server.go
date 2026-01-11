@@ -21,7 +21,6 @@ import (
 
 	"github.com/felixge/httpsnoop"
 	hutil "github.com/kjk/common/httputil"
-	"github.com/kjk/common/logtastic"
 	"github.com/kjk/common/u"
 )
 
@@ -66,7 +65,7 @@ func serverApiCurrencyRates(w http.ResponseWriter, r *http.Request) {
 		logf("serverCurrencyRates: have cached data, since update: %s\n", sinceUpdate)
 		if sinceUpdate < currencyUpdateFreq {
 			logf("serverCurrencyRates: using cached data\n")
-			serveJSON(w, []byte(cachedCurrencyRatesJSON))
+			serveJSONData(w, []byte(cachedCurrencyRatesJSON))
 			return
 		}
 	}
@@ -75,7 +74,7 @@ func serverApiCurrencyRates(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logf("serverCurrencyRates: getCurrencyRates() failed with: '%s'\n", err)
 		if cachedCurrencyRatesJSON != nil {
-			serveJSON(w, cachedCurrencyRatesJSON)
+			serveJSONData(w, cachedCurrencyRatesJSON)
 			return
 		}
 		serveInternalError(w, err)
@@ -84,7 +83,7 @@ func serverApiCurrencyRates(w http.ResponseWriter, r *http.Request) {
 	logf("serverCurrencyRates: got data of size %d %s\n", len(d), truncData(d, 64))
 	cachedCurrencyRatesJSON = d
 	currencyRatesLastUpdate = time.Now()
-	serveJSON(w, d)
+	serveJSONData(w, d)
 }
 
 func truncData(data []byte, maxLen int) string {
@@ -117,7 +116,7 @@ func serveChromeDevToolsJSON(w http.ResponseWriter, r *http.Request) {
 	s = strings.ReplaceAll(s, "{{root}}", srcDir)
 	s = strings.ReplaceAll(s, "{{uuid}}", uuid)
 	// logf("serveChromeDevToolsJSON:\n\n%s\n\n", s)
-	serveJSON(w, []byte(s))
+	serveJSONData(w, []byte(s))
 }
 
 func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.ReverseProxy) *http.Server {
@@ -154,7 +153,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			return
 		}
 		if strings.HasPrefix(uri, "/event") {
-			logtastic.HandleEvent(w, r)
+			apiLogEvent(w, r)
 			return
 		}
 		if uri == "/help" {
@@ -215,8 +214,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 				http.Error(w, errStr, http.StatusInternalServerError)
 				return
 			}
-			logHTTPReq(r, m.Code, m.Written, m.Duration)
-			logtastic.LogHit(r, m.Code, m.Written, m.Duration)
+			logHttpRequest(r, m.Code, m.Written, m.Duration)
 			// axiomLogHTTPReq(ctx(), r, m.Code, int(m.Written), m.Duration)
 		}()
 	})
@@ -264,8 +262,6 @@ func serverListen(httpSrv *http.Server) func() {
 			// timeout
 			logf("timed out trying to shut down http server")
 		}
-		logf("stopping logtastic\n")
-		logtastic.Stop()
 	}
 }
 
@@ -319,26 +315,11 @@ func mkServeFileOptions(fsys fs.FS) *hutil.ServeFileOptions {
 	}
 }
 
-func startLogtastic() {
-	if logtastic.ApiKey == "" {
-		return
-	}
-	logtastic.BuildHash = GitCommitHash
-	logtastic.LogDir = getLogsDirMust()
-	if flgRunProd {
-		logtastic.Server = "l.arslexis.io"
-	} else {
-		logtastic.Server = "127.0.0.1:9327"
-	}
-	logf("logtatistic server: %s\n", logtastic.Server)
-}
-
 var (
 	proxyURLStr = "http://localhost:3035"
 )
 
 func runServerDev() {
-	startLogtastic()
 	// must be same as vite.config.js
 
 	logf("runServerDev\n")
@@ -380,15 +361,8 @@ func runServerProd() {
 	fsys := mkFsysEmbedded()
 	checkHasEmbeddedFilesMust()
 
-	if !testingProd {
-		startLogtastic()
-	}
-
 	serveOpts := mkServeFileOptions(fsys)
 	httpSrv := makeHTTPServer(serveOpts, nil)
-	if !isWinOrMac() {
-		startLogtastic()
-	}
 	logf("runServerProd(): starting on 'http://%s', dev: %v, prod: %v, testingProd: %v\n", httpSrv.Addr, flgRunDev, flgRunProd, testingProd)
 
 	waitFn := serverListen(httpSrv)

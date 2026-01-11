@@ -11,7 +11,6 @@ import (
 
 	"github.com/andybalholm/brotli"
 	"github.com/dustin/go-humanize"
-	"github.com/kjk/common/logtastic"
 	"github.com/klauspost/compress/gzip"
 	"github.com/klauspost/compress/zstd"
 
@@ -78,27 +77,27 @@ func loadSecrets() {
 	d := getSecrets()
 	m := u.ParseEnvMust(d)
 	logf("loadSecret: got %d secrets\n", len(m))
-	getEnv := func(key string, val *string, minLen int, must bool) {
-		v := strings.TrimSpace(m[key])
-		if len(v) < minLen {
-			panicIf(must, "missing %s, len: %d, wanted: %d\n", key, len(v), minLen)
-			logf("missing %s, len: %d, wanted: %d\n", key, len(v), minLen)
-			return
-		}
-		*val = v
-		if isDev() {
-			logf("Got %s='%s'\n", key, v)
-		} else {
-			logf("Got %s\n", key)
-		}
-	}
+	// getEnv := func(key string, val *string, minLen int, must bool) {
+	// 	v := strings.TrimSpace(m[key])
+	// 	if len(v) < minLen {
+	// 		panicIf(must, "missing %s, len: %d, wanted: %d\n", key, len(v), minLen)
+	// 		logf("missing %s, len: %d, wanted: %d\n", key, len(v), minLen)
+	// 		return
+	// 	}
+	// 	*val = v
+	// 	if isDev() {
+	// 		logf("Got %s='%s'\n", key, v)
+	// 	} else {
+	// 		logf("Got %s\n", key)
+	// 	}
+	// }
 	// those we need always
-	must := false
+	// must := false
 	// // getEnv("COOKIE_AUTH_KEY", &cookieAuthKeyHex, 64, must)
 	// // getEnv("COOKIE_ENCR_KEY", &cookieEncrKeyHex, 64, must)
 
 	// // those are only required in prod
-	getEnv("LOGTASTIC_API_KEY", &logtastic.ApiKey, 30, must)
+	// getEnv("LOGTASTIC_API_KEY", &logtastic.ApiKey, 30, must)
 	// getEnv("PIRSCH_SECRET", &pirschClientSecret, 64, must)
 	// getEnv("GITHUB_SECRET_ONLINETOOL", &secretGitHubOnlineTool, 40, must)
 	// getEnv("GITHUB_SECRET_TOOLS_ARSLEXIS", &secretGitHubToolsArslexis, 40, must)
@@ -112,11 +111,6 @@ func loadSecrets() {
 	// 	pirschClientSecret = ""
 	// }
 
-	// when running locally, don't
-	if false && flgRunDev {
-		logfLocal("loadSecrets: clearing logtasticApiKey\n")
-		logtastic.ApiKey = ""
-	}
 }
 
 var (
@@ -221,11 +215,17 @@ func Main() {
 	loadSecrets()
 
 	if flgRunDev {
+		setupLogging()
+		defer closeLogging()
+
 		runServerDev()
 		return
 	}
 
 	if flgRunProd {
+		setupLogging()
+		defer closeLogging()
+
 		runServerProd()
 		return
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -105,7 +104,7 @@ func fmtHandler(w http.ResponseWriter, r *http.Request) {
 	body := string(bodyBytes)
 	bodyBytes, err = runImports(&body)
 	if err != nil {
-		log.Printf("runImports() error: %v", err)
+		logf("runImports() error: %v", err)
 		http.Error(w, "Failed to format source code", http.StatusInternalServerError)
 		return
 	}
@@ -131,7 +130,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, err = runImports(&body)
 	if err != nil {
-		log.Printf("runImports() error: %v", err)
+		logf("runImports() error: %v", err)
 		http.Error(w, "Failed to format source code", http.StatusInternalServerError)
 		return
 	}
@@ -140,7 +139,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(bodyBytes, &fmtResponse)
 	if err != nil {
-		log.Printf("fmtResponse unmarshal error: %v", err)
+		logf("fmtResponse unmarshal error: %v", err)
 		http.Error(w, "Failed to decode upstream server response", http.StatusInternalServerError)
 		return
 	}
@@ -154,7 +153,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, err = runCompile(&fmtResponse.Body)
 	if err != nil {
-		log.Printf("runCompile() error: %v", err)
+		logf("runCompile() error: %v", err)
 		http.Error(w, "Failed to compile source code", http.StatusInternalServerError)
 		return
 	}
@@ -170,7 +169,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(bodyBytes, &compileResponse)
 	if err != nil {
-		log.Printf("compileResponse unmarshal error: %v", err)
+		logf("compileResponse unmarshal error: %v", err)
 		http.Error(w, "Failed to decode upstream server response", http.StatusInternalServerError)
 		return
 	}
@@ -179,7 +178,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, err = json.Marshal(compileResponse)
 	if err != nil {
-		log.Printf("compileResponse marshal error: %v", err)
+		logf("compileResponse marshal error: %v", err)
 		http.Error(w, "Failed to encode data", http.StatusInternalServerError)
 		return
 	}

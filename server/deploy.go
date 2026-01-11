@@ -21,7 +21,7 @@ var (
 	domain            = "edna.arslexis.io"
 	httpPort          = 9325
 	frontEndBuildDir  = "dist"
-	wantedProdSecrets = []string{"LOGTASTIC_API_KEY"}
+	wantedProdSecrets = []string{}
 )
 
 // stuff that is derived from the above
