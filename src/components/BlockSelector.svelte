@@ -101,17 +101,17 @@
 <form
   {onkeydown}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] max-h-[94vh] flex flex-col p-2 max-w-[80vw] w-[40em]"
+  class="selector z-20 absolute center-x-with-translate top-8 max-h-[94vh] flex flex-col p-2 max-w-[80vw] w-[40em]"
 >
   <div>
     <input
       use:focus
       type="text"
       bind:value={filter}
-      class="py-1 px-2 bg-white w-full min-w-[400px] mb-2 rounded-xs"
+      class="py-1 px-2 bg-white w-full min-w-100 mb-2 rounded-xs"
     />
 
-    <div class="absolute right-[1rem] top-[0.75rem] italic text-gray-400">
+    <div class="absolute right-4 top-3 italic text-gray-400">
       {blockCountMsg}
     </div>
   </div>
