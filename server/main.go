@@ -144,7 +144,6 @@ func Main() {
 		flgDeployHetzner bool
 		flgSetupAndRun   bool
 		flgGen           bool
-		flgAdHoc         bool
 		flgBuildFrontend bool
 	)
 	{
@@ -154,11 +153,10 @@ func Main() {
 		flag.BoolVar(&flgDeployHetzner, "deploy", false, "deploy to hetzner")
 		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
 		flag.BoolVar(&flgGen, "gen", false, "generate code")
-		flag.BoolVar(&flgAdHoc, "ad-hoc", false, "run ad-hoc code")
 		flag.Parse()
 	}
 
-	if flgAdHoc {
+	if false { // ad-hoc code
 		if true {
 			testRunServerProd()
 		} else {
