@@ -73,6 +73,7 @@
   let forceBadApiKey = false; // for ad-hoc testing
 
   let settings = getSettings();
+  // svelte-ignore state_referenced_locally
   let questionText = $state(startText);
   let reqFinished = $state(false);
   let err = $state("");

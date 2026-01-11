@@ -33,7 +33,9 @@
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
 
+  // svelte-ignore state_referenced_locally
   let blockCountMsg = $state(`${len(blocks)} blocks`);
+  // svelte-ignore state_referenced_locally
   if (len(blocks) == 1) {
     blockCountMsg = `1 block`;
   }

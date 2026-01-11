@@ -118,6 +118,7 @@
     return kMenuStatusNormal;
   }
 
+  // svelte-ignore state_referenced_locally
   let rootMenu = buildMenuFromDef(
     menuDef,
     1,

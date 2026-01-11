@@ -30,6 +30,7 @@
 
   let selectedIdx = $state(-1);
 
+  // svelte-ignore state_referenced_locally
   let n = len(items);
   let refs = $state(new Array(n));
   let prevItemsLen = n;

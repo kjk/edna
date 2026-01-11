@@ -1,4 +1,3 @@
-import test from "node:test";
 import {
   AppendStore,
   AppendStoreRecord,

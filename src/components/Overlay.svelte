@@ -17,6 +17,7 @@
   } = $props();
 
   // if noCloseOnEsc is false, we must have onclose
+  // svelte-ignore state_referenced_locally
   throwIf(!onclose && !noCloseOnEsc);
 
   /**

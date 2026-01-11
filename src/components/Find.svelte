@@ -45,6 +45,7 @@
   /** @type {HTMLInputElement} */
   let replaceInputRef = $state(undefined);
 
+  // svelte-ignore state_referenced_locally
   let query = getSearchQuery(view.state);
   searchTerm = query.search;
 

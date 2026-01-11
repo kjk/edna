@@ -5,8 +5,12 @@
   } } */
   let { class: className = "", formatTime = formatTimeMyStyle } = $props();
 
+  // svelte-ignore state_referenced_locally
   let formattedTime = $state(formatTime(new Date()));
 
+  /**
+   * @param {Date} dt
+   */
   function formatTimeMyStyle(dt) {
     return dt.toLocaleString("en-US", {
       weekday: "short",

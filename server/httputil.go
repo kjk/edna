@@ -48,7 +48,7 @@ func serve200Text(w http.ResponseWriter, fmtMsg ...any) {
 }
 
 // 304: not modified
-func serve304(w http.ResponseWriter, r *http.Request) {
+func serve304(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNotModified)
 }
 
@@ -101,7 +101,7 @@ func serve401TextIfError(w http.ResponseWriter, err error, fmtMsg ...any) bool {
 	if len(fmtMsg) > 0 {
 		msg = fmtSmartNL(fmtMsg...)
 	}
-	logErrorf(msg)
+	logErrorf("%s", msg)
 	http.Error(w, msg, http.StatusUnauthorized)
 	return true
 }

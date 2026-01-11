@@ -10,6 +10,7 @@
 }}*/
   let { oldName, onclose, rename } = $props();
 
+  // svelte-ignore state_referenced_locally
   let newName = $state(oldName);
 
   let sanitizedNewName = $derived.by(() => {
@@ -64,7 +65,7 @@
   role="dialog"
   tabindex="0"
   {onkeydown}
-  class="selector z-20 absolute center-x-with-translate top-[4rem] flex flex-col max-w-full p-3"
+  class="selector z-20 absolute center-x-with-translate top-16 flex flex-col max-w-full p-3"
 >
   <div class="flex">
     <div class="text-lg font-semibold grow">
