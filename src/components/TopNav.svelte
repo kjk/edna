@@ -218,7 +218,7 @@
           : "bg-gray-200 dark:bg-gray-500! hover:bg-gray-100 cursor-pointer"}
         {@const noteNameCls = noteCls(noteName)}
         <button
-          class="truncate justify-between items-center whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 group {cls}"
+          class="truncate justify-between items-center whitespace-nowrap flex-1 ml-2 flex dark:bg-gray-700 clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 group {cls}"
           onclick={() => openNote(noteName, false)}
           title={getNameWithShortcut(noteName)}
         >
@@ -261,9 +261,9 @@
       showingQuickAccess = false;
       focusEditor();
     }}
-    class="clickable-icon mt-[-2px] relative"
+    class="clickable-icon -mt-0.5 relative"
   >
-    <div class="mt-[2px]">{@render IconGrokIconDown()}</div>
+    <div class="mt-0.5">{@render IconGrokIconDown()}</div>
     {#if showingQuickAccess}
       <QuickAccess openNote={myOpenNote} forHistory={false} />
     {/if}

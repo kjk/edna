@@ -127,7 +127,7 @@
   {onkeydown}
   tabindex="-1"
   use:focus
-  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden {cls}"
+  class="absolute flex flex-col pt-1 z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden {cls}"
 >
   <ListBox
     bind:this={listboxRef}
