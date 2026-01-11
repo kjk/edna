@@ -1,7 +1,7 @@
 import { FileSystemMem } from "./fs-mem";
 import { FileSystemOFS } from "./fs-ofs";
 import { FileSystemWorkerOFS, getFileSystemWorkerOfs } from "./fs-worker-ofs";
-import { len, logDur, throwIf } from "./util";
+import { len, throwIf } from "./util";
 
 export class AppendStoreRecord {
   /** @type {number} */

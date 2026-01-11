@@ -1,5 +1,3 @@
-import { logDur } from "./util";
-
 export class FileSystemMem {
   constructor() {
     /** @type {Map<string, Blob>} */
