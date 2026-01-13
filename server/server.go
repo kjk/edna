@@ -154,6 +154,10 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		case "/api/sse_events":
 			handleSSEEvents(w, r)
 			return
+		// should be logevent but uBlock blocks it
+		case "/api/le":
+			handleEvent(w, r)
+			return
 
 		case "/api/currency_rates.json":
 			serverApiCurrencyRates(w, r)
@@ -173,10 +177,6 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			return
 		}
 
-		if strings.HasPrefix(uri, "/event") {
-			handleEvent(w, r)
-			return
-		}
 		if uri == "/help" {
 			file := "help-win.html"
 			if isMacBasedOnUserAgent(r) {

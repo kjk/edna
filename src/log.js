@@ -6,7 +6,7 @@ import { throwIf } from "./util";
  * @param {Object} o
  */
 export function logEvent(o) {
-  fetch("/event", {
+  fetch("/api/le", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
