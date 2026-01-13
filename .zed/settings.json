@@ -6,7 +6,7 @@
   "languages": {
     "Svelte": {
       "language_servers": [
-        "tailwindcss-intellisense-css",
+        "tailwindcss-language-server",
         "!vscode-css-language-server",
       ],
     },
