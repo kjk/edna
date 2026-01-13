@@ -10,7 +10,6 @@ import (
 	"github.com/mailgun/mailgun-go/v4"
 )
 
-// https://github.com/mailgun/mailgun-go
 var (
 	mailgunDomain = ""
 	mailgunAPIKey = ""
