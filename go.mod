@@ -3,13 +3,11 @@ module elaris
 go 1.24.3
 
 require (
-	github.com/andybalholm/brotli v1.2.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/felixge/httpsnoop v1.0.4
 	github.com/gorilla/securecookie v1.1.2
 	github.com/kjk/common v0.0.0-20260110152255-a7018ca0be57
 	github.com/kjk/minioutil v0.0.0-20230422073834-96945ac7e481
-	github.com/klauspost/compress v1.18.2
 	github.com/mailgun/mailgun-go/v4 v4.23.0
 	github.com/melbahja/goph v1.4.0
 	github.com/pkg/sftp v1.13.10
@@ -17,11 +15,13 @@ require (
 )
 
 require (
+	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/carlmjohnson/requests v0.25.1 // indirect
 	github.com/go-chi/chi/v5 v5.2.3 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect

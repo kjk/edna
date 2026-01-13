@@ -2,11 +2,9 @@ package server
 
 import (
 	"io"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/kjk/common/appendstore"
@@ -123,28 +121,6 @@ func adHocGetZipWithPutRecordsTest() {
 func humanSize(n int) string {
 	un := uint64(n)
 	return humanize.Bytes(un)
-}
-
-func adHocTestCompress() {
-	logf("testCompress()\n")
-	rebuildFrontend()
-	u.RunLoggedInDirMust(".", "bun", "run", "build")
-
-	dir := filepath.Join("dist", "assets")
-	files, err := os.ReadDir(dir)
-	panicIfErr(err)
-	var e fs.DirEntry
-	for _, f := range files {
-		if strings.HasPrefix(f.Name(), "index-") && strings.HasSuffix(f.Name(), ".js") {
-			e = f
-			break
-		}
-	}
-
-	info, _ := e.Info()
-	logf("found %s of size %d (%s)\n", e.Name(), info.Size(), humanSize(int(info.Size())))
-	path := filepath.Join(dir, e.Name())
-	benchFileCompress(path)
 }
 
 func adHocTestRunServerProd() {

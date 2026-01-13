@@ -1,17 +1,13 @@
 package server
 
 import (
-	"bytes"
 	"flag"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/andybalholm/brotli"
 	"github.com/kjk/common/logtastic"
-	"github.com/klauspost/compress/gzip"
-	"github.com/klauspost/compress/zstd"
 
 	"github.com/kjk/common/u"
 )
@@ -158,7 +154,7 @@ func Main() {
 		flag.BoolVar(&flgRunProd, "run-prod", false, "run server in production")
 		flag.BoolVar(&flgDeployHetzner, "deploy", false, "deploy to hetzner")
 		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
-		flag.BoolVar(&flgGen, "gen", false, "generate code")
+		flag.BoolVar(&flgGen, "gen", false, "generate code (ai models)")
 		flag.Parse()
 	}
 
@@ -176,7 +172,6 @@ func Main() {
 			adHocTestReplayBrowserStoreZip()
 			adHocTestRunServerProd()
 			adHocTestReplayBrowserStoreZip()
-			adHocTestCompress()
 			clean()
 		}
 		return
@@ -237,78 +232,4 @@ func Main() {
 	}
 
 	flag.Usage()
-}
-
-type benchResult struct {
-	name string
-	data []byte
-	dur  time.Duration
-}
-
-func benchFileCompress(path string) {
-	d, err := os.ReadFile(path)
-	panicIfErr(err)
-
-	var results []benchResult
-	gzipCompress := func(d []byte) []byte {
-		var buf bytes.Buffer
-		w, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-		panicIfErr(err)
-		_, err = w.Write(d)
-		panicIfErr(err)
-		err = w.Close()
-		panicIfErr(err)
-		return buf.Bytes()
-	}
-
-	zstdCompress := func(d []byte, level zstd.EncoderLevel) []byte {
-		var buf bytes.Buffer
-		w, err := zstd.NewWriter(&buf, zstd.WithEncoderLevel(level), zstd.WithEncoderConcurrency(1))
-		panicIfErr(err)
-		_, err = w.Write(d)
-		panicIfErr(err)
-		err = w.Close()
-		panicIfErr(err)
-		return buf.Bytes()
-	}
-
-	brCompress := func(d []byte, level int) []byte {
-		var dst bytes.Buffer
-		w := brotli.NewWriterLevel(&dst, level)
-		_, err := w.Write(d)
-		panicIfErr(err)
-		err = w.Close()
-		panicIfErr(err)
-		return dst.Bytes()
-	}
-
-	var cd []byte
-	logf("compressing with gzip\n")
-	t := time.Now()
-	cd = gzipCompress(d)
-	push(&results, benchResult{"gzip", cd, time.Since(t)})
-
-	logf("compressing with brotli: default (level 6)\n")
-	t = time.Now()
-	cd = brCompress(d, brotli.DefaultCompression)
-	push(&results, benchResult{"brotli default", cd, time.Since(t)})
-
-	logf("compressing with brotli: best (level 11)\n")
-	t = time.Now()
-	cd = brCompress(d, brotli.BestCompression)
-	push(&results, benchResult{"brotli best", cd, time.Since(t)})
-
-	logf("compressing with zstd level: better (3)\n")
-	t = time.Now()
-	cd = zstdCompress(d, zstd.SpeedBetterCompression)
-	push(&results, benchResult{"zstd better", cd, time.Since(t)})
-
-	logf("compressing with zstd level: best (4)\n")
-	t = time.Now()
-	cd = zstdCompress(d, zstd.SpeedBestCompression)
-	push(&results, benchResult{"zstd best", cd, time.Since(t)})
-
-	for _, r := range results {
-		logf("%14s: %6d (%s) in %s\n", r.name, len(r.data), humanSize(len(r.data)), r.dur)
-	}
 }
