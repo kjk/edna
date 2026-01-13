@@ -124,8 +124,6 @@ var (
 	flgRunDev bool
 	// compiled assets embedded in the binary
 	flgRunProd bool
-	// if true, don't auto-open the browser
-	flgNoOpen bool
 )
 
 func isDev() bool {
@@ -161,7 +159,6 @@ func Main() {
 		flag.BoolVar(&flgDeployHetzner, "deploy", false, "deploy to hetzner")
 		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
 		flag.BoolVar(&flgGen, "gen", false, "generate code")
-		flag.BoolVar(&flgNoOpen, "no-open", false, "don't open browser when running in dev mode")
 		flag.Parse()
 	}
 
