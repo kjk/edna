@@ -22,7 +22,7 @@ func ToValidFileName(s string) string {
 	if isInvalidFileName(s) {
 		for _, r := range s {
 			sb.WriteString("%")
-			sb.WriteString(fmt.Sprintf("%04x", r))
+			fmt.Fprintf(&sb, "%04x", r)
 		}
 		return sb.String()
 	}
@@ -30,7 +30,7 @@ func ToValidFileName(s string) string {
 	for _, r := range s {
 		if unicode.IsControl(r) || r == '%' || strings.ContainsRune(`\/:*?"<>|`, r) {
 			sb.WriteString("%")
-			sb.WriteString(fmt.Sprintf("%04x", r))
+			fmt.Fprintf(&sb, "%04x", r)
 		} else {
 			sb.WriteRune(r)
 		}
