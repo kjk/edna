@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kjk/common/logtastic"
-
 	"github.com/kjk/common/u"
 )
 
@@ -38,26 +36,13 @@ func getLogsDirMust() string {
 	return res
 }
 
-// minimum amount of secrets that allows for running in dev mode
-// if some secrets are missing, the related functionality will be disabled
-// (e.g. sending mails or github loging)
-// you can put your own secrets here
-const secretsDev = `# secrets for dev mode
-# COOKIE_AUTH_KEY=baa18ad1db89a7e9fbb50638815be63150a4494ac465779ee2f30bc980f1a55e
-# COOKIE_ENCR_KEY=2780ffc17eec2d85960473c407ee37c0249db93e4586ec52e3ef9e153ba61e72
-`
-
-var (
-	secretGitHub = ""
-)
-
 func getSecrets() []byte {
 	// in production deployment secrets are embedded in binary as secretsEnv
 	if len(secretsEnv) > 0 {
 		logf("getSecrets(): using secrets from embedded secretsEnv of length %d\n", len(secretsEnv))
 		return secretsEnv
 	}
-	//panicIf(flgRunProd, "when running in production must have secrets embedded in the binary")
+	panicIf(flgRunProd && !isWinOrMac(), "when running with -run-prod on Linux must have secrets embedded in the binary")
 
 	// when running non-prod we try to read secrets from secrets repo
 	// secrets file only exists on my laptop so it's ok if read fails
@@ -67,9 +52,8 @@ func getSecrets() []byte {
 		logf("getSecrets(): using secrets from %s of size %d\n", secretsSrcPath, len(d))
 		return d
 	}
-	// we fallback to minimum amount of secrets from secretsDev
-	logf("getSecrets(): using minimal dev secrets from secretsDev of length %d\n", len(secretsDev))
-	return []byte(secretsDev)
+	logf("Warning: secrets not found")
+	return nil
 }
 
 func loadSecrets() {
@@ -84,33 +68,16 @@ func loadSecrets() {
 			return
 		}
 		*val = v
-		if isDev() {
+		if isDevOrLocal() {
 			logf("Got %s='%s'\n", key, v)
 		} else {
 			logf("Got %s\n", key)
 		}
 	}
-	// those we need always
-	must := false
-	// // getEnv("COOKIE_AUTH_KEY", &cookieAuthKeyHex, 64, must)
-	// // getEnv("COOKIE_ENCR_KEY", &cookieEncrKeyHex, 64, must)
-
-	// // those are only required in prod
-	getEnv("LOGTASTIC_API_KEY", &logtastic.ApiKey, 30, must)
-	// getEnv("PIRSCH_SECRET", &pirschClientSecret, 64, must)
-	// getEnv("GITHUB_SECRET_ONLINETOOL", &secretGitHubOnlineTool, 40, must)
-	// getEnv("GITHUB_SECRET_TOOLS_ARSLEXIS", &secretGitHubToolsArslexis, 40, must)
-	// getEnv("GITHUB_SECRET_LOCAL", &secretGitHubLocal, 40, must)
-	getEnv("MAILGUN_DOMAIN", &mailgunDomain, 4, must)
-	getEnv("MAILGUN_API_KEY", &mailgunAPIKey, 32, must)
-	// // when running locally we shouldn't send axiom / pirsch
-	// if isDev() || flgRunProdLocal {
-	// 	axiomApiToken = ""
-	// 	pirschClientSecret = ""
-	// }
-
+	getEnv("MAILGUN_DOMAIN", &mailgunDomain, 4, false)
+	getEnv("MAILGUN_API_KEY", &mailgunAPIKey, 32, false)
 	getEnv("GITHUB_SECRET_PROD", &secretGitHub, 40, true)
-	if isDev() {
+	if isDevOrLocal() {
 		getEnv("GITHUB_SECRET_LOCAL", &secretGitHub, 40, true)
 	}
 }
@@ -122,8 +89,8 @@ var (
 	flgRunProd bool
 )
 
-func isDev() bool {
-	return flgRunDev
+func isDevOrLocal() bool {
+	return flgRunDev || isWinOrMac()
 }
 
 func measureDuration() func() {
@@ -200,11 +167,17 @@ func Main() {
 	loadSecrets()
 
 	if flgRunDev {
+		setupLogging()
+		defer closeLogging()
+
 		runServerDev()
 		return
 	}
 
 	if flgRunProd {
+		setupLogging()
+		defer closeLogging()
+
 		runServerProd()
 		return
 	}

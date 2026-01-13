@@ -20,7 +20,6 @@ import (
 
 	"github.com/felixge/httpsnoop"
 	hutil "github.com/kjk/common/httputil"
-	"github.com/kjk/common/logtastic"
 	"github.com/kjk/common/u"
 )
 
@@ -196,7 +195,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		}
 
 		if strings.HasPrefix(uri, "/event") {
-			logtastic.HandleEvent(w, r)
+			handleEvent(w, r)
 			return
 		}
 		if uri == "/help" {
@@ -257,9 +256,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 				http.Error(w, errStr, http.StatusInternalServerError)
 				return
 			}
-			logHTTPReq(r, m.Code, m.Written, m.Duration)
-			logtastic.LogHit(r, m.Code, m.Written, m.Duration)
-			// axiomLogHTTPReq(ctx(), r, m.Code, int(m.Written), m.Duration)
+			logHTTPRequest(r, m.Code, m.Written, m.Duration)
 		}()
 	})
 
@@ -304,8 +301,6 @@ func serverListen(httpSrv *http.Server) func() {
 		defer cancel()
 		_ = httpSrv.Shutdown(ctx)
 		<-chServerClosed
-		logf("stopping logtastic\n")
-		logtastic.Stop()
 	}
 }
 
@@ -359,32 +354,11 @@ func mkServeFileOptions(fsys fs.FS) *hutil.ServeFileOptions {
 	}
 }
 
-func startLogtastic() {
-	if logtastic.ApiKey == "" {
-		return
-	}
-	logtastic.BuildHash = GitCommitHash
-	logtastic.LogDir = getLogsDirMust()
-	if isDev() || u.IsWinOrMac() {
-		err := logtastic.CheckServerAlive("127.0.0.1:9327")
-		if err != nil {
-			logf("startLogtastic: failed to connect to logtastic server, error: %s\n", err)
-			logtastic.ApiKey = ""
-			return
-		}
-		logtastic.Server = "127.0.0.1:9327"
-	} else {
-		logtastic.Server = "l.arslexis.io"
-	}
-	logf("logtatistic server: %s\n", logtastic.Server)
-}
-
 var (
 	proxyURLStr = "http://localhost:3035"
 )
 
 func runServerDev() {
-	startLogtastic()
 	// must be same as vite.config.js
 
 	logf("runServerDev\n")
@@ -409,10 +383,7 @@ func runServerDev() {
 	serveOpts.DirPrefix = "./"
 	httpSrv := makeHTTPServer(serveOpts, proxyHandler)
 
-	//closeHTTPLog := OpenHTTPLog("onlinetool")
-	//defer closeHTTPLog()
-
-	logf("runServerDev(): starting on '%s', dev: %v\n", httpSrv.Addr, isDev())
+	logf("runServerDev(): starting on '%s', dev: %v\n", httpSrv.Addr, isDevOrLocal())
 	waitFn := serverListen(httpSrv)
 	if isWinOrMac() {
 		openBrowserForServerMust(httpSrv)
@@ -426,15 +397,8 @@ func runServerProd() {
 	fsys := mkFsysEmbedded()
 	checkHasEmbeddedFilesMust()
 
-	if !testingProd {
-		startLogtastic()
-	}
-
 	serveOpts := mkServeFileOptions(fsys)
 	httpSrv := makeHTTPServer(serveOpts, nil)
-	if !isWinOrMac() {
-		startLogtastic()
-	}
 	logf("runServerProd(): starting on 'http://%s', dev: %v, prod: %v, testingProd: %v\n", httpSrv.Addr, flgRunDev, flgRunProd, testingProd)
 
 	waitFn := serverListen(httpSrv)

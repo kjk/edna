@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+func serveJSONOk(w http.ResponseWriter, v any) {
+	serveJSON(w, v, http.StatusOK)
+}
+
 func serveJSON(w http.ResponseWriter, v any, code int) {
 	d, err := json.Marshal(v)
 	if err != nil {
@@ -217,7 +221,7 @@ func postWithHeaders(uri string, hdrs map[string]string) (*http.Response, error)
 }
 
 func getServerBaseURL() string {
-	if isDev() {
+	if isDevOrLocal() {
 		return fmt.Sprintf("http://localhost:%d", httpPort)
 	}
 	return "https://" + domain

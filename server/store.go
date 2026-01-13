@@ -433,7 +433,7 @@ func handleStoreGetNotes(w http.ResponseWriter, r *http.Request, userInfo *UserI
 }
 
 func maybeSaveIndexAndData(dataDir string, index []byte, data []byte) {
-	if !isDev() || dataDir == "" {
+	if !isDevOrLocal() || dataDir == "" {
 		// only when testing
 		return
 	}
@@ -445,7 +445,7 @@ func maybeSaveIndexAndData(dataDir string, index []byte, data []byte) {
 }
 
 func maybeSaveUploadedZip(dataDir string, zipData []byte) {
-	if !isDev() {
+	if !isDevOrLocal() {
 		// only when testing
 		return
 	}

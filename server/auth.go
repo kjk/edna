@@ -52,8 +52,12 @@ func makeSecureCookie() {
 	secureCookie = securecookie.New(cookieAuthKey, cookieEncrKey)
 }
 
+var (
+	secretGitHub = ""
+)
+
 func getGitHubSecrets() (string, string) {
-	if isDev() {
+	if isDevOrLocal() {
 		return "Ov23liHlSBA3rZzl9wHE", secretGitHub
 	}
 	return "Ov23lioGhkU0mvfQBrxI", secretGitHub
