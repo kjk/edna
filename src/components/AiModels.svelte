@@ -21,7 +21,7 @@
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{ 
+  /** @type {{
     selectModel: (model: any) => void,
     close: () => void,
   }} */
@@ -118,7 +118,7 @@
   use:clickOutside={close}
   {onkeydown}
   tabindex="-1"
-  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-[24px] border-gray-400 right-0 max-h-[50vh] min-w-[40ch]"
+  class="absolute flex flex-col pt-1 z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-6 border-gray-400 right-0 max-h-[50vh] min-w-[40ch]"
 >
   <div class="relative">
     <input

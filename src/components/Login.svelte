@@ -1,7 +1,7 @@
 <script>
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import GitHub from "./GitHub.svelte";
+  import { IconGitHub } from "./Icons.svelte";
 
   /** @type { {
     onclose: () => void,
@@ -112,7 +112,7 @@
       href="/auth/ghlogin"
       class="relative flex items-center justify-center w-full py-2 px-4 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors font-medium"
     >
-      <GitHub class="mr-2" />
+      {@render IconGitHub("mr-2")}
       Login with GitHub
     </a>
   </div>
