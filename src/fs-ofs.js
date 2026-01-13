@@ -62,6 +62,7 @@ async function ofsWriteToFileAtOffset(path, offset, blob) {
     keepExistingData: true,
   });
   await writable.seek(offset);
+  // @ts-ignore
   await writable.write(blob);
   await writable.close();
   return offset;
@@ -83,6 +84,7 @@ async function ofsAppendToFile(path, blob) {
     keepExistingData: true,
   });
   await writable.seek(offset);
+  // @ts-ignore
   await writable.write(blob);
   await writable.close();
   return offset;

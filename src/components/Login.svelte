@@ -97,12 +97,12 @@
   role="dialog"
   tabindex="0"
   {onkeydown}
-  class="selector z-20 absolute center-x-with-translate top-[4rem] flex flex-col max-w-full p-8 text-sm"
+  class="selector z-20 absolute center-x-with-translate top-16 flex flex-col max-w-full p-8 text-sm"
 >
   <div class="flex justify-between items-baseline">
     <div></div>
     <div class="self-center font-semibold mb-4">Login to Elaris</div>
-    <button title="Close" onclick={() => onclose()} class="kbd-btn mt-[4px]"
+    <button title="Close" onclick={() => onclose()} class="kbd-btn mt-1"
       >Esc</button
     >
   </div>

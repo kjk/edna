@@ -127,7 +127,7 @@
       type="text"
       class="px-1 py-0.5 mb-2 w-full text-xs"
     />
-    <div class="absolute right-[0.5rem] top-[1px] italic text-gray-400">
+    <div class="absolute right-2 top-px italic text-gray-400">
       {modelsCountMsg}
     </div>
   </div>
@@ -156,7 +156,7 @@
 
       <button
         tabindex="-1"
-        class="ml-[-6px] cursor-pointer hover:text-yellow-600"
+        class="-ml-1.5 cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
           ev.preventDefault();
           ev.stopPropagation();

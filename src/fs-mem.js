@@ -15,10 +15,12 @@ export class FileSystemMem {
 
     if (existingBlob) {
       // Combine existing blob with new data
+      // @ts-ignore
       const newBlob = new Blob([existingBlob, blob]);
       this.files.set(path, newBlob);
     } else {
       // Create new file
+      // @ts-ignore
       this.files.set(path, new Blob([blob]));
     }
 
@@ -36,10 +38,12 @@ export class FileSystemMem {
     if (!existingBlob) {
       // Create new file with data at offset
       if (offset === 0) {
+        // @ts-ignore
         this.files.set(path, new Blob([bytes]));
       } else {
         // Create file with zeros up to offset, then the data
         const padding = new Uint8Array(offset);
+        // @ts-ignore
         this.files.set(path, new Blob([padding, bytes]));
       }
       return;

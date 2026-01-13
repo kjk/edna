@@ -518,7 +518,7 @@
 <form
   onkeydown={onKeydown}
   tabindex="-1"
-  class="selector absolute flex flex-col z-20 center-x-with-translate top-[2rem] max-h-[90vh] w-[42em] max-w-[90vw] p-2"
+  class="selector absolute flex flex-col z-20 center-x-with-translate top-8 max-h-[90vh] w-[42em] max-w-[90vw] p-2"
 >
   {#if header}
     <div class="font-bold mb-2 text-lg ml-1">{header}</div>
@@ -532,7 +532,7 @@
       type="text"
       class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
     />
-    <div class="absolute right-[0.5rem] top-[0.25rem] italic text-gray-400">
+    <div class="absolute right-2 top-1 italic text-gray-400">
       {notesCountMsg}
     </div>
   </div>
@@ -547,7 +547,7 @@
       <div class="flex w-full items-center group">
         <button
           tabindex="-1"
-          class="ml-[-6px] cursor-pointer hover:text-yellow-600"
+          class="-ml-1.5 cursor-pointer hover:text-yellow-600"
           onclick={(ev) => {
             ev.preventDefault();
             ev.stopPropagation();
@@ -567,7 +567,7 @@
         </div>
 
         <div
-          class="mt-[0px] opacity-0 invisible group-hover:visible group-hover:opacity-100 flex items-center self-center bg-gray-100"
+          class="mt-0 opacity-0 invisible group-hover:visible group-hover:opacity-100 flex items-center self-center bg-gray-100"
         >
           {#if isNoteArchivable(noteInfo.name)}
             {#if isNoteArchived(noteInfo.name)}
