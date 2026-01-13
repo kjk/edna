@@ -59,8 +59,17 @@ var (
 	muStore sync.Mutex
 )
 
-func serve404(w http.ResponseWriter, s string) {
-	http.Error(w, s, http.StatusNotFound)
+// call fn() with UserInfo under lock
+func doUserOpByEmail(email string, fn func(*UserInfo, int) error) error {
+	muStore.Lock()
+	defer muStore.Unlock()
+
+	for i, u := range users {
+		if u.Email == email {
+			return fn(u, i)
+		}
+	}
+	return fn(nil, -1)
 }
 
 type GetNotesResponse struct {

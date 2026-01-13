@@ -118,19 +118,6 @@ func serveChromeDevToolsJSON(w http.ResponseWriter, r *http.Request) {
 	serve200JSONData(w, []byte(s))
 }
 
-// call fn() with UserInfo under lock
-func doUserOpByEmail(email string, fn func(*UserInfo, int) error) error {
-	muStore.Lock()
-	defer muStore.Unlock()
-
-	for i, u := range users {
-		if u.Email == email {
-			return fn(u, i)
-		}
-	}
-	return fn(nil, -1)
-}
-
 func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.ReverseProxy) *http.Server {
 	panicIf(serveOpts == nil, "must provide serveOpts")
 

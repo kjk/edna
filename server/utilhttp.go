@@ -135,6 +135,10 @@ func serve404JSON(w http.ResponseWriter, v map[string]any) {
 	w.Write(d)
 }
 
+func serve404(w http.ResponseWriter, s string) {
+	http.Error(w, s, http.StatusNotFound)
+}
+
 func serve500Text(w http.ResponseWriter, fmtMsg ...any) {
 	msg := fmtSmartNL(fmtMsg...)
 	logf(msg)

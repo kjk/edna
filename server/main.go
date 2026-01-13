@@ -114,14 +114,12 @@ func Main() {
 		flgSetupAndRun   bool
 		flgGen           bool
 	)
-	{
-		flag.BoolVar(&flgRunDev, "run-dev", false, "run the server in dev mode")
-		flag.BoolVar(&flgRunProd, "run-prod", false, "run server in production")
-		flag.BoolVar(&flgDeployHetzner, "deploy", false, "deploy to hetzner")
-		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
-		flag.BoolVar(&flgGen, "gen", false, "generate code (ai models)")
-		flag.Parse()
-	}
+	flag.BoolVar(&flgRunDev, "run-dev", false, "run the server in dev mode")
+	flag.BoolVar(&flgRunProd, "run-prod", false, "run server in production")
+	flag.BoolVar(&flgDeployHetzner, "deploy", false, "deploy to hetzner")
+	flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
+	flag.BoolVar(&flgGen, "gen", false, "generate code (ai models)")
+	flag.Parse()
 
 	// for ad-hoc testing
 	if true {
