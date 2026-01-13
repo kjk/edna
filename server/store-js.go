@@ -249,7 +249,7 @@ func replayBrowserStoreZip(userDataDir string, store *appendstore.Store, zipData
 		// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
 		case kStoreWriteFile:
 			content := data[rec.Offset : rec.Offset+rec.Size]
-			store.OverwriteRecordWithTimestamp(kStoreWriteFile, rec.Meta, content, rec.TimestampMs)
+			store.AppendRecordFileWithTimestamp(kStoreWriteFile, rec.Meta, content, rec.Meta, rec.TimestampMs)
 			// logf("replayBrowserStoreZip: updated content for note %s with verId %s\n", noteId, verId)
 		default:
 			logf("replayBrowserStoreZip: unknown record kind %s\n", rec.Kind)
@@ -281,7 +281,7 @@ func validateStoreRecords(store *appendstore.Store) error {
 
 	noteToWatch := "BlCJ"
 	noteToWatch = ""
-	recs := store.AllRecords()
+	recs := store.Records()
 	idToNote := make(map[string]*Note)
 	for _, rec := range recs {
 		k := rec.Kind
@@ -289,20 +289,9 @@ func validateStoreRecords(store *appendstore.Store) error {
 		if noteToWatch != "" && strings.Contains(recStr, noteToWatch) {
 			logf("%s", recStr)
 		}
-		if rec.SizeInFile != 0 && rec.SizeInFile < rec.Size {
-			return fmt.Errorf("SizeInFile %d is smaller than Size %d, kind '%s'\n%s", rec.SizeInFile, rec.Size, rec.Kind, recStr)
-		}
-		if rec.Overwritten {
-			if k != kStoreWriteFile {
-				return fmt.Errorf("record with kind '%s' is overwritten, only %s is allowed\n%s", rec.Kind, kStoreWriteFile, recStr)
-			}
-		}
 		switch k {
 		case kStorePut, kStorePutEncrypted, kStoreWriteFile:
 			size := rec.Size
-			if rec.SizeInFile != 0 {
-				size = rec.SizeInFile
-			}
 			end := rec.Offset + size
 			if end > dataSize {
 				return fmt.Errorf("record %s has invalid offset/size: offset=%d, size=%d, end: %d, data size=%d\n%s",

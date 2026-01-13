@@ -39,10 +39,9 @@ func openStoreForTest() *appendstore.Store {
 	indexFileName := "index.txt"
 	dataFileName := "data.bin"
 	store := &appendstore.Store{
-		DataDir:                    dir,
-		IndexFileName:              indexFileName,
-		DataFileName:               dataFileName,
-		OverWriteDataExpandPercent: 100,
+		DataDir:       dir,
+		IndexFileName: indexFileName,
+		DataFileName:  dataFileName,
 	}
 	err := appendstore.OpenStore(store)
 	must(err)
@@ -53,7 +52,7 @@ func openStoreForTest() *appendstore.Store {
 
 func adHocTestOpenStore() *appendstore.Store {
 	store := openStoreForTest()
-	dumpRecords(store.AllRecords(), "")
+	dumpRecords(store.Records(), "")
 	return store
 }
 
@@ -71,10 +70,9 @@ func adHocTestReplyZip() {
 	os.Remove(filepath.Join(dir, indexFileName))
 	os.Remove(filepath.Join(dir, dataFileName))
 	store := &appendstore.Store{
-		DataDir:                    dir,
-		IndexFileName:              indexFileName,
-		DataFileName:               dataFileName,
-		OverWriteDataExpandPercent: 100,
+		DataDir:       dir,
+		IndexFileName: indexFileName,
+		DataFileName:  dataFileName,
 	}
 	err = appendstore.OpenStore(store)
 	must(err)
@@ -96,10 +94,9 @@ func adHocTestReplayBrowserStoreZip() {
 		copyFileOverwrite(srcPath, dstPath)
 	}
 	store := &appendstore.Store{
-		DataDir:                    dir,
-		IndexFileName:              "index_tmp.txt",
-		DataFileName:               "data_tmp.bin",
-		OverWriteDataExpandPercent: 100,
+		DataDir:       dir,
+		IndexFileName: "index_tmp.txt",
+		DataFileName:  "data_tmp.bin",
 	}
 	err := appendstore.OpenStore(store)
 	must(err)

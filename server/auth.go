@@ -325,10 +325,9 @@ func getLoggedUser(r *http.Request, _ http.ResponseWriter) (*UserInfo, error) {
 		}
 
 		userInfo.Store = &appendstore.Store{
-			DataDir:                    dataDir,
-			IndexFileName:              "index.txt",
-			DataFileName:               "data.bin",
-			OverWriteDataExpandPercent: 100,
+			DataDir:       dataDir,
+			IndexFileName: "index.txt",
+			DataFileName:  "data.bin",
 		}
 		err = appendstore.OpenStore(userInfo.Store)
 		if err != nil {
@@ -394,10 +393,9 @@ func handleLogInLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		userInfo.Store = &appendstore.Store{
-			DataDir:                    dataDir,
-			IndexFileName:              "index.txt",
-			DataFileName:               "data.bin",
-			OverWriteDataExpandPercent: 100,
+			DataDir:       dataDir,
+			IndexFileName: "index.txt",
+			DataFileName:  "data.bin",
 		}
 		err = appendstore.OpenStore(userInfo.Store)
 		if err != nil {

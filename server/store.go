@@ -215,25 +215,16 @@ type GetMultiRequest struct {
 
 func serializeRecord(rec *appendstore.Record) string {
 	sz := ""
-	if rec.SizeInFile > 0 {
-		sz = fmt.Sprintf("%d:%d", rec.Size, rec.SizeInFile)
-	} else {
-		sz = fmt.Sprintf("%d", rec.Size)
-	}
-	overWritten := ""
-	if rec.Overwritten {
-		overWritten = " :overwritten"
-	}
-	return fmt.Sprintf("%d %s %s %s%s\n", rec.Offset, sz, rec.Kind, rec.Meta, overWritten)
+	sz = fmt.Sprintf("%d", rec.Size)
+	return fmt.Sprintf("%d %s %s %s\n", rec.Offset, sz, rec.Kind, rec.Meta)
 }
 
 func dumpRecords(recs []*appendstore.Record, limitKind string) {
 	type row struct {
-		offset      string
-		size        string
-		kind        string
-		meta        string
-		overwritten string
+		offset string
+		size   string
+		kind   string
+		meta   string
 	}
 
 	var rows []row
@@ -242,21 +233,12 @@ func dumpRecords(recs []*appendstore.Record, limitKind string) {
 			continue
 		}
 		sz := ""
-		if rec.SizeInFile > 0 {
-			sz = fmt.Sprintf("%d:%d", rec.Size, rec.SizeInFile)
-		} else {
-			sz = fmt.Sprintf("%d", rec.Size)
-		}
-		overWritten := ""
-		if rec.Overwritten {
-			overWritten = "overwritten"
-		}
+		sz = fmt.Sprintf("%d", rec.Size)
 		rows = append(rows, row{
-			offset:      fmt.Sprintf("%d", rec.Offset),
-			size:        sz,
-			kind:        rec.Kind,
-			meta:        rec.Meta,
-			overwritten: overWritten,
+			offset: fmt.Sprintf("%d", rec.Offset),
+			size:   sz,
+			kind:   rec.Kind,
+			meta:   rec.Meta,
 		})
 	}
 
@@ -268,7 +250,6 @@ func dumpRecords(recs []*appendstore.Record, limitKind string) {
 	maxSize := len("Size")
 	maxKind := len("Kind")
 	maxMeta := len("Meta")
-	maxOverwritten := len("Overwritten")
 
 	for _, r := range rows {
 		if len(r.offset) > maxOffset {
@@ -283,18 +264,15 @@ func dumpRecords(recs []*appendstore.Record, limitKind string) {
 		if len(r.meta) > maxMeta {
 			maxMeta = len(r.meta)
 		}
-		if len(r.overwritten) > maxOverwritten {
-			maxOverwritten = len(r.overwritten)
-		}
 	}
 
-	format := fmt.Sprintf("%%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds\n", maxOffset, maxSize, maxKind, maxMeta, maxOverwritten)
+	format := fmt.Sprintf("%%-%ds | %%-%ds | %%-%ds | %%-%ds | %%\n", maxOffset, maxSize, maxKind, maxMeta)
 
-	fmt.Printf(format, "Offset", "Size", "Kind", "Meta", "Overwritten")
-	fmt.Println(strings.Repeat("-", maxOffset+maxSize+maxKind+maxMeta+maxOverwritten+8)) // 4 pipes and 4 spaces
+	fmt.Printf(format, "Offset", "Size", "Kind", "Meta")
+	fmt.Println(strings.Repeat("-", maxOffset+maxSize+maxKind+maxMeta+8)) // 4 pipes and 4 spaces
 
 	for _, r := range rows {
-		fmt.Printf(format, r.offset, r.size, r.kind, r.meta, r.overwritten)
+		fmt.Printf(format, r.offset, r.size, r.kind, r.meta)
 	}
 }
 
@@ -663,7 +641,7 @@ func rewriteStoreWithPutRecordsFromZip(userInfo *UserInfo, zipData []byte, kind 
 				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to read record %s, error: %v", rec.Kind, err)
 			}
 			// copy data without changing kind
-			err = tempStore.OverwriteRecordWithTimestamp(rec.Kind, rec.Meta, d, rec.TimestampMs)
+			err = tempStore.AppendRecordFileWithTimestamp(rec.Kind, rec.Meta, d, rec.Meta, rec.TimestampMs)
 			if err != nil {
 				return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to copy record %s, error: %v", rec.Kind, err)
 			}
@@ -679,10 +657,9 @@ func rewriteStoreWithPutRecordsFromZip(userInfo *UserInfo, zipData []byte, kind 
 		return fmt.Errorf("rewriteStoreWithPutRecordsFromZip: failed to rename files, error: %v", err)
 	}
 	userInfo.Store = &appendstore.Store{
-		DataDir:                    userInfo.DataDir,
-		IndexFileName:              oldIndexName,
-		DataFileName:               oldDataName,
-		OverWriteDataExpandPercent: 100,
+		DataDir:       userInfo.DataDir,
+		IndexFileName: oldIndexName,
+		DataFileName:  oldDataName,
 	}
 	err = appendstore.OpenStore(userInfo.Store)
 	if err != nil {
@@ -1047,7 +1024,7 @@ func handleStoreWriteFile(w http.ResponseWriter, r *http.Request, userInfo *User
 	if serve400TextIfError(w, err, "handleStoreWriteFile: KeyValueMarshal() failed with '%s'", err) {
 		return
 	}
-	if err := userInfo.Store.OverwriteRecord(kStoreWriteFile, meta, d); err != nil {
+	if err := userInfo.Store.AppendRecordFile(kStoreWriteFile, "", d, meta); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to write file %s: %s", name, err), http.StatusInternalServerError)
 		return
 	}
