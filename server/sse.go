@@ -65,7 +65,7 @@ func sseNotify(r *http.Request, u *UserInfo, message string) {
 	}
 }
 
-// SSE /api/events?sessionId=<sessionId>
+// SSE /api/sse_events?sessionId=<sessionId>
 func handleEvents(w http.ResponseWriter, r *http.Request) {
 	uri := r.URL.Path
 	userInfo, err := getLoggedUser(r, w)

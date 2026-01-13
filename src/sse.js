@@ -21,7 +21,8 @@ export function startServerSideEvents() {
   }
   console.warn("Starting SSE connection, sessionId:" + sessionId);
   let sessionIdEnc = encodeURIComponent(sessionId);
-  let uri = window.location.origin + "/api/events?sessionId=" + sessionIdEnc;
+  let uri =
+    window.location.origin + "/api/sse_events?sessionId=" + sessionIdEnc;
   eventSource = new EventSource(uri);
 
   eventSource.onmessage = async function (event) {

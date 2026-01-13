@@ -151,7 +151,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		case "/api/verify_login_code":
 			handleAPIVerifyLoginCode(w, r)
 			return
-		case "/api/events":
+		case "/api/sse_events":
 			handleEvents(w, r)
 			return
 
