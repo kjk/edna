@@ -12,7 +12,7 @@ var nanoRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func genRandomID(n int) string {
 	res := make([]byte, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		idx := nanoRand.Intn(len(shortIDSymbols))
 		res[i] = shortIDSymbols[idx]
 	}
@@ -21,7 +21,7 @@ func genRandomID(n int) string {
 
 func genRandomLoginCode(n int) string {
 	result := make([]byte, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		x := nanoRand.Intn(len(symbolsDigit) - 1)
 		result[i] = symbolsDigit[x]
 	}
