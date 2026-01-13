@@ -152,7 +152,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			handleAPIVerifyLoginCode(w, r)
 			return
 		case "/api/sse_events":
-			handleEvents(w, r)
+			handleSSEEvents(w, r)
 			return
 
 		case "/api/currency_rates.json":

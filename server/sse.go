@@ -66,7 +66,7 @@ func sseNotify(r *http.Request, u *UserInfo, message string) {
 }
 
 // SSE /api/sse_events?sessionId=<sessionId>
-func handleEvents(w http.ResponseWriter, r *http.Request) {
+func handleSSEEvents(w http.ResponseWriter, r *http.Request) {
 	uri := r.URL.Path
 	userInfo, err := getLoggedUser(r, w)
 	if serve500TextIfError(w, err, "handleStore: %s, err: %v", uri, err) {
