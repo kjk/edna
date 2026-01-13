@@ -146,11 +146,9 @@ func Main() {
 		flgDeployHetzner bool
 		flgSetupAndRun   bool
 		flgGen           bool
-		flgBuildFrontend bool
 	)
 	{
 		flag.BoolVar(&flgRunDev, "run-dev", false, "run the server in dev mode")
-		flag.BoolVar(&flgBuildFrontend, "build-frontend", false, "build frontend assets")
 		flag.BoolVar(&flgRunProd, "run-prod", false, "run server in production")
 		flag.BoolVar(&flgDeployHetzner, "deploy", false, "deploy to hetzner")
 		flag.BoolVar(&flgSetupAndRun, "setup-and-run", false, "setup and run on the server")
@@ -159,21 +157,20 @@ func Main() {
 	}
 
 	// for ad-hoc testing
-	if false {
-		if true {
-			adHocTestOpenStore()
-		} else {
-			// make those reachable to avoid dead code warnings
-			adHocTestGetNotes()
-			adHocTestOpenStore()
-			adHocGetZipWithPutRecordsTest()
-			adHocTestReplyZip()
-			adHocTestOpenStore()
-			adHocTestReplayBrowserStoreZip()
-			adHocTestRunServerProd()
-			adHocTestReplayBrowserStoreZip()
-			clean()
-		}
+	if true {
+	} else {
+		adHocTestOpenStore()
+		rebuildFrontend()
+		// make those reachable to avoid dead code warnings
+		adHocTestGetNotes()
+		adHocTestOpenStore()
+		adHocGetZipWithPutRecordsTest()
+		adHocTestReplyZip()
+		adHocTestOpenStore()
+		adHocTestReplayBrowserStoreZip()
+		adHocTestRunServerProd()
+		adHocTestReplayBrowserStoreZip()
+		clean()
 		return
 	}
 
@@ -183,15 +180,15 @@ func Main() {
 		return
 	}
 
-	if GitCommitHash != "" {
-		uriBase := "https://github.com/kjk/elaris/commit/"
-		logf("elaris.arslexis.io, build: %s (%s)\n", GitCommitHash, uriBase+GitCommitHash)
-	}
-
 	if flgDeployHetzner {
 		defer measureDuration()()
 		deployToHetzner()
 		return
+	}
+
+	if GitCommitHash != "" {
+		uriBase := "https://github.com/kjk/elaris/commit/"
+		logf("elaris.arslexis.io, build: %s (%s)\n", GitCommitHash, uriBase+GitCommitHash)
 	}
 
 	if flgSetupAndRun {
@@ -199,25 +196,6 @@ func Main() {
 		setupAndRun()
 		return
 	}
-
-	if flgBuildFrontend {
-		defer measureDuration()()
-		rebuildFrontend()
-		return
-	}
-
-	n := 0
-	if flgRunDev {
-		n++
-	}
-	if flgRunProd {
-		n++
-	}
-	if n == 0 {
-		flag.Usage()
-		return
-	}
-	panicIf(n > 1, "can only use one of: -run-dev, -run-prod, -run-local-prod")
 
 	loadSecrets()
 
