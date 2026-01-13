@@ -226,3 +226,11 @@ func getServerBaseURL() string {
 	}
 	return "https://" + domain
 }
+
+func httpScheme(r *http.Request) string {
+	isLocal := strings.HasPrefix(r.Host, "localhost") || strings.HasPrefix(r.Host, "127.0.0.1")
+	if isLocal {
+		return "http://"
+	}
+	return "https://"
+}

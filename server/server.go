@@ -118,14 +118,6 @@ func serveChromeDevToolsJSON(w http.ResponseWriter, r *http.Request) {
 	serve200JSONData(w, []byte(s))
 }
 
-func httpScheme(r *http.Request) string {
-	isLocal := strings.HasPrefix(r.Host, "localhost") || strings.HasPrefix(r.Host, "127.0.0.1")
-	if isLocal {
-		return "http://"
-	}
-	return "https://"
-}
-
 // call fn() with UserInfo under lock
 func doUserOpByEmail(email string, fn func(*UserInfo, int) error) error {
 	muStore.Lock()
