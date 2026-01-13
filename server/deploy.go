@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -404,6 +405,24 @@ func setupAndRun() {
 			err = os.Rename(file, backupPath)
 			u.PanicIfErr(err, "os.Rename('%s', '%s') failed with %s\n", file, backupPath, err)
 			logf("moved '%s' to '%s'\n", file, backupPath)
+		}
+	}
+	// delete archived builds, leave 5 most recent
+	{
+		pattern := filepath.Join(deployServerDir, "backup", projectName+"-*")
+		files, err := filepath.Glob(pattern)
+		must(err)
+		logf("deleting old archived builds, pattern: '%s', %d files\n", pattern, len(files))
+		slices.Sort(files)
+		slices.Reverse(files)
+		for i, file := range files {
+			if i < 5 {
+				logf("skipping deletion of '%s'\n", file)
+				continue
+			}
+			err = os.Remove(file)
+			u.PanicIfErr(err, "os.Remove('%s') failed with %s\n", file, err)
+			logf("deleted '%s'\n", file)
 		}
 	}
 }
