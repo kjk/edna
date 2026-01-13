@@ -131,7 +131,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		case "/ping", "/ping.txt":
 			content := bytes.NewReader([]byte("pong"))
 			// foo.txt is so that they set the right mime type
-			http.ServeContent(w, r, "foo.txt", time.Time{}, content)
+			http.ServeContent(w, r, ".txt", time.Time{}, content)
 			return
 		case "/auth/ghlogin":
 			handleLoginGitHub(w, r)
