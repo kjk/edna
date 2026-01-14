@@ -41,11 +41,7 @@ export class FileSystemWorkerOFS {
     };
   }
 
-  /**
-   * @param {string} method
-   * @param {any} args
-   */
-  async sendMessage(method, args) {
+  async sendMessage(method: string, args: any) {
     await this.initPromise;
 
     const id = ++this.messageId;
@@ -73,24 +69,14 @@ export class FileSystemWorkerOFS {
     });
   }
 
-  /**
-   * @param {string} path
-   * @param {Uint8Array} blob
-   * @returns {Promise<number>}
-   */
-  async appendToFile(path, blob) {
+  async appendToFile(path: string, blob: Uint8Array): Promise<number> {
     return await this.sendMessage("appendToFile", {
       path,
       blob: blob,
     });
   }
 
-  /**
-   * @param {string} path
-   * @param {number} offset
-   * @param {Uint8Array} bytes
-   */
-  async writeToFileAtOffset(path, offset, bytes) {
+  async writeToFileAtOffset(path: string, offset: number, bytes: Uint8Array) {
     await this.sendMessage("writeToFileAtOffset", {
       path,
       offset,
@@ -98,29 +84,15 @@ export class FileSystemWorkerOFS {
     });
   }
 
-  /**
-   * @param {string} path
-   * @returns {Promise<ArrayBuffer|null>}
-   */
-  async readFile(path) {
+  async readFile(path: string): Promise<ArrayBuffer | null> {
     return await this.sendMessage("readFile", { path });
   }
 
-  /**
-   * @param {string} path
-   * @returns {Promise<number>}
-   */
-  async getFileSize(path) {
+  async getFileSize(path: string): Promise<number> {
     return await this.sendMessage("getFileSize", { path });
   }
 
-  /**
-   * @param {string} path
-   * @param {number} offset
-   * @param {number} size
-   * @returns {Promise<Uint8Array>}
-   */
-  async readFileSegment(path, offset, size) {
+  async readFileSegment(path: string, offset: number, size: number): Promise<Uint8Array> {
     return await this.sendMessage("readFileSegment", {
       path,
       offset,
@@ -128,18 +100,11 @@ export class FileSystemWorkerOFS {
     });
   }
 
-  /**
-   * @param {string} path
-   */
-  async deleteFile(path) {
+  async deleteFile(path: string) {
     await this.sendMessage("deleteFile", { path });
   }
 
-  /**
-   * @param {any} oldPath
-   * @param {any} newPath
-   */
-  async renameFile(oldPath, newPath) {
+  async renameFile(oldPath: any, newPath: any) {
     await this.sendMessage("renameFile", {
       oldPath,
       newPath,
@@ -165,10 +130,7 @@ export class FileSystemWorkerOFS {
 
 let fs;
 
-/**
- * @returns {Promise<FileSystemWorkerOFS>}
- */
-export async function getFileSystemWorkerOfs() {
+export async function getFileSystemWorkerOfs(): Promise<FileSystemWorkerOFS> {
   if (!fs) {
     fs = new FileSystemWorkerOFS();
     await fs.initWorker();
