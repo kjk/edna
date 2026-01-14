@@ -37,13 +37,10 @@ const settingsKeys = [
 export class Settings {
   bracketClosing = $state(true);
   currentTab = $state(kScratchNoteName);
-  /** @type { string[] } */
-  tabs = $state([]);
+  tabs: string[] = $state([]);
   emacsMetaKey = $state("alt");
-  /** @type { string } */
-  fontFamily = $state(undefined);
-  /** @type { number } */
-  fontSize = $state(undefined);
+  fontFamily: string = $state(undefined);
+  fontSize: number = $state(undefined);
   keymap = $state("default");
   showFoldGutter = $state(true);
   showLineNumberGutter = $state(true);
@@ -69,16 +66,10 @@ export class Settings {
       }
     }
   }
-  /**
-   * @param {string} tab
-   */
-  addTab(tab) {
+  addTab(tab: string) {
     pushIfNotExists(this.tabs, tab);
   }
-  /**
-   * @param {string} tab
-   */
-  removeTab(tab) {
+  removeTab(tab: string) {
     arrayRemove(this.tabs, tab);
   }
   toJSON() {
@@ -117,11 +108,7 @@ function validateTabSize(tabSize) {
   return tabSize;
 }
 
-/**
- * @param {string} modelID
- * @returns {any[]}
- */
-export function findModelByID(modelID) {
+export function findModelByID(modelID: string): any[] {
   for (let m of modelsShort) {
     if (m[kModelIDIdx] == modelID) {
       return m;
@@ -130,11 +117,7 @@ export function findModelByID(modelID) {
   return null;
 }
 
-/**
- * @param {string} modelID
- * @returns {string}
- */
-function validateAiModelID(modelID) {
+function validateAiModelID(modelID: string): string {
   let model = findModelByID(modelID);
   if (model === null) {
     console.warn(`validateAiModelID: model not found for id: ${modelID}`);
@@ -143,11 +126,7 @@ function validateAiModelID(modelID) {
   return modelID;
 }
 
-/**
- * @param {string[]} modelIDs
- * @returns {string[]}
- */
-function removeUnknownAiModels(modelIDs) {
+function removeUnknownAiModels(modelIDs: string[]): string[] {
   let validModels = [];
   for (let modelID of modelIDs) {
     let model = findModelByID(modelID);
@@ -162,8 +141,7 @@ function removeUnknownAiModels(modelIDs) {
 
 let lastSettingsRaw;
 
-/** @returns {Settings} */
-export function getSettings() {
+export function getSettings(): Settings {
   if (appState.settings) {
     // console.log("getSettings: already loaded");
     // logSettings(appState.settings);
@@ -205,11 +183,7 @@ function updateWebsiteTheme() {
   }
 }
 
-/**
- * @param {Settings} newSettings
- * @returns {boolean}
- */
-function saveSettings(newSettings) {
+function saveSettings(newSettings: Settings): boolean {
   if (!lastSettingsRaw) {
     // prevent exeption due to HMR
     return false;
@@ -275,19 +249,13 @@ mediaMatch.addEventListener("change", async () => {
   }
 });
 
-/**
- * @returns {string}
- */
-export function getVersion() {
+export function getVersion(): string {
   // __APP_VERSION__ and __GIT_HASH__ are set in vite.config.js
   // @ts-ignore
   return __APP_VERSION__;
 }
 
-/**
- * @returns {string}
- */
-export function getGitHash() {
+export function getGitHash(): string {
   // @ts-ignore
   return __GIT_HASH__;
 }
