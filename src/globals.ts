@@ -2,32 +2,29 @@ import { getNotes, updateAppStateAfterNotesChange } from "./appstate.svelte";
 import { Note } from "./note";
 import { formatDurationShort } from "./util";
 
-/** @typedef {{
-  openSettings: () => void,
-  openLanguageSelector: () => void,
-  openCreateNewNote: () => void,
-  openNoteSelector: () => void,
-  openCommandPalette: () => void,
-  openFindInNotes: () => void,
-  openContextMenu: (MouseEvent) => void,
-  openQuickAccess: () => void,
-  createScratchNote: () => void,
-  openBlockSelector: () => void,
-  openFunctionSelector: (boolean) => void,
-  smartRun: () => void,
-  focusEditor: () => void,
-  getPassword: (msg: string) => Promise<string>,
-  updateAfterNoteStateChange: (notes: Note[]) => void,
-  closeTabWithName: (name: string) => Promise<void>,
-  reloadIfCurrent: (name: string) => Promise<void>,
-}} GlobalFuncs
-*/
+export type GlobalFuncs = {
+  openSettings: () => void;
+  openLanguageSelector: () => void;
+  openCreateNewNote: () => void;
+  openNoteSelector: () => void;
+  openCommandPalette: () => void;
+  openFindInNotes: () => void;
+  openContextMenu: (ev: MouseEvent) => void;
+  openQuickAccess: () => void;
+  createScratchNote: () => void;
+  openBlockSelector: () => void;
+  openFunctionSelector: (onSelection: boolean) => void;
+  smartRun: () => void;
+  focusEditor: () => void;
+  getPassword: (msg: string) => Promise<string>;
+  updateAfterNoteStateChange: (notes: Note[]) => void;
+  closeTabWithName: (name: string) => Promise<void>;
+  reloadIfCurrent: (name: string) => Promise<void>;
+};
 
 let sessionStart = performance.now();
-/**
- * @returns {string}
- */
-export function getSessionDur() {
+
+export function getSessionDur(): string {
   let durMs = Math.round(performance.now() - sessionStart);
   return formatDurationShort(durMs);
 }
@@ -35,83 +32,73 @@ export function getSessionDur() {
 // it's easier to make some functions from App.vue available this way
 // then elaborate scheme of throwing and catching events
 // could also use setContext()
-/** @type {GlobalFuncs} */
-let globalFunctions;
+let globalFunctions: GlobalFuncs;
 
-/**
- * @param {GlobalFuncs} gf
- */
-export function setGlobalFuncs(gf) {
+export function setGlobalFuncs(gf: GlobalFuncs): void {
   globalFunctions = gf;
 }
 
-export function openSettings() {
+export function openSettings(): void {
   globalFunctions.openSettings();
 }
 
-export function openLanguageSelector() {
+export function openLanguageSelector(): void {
   globalFunctions.openLanguageSelector();
 }
 
-export function openCreateNewNote() {
+export function openCreateNewNote(): void {
   globalFunctions.openCreateNewNote();
 }
 
-export function openNoteSelector() {
+export function openNoteSelector(): void {
   globalFunctions.openNoteSelector();
 }
 
-export function openCommandPalette() {
+export function openCommandPalette(): void {
   globalFunctions.openCommandPalette();
 }
 
-export function openContextMenu(ev) {
+export function openContextMenu(ev: MouseEvent): void {
   globalFunctions.openContextMenu(ev);
 }
 
-export function openQuickAccess() {
+export function openQuickAccess(): void {
   globalFunctions.openQuickAccess();
 }
 
-export function createScratchNote() {
+export function createScratchNote(): void {
   globalFunctions.createScratchNote();
 }
 
-export function openBlockSelector() {
+export function openBlockSelector(): void {
   globalFunctions.openBlockSelector();
 }
 
-export function openFunctionSelector(onSelection = false) {
+export function openFunctionSelector(onSelection: boolean = false): void {
   globalFunctions.openFunctionSelector(onSelection);
 }
 
-export function openFindInNotes() {
+export function openFindInNotes(): void {
   globalFunctions.openFindInNotes();
 }
 
-export function smartRun() {
+export function smartRun(): void {
   globalFunctions.smartRun();
 }
 
-export function focusEditor() {
+export function focusEditor(): void {
   globalFunctions.focusEditor();
 }
 
-/**
- * @param {string} name
- */
-export async function closeTabWithName(name) {
+export async function closeTabWithName(name: string): Promise<void> {
   await globalFunctions.closeTabWithName(name);
 }
 
-/**
- * @param {string} name
- */
-export async function reloadIfCurrent(name) {
+export async function reloadIfCurrent(name: string): Promise<void> {
   await globalFunctions.reloadIfCurrent(name);
 }
 
-export function updateAfterNoteStateChange(allNotes = null) {
+export function updateAfterNoteStateChange(allNotes: Note[] | null = null): void {
   if (allNotes === null) {
     allNotes = getNotes();
   }
@@ -124,11 +111,7 @@ export function updateAfterNoteStateChange(allNotes = null) {
   globalFunctions.updateAfterNoteStateChange(allNotes);
 }
 
-/**
- * @param {string} msg
- * @returns {Promise<string>}
- */
-export async function getPasswordFromUser(msg) {
+export async function getPasswordFromUser(msg: string): Promise<string> {
   let pwd = await globalFunctions.getPassword(msg);
   console.log("got password:", pwd);
   return pwd;
