@@ -2,26 +2,19 @@
   import { onMount } from "svelte";
   import { len } from "../util";
 
-  /** @type {Timer} */
-  let timerID;
+  let timerID: Timer;
 
   class ModalInfoState {
     isShowing = $state(false);
     messages = $state([]);
-    /** @type {HTMLElement} */
-    listBoxRef = $state(null);
+    listBoxRef: HTMLElement = $state(null);
     title = $state("");
     canClose = $state(false);
 
-    /** @type {HTMLElement} */
-    overlayRef = $state(null);
-    /** @type {HTMLButtonElement} */
-    closeButtonRef = $state(null);
+    overlayRef: HTMLElement = $state(null);
+    closeButtonRef: HTMLButtonElement = $state(null);
 
-    /**
-     * @param {string} msgHTML
-     */
-    addMessage(msgHTML) {
+    addMessage(msgHTML: string): void {
       this.messages.unshift(msgHTML);
       this.isShowing = true;
       // scroll to bottom
@@ -30,11 +23,7 @@
       }
     }
 
-    /**
-     * @param {string} msgHTML
-     * @param {number} delay
-     */
-    addMessageDeilayed(msgHTML, delay) {
+    addMessageDeilayed(msgHTML: string, delay: number): void {
       clearTimeout(timerID);
       timerID = null;
       if (delay <= 0) {
@@ -97,10 +86,7 @@
     }
   }
 
-  /**
-   * @param {MouseEvent} ev
-   */
-  function onclick(ev) {
+  function onclick(ev: MouseEvent): void {
     if (ev.target === modalInfoState.overlayRef) {
       maybeClose();
     }

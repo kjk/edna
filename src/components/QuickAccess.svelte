@@ -9,11 +9,13 @@
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
-  /** @type {{
-    openNote: (name: string, newTab?: boolean) => void,
-    forHistory: boolean,
-  }} */
-  let { forHistory, openNote } = $props();
+  let {
+    forHistory,
+    openNote,
+  }: {
+    openNote: (name: string, newTab?: boolean) => void;
+    forHistory: boolean;
+  } = $props();
 
   let altChar = getAltChar();
   let modChar = getModChar();
@@ -29,16 +31,14 @@
 
   const kMaxHistory = 10;
 
-  /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
-  /**
-   * @param {Note[]} starred
-   * @param {Note[]} withShortcuts
-   * @param {string[]} history
-   * @returns {NoteInfo[]}
-   */
-  function buildQuickAccessNotes(starred, withShortcuts, history) {
-    /** @type {Note[]} */
-    let notes = [...starred, ...withShortcuts];
+  type NoteInfo = import("./NoteSelector.svelte").NoteInfo;
+
+  function buildQuickAccessNotes(
+    starred: Note[],
+    withShortcuts: Note[],
+    history: string[]
+  ): NoteInfo[] {
+    let notes: Note[] = [...starred, ...withShortcuts];
     // remove duplicate names in notes
     notes = [...new Set(notes)];
     let res = buildNoteInfos(notes);
@@ -72,21 +72,14 @@
     ),
   );
 
-  /**
-   * @param {NoteInfo} note
-   * @returns {string}
-   */
-  function getNoteShortcut(note) {
+  function getNoteShortcut(note: NoteInfo): string {
     if (note.altShortcut) {
       return `${altChar} + ${note.altShortcut}`;
     }
     return "";
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent): void {
     // '0' ... '9' picks an item
     let idx = getKeyEventNumber(ev);
     let lastIdx = len(history) - 1;
@@ -100,10 +93,7 @@
     listboxRef.onkeydown(ev, true);
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   */
-  async function toggleStarred(noteInfo) {
+  async function toggleStarred(noteInfo: NoteInfo): Promise<void> {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
     // because we wait until metadata file is saved
