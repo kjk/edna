@@ -1,7 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bun run build)"
+      "Bash(bun run build)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(for f in src/globals.ts src/metadata.ts src/httputil.ts src/keys.ts src/log.ts)",
+      "Bash(do wc -l \"$f\")",
+      "Bash(done)",
+      "Bash(find:*)",
+      "Bash(git log:*)",
+      "Bash(for f in src/*.ts)",
+      "Bash(do if grep -q \"@param\\\\|@returns\\\\|@type {\" \"$f\")",
+      "Bash(then basename \"$f\")",
+      "Bash(fi)",
+      "Bash(for f in *.ts)",
+      "Bash(do if grep -l \"@param\\\\|@returns\\\\|@type\" \"$f\")",
+      "Bash(then echo \"$f\")",
+      "Bash(grep:*)"
     ]
   }
 }
