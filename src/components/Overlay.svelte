@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { smartfocus, trapfocus } from "../actions";
   import { throwIf } from "../util";
 

@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
   /** @typedef {[string, number|MenuItemDef[]]} MenuItemDef */
   /** @typedef {MenuItemDef[]} MenuDef */
 
@@ -97,7 +97,7 @@
   }
 </script>
 
-<script>
+<script lang="ts">
   import { onMount } from "svelte";
   import { ensurevisible, focus } from "./actions";
   import { extractShortcut } from "./keys";

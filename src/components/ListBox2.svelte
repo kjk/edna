@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { len } from "../util";
   import "overlayscrollbars/overlayscrollbars.css";
   import { onMount } from "svelte";

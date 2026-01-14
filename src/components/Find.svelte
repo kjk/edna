@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount, tick, untrack } from "svelte";
   import {
     closeSearchPanel,

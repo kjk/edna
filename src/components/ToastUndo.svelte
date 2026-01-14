@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   /** @type { {
     message: string,
     undoAction: (ev) => void,

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { tooltip } from "../actions.js";
   import {
     getLanguage,

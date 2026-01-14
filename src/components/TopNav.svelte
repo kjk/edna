@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { tooltip } from "../actions.js";
   import { appState, findNoteByName } from "../appstate.svelte.js";
   import { focusEditor, openNoteSelector } from "../globals.js";

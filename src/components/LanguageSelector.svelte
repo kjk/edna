@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { focus } from "../actions.js";
   import { kLanguages } from "../editor/languages.js";
   import {

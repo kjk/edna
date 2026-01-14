@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { focus } from "../actions";
   import { getFunctionMeta, toggleFunctionStarred } from "../metadata";
   import { getBoopFunctions } from "../system-notes";

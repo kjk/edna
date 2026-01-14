@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { focus } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
   import { isSystemNoteName, sanitizeNoteName } from "../notes";

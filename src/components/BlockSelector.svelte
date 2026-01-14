@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
   /** @typedef {{
    block: any,
    text: string,
@@ -7,7 +7,7 @@
   */
 </script>
 
-<script>
+<script lang="ts">
   import { EditorView } from "@codemirror/view";
   import { focus, tooltip } from "../actions";
   import { toggleBlockFoldN } from "../editor/fold-gutter";

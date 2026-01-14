@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount, tick } from "svelte";
   import { preventDefault, stopPropagation } from "svelte/legacy";
   import { focus, trapfocus } from "../actions";

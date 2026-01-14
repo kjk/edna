@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount, tick } from "svelte";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";

@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
   import { onMount } from "svelte";
   import { len } from "../util";
 
@@ -64,7 +64,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<script>
+<script lang="ts">
   import { focus, smartfocus, trapfocus } from "../actions";
 
   let msg = "Auto added message";

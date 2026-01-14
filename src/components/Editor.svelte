@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte";
   import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
