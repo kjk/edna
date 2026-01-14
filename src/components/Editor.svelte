@@ -11,32 +11,29 @@
   import { parseTab } from "../tab.js";
   import { throwIf } from "../util.js";
 
-  /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
+  type SelectionChangeEvent = import("../editor/event.js").SelectionChangeEvent;
 
-  /** @type {{
-    class?: string,
-    debugSyntaxTree: boolean,
-    cursorChange: (e: SelectionChangeEvent) => void,
-    docDidChange: () => void,
-    didLoadNote: (name: string, noPushHistory: boolean) => void,
-   }}*/
   let {
     class: klass = "",
     debugSyntaxTree,
     cursorChange,
     docDidChange,
     didLoadNote,
+  }: {
+    class?: string;
+    debugSyntaxTree: boolean;
+    cursorChange: (e: SelectionChangeEvent) => void;
+    docDidChange: () => void;
+    didLoadNote: (name: string, noPushHistory: boolean) => void;
   } = $props();
 
   let syntaxTreeDebugContent = $state(null);
   let settings = getSettings();
   let theme = settings.theme;
 
-  /** @type {EdnaEditor} */
-  let editor;
+  let editor: EdnaEditor;
 
-  /** @type {HTMLElement} */
-  let editorRef;
+  let editorRef: HTMLElement;
 
   $effect(() => {
     /* TODO: it's not reactive if I do:

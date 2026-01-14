@@ -12,23 +12,25 @@
   } from "../util";
   import ListBox from "./ListBox.svelte";
 
-  /** @typedef {[string, number]} CmdDef */
+  type CmdDef = [string, number];
 
-  /** @type {{
-    executeCommand: (id: number) => void,
-    switchToNoteSelector: () => void,
-    commandsDef: CmdDef[],
-}}*/
-  let { executeCommand, switchToNoteSelector, commandsDef } = $props();
+  let {
+    executeCommand,
+    switchToNoteSelector,
+    commandsDef,
+  }: {
+    executeCommand: (id: number) => void;
+    switchToNoteSelector: () => void;
+    commandsDef: CmdDef[];
+  } = $props();
 
-  /** @typedef {{
-   key: number,
-   name: string,
-   nameLC: string,
-   shortcut: string,
-   ref: HTMLElement,
-  }} Item
-   */
+  type Item = {
+    key: number;
+    name: string;
+    nameLC: string;
+    shortcut: string;
+    ref: HTMLElement;
+  };
 
   function verifyCommandsAreUnique() {
     let m = new Map();
@@ -42,17 +44,13 @@
     }
   }
 
-  /**
-   * @returns {Item[]}
-   */
-  function buildCommands() {
+  function buildCommands(): Item[] {
     if (isDev()) {
       verifyCommandsAreUnique();
     }
 
     // console.log("rebuildCommands:", commands);
-    /** @type {Item[]} */
-    let res = Array(len(commandsDef));
+    let res: Item[] = Array(len(commandsDef));
     for (let i = 0; i < len(commandsDef); i++) {
       let s = commandsDef[i][0];
       let id = commandsDef[i][1];
@@ -91,11 +89,7 @@
     }
   });
 
-  /**
-   * @param {string} f
-   * @returns {string}
-   */
-  function trimFilter(f) {
+  function trimFilter(f: string): string {
     f = f.trim();
     return trimPrefix(f, ">");
   }
@@ -106,10 +100,7 @@
     return findMatchingItems(items, lc, "nameLC");
   });
 
-  /**
-   * @param {Item} item
-   */
-  function emitExecuteCommand(item) {
+  function emitExecuteCommand(item: Item): void {
     // console.log("emitOpenNote", item);
     executeCommand(item.key);
   }

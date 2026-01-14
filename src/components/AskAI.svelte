@@ -15,12 +15,15 @@
   import AiModels from "./AiModels.svelte";
   import { IconGrokIconDown } from "./Icons.svelte";
 
-  /** @type {{
-    close: () => void,
-    startText: string,
-    insertResponse: (s: string) => void,
-}}*/
-  let { close, startText, insertResponse } = $props();
+  let {
+    close,
+    startText,
+    insertResponse,
+  }: {
+    close: () => void;
+    startText: string;
+    insertResponse: (s: string) => void;
+  } = $props();
 
   let outputMarkdownToHTML = true;
   const kApiProviderOpenAI = 0;
@@ -29,19 +32,12 @@
   // const kApiProviderAnthropic = 3;
   // const kApiProviderGoogle = 3;
 
-  /**
-   * @param {number} apiProvider
-   * @returns {{maybeValidApiKey:string, apiProviderToUse:number;}}
-   * @param {string} openAIKey
-   * @param {string} xAIKey
-   * @param {string} openRouterKey
-   */
   function pickApiKeyForProvider(
-    apiProvider,
-    openAIKey,
-    xAIKey,
-    openRouterKey,
-  ) {
+    apiProvider: number,
+    openAIKey: string,
+    xAIKey: string,
+    openRouterKey: string
+  ): { maybeValidApiKey: string; apiProviderToUse: number } {
     if (apiProvider == kApiProviderOpenAI) {
       if (looksValidOpenAIKey(openAIKey)) {
         return {
@@ -109,10 +105,7 @@
     }
   }
 
-  /**
-   * @type {[number, string][]}
-   */
-  const apiProviders = [
+  const apiProviders: [number, string][] = [
     [kApiProviderXAi, "https://api.x.ai/v1/chat/completions"],
     [kApiProviderOpenAI, "https://api.openai.com/v1/chat/completions"],
     [kApiProviderOpenRouter, "https://openrouter.ai/api/v1/chat/completions"],
@@ -123,11 +116,7 @@
     // [kApiProviderAnthropic, "https://api.anthropic.com/completions"],
   ];
 
-  /**
-   * @param {number} apiProvider
-   * @returns {string}
-   */
-  function getApiProviderBaseURL(apiProvider) {
+  function getApiProviderBaseURL(apiProvider: number): string {
     for (let p of apiProviders) {
       if (p[0] == apiProvider) {
         return p[1];
@@ -183,33 +172,21 @@
   }
 
   // heuristc. my openai keys start with "sk-proj-" and are 164 chars in length
-  /**
-   * @param {string} s
-   * @returns {boolean}
-   */
-  function looksValidOpenAIKey(s) {
+  function looksValidOpenAIKey(s: string): boolean {
     // this might be fragile. the keys start with "sk-proj-" today but they
     // can change it in the future
     return s.startsWith("sk-proj-") && len(s) > 100;
   }
 
   // mine is 84 chars
-  /**
-   * @param {string} s
-   * @returns {boolean}
-   */
-  function looksValidXAIkKey(s) {
+  function looksValidXAIkKey(s: string): boolean {
     // this might be fragile. the keys start with "xai-" today but they
     // can change it in the future
     return s.startsWith("xai-") && len(s) > 70;
   }
 
   // mine is 73 chars
-  /**
-   * @param {string} s
-   * @returns {boolean}
-   */
-  function looksValidOpenRouterKey(s) {
+  function looksValidOpenRouterKey(s: string): boolean {
     // this might be fragile. the keys start with "sk-or-" today but they
     // can change it in the future
     return s.startsWith("sk-or-") && len(s) > 50;
@@ -226,12 +203,11 @@
     close();
   }
 
-  /**
-   * @param {string} prompt
-   * @param {string} apiKey
-   * @param {string} baseURL
-   */
-  async function streamChatGPTResponse(prompt, apiKey, baseURL) {
+  async function streamChatGPTResponse(
+    prompt: string,
+    apiKey: string,
+    baseURL: string
+  ): Promise<void> {
     // console.warn("streamChatGPTResponse");
 
     if (forceBadApiKey) {
@@ -312,10 +288,7 @@
     }
   }
 
-  /**
-   * @param {markdownIt} md
-   */
-  function addTargetBlank(md) {
+  function addTargetBlank(md: any): void {
     // Remember old renderer, if overridden, or proxy to default renderer
     var defaultRender =
       md.renderer.rules.link_open ||
@@ -422,11 +395,7 @@
     };
   });
 
-  /**
-   * @param {string} md
-   * @returns {string}
-   */
-  function mdToHTML(md) {
+  function mdToHTML(md: string): string {
     startLazyImports();
     if (!markdownIt || !markdownItAnchor) {
       return "";
@@ -452,21 +421,15 @@
     return html;
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent): void {
     if (isKeyCtrlEnter(ev) && !askAIDisabled) {
       askai();
     }
   }
 
-  /** @type {HTMLButtonElement} */
-  let btnInsertRef;
-  /** @type {HTMLTextAreaElement} */
-  let textAreaRef;
-  /** @type {HTMLButtonElement} */
-  let btnAskAIRef;
+  let btnInsertRef: HTMLButtonElement;
+  let textAreaRef: HTMLTextAreaElement;
+  let btnAskAIRef: HTMLButtonElement;
 
   let showingModels = $state(false);
 

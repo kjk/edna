@@ -157,8 +157,8 @@
   import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
   import TopNav from "./TopNav.svelte";
 
-  /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
-  /** @typedef {import("../functions").BoopFunction} BoopFunction */
+  type MenuItemDef = import("../Menu.svelte").MenuItemDef;
+  type BoopFunction = import("../functions").BoopFunction;
 
   const isMac = platform.isMac;
 
@@ -171,8 +171,7 @@
   let line = $state(1);
   let currTabStr = $derived(settings.currentTab);
 
-  /** @type {Tab} */
-  let currTab = $derived(parseTab(currTabStr));
+  let currTab: Tab = $derived(parseTab(currTabStr));
 
   let selectionSize = $state(0);
 
@@ -248,8 +247,7 @@
   // /** @type {import("../editor/editor").EdnaEditor} */
   // let ednaEditor = $state(null);
 
-  /** @type {Editor} */
-  let editorRef;
+  let editorRef: Editor;
 
   $effect(() => {
     isMoving.disableMoveTracking = isShowingDialog;
@@ -259,10 +257,7 @@
     showingFindInNotes = true;
   }
 
-  /**
-   * @param {Note[]} allNotes
-   */
-  function updateAfterNoteStateChangeDispatch(allNotes) {
+  function updateAfterNoteStateChangeDispatch(allNotes: Note[]): void {
     tick().then(() => {
       updateAppStateAfterNotesChange(allNotes);
       // re-assign tabs to redraw the state of the note in title
@@ -347,10 +342,7 @@
     };
   });
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onKeyDown(ev) {
+  function onKeyDown(ev: KeyboardEvent): void {
     // we bind Mod-h in CocdeMirror which only works if CodeMirror has
     // focus. We have to prevent it here to disable the default
     // behavior of hiding a window
@@ -668,7 +660,7 @@
     showingFunctionSelector = true;
   }
 
-  /** @typedef {import("../functions").BoopFunctionArg} BoopFunctionArg*/
+  type BoopFunctionArg = import("../functions").BoopFunctionArg;
 
   /**
    * @param {BoopFunction} f
@@ -739,7 +731,7 @@
     }
   }
 
-  /** @typedef {import("@codemirror/view").EditorView} EditorView */
+  type EditorView = import("@codemirror/view").EditorView;
   /**
    * @param {EditorView} view
    * @param {BoopFunction} fdef
@@ -1111,12 +1103,8 @@
         ]),
   ];
 
-  /**
-   * @param {MenuItemDef} mi
-   * @returns {number}
-   */
-  function menuItemStatus(mi) {
-    let mid = /** @type {number} */ (mi[1]);
+  function menuItemStatus(mi: MenuItemDef): number {
+    let mid = mi[1] as number;
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
     }
@@ -1674,17 +1662,11 @@
     onmenucmd(cmdId);
   }
 
-  /**
-   * @returns {Editor}
-   */
-  function getEditorComp() {
+  function getEditorComp(): Editor {
     return editorRef;
   }
 
-  /**
-   * @returns {EdnaEditor}
-   */
-  function getEditor() {
+  function getEditor(): EdnaEditor {
     return editorRef.getEditor();
   }
 

@@ -2,11 +2,13 @@
   import { focus } from "../actions";
   import { len } from "../util";
 
-  /** @type { {
-    msg: string,
-    onpassword: (newName: string) => void,
-}}*/
-  let { msg, onpassword } = $props();
+  let {
+    msg,
+    onpassword,
+  }: {
+    msg: string;
+    onpassword: (newName: string) => void;
+  } = $props();
 
   let password = $state("");
 
@@ -20,10 +22,7 @@
     return "password must be at least 8 characters long";
   });
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent): void {
     let key = ev.key;
 
     if (key === "Enter") {
@@ -39,8 +38,7 @@
   }
   let hidePassword = $state(true);
 
-  /** @type {HTMLElement} */
-  let inputRef;
+  let inputRef: HTMLElement;
   function onchange(ev) {
     inputRef.focus();
   }
