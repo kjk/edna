@@ -1,5 +1,5 @@
 <script module lang="ts">
-  /** @typedef {{
+  type NoteInfo = {
     key: number,
     name: string,
     nameLC: string,
@@ -7,17 +7,14 @@
     isArchived: boolean,
     altShortcut?: number, // if present, 1 to 9 for Alt-1 to Alt-9
     ref: HTMLElement,
-  }} NoteInfo
-*/
+  }
 
   /**
    * -1 if a < b
    * 0 if a = b
    * 1 if a > b
-   * @param {NoteInfo} a
-   * @param {NoteInfo} b
    */
-  export function sortNotes(a, b) {
+  export function sortNotes(a: NoteInfo, b: NoteInfo) {
     // first archived
     if (a.isArchived && !b.isArchived) {
       return -1;
@@ -57,19 +54,14 @@
 
   let lastKey = 0;
 
-  /**
-   * @param {Note} note
-   * @returns {NoteInfo}
-   */
-  export function buildNoteInfo(note) {
+  export function buildNoteInfo(note: Note): NoteInfo {
     let isArchived = false;
     let isStarred = false;
     if (note) {
       isStarred = note.isStarred;
       isArchived = note.isArchived;
     }
-    /** @type {NoteInfo} */
-    let item = {
+    let item: NoteInfo = {
       key: lastKey,
       name: note.name,
       nameLC: note.name.toLowerCase(),
@@ -85,14 +77,9 @@
     return item;
   }
 
-  /**
-   * @param {Note[]} notes
-   * @returns {NoteInfo[]}
-   */
-  export function buildNoteInfos(notes) {
+  export function buildNoteInfos(notes: Note[]): NoteInfo[] {
     // console.log("buildItems, notes", noteInfos)
-    /** @type {NoteInfo[]} */
-    let res = Array(len(notes));
+    let res: NoteInfo[] = Array(len(notes));
     for (let i = 0; i < len(notes); i++) {
       let name = notes[i];
       let item = buildNoteInfo(name);
@@ -130,15 +117,6 @@
   import { IconTablerArchive, IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
-    header?: string,
-    openNote: (name: string, newTab: boolean) => void,
-    createNote: (name: string) => void,
-    deleteNote: (name: string, showNotif: boolean) => Promise<void>,
-    switchToCommandPalette?: () => void,
-    switchToWideNoteSelector?: () => void,
-    forMoveBlock?: boolean,
-}}*/
   let {
     header = undefined,
     openNote,
@@ -147,13 +125,17 @@
     switchToCommandPalette = noOp,
     switchToWideNoteSelector = noOp,
     forMoveBlock = false,
-  } = $props();
+  }: {
+    header?: string,
+    openNote: (name: string, newTab: boolean) => void,
+    createNote: (name: string) => void,
+    deleteNote: (name: string, showNotif: boolean) => Promise<void>,
+    switchToCommandPalette?: () => void,
+    switchToWideNoteSelector?: () => void,
+    forMoveBlock?: boolean,
+} = $props();
 
-  /**
-   * @param {Note[]} regular
-   * @param {Note[]} archived
-   */
-  function localBuildNoteInfos(regular, archived) {
+  function localBuildNoteInfos(regular: Note[], archived: Note[]) {
     let notes = [...regular];
     notes.push(...archived);
     let res = buildNoteInfos(notes);
@@ -186,8 +168,7 @@
     return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
-  /** @type {NoteInfo} */
-  let selectedNote = $state(null);
+  let selectedNote: NoteInfo = $state(null);
   let selectedName = $state("");
   let canOpenSelected = $state(false);
   let canCreate = $state(false);
@@ -207,10 +188,7 @@
     return `${n} of ${nItems} notes`;
   });
 
-  /**
-   * @param {string} name
-   */
-  function recalcAvailableActions(item, name) {
+  function recalcAvailableActions(item, name: string) {
     canOpenSelected = !!selectedNote;
     canCreateWithEnter = !(len(name) == 0) && !canOpenSelected;
     canCreate = len(name) > 0;
@@ -232,29 +210,18 @@
     showDelete = canOpenSelected;
   }
 
-  /**
-   * @param {NoteInfo} item
-   * @param {number} idx
-   */
-  function selectionChanged(item, idx) {
+  function selectionChanged(item: NoteInfo, idx: number) {
     // console.log("selectionChanged: item:", item, "idx:", idx);
     selectedNote = item;
     selectedName = item ? selectedNote.name : "";
     recalcAvailableActions(item, sanitizedFilter);
   }
 
-  /**
-   * @param {NoteInfo} note
-   * @returns {string}
-   */
-  function noteShortcut(note) {
+  function noteShortcut(note: NoteInfo): string {
     return note.altShortcut ? altChar + " + " + note.altShortcut : "";
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  async function onKeydown(ev) {
+  async function onKeydown(ev: KeyboardEvent) {
     // console.log("onKeyDown:", event);
     let altN = isAltNumEvent(ev);
     if (altN !== null) {
@@ -311,19 +278,12 @@
     listboxRef.onkeydown(ev, filter === "");
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   * @param {boolean} newTab
-   */
-  function emitOpenNote(noteInfo, newTab) {
+  function emitOpenNote(noteInfo: NoteInfo, newTab: boolean) {
     // console.log("emitOpenNote", noteInfo.name, "newTab:", newTab);
     openNote(noteInfo.name, newTab);
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   */
-  async function toggleStarred(noteInfo) {
+  async function toggleStarred(noteInfo: NoteInfo) {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
     // because we wait until metadata file is saved
@@ -347,10 +307,7 @@
   function toggleShowArchived() {
     appState.showingArchived = !appState.showingArchived;
   }
-  /**
-   * @param {boolean} isShowing
-   */
-  function showHideTxt(isShowing) {
+  function showHideTxt(isShowing: boolean) {
     return isShowing ? "hide" : "show";
   }
 
