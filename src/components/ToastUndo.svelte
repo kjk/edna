@@ -1,10 +1,13 @@
 <script lang="ts">
-  /** @type { {
-    message: string,
-    undoAction: (ev) => void,
-    undoText: string,
-  } }*/
-  let { message, undoAction, undoText } = $props();
+  let {
+    message,
+    undoAction,
+    undoText,
+  }: {
+    message: string;
+    undoAction: (ev: any) => void;
+    undoText: string;
+  } = $props();
 </script>
 
 <div class="flex self-center grow justify-between items-center my-1 pl-2">

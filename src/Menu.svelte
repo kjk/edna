@@ -1,6 +1,6 @@
 <script module lang="ts">
-  /** @typedef {[string, number|MenuItemDef[]]} MenuItemDef */
-  /** @typedef {MenuItemDef[]} MenuDef */
+  type MenuItemDef = [string, number | MenuItemDef[]];
+  type MenuDef = MenuItemDef[];
 
   // when used as menu id this will show as a text, not a menu item
   export const kMenuIdJustText = -1;
@@ -11,11 +11,7 @@
 
   export const kMenuSeparator = ["---", 0];
 
-  /**
-   * @param {string} s
-   * @returns {string}
-   */
-  export function fixMenuName(s) {
+  export function fixMenuName(s: string): string {
     if (!s) {
       if (s === "") {
         return "";
@@ -27,11 +23,7 @@
     return parts[0];
   }
 
-  /**
-   * @param {MenuItemDef} mi
-   * @returns {string}
-   */
-  function getShortcut(mi) {
+  function getShortcut(mi: MenuItemDef): string {
     let s = mi[0];
     let parts = splitMax(s, "\t", 2);
     if (len(parts) > 1) {
@@ -43,15 +35,11 @@
   class MenuItem {
     text = "";
     shortcut = "";
-    /** @type {MenuItem[]} */
-    children = null;
+    children: MenuItem[] = null;
     cmdId = 0;
-    /** @type {HTMLElement} */
-    element = $state(null);
-    /** @type {HTMLElement} */
-    submenuElement = null;
-    /** @type {MenuItem} */
-    parent = null;
+    element: HTMLElement = $state(null);
+    submenuElement: HTMLElement = null;
+    parent: MenuItem = null;
     zIndex = 30;
 
     isSeparator = false;
@@ -61,14 +49,12 @@
     isSelected = $state(false);
   }
 
-  /**
-   * @param {MenuDef} menuDef
-   * @param {(mi: MenuItemDef) => number} menuItemStatus
-   * @returns {MenuItem[]}
-   */
-  function buildMenuFromDef(menuDef, nest, menuItemStatus) {
-    /*** @type {MenuItem[]} */
-    let res = [];
+  function buildMenuFromDef(
+    menuDef: MenuDef,
+    nest: number,
+    menuItemStatus: (mi: MenuItemDef) => number
+  ): MenuItem[] {
+    let res: MenuItem[] = [];
     for (let mi of menuDef) {
       let i = new MenuItem();
       res.push(i);
@@ -103,18 +89,19 @@
   import { extractShortcut } from "./keys";
   import { len, splitMax } from "./util";
 
-  /** @type {{
-   menuDef: MenuDef,
-   pos: {x: number, y: number},
-   menuItemStatus?: (mi: MenuItemDef) => number,
-   onmenucmd: (cmd: number) => void,
-}}*/
-  let { menuDef, pos, menuItemStatus = null, onmenucmd } = $props();
+  let {
+    menuDef,
+    pos,
+    menuItemStatus = null,
+    onmenucmd,
+  }: {
+    menuDef: MenuDef;
+    pos: { x: number; y: number };
+    menuItemStatus?: (mi: MenuItemDef) => number;
+    onmenucmd: (cmd: number) => void;
+  } = $props();
 
-  /**
-   * @param {MenuItemDef} mid
-   */
-  function menuItemStatusDefault(mid) {
+  function menuItemStatusDefault(mid: MenuItemDef): number {
     return kMenuStatusNormal;
   }
 
@@ -125,12 +112,8 @@
     menuItemStatus || menuItemStatusDefault,
   );
 
-  /**
-   * @param {(mi: MenuItem) => boolean} visit
-   */
-  function forEachMenuItem(visit) {
-    /** @type {MenuItem[][]} */
-    let toVisit = [rootMenu];
+  function forEachMenuItem(visit: (mi: MenuItem) => boolean): void {
+    let toVisit: MenuItem[][] = [rootMenu];
     while (len(toVisit) > 0) {
       let items = toVisit.shift();
       for (let mi of items) {
@@ -145,12 +128,8 @@
     }
   }
 
-  /**
-   * @param {HTMLElement} el
-   * @returns {MenuItem}
-   */
-  function findMenuItemForElement(el) {
-    let found = null;
+  function findMenuItemForElement(el: HTMLElement): MenuItem {
+    let found: MenuItem = null;
     function visit(mi) {
       if (mi.element === el) {
         found = mi;
@@ -179,10 +158,7 @@
     });
   }
 
-  /**
-   * @param {MenuItem} mi
-   */
-  function selectMenuItem(mi) {
+  function selectMenuItem(mi: MenuItem): void {
     // console.log("selectMenuItem:", mi.text, "isSelected:", mi.isSelected);
     if (mi.isSelected) {
       return;
@@ -204,12 +180,8 @@
     }, kMenuShowDelay);
   }
 
-  /**
-   * @param {Event} ev
-   * @returns {MenuItem}
-   */
-  function findMenuItem(ev) {
-    let el = /** @type {HTMLElement} */ (ev.target);
+  function findMenuItem(ev: Event): MenuItem {
+    let el = ev.target as HTMLElement;
     while (el && el.role != "menuitem") {
       el = el.parentElement;
     }
@@ -220,10 +192,7 @@
     return findMenuItemForElement(el);
   }
 
-  /**
-   * @param {MouseEvent} ev
-   */
-  function handleMouseOver(ev) {
+  function handleMouseOver(ev: MouseEvent): void {
     let mi = findMenuItem(ev);
     if (!mi) {
       return;
@@ -231,10 +200,7 @@
     selectMenuItem(mi);
   }
 
-  /**
-   * @param {MouseEvent} ev
-   */
-  function handleClicked(ev) {
+  function handleClicked(ev: MouseEvent): void {
     let mi = findMenuItem(ev);
     if (!mi || mi.cmdId <= 0) {
       return;
@@ -243,14 +209,10 @@
     ev.stopPropagation();
   }
 
-  /**
-   * @returns {MenuItem}
-   */
-  function findCurrentlySelected() {
+  function findCurrentlySelected(): MenuItem {
     // find the most nested selected
-    /** @type {MenuItem} */
-    let found;
-    let foundNest;
+    let found: MenuItem;
+    let foundNest: number;
     forEachMenuItem((mi) => {
       if (!mi.isSelected || !isSelectable(mi)) {
         return true;
@@ -271,12 +233,7 @@
     return found;
   }
 
-  /**
-    @param {MenuItem} mi
-    @param {number} dir
-    @returns {MenuItem}
-   */
-  function findSibling(mi, dir) {
+  function findSibling(mi: MenuItem, dir: number): MenuItem {
     let items = rootMenu;
     if (mi.parent) {
       items = mi.parent.children;
@@ -297,20 +254,14 @@
     }
   }
 
-  /**
-   * @param {MenuItem} mi
-   */
-  function isSelectable(mi) {
+  function isSelectable(mi: MenuItem): boolean {
     if (mi.isRemoved || mi.isDisabled || mi.isSeparator) {
       return false;
     }
     return true;
   }
 
-  /**
-   * @param {MenuItem[]} items
-   */
-  function selectFirst(items) {
+  function selectFirst(items: MenuItem[]): void {
     // console.log("selectFirst");
     for (let mi of items) {
       if (!isSelectable(mi)) {
@@ -321,10 +272,7 @@
     }
   }
 
-  /**
-   * @param {number} dir
-   */
-  function selectSibling(dir) {
+  function selectSibling(dir: number): void {
     let mi = findCurrentlySelected();
     if (!mi) {
       selectFirst(rootMenu);
@@ -353,15 +301,11 @@
     selectFirst(mi.children);
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function handleKeydown(ev) {
+  function handleKeydown(ev: KeyboardEvent): void {
     let key = ev.key;
     // console.log("key:", key);
     if (key === "Enter") {
-      /** @type {MenuItem} */
-      let found = null;
+      let found: MenuItem = null;
       forEachMenuItem((mi) => {
         if (mi.isSelected && !mi.isSubMenu) {
           found = mi;
@@ -428,8 +372,7 @@
     selectFirst(rootMenu);
   });
 
-  /** @type {HTMLElement} */
-  let menuRef;
+  let menuRef: HTMLElement;
   onMount(() => {
     if (pos) {
       // invoked via mouse click
@@ -438,7 +381,7 @@
   });
 </script>
 
-{#snippet separator(mi)}
+{#snippet separator(mi: MenuItem)}
   <div class="border-y border-gray-200 mt-1 mb-1"></div>
 {/snippet}
 
@@ -471,7 +414,7 @@
   </svg>
 {/snippet}
 
-{#snippet menuItem(/** @type {MenuItem} */ mi)}
+{#snippet menuItem(mi: MenuItem)}
   <!-- svelte-ignore a11y_mouse_events_have_key_events -->
   {#if mi.isSeparator}
     {@render separator(mi)}
@@ -494,7 +437,7 @@
   {/if}
 {/snippet}
 
-{#snippet submenu(/** @type {MenuItem} */ mi)}
+{#snippet submenu(mi: MenuItem)}
   <!-- svelte-ignore a11y_mouse_events_have_key_events -->
   <div
     role="menuitem"
@@ -518,7 +461,7 @@
   </div>
 {/snippet}
 
-{#snippet menuItems(/** @type {MenuItem[]} */ items)}
+{#snippet menuItems(items: MenuItem[])}
   {#each items as mi}
     {#if !mi.isRemoved}
       {#if mi.isSubMenu}

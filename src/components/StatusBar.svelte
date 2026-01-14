@@ -11,18 +11,6 @@
   import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
 
-  /** @type { {
-    line: number,
-    column: number,
-    docSize: number,
-    selectionSize: number,
-    language: string,
-    languageAuto: boolean,
-    isSpellChecking: boolean,
-    toggleSpellCheck: (ev) => void,
-    smartRun: (ev) => void,
-    formatCurrentBlock: (ev) => void,
-  } } */
   let {
     line = 0,
     column = 0,
@@ -34,6 +22,17 @@
     toggleSpellCheck,
     smartRun,
     formatCurrentBlock,
+  }: {
+    line: number;
+    column: number;
+    docSize: number;
+    selectionSize: number;
+    language: string;
+    languageAuto: boolean;
+    isSpellChecking: boolean;
+    toggleSpellCheck: (ev: any) => void;
+    smartRun: (ev: any) => void;
+    formatCurrentBlock: (ev: any) => void;
   } = $props();
 
   let style = $state("");
@@ -68,10 +67,7 @@
     fixUpShortcuts(`Change language for current block (Mod + L)`),
   );
 
-  /**
-   * @param {number} docSize
-   */
-  function noteSizeFn(docSize) {
+  function noteSizeFn(docSize: number): string {
     return `Note Size: ${docSize} bytes`;
   }
   let noteSize = $derived(noteSizeFn(docSize));

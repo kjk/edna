@@ -19,20 +19,9 @@
   } from "./Icons.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
-  /** @typedef {import("../Menu.svelte").MenuDef} MenuDef */
-  /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
+  type MenuDef = import("../Menu.svelte").MenuDef;
+  type MenuItemDef = import("../Menu.svelte").MenuItemDef;
 
-  /** @type {{
-    class?: string,
-    openTab: (tabStr: string) => void,
-    openNote: (name: string, newTab: boolean) => void,
-    closeTab: (name: string) => void,
-
-    buildMenuDef: any,
-    menuItemStatus?: (mi: MenuItemDef) => number,
-    onmenucmd: (cmd: number) => void,
-
-  }} */
   let {
     class: klass = "",
     openTab,
@@ -41,6 +30,14 @@
     buildMenuDef,
     menuItemStatus,
     onmenucmd,
+  }: {
+    class?: string;
+    openTab: (tabStr: string) => void;
+    openNote: (name: string, newTab: boolean) => void;
+    closeTab: (name: string) => void;
+    buildMenuDef: any;
+    menuItemStatus?: (mi: MenuItemDef) => number;
+    onmenucmd: (cmd: number) => void;
   } = $props();
 
   let altChar = getAltChar();
@@ -49,11 +46,7 @@
   let menuTriggerCls = $derived(
     parseTab(settings.currentTab).isNote() ? "" : "invisible",
   );
-  /**
-   * @param {string} tabStr
-   * @returns {string}
-   */
-  function tabTitle(tabStr) {
+  function tabTitle(tabStr: string): string {
     let tab = parseTab(tabStr);
     if (tab.isURL()) {
       let uri = tab.value;
@@ -64,11 +57,7 @@
     return tab.value;
   }
 
-  /**
-   * @param {string} tab
-   * @returns {string}
-   */
-  function getTabTooltip(tab) {
+  function getTabTooltip(tab: string): string {
     if (tab.startsWith("url:")) {
       let uri = tab.substring(4);
       if (uri.startsWith("/")) {
@@ -83,11 +72,7 @@
     return noteName;
   }
 
-  /**
-   * @param {string} noteName
-   * @param {boolean} newTab
-   */
-  function myOpenNote(noteName, newTab) {
+  function myOpenNote(noteName: string, newTab: boolean): void {
     showingQuickAccess = false;
     openNote(noteName, newTab);
   }
@@ -105,10 +90,7 @@
 
   let showingHelp = $state(false);
 
-  /**
-   * @param {string} url
-   */
-  function openURLOrNote(url) {
+  function openURLOrNote(url: string): void {
     showingHelp = false;
     if (url.startsWith("system:")) {
       openNote(url, true);
@@ -127,20 +109,13 @@
   let noFocusEditorOnMenuOut = false;
   let menuPos = { x: 0, y: 0 };
 
-  /**
-   * @param {number} cmdid
-   */
-  function myOnMenuCmd(cmdid) {
+  function myOnMenuCmd(cmdid: number): void {
     noFocusEditorOnMenuOut = true;
     showingMenu = false;
     onmenucmd(cmdid);
   }
 
-  /**
-   * @param {string} tabStr
-   * @return {string}
-   */
-  function tabCls(tabStr) {
+  function tabCls(tabStr: string): string {
     if (tabStr.startsWith("url:")) {
       return "";
     }

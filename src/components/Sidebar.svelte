@@ -19,13 +19,15 @@
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfos } from "./NoteSelector.svelte";
 
-  /** @type {{
-    class?: string,
-    openNote: (name: string, newTab: boolean) => void,
-}}*/
-  let { class: klass, openNote } = $props();
+  let {
+    class: klass,
+    openNote,
+  }: {
+    class?: string;
+    openNote: (name: string, newTab: boolean) => void;
+  } = $props();
 
-  /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo} */
+  type NoteInfo = import("./NoteSelector.svelte").NoteInfo;
 
   function localBuildNoteInfos(regular, archived) {
     let notes = [...regular];
@@ -65,8 +67,7 @@
     return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
-  /** @type {NoteInfo} */
-  let selectedNote = $state(null);
+  let selectedNote: NoteInfo = $state(null);
   let selectedName = $state("");
 
   let notesCountMsg = $derived.by(() => {
@@ -88,26 +89,15 @@
     selectedName = item ? selectedNote.name : "";
   }
 
-  /**
-   * @param {NoteInfo} note
-   * @returns {string}
-   */
-  function sysNoteCls(note) {
+  function sysNoteCls(note: NoteInfo): string {
     return isSystemNoteName(note.name) ? "italic" : "";
   }
 
-  /**
-   * @param {NoteInfo} note
-   * @returns {string}
-   */
-  function noteShortcut(note) {
+  function noteShortcut(note: NoteInfo): string {
     return note.altShortcut ? altChar + " + " + note.altShortcut : "";
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  async function onKeydown(ev) {
+  async function onKeydown(ev: KeyboardEvent): Promise<void> {
     // console.log("onKeyDown:", event);
     let altN = isAltNumEvent(ev);
     if (altN !== null) {
@@ -138,19 +128,12 @@
     listboxRef.onkeydown(ev, filter === "");
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   * @param {boolean} newTab
-   */
-  function emitOpenNote(noteInfo, newTab) {
+  function emitOpenNote(noteInfo: NoteInfo, newTab: boolean): void {
     // console.log("emitOpenNote", noteInfo.name, newTab);
     openNote(noteInfo.name, newTab);
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   */
-  async function toggleStarred(noteInfo) {
+  async function toggleStarred(noteInfo: NoteInfo): Promise<void> {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
     // because we wait until metadata file is saved
@@ -164,10 +147,8 @@
     inputRef.focus();
   }
 
-  /** HTMLElemnt */
-  let inputRef;
-  /** HTMLElemnt */
-  let listboxRef;
+  let inputRef: HTMLElement;
+  let listboxRef: HTMLElement;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->

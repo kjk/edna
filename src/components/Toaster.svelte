@@ -1,26 +1,21 @@
 <script module lang="ts">
-  /**
-   * @typedef {Object} Toast
-   * @property {string} msg
-   * @property {number} id
-   * @property {number} type
-   * @property {number} timeoutMs
-   */
+  type Toast = {
+    msg: string;
+    id: number;
+    type: number;
+    timeoutMs: number;
+  };
 
   export let defaultTimeout = 4000;
   const kToastRegular = 0;
   const kToastWarning = 1;
   const kToastError = 1;
 
-  /** @type {Toast[]} */
-  let toasts = $state([]);
+  let toasts: Toast[] = $state([]);
 
   let nextId = 0;
 
-  /**
-   * @param {number} id
-   */
-  function removeToast(id) {
+  function removeToast(id: number): void {
     let idx = -1;
     for (let i = 0; i < len(toasts); i++) {
       if (toasts[i].id === id) {
@@ -35,36 +30,19 @@
     toasts.splice(idx, 1);
   }
 
-  /**
-   * @param {string} msg
-   * @param {number} [timeoutMs]
-   */
-  export function showWarning(msg, timeoutMs = -1) {
+  export function showWarning(msg: string, timeoutMs: number = -1): void {
     showToastEx(msg, kToastWarning, timeoutMs);
   }
 
-  /**
-   * @param {string} msg
-   * @param {number} [timeoutMs]
-   */
-  export function showError(msg, timeoutMs = -1) {
+  export function showError(msg: string, timeoutMs: number = -1): void {
     showToastEx(msg, kToastError, timeoutMs);
   }
 
-  /**
-   * @param {string} msg
-   * @param {number} [timeoutMs]
-   */
-  export function showToast(msg, timeoutMs = -1) {
+  export function showToast(msg: string, timeoutMs: number = -1): void {
     showToastEx(msg, kToastRegular, timeoutMs);
   }
 
-  /**
-   * @param {string} msg
-   * @param {number} type
-   * @param {number} [timeoutMs]
-   */
-  function showToastEx(msg, type, timeoutMs = -1) {
+  function showToastEx(msg: string, type: number, timeoutMs: number = -1): void {
     if (timeoutMs < 0) {
       timeoutMs = defaultTimeout;
     }
