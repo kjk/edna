@@ -1,4 +1,4 @@
-import { getAltChar, getModChar, platformName } from "./util.js";
+import { getAltChar, getModChar, platformName } from "./util";
 
 export function fixUpShortcuts(s, platform = platformName) {
   let modChar = getModChar(platform);

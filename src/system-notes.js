@@ -1,17 +1,17 @@
-import { len, platformName } from "./util.js";
+import { len, platformName } from "./util";
 
 import dailyJournalRaw from "./notes/note-daily-journal.elaris.txt?raw";
-import { fixUpNoteContent } from "./notes.js";
+import { fixUpNoteContent } from "./notes";
 import helpRaw from "./notes/note-help.elaris.txt?raw";
 import inboxRaw from "./notes/note-inbox.elaris.txt?raw";
 import scratchDevRaw from "./notes/note-scratch-dev.elaris.txt?raw";
 import scratchRaw from "./notes/note-scratch.elaris.txt?raw";
-import { fixUpShortcuts, keyHelpStr } from "./key-helper.js";
+import { fixUpShortcuts, keyHelpStr } from "./key-helper";
 import releaseNotesRaw from "./notes/note-release-notes.elaris.txt?raw";
 import builtInFunctionsRaw from "./notes/note-built-in-functions.js?raw";
 import myFunctionsRaw from "./notes/note-custom-functions.elaris.txt?raw";
 
-import { parseBuiltInFunctions } from "./functions.js";
+import { parseBuiltInFunctions } from "./functions";
 
 /**
  * @returns {string}

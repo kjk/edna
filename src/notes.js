@@ -7,7 +7,7 @@ import {
 import { modalInfoState } from "./components/ModalInfo.svelte";
 import { rememberPassword, removePassword, saltPassword } from "./encrypt";
 import { updateAfterNoteStateChange } from "./globals";
-import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
+import { removeNoteFromHistory, renameNoteInHistory } from "./history";
 import { getMetadata, saveAppMetadata } from "./metadata";
 import { mkRandomContentId, mkRandomNoteId, Note } from "./note";
 import { getSettings } from "./settings.svelte";

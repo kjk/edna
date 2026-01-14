@@ -1,6 +1,6 @@
-/** @typedef {import("./login.js").UserInfo} UserInfo */
+/** @typedef {import("./login").UserInfo} UserInfo */
 
-import { Note } from "./note.js";
+import { Note } from "./note";
 
 class AppState {
   /** @type {UserInfo} */
