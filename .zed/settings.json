@@ -22,4 +22,8 @@
       },
     },
   },
+  "status_bar": {
+    // TODO: doesn't take effect?
+    "line_endings_button": true,
+  },
 }
