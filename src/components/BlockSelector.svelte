@@ -1,10 +1,9 @@
 <script module lang="ts">
-  /** @typedef {{
+  type Item = {
    block: any,
    text: string,
    key: number,
-  }} Item
-  */
+  }
 </script>
 
 <script lang="ts">
@@ -21,16 +20,14 @@
   import { IconTablerFold } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
+  let { view, blocks, selectBlock, initialSelection = 0 }: {
     view: EditorView,
     blocks: Item[],
     selectBlock: (block : Item) => void,
     initialSelection?: number,
-  }}*/
-  let { view, blocks, selectBlock, initialSelection = 0 } = $props();
+  } = $props();
 
-  /** @type {string} */
-  let filter = $state("");
+  let filter: string = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
 
   // svelte-ignore state_referenced_locally
@@ -40,14 +37,10 @@
     blockCountMsg = `1 block`;
   }
 
-  /** @typedef {{item: Item, textLC: string, key: number }} BlockItem */
+  type BlockItem = {item: Item, textLC: string, key: number }
 
-  /**
-   * @returns {BlockItem[]}
-   */
-  function buildItems() {
-    /** @type {BlockItem[]} */
-    let res = [];
+  function buildItems(): BlockItem[] {
+    let res: BlockItem[] = [];
     for (let block of blocks) {
       let bi = {
         item: block,
@@ -59,16 +52,11 @@
     return res;
   }
 
-  /** @type {BlockItem[]} */
-  let items = buildItems();
+  let items: BlockItem[] = buildItems();
 
-  /** @type {BlockItem[]} */
-  let itemsFiltered = $derived(findMatchingItems(items, filter, "textLC"));
+  let itemsFiltered: BlockItem[] = $derived(findMatchingItems(items, filter, "textLC"));
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     // Ctrl + '0' ... '9' picks an item
     // TODO: extend it to `a` .. `z` ?
     if (ev.ctrlKey) {
@@ -85,13 +73,9 @@
     listboxRef.onkeydown(ev, filter === "");
   }
 
-  /** @type {ListBox} */
-  let listboxRef;
+  let listboxRef: ListBox;
 
-  /**
-   * @param {number} idx
-   */
-  function toggleFold(idx) {
+  function toggleFold(idx: number) {
     console.log("toggleFold:", idx);
     toggleBlockFoldN(view, idx);
   }

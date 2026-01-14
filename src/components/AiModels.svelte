@@ -21,11 +21,10 @@
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
+  let { close, selectModel }: {
     selectModel: (model: any) => void,
     close: () => void,
-  }} */
-  let { close, selectModel } = $props();
+  } = $props();
 
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
@@ -36,13 +35,7 @@
   let sanitizedFilter = $derived(filter.trim());
   let models = $derived(buildModels(modelsShort, sanitizedFilter, forceUpdate));
 
-  /**
-   * @param {any[]} items
-   * @param {string} filter
-   * @param {any} ignore
-   * @return {any[]}
-   */
-  function buildModels(items, filter, ignore) {
+  function buildModels(items: any[], filter: string, ignore: any): any[] {
     function modelNameFn(model) {
       let name = model[kModelNameIdx];
       let provider = providersInfo[model[kModelProviderIdx]];
@@ -65,10 +58,7 @@
 
   let listboxRef;
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     if (ev.code === "Escape") {
       ev.stopPropagation();
       close();

@@ -1,17 +1,13 @@
 <script lang="ts">
-  /** @type { {
+  let { class: className = "", formatTime = formatTimeMyStyle }: {
     class: string,
     formatTime?: (date: Date) => string,
-  } } */
-  let { class: className = "", formatTime = formatTimeMyStyle } = $props();
+  } = $props();
 
   // svelte-ignore state_referenced_locally
   let formattedTime = $state(formatTime(new Date()));
 
-  /**
-   * @param {Date} dt
-   */
-  function formatTimeMyStyle(dt) {
+  function formatTimeMyStyle(dt: Date) {
     return dt.toLocaleString("en-US", {
       weekday: "short",
       month: "2-digit",

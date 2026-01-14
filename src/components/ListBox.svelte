@@ -5,16 +5,6 @@
   import { OverlayScrollbars } from "overlayscrollbars";
   import { getOverlayScrollbarOptions } from "../settings.svelte";
 
-  /** @type {{
-    items: any[],
-    itemKey?: (item) => any,
-    onclick: (item: any, ev: any) => void,
-    renderItem: any,
-    selectionChanged?: (any, number) => void,
-    initialSelection?: number,
-    selectedItem?: any,
-    compact?: boolean,
-  }}*/
   let {
     items,
     itemKey = (item) => item.key,
@@ -26,6 +16,15 @@
     selectedItem = $bindable(null),
     initialSelection = 0,
     compact = false,
+  }: {
+    items: any[],
+    itemKey?: (item) => any,
+    onclick: (item: any, ev: any) => void,
+    renderItem: any,
+    selectionChanged?: (any, number) => void,
+    initialSelection?: number,
+    selectedItem?: any,
+    compact?: boolean,
   } = $props();
 
   let selectedIdx = $state(-1);
@@ -78,10 +77,7 @@
     }
   });
 
-  /**
-   * @param {number} n
-   */
-  export function select(n) {
+  export function select(n: number) {
     let nItems = len(items);
     // console.log("select:", n, "nItems:", nItems);
     if (nItems <= 0) {
@@ -128,12 +124,7 @@
     select(selectedIdx + 1);
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   * @param {boolean} [allowLeftRight]
-   * @returns {boolean}
-   */
-  export function onkeydown(ev, allowLeftRight = false) {
+  export function onkeydown(ev: KeyboardEvent, allowLeftRight = false): boolean {
     let key = ev.key;
     let isUp = key === "ArrowUp" || (key === "ArrowLeft" && allowLeftRight);
     let isDown =
@@ -161,11 +152,7 @@
     OverlayScrollbars(listboxRef, opts);
   });
 
-  /**
-   * @param {MouseEvent} ev
-   * @returns {number}
-   */
-  function findItemIdxForMouseEvent(ev) {
+  function findItemIdxForMouseEvent(ev: MouseEvent): number {
     // note: could also traverse from ev.target via parentElement
     // until finds tagName === "LI", but this seems more reliable
     // slower but only executed on click
@@ -181,10 +168,7 @@
     return -1;
   }
 
-  /**
-   * @param {MouseEvent} ev
-   */
-  function click(ev) {
+  function click(ev: MouseEvent) {
     let idx = findItemIdxForMouseEvent(ev);
     if (idx < 0) {
       return;
@@ -194,10 +178,7 @@
     // console.log("didn't find item for ev.target:", ev.target);
   }
 
-  /**
-   * @param {MouseEvent} ev
-   */
-  function mousemove(ev) {
+  function mousemove(ev: MouseEvent) {
     let idx = findItemIdxForMouseEvent(ev);
     if (idx < 0) {
       return;

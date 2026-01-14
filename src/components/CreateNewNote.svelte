@@ -2,11 +2,10 @@
   import { focus } from "../actions";
   import { noteExists, sanitizeNoteName } from "../notes";
 
-  /** @type { {
+  let { onclose, createNewNote }: {
     onclose: () => void,
     createNewNote: (newName: string) => void,
-}}*/
-  let { onclose, createNewNote } = $props();
+} = $props();
 
   let newName = $state("");
 
@@ -31,10 +30,7 @@
     return "";
   });
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     let key = ev.key;
 
     if (canCreate && key === "Enter") {

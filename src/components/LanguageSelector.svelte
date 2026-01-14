@@ -9,10 +9,9 @@
   } from "../util.js";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
+  let { selectLanguage }: {
     selectLanguage: (name: string) => void,
-  }} */
-  let { selectLanguage } = $props();
+  } = $props();
 
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
