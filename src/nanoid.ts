@@ -12,7 +12,7 @@ const kNanoIDAlphabet =
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_";
 const kAlphabetMax = kNanoIDAlphabet.length - 1;
 
-export function nanoid(size = 21) {
+export function nanoid(size: number = 21): string {
   let rv = crypto.getRandomValues(new Uint8Array(size));
   let res = "";
   for (let i = 0; i < rv.length; i++) {
@@ -28,10 +28,6 @@ export function nanoid(size = 21) {
   return res;
 }
 
-/**
- * @param {number} n
- * @returns {string}
- */
-export function genRandomID(n) {
+export function genRandomID(n: number): string {
   return nanoid(n);
 }

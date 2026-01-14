@@ -1,26 +1,19 @@
-/** @typedef {import("./login").UserInfo} UserInfo */
-
+import type { UserInfo } from "./login";
 import { Note } from "./note";
 
 class AppState {
-  /** @type {UserInfo} */
-  user;
+  user: UserInfo;
 
   /* regular, arhived, deleted notes */
-  /** @type {Note[]} */
-  allNotes = $state([]);
+  allNotes: Note[] = $state([]);
 
   /* regular notes, not archived or deleted */
-  /** @type {Note[]} */
-  regularNotes = $state([]);
+  regularNotes: Note[] = $state([]);
 
-  /** @type {Note[]} */
-  archivedNotes = $state([]);
+  archivedNotes: Note[] = $state([]);
 
-  /** @type {Note[]} */
-  starredNotes = $state([]);
-  /** @type {Note[]} */
-  withShortcuts = $state([]);
+  starredNotes: Note[] = $state([]);
+  withShortcuts: Note[] = $state([]);
 
   noteSelectorInfoCollapsed = $state(false);
 
@@ -38,10 +31,8 @@ class AppState {
 
   searchIncludeArchived = $state(false);
 
-  /** @type {string[]} */
-  history = $state([]); // names of opened notes
-  /** @type {import("./settings.svelte").Settings} */
-  settings = $state(undefined); // user settings
+  history: string[] = $state([]); // names of opened notes
+  settings: import("./settings.svelte").Settings = $state(undefined); // user settings
 
   isOnline = $state(true);
 
@@ -50,16 +41,12 @@ class AppState {
 
   //keeps editor selection / cursor state for notes
   // key is note id
-  /** @type {Map<string, any>} */
-  noteSelectionState = new Map();
+  noteSelectionState: Map<string, any> = new Map();
 
   showingLogin = $state(false);
 }
 
-/**
- * @param {Note} note
- */
-export function removeNoteFromAppState(note) {
+export function removeNoteFromAppState(note: Note): void {
   let allNotes = [...appState.allNotes];
   for (let i = 0; i < allNotes.length; i++) {
     if (allNotes[i].id === note.id) {
@@ -70,10 +57,7 @@ export function removeNoteFromAppState(note) {
   }
 }
 
-/**
- * @param {Note[]} allNotes
- */
-export function updateAppStateAfterNotesChange(allNotes) {
+export function updateAppStateAfterNotesChange(allNotes: Note[]): void {
   appState.allNotes = allNotes;
   appState.regularNotes = [];
   appState.archivedNotes = [];
@@ -109,16 +93,12 @@ export function updateAppStateAfterNotesChange(allNotes) {
 
 export const appState = new AppState();
 
-export function getNotes() {
+export function getNotes(): Note[] {
   return appState.allNotes;
 }
 
-/**
- * @param {string} name
- * @param {boolean} [quiet=false] set if you don't expect note to exist
- * @returns {Note|null}
- */
-export function findNoteByName(name, quiet = false) {
+// set if you don't expect note to exist
+export function findNoteByName(name: string, quiet: boolean = false): Note | null {
   for (let note of appState.allNotes) {
     if (note.name === name) {
       return note;
@@ -131,12 +111,8 @@ export function findNoteByName(name, quiet = false) {
   return null;
 }
 
-/**
- * @param {string} id
- * @param {boolean} [quiet=false] set if you don't expect note to exist
- * @returns {Note|null}
- */
-export function findNoteById(id, quiet = false) {
+// set if you don't expect note to exist
+export function findNoteById(id: string, quiet: boolean = false): Note | null {
   for (let note of appState.allNotes) {
     if (note.id === id) {
       return note;

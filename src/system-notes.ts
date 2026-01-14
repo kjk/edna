@@ -13,10 +13,7 @@ import myFunctionsRaw from "./notes/note-custom-functions.elaris.txt?raw";
 
 import { parseBuiltInFunctions } from "./functions";
 
-/**
- * @returns {string}
- */
-export function getHelp(platform = platformName) {
+export function getHelp(platform: string = platformName): string {
   let keyHelp = keyHelpStr(platform);
   let help = fixUpShortcuts(helpRaw, platform);
   help = help.replace("{{keyHelp}}", keyHelp);
@@ -42,10 +39,7 @@ You can write your own functions.
 To learn more see http://elaris.arslexis.io/help#running-code
 `;
 
-/**
- * @returns {string}
- */
-export function getBuiltInFunctionsNote() {
+export function getBuiltInFunctionsNote(): string {
   let s = builtInFunctionsRaw;
   let parts = s.split("// ----------------------------");
   let res = [];
@@ -59,18 +53,11 @@ export function getBuiltInFunctionsNote() {
   return builtInHdr + res.join("\n");
 }
 
-/**
- * @returns {string}
- */
-export function getBuiltInFunctionsJS() {
+export function getBuiltInFunctionsJS(): string {
   return builtInFunctionsRaw;
 }
 
-/**
- * @param {string} s
- * @returns {string}
- */
-function fixUpNote(s) {
+function fixUpNote(s: string): string {
   s = fixUpNoteContent(s);
   s = fixUpShortcuts(s);
   let keyHelp = keyHelpStr(platformName);
@@ -78,55 +65,36 @@ function fixUpNote(s) {
   return s;
 }
 
-/**
- * @returns {string}
- */
-export function getReleaseNotes() {
+export function getReleaseNotes(): string {
   return fixUpNote(releaseNotesRaw);
 }
 
-/**
- * @returns {string}
- */
-export function getInboxNote() {
+export function getInboxNote(): string {
   return fixUpNote(inboxRaw);
 }
 
-/**
- * @returns {string}
- */
-export function getJournalNote() {
+export function getJournalNote(): string {
   return fixUpNote(dailyJournalRaw);
 }
 
-/**
- * @returns {string}
- */
-export function getWelcomeNote() {
+export function getWelcomeNote(): string {
   return fixUpNote(scratchRaw);
 }
 
-/**
- * @returns {string}
- */
-export function getWelcomeNoteDev() {
+export function getWelcomeNoteDev(): string {
   return getWelcomeNote() + scratchDevRaw;
 }
 
-/**
- * @returns {string}
- */
-export function getMyFunctionsNote() {
+export function getMyFunctionsNote(): string {
   return fixUpNote(myFunctionsRaw);
 }
 
 // this logically belongs in functions.js but I use bun test
 // to test to test functions.js and it doesn't handle
 // importing ?raw
-/** @tye {BoopFunction[]} */
-export let boopFunctions = [];
+export let boopFunctions: any[] = [];
 
-export function getBoopFunctions() {
+export function getBoopFunctions(): any[] {
   if (len(boopFunctions) === 0) {
     let jsRaw = getBuiltInFunctionsJS();
     boopFunctions = parseBuiltInFunctions(jsRaw);
