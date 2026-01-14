@@ -22,12 +22,10 @@ import {
   kScratchNoteName,
   reassignNoteShortcut,
 } from "./notes";
-import { getSettings } from "./settings.svelte";
+import { getSettings, Settings } from "./settings.svelte";
 import { openBackendStore, openLocalStore, storeDumpIndex } from "./store";
 import { getInboxNote, getJournalNote, getWelcomeNote } from "./system-notes";
 import { isDev, len } from "./util";
-
-/** @typedef {import("./settings.svelte").Settings} Settings */
 
 // window.onunhandledrejection = console.warn;
 
@@ -58,11 +56,7 @@ function setupWindowDebug() {
   };
 }
 
-/**
- * @param {Note[]} existingNotes
- * @returns {Promise<string[]>}
- */
-async function createDefaultNotes(existingNotes) {
+async function createDefaultNotes(existingNotes: Note[]): Promise<string[]> {
   let isFirstRun = len(existingNotes) == 0;
   console.log(
     `isFirstRun: ${isFirstRun}, len(existingNotes): ${len(existingNotes)}`,
@@ -120,10 +114,7 @@ function setupPosthog() {
   });
 
   const originalConsoleError = console.error;
-  /**
-   * @param  {...any} args
-   */
-  function myConsoleError(...args) {
+  function myConsoleError(...args: any[]) {
     originalConsoleError.apply(console, args);
 
     let err;

@@ -6,11 +6,8 @@ import { appState } from "./appstate.svelte";
 import { kSettingsPath } from "./settings.svelte";
 import { loadNoteContent } from "./notes";
 
-/**
- * packs all notes, un-encrypted, into a .zip blob
- * @returns {Promise<Blob>}
- */
-export async function exportUnencryptedNotesToZipBlob() {
+// packs all notes, un-encrypted, into a .zip blob
+export async function exportUnencryptedNotesToZipBlob(): Promise<Blob> {
   console.log("exportUnencryptedNotesToZipBlob");
   let libZip = await import("@zip.js/zip.js");
   let blobWriter = new libZip.BlobWriter("application/zip");
@@ -35,7 +32,7 @@ export async function exportUnencryptedNotesToZipBlob() {
   return blob;
 }
 
-export async function exportNotesToZip() {
+export async function exportNotesToZip(): Promise<void> {
   let blob = await exportUnencryptedNotesToZipBlob();
   let name = "elaris.notes.export-" + formatDateYYYYMMDD() + ".zip";
   browserDownloadBlob(blob, name);
