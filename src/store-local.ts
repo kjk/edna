@@ -17,19 +17,11 @@ export const kStorePut = "put";
 export const kStorePutEncrypted = "put-e";
 export const kStoreWriteFile = "write-file";
 
-/**
- * @param {string} id
- * @param {string} name
- */
-function mkCreateNoteMeta(id, name) {
+function mkCreateNoteMeta(id: string, name: string) {
   return `${id}:${name}`;
 }
 
-/**
- * @param {string} meta
- * @returns {string[]}
- */
-export function parseCreateNoteMeta(meta) {
+export function parseCreateNoteMeta(meta: string): string[] {
   let idx = meta.indexOf(":");
   if (idx === -1) {
     throw new Error(`invalid create note meta: ${meta}`);
@@ -37,19 +29,11 @@ export function parseCreateNoteMeta(meta) {
   return [meta.slice(0, idx), meta.slice(idx + 1)];
 }
 
-/**
- * @param {string} id
- * @param {any} verId
- */
-function mkPutMeta(id, verId) {
+function mkPutMeta(id: string, verId: any) {
   return `${id}:${verId}`;
 }
 
-/**
- * @param {string} meta
- * @returns {string[]}
- */
-export function parsePutMeta(meta) {
+export function parsePutMeta(meta: string): string[] {
   let idx = meta.indexOf(":");
   if (idx === -1) {
     throw new Error(`invalid put meta: ${meta}`);
@@ -57,10 +41,7 @@ export function parsePutMeta(meta) {
   return [meta.slice(0, idx), meta];
 }
 
-/**
- * @param {string} verId
- */
-export function noteIdFromVerId(verId) {
+export function noteIdFromVerId(verId: string) {
   let idx = verId.indexOf(":");
   if (idx < 0) {
     throw new Error("invalid contentId: " + verId);
@@ -68,12 +49,7 @@ export function noteIdFromVerId(verId) {
   return verId.substring(0, idx);
 }
 
-/**
- * @param {AppendStoreRecord[]} records
- * @param {string} key
- * @returns {AppendStoreRecord|null}
- */
-export function findPutRecord(records, key) {
+export function findPutRecord(records: AppendStoreRecord[], key: string): AppendStoreRecord | null {
   // searching from the end should be faster on average
   // we're more likely to search for recent content
   let lastIdx = len(records) - 1;
@@ -89,12 +65,7 @@ export function findPutRecord(records, key) {
   return null;
 }
 
-/**
- * @param {AppendStoreRecord[]} records
- * @param {string} name
- * @returns {AppendStoreRecord|null}
- */
-export function findWriteFileRecord(records, name) {
+export function findWriteFileRecord(records: AppendStoreRecord[], name: string): AppendStoreRecord | null {
   // searching from the end should be faster on average
   // we're more likely to search for recent content
   let lastIdx = len(records) - 1;
@@ -120,25 +91,18 @@ export function findWriteFileRecord(records, name) {
 }
 
 export class LocalStore {
-  /** @type {AppendStore} */
-  store;
+  store: AppendStore;
 
   // if true, this is a partial store used to store changes
   // when we're offline
   isPartial = false;
 
-  /**
-   * @param {AppendStore} apstore
-   */
-  constructor(apstore) {
+  constructor(apstore: AppendStore) {
     this.store = apstore;
   }
 
-  /**
-   * @param {string} key
-   * @returns {Promise<{content:Uint8Array, isEncrypted:boolean}|null>} returns null if doesn't exist
-   */
-  async get(key) {
+  // returns null if doesn't exist
+  async get(key: string): Promise<{ content: Uint8Array; isEncrypted: boolean } | null> {
     let store = this.store;
     let recs = store.records();
     let rec = findPutRecord(recs, key);
@@ -153,12 +117,7 @@ export class LocalStore {
     }
   }
 
-  /**
-   * @param {string} key
-   * @param {string|Uint8Array} content
-   * @param {boolean} isEncrypted
-   */
-  async put(key, content, isEncrypted) {
+  async put(key: string, content: string | Uint8Array, isEncrypted: boolean) {
     // console.log("putString:", key, content?.substring(0, 20));
     let store = this.store;
     let kind = isEncrypted ? kStorePutEncrypted : kStorePut;
@@ -166,11 +125,7 @@ export class LocalStore {
     await debugValidateLocalStoreIndex(this);
   }
 
-  /**
-   * @param {string} name
-   * @param {string |Uint8Array} content
-   */
-  async writeFile(name, content) {
+  async writeFile(name: string, content: string | Uint8Array) {
     // console.log("putStringOverwrite:", meta, content?.substring(0, 20));
     let store = this.store;
     let meta = keyValueMarshal("name", name);
@@ -178,28 +133,17 @@ export class LocalStore {
     await debugValidateLocalStoreIndex(this);
   }
 
-  /**
-   * @param {string} fileName
-   * @returns {Promise<Uint8Array>}
-   */
-  async readFile(fileName) {
+  async readFile(fileName: string): Promise<Uint8Array> {
     let store = this.store;
     let rec = findWriteFileRecord(store.records(), fileName);
     return rec ? await store.readRecord(rec) : null;
   }
 
-  /**
-   * @param {string} fileName
-   * @returns {Promise<void>}
-   */
-  async invalidateFile(fileName) {
+  async invalidateFile(fileName: string): Promise<void> {
     // nothing to do because we don't cache
   }
 
-  /**
-   * @param {Object} m
-   */
-  async writeNoteMeta(m) {
+  async writeNoteMeta(m: Object) {
     let store = this.store;
     // we expect m to be small so storing in index as meta
     let meta = JSON.stringify(m);
@@ -207,21 +151,13 @@ export class LocalStore {
     await debugValidateLocalStoreIndex(this);
   }
 
-  /**
-   * @param {string} noteId
-   */
-  async deleteNote(noteId) {
+  async deleteNote(noteId: string) {
     let store = this.store;
     await store.appendRecord(kStoreDeleteNote, noteId, null);
     await debugValidateLocalStoreIndex(this);
   }
 
-  /**
-   * @param {string} noteId
-   * @param {string} name
-   * @return {Promise<Note>}
-   */
-  async createNote(noteId, name) {
+  async createNote(noteId: string, name: string): Promise<Note> {
     // console.log("createNote:", noteId, name);
     let store = this.store;
     let meta = mkCreateNoteMeta(noteId, name);
@@ -238,11 +174,7 @@ export class LocalStore {
     );
   }
 
-  /**
-   * @param {boolean} forceUpdate
-   * @returns {Promise<Note[]>}
-   */
-  async getAllNotes(forceUpdate = false) {
+  async getAllNotes(forceUpdate: boolean = false): Promise<Note[]> {
     let store = this.store;
     return notesFromStoreLog(store.records(), this.isPartial);
   }
@@ -254,12 +186,7 @@ export class LocalStore {
   }
 }
 
-/**
- * @param {AppendStoreRecord[]} records
- * @param {boolean} isPartial
- * @returns {Note[]}
- */
-function notesFromStoreLog(records, isPartial) {
+function notesFromStoreLog(records: AppendStoreRecord[], isPartial: boolean): Note[] {
   let res = [];
   let m = new Map();
   for (let rec of records) {
@@ -341,10 +268,7 @@ export async function deleteLocalStore() {
   );
 }
 
-/**
- * @param {string} s
- */
-export function validateIndex(s) {
+export function validateIndex(s: string) {
   let m = new Set(); // remembers non-deleted notes
   parseIndexCb(s, (line, record) => {
     let k = record.kind;
@@ -384,10 +308,7 @@ export function validateIndex(s) {
   });
 }
 
-/**
- * @param {LocalStore} localStore
- */
-async function validateLocalStoreIndex(localStore) {
+async function validateLocalStoreIndex(localStore: LocalStore) {
   if (localStore.isPartial) {
     // partial store cannot be validated
     return;
@@ -401,21 +322,13 @@ async function validateLocalStoreIndex(localStore) {
   }
 }
 
-/**
- * @param {LocalStore} localStore
- */
-async function debugValidateLocalStoreIndex(localStore) {
+async function debugValidateLocalStoreIndex(localStore: LocalStore) {
   if (isDev()) {
     await validateLocalStoreIndex(localStore);
   }
 }
 
-/**
- * @param {LocalStore} localStore
- * @param {boolean} validate
- * @returns {Promise<Blob | null>}
- */
-export async function createLocalStoreZip(localStore, validate = false) {
+export async function createLocalStoreZip(localStore: LocalStore, validate: boolean = false): Promise<Blob | null> {
   let indexContent = await localStore.store.getIndexContent();
   if (len(indexContent) === 0) {
     console.warn(
