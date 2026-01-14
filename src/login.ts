@@ -3,21 +3,18 @@ import { elarisFetch } from "./httputil";
 import { error, log } from "./log";
 import { getLocalStorageAsJSON, setLocalStorageFromJSON } from "./util";
 
-/** @typedef {{
+export type UserInfo = {
   user: string;
   email: string;
   login: string;
   avatar_url?: string;
-}} UserInfo */
+};
 
 // returns user info if logged in, null if not logged in
 
 const kCachedUserKey = "elaris:cacheduser";
 
-/**
- * @returns {Promise<UserInfo|null>}
- */
-export async function getLoggedUser() {
+export async function getLoggedUser(): Promise<UserInfo | null> {
   let user = null;
   try {
     let rsp = await elarisFetch("/auth/user");

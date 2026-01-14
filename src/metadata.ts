@@ -2,48 +2,41 @@ import { storeReadFileAsString, storeWriteFile } from "./store";
 
 export const kMetadataName = "__metadata.elaris.json";
 
-/** @typedef {{
-    name: string,
-    isStarred?: boolean,
-}} FunctionMetadata */
+export type FunctionMetadata = {
+  name: string;
+  isStarred?: boolean;
+};
 
-/** @typedef {{
-  selection?: any,
-  foldedRanges?: any,
-}} NoteMetadata */
+export type NoteMetadata = {
+  selection?: any;
+  foldedRanges?: any;
+};
 
-/** @typedef {{
-  ver: number,
-  functions: FunctionMetadata[],
-  notes: Record<string, NoteMetadata>,
-}} Metadata */
+export type Metadata = {
+  ver: number;
+  functions: FunctionMetadata[];
+  notes: Record<string, NoteMetadata>;
+};
 
-/** @type {Metadata} */
-let metadata = null;
+let metadata: Metadata = null;
 
-export function getMetadata() {
+export function getMetadata(): Metadata {
   return metadata;
 }
 
-/**
- * @returns {FunctionMetadata[]}
- */
-function getFunctionsMetadata() {
+function getFunctionsMetadata(): FunctionMetadata[] {
   metadata.functions = metadata.functions || [];
   return metadata.functions;
 }
 
-export async function saveAppMetadata() {
+export async function saveAppMetadata(): Promise<void> {
   let s = JSON.stringify(metadata, null, 2);
   await storeWriteFile(kMetadataName, s);
 }
 
-/**
- * @returns {Promise<Metadata>}
- */
-export async function loadAppMetadata() {
+export async function loadAppMetadata(): Promise<Metadata> {
   let s = await storeReadFileAsString(kMetadataName);
-  let m = {
+  let m: Metadata = {
     ver: 1,
     functions: [],
     notes: {},
@@ -61,12 +54,7 @@ export async function loadAppMetadata() {
   return metadata;
 }
 
-/**
- * @param {string} name
- * @param {boolean} createIfNotExists
- * @returns {FunctionMetadata}
- */
-export function getFunctionMeta(name, createIfNotExists = false) {
+export function getFunctionMeta(name: string, createIfNotExists: boolean = false): FunctionMetadata | null {
   // console.log("getMetadataForFunction:", name);
   let functions = getFunctionsMetadata();
   for (let m of functions) {
@@ -77,18 +65,14 @@ export function getFunctionMeta(name, createIfNotExists = false) {
   if (!createIfNotExists) {
     return null;
   }
-  let m = {
+  let m: FunctionMetadata = {
     name: name,
   };
   functions.push(m);
   return m;
 }
 
-/**
- * @param {string} name
- * @returns {Promise<boolean>}
- */
-export async function toggleFunctionStarred(name) {
+export async function toggleFunctionStarred(name: string): Promise<boolean> {
   let m = getFunctionMeta(name, true);
   m.isStarred = !m.isStarred;
   await saveAppMetadata();

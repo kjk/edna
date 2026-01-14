@@ -35,8 +35,7 @@ export function startServerSideEvents() {
     let kind = parts[0];
     let meta = len(parts) > 1 ? parts[1] : "";
     let noteId = "";
-    /** @type {Note} */
-    let note;
+    let note: Note;
     switch (kind) {
       case kStoreDeleteNote:
         // if a tab is open for this note, close it
