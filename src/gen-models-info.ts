@@ -68,7 +68,7 @@ async function downloadModelsJSON(force = false) {
 
 let skipped = [];
 
-function padStr(s, n) {
+function padStr(s: string, n: number) {
   // Pad string s to length n with spaces
   return s + " ".repeat(Math.max(0, n - s.length));
 }
@@ -126,7 +126,7 @@ function parseModelsJSON() {
   return res;
 }
 
-function findProviderID(id) {
+function findProviderID(id: string) {
   for (let i = 0; i < providersInfo.length; i++) {
     if (id.startsWith(providersInfo[i][0])) {
       return i;

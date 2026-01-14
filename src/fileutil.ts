@@ -1,6 +1,9 @@
 import { throwIf } from "./util";
 
-export async function requestHandlePermission(fh: any, withWrite: boolean): Promise<boolean> {
+export async function requestHandlePermission(
+  fh: any,
+  withWrite: boolean,
+): Promise<boolean> {
   const opts = {};
   if (withWrite) {
     opts.mode = "readwrite";
@@ -8,8 +11,11 @@ export async function requestHandlePermission(fh: any, withWrite: boolean): Prom
   return (await fh.requestPermission(opts)) === "granted";
 }
 
-export async function hasHandlePermission(fh: any, withWrite: boolean): Promise<boolean> {
-  const opts = {};
+export async function hasHandlePermission(
+  fh: any,
+  withWrite: boolean,
+): Promise<boolean> {
+  const opts: any = {};
   if (withWrite) {
     opts.mode = "readwrite";
   }
@@ -113,7 +119,11 @@ export class FsEntry extends Array {
     this[dirEntriesIdx] = v;
   }
 
-  static async fromHandle(handle: any, parentHandle: any, path: string): Promise<FsEntry> {
+  static async fromHandle(
+    handle: any,
+    parentHandle: any,
+    path: string,
+  ): Promise<FsEntry> {
     let size = 0;
     if (handle.kind === "file") {
       let file = await handle.getFile();
@@ -173,7 +183,10 @@ export async function readDir(
   return res;
 }
 
-export async function readDirRecurFiles(dirHandle: FileSystemDirectoryHandle, dir: string = dirHandle.name): Promise<File[]> {
+export async function readDirRecurFiles(
+  dirHandle: FileSystemDirectoryHandle,
+  dir: string = dirHandle.name,
+): Promise<File[]> {
   const dirs = [];
   const files = [];
   // @ts-ignore
@@ -210,7 +223,9 @@ export function forEachFsEntry(dir: FsEntry, fn: Function) {
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker
-export async function openDirPicker(writeAccess: boolean): Promise<FileSystemDirectoryHandle> {
+export async function openDirPicker(
+  writeAccess: boolean,
+): Promise<FileSystemDirectoryHandle> {
   const opts = {
     mutltiple: false,
   };
@@ -233,43 +248,65 @@ export function supportsFileSystem(): boolean {
 }
 
 // chatgpt says the string is saved in utf-8
-export async function fsFileHandleWriteText(fh: FileSystemFileHandle, content: string) {
+export async function fsFileHandleWriteText(
+  fh: FileSystemFileHandle,
+  content: string,
+) {
   const writable = await fh.createWritable();
   await writable.write(content);
   await writable.close();
 }
 
-export async function fsWriteTextFile(dh: FileSystemDirectoryHandle, fileName: string, content: string) {
+export async function fsWriteTextFile(
+  dh: FileSystemDirectoryHandle,
+  fileName: string,
+  content: string,
+) {
   console.log("writing to file:", fileName, content.length);
   let fh = await dh.getFileHandle(fileName, { create: true });
   fsFileHandleWriteText(fh, content);
 }
 
-export async function fsFileHandleWriteBlob(fh: FileSystemFileHandle, blob: Blob) {
+export async function fsFileHandleWriteBlob(
+  fh: FileSystemFileHandle,
+  blob: Blob,
+) {
   const writable = await fh.createWritable();
   await writable.write(blob);
   await writable.close();
 }
 
-export async function fsWriteBlob(dh: FileSystemDirectoryHandle, fileName: string, blob: Blob) {
+export async function fsWriteBlob(
+  dh: FileSystemDirectoryHandle,
+  fileName: string,
+  blob: Blob,
+) {
   console.log("writing to file:", fileName, blob.size);
   let fh = await dh.getFileHandle(fileName, { create: true });
   await fsFileHandleWriteBlob(fh, blob);
 }
 
-export async function fsFileHandleReadTextFile(fh: FileSystemFileHandle): Promise<string> {
+export async function fsFileHandleReadTextFile(
+  fh: FileSystemFileHandle,
+): Promise<string> {
   const file = await fh.getFile();
   const res = await file.text(); // reads utf-8
   return res;
 }
 
-export async function fsReadTextFile(dh: FileSystemDirectoryHandle, fileName: string): Promise<string> {
+export async function fsReadTextFile(
+  dh: FileSystemDirectoryHandle,
+  fileName: string,
+): Promise<string> {
   // console.log("fsReadTextFile:", fileName);
   let fh = await dh.getFileHandle(fileName, { create: false });
   return await fsFileHandleReadTextFile(fh);
 }
 
-export async function fsReadBinaryFile(dh: FileSystemDirectoryHandle, fileName: string): Promise<Uint8Array> {
+export async function fsReadBinaryFile(
+  dh: FileSystemDirectoryHandle,
+  fileName: string,
+): Promise<Uint8Array> {
   // console.log("fsReadBinaryFile:", fileName);
   let fh = await dh.getFileHandle(fileName, { create: false });
   const blob = await fh.getFile();
@@ -277,14 +314,22 @@ export async function fsReadBinaryFile(dh: FileSystemDirectoryHandle, fileName: 
   return res;
 }
 
-export async function fsRenameFileOld(dh: FileSystemDirectoryHandle, newName: string, oldName: string): Promise<void> {
+export async function fsRenameFileOld(
+  dh: FileSystemDirectoryHandle,
+  newName: string,
+  oldName: string,
+): Promise<void> {
   let d = await fsReadTextFile(dh, oldName);
   fsWriteTextFile(dh, newName, d);
   fsDeleteFile(dh, oldName);
 }
 
 // true if renamed, false if failed
-export async function fsRenameFile(dh: FileSystemDirectoryHandle, oldName: string, newName: string): Promise<boolean> {
+export async function fsRenameFile(
+  dh: FileSystemDirectoryHandle,
+  oldName: string,
+  newName: string,
+): Promise<boolean> {
   try {
     let f = await dh.getFileHandle(oldName);
     // @ts-ignore
@@ -298,7 +343,10 @@ export async function fsRenameFile(dh: FileSystemDirectoryHandle, oldName: strin
 }
 
 // true if exists
-export async function fsFileExists(dh: FileSystemDirectoryHandle, fileName: string): Promise<boolean> {
+export async function fsFileExists(
+  dh: FileSystemDirectoryHandle,
+  fileName: string,
+): Promise<boolean> {
   try {
     await dh.getFileHandle(fileName);
   } catch (e) {
@@ -309,7 +357,10 @@ export async function fsFileExists(dh: FileSystemDirectoryHandle, fileName: stri
   return true;
 }
 
-export async function fsDeleteFile(dh: FileSystemDirectoryHandle, name: string) {
+export async function fsDeleteFile(
+  dh: FileSystemDirectoryHandle,
+  name: string,
+) {
   await dh.removeEntry(name);
 }
 

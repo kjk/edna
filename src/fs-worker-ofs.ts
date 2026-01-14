@@ -1,6 +1,11 @@
 // FileSystemWorkerOFS - OPFS operations through a web worker
 
 export class FileSystemWorkerOFS {
+  worker: Worker;
+  messageId: number;
+  pendingRequests: Map<any, any>;
+  initPromise: Promise<void>;
+
   constructor() {
     this.worker = null;
     this.messageId = 0;
@@ -92,7 +97,11 @@ export class FileSystemWorkerOFS {
     return await this.sendMessage("getFileSize", { path });
   }
 
-  async readFileSegment(path: string, offset: number, size: number): Promise<Uint8Array> {
+  async readFileSegment(
+    path: string,
+    offset: number,
+    size: number,
+  ): Promise<Uint8Array> {
     return await this.sendMessage("readFileSegment", {
       path,
       offset,
@@ -128,7 +137,7 @@ export class FileSystemWorkerOFS {
   }
 }
 
-let fs;
+let fs: FileSystemWorkerOFS;
 
 export async function getFileSystemWorkerOfs(): Promise<FileSystemWorkerOFS> {
   if (!fs) {

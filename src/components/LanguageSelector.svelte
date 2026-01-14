@@ -9,8 +9,10 @@
   } from "../util.js";
   import ListBox from "./ListBox.svelte";
 
-  let { selectLanguage }: {
-    selectLanguage: (name: string) => void,
+  let {
+    selectLanguage,
+  }: {
+    selectLanguage: (name: string) => void;
   } = $props();
 
   let filter = $state("");
@@ -53,13 +55,13 @@
     listboxRef.onkeydown(ev, filter === "");
   }}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] max-h-[94vh] flex flex-col p-2"
+  class="selector z-20 absolute center-x-with-translate top-8 max-h-[94vh] flex flex-col p-2"
 >
   <input
     use:focus
     type="text"
     bind:value={filter}
-    class="py-1 px-2 bg-white w-full min-w-[400px] mb-2 rounded-xs"
+    class="py-1 px-2 bg-white w-full min-w-100 mb-2 rounded-xs"
   />
   <ListBox
     bind:this={listboxRef}
