@@ -28,22 +28,17 @@
     IconTablerX,
   } from "./Icons.svelte";
 
-  /** @typedef {import("@codemirror/view").EditorView} EditorView */
-  /** @type {{
-    view: EditorView
-   }}
-   */
-  let { view } = $props();
+  type EditorView = import("@codemirror/view").EditorView;
+
+  let { view }: { view: EditorView } = $props();
 
   let searchTerm = $state("");
   let replaceTerm = $state("");
   let showReplace = $state(false);
 
-  /** @type {HTMLInputElement} */
-  let searchInputREf;
+  let searchInputREf: HTMLInputElement;
 
-  /** @type {HTMLInputElement} */
-  let replaceInputRef = $state(undefined);
+  let replaceInputRef: HTMLInputElement = $state(undefined);
 
   // svelte-ignore state_referenced_locally
   let query = getSearchQuery(view.state);
@@ -52,20 +47,12 @@
   const kMaxCountOfMatches = 1000; // 9999 in extended-find-replace
 
   // stores [from, to] positions for all matches as flattened array
-  /** @type {number[]} */
-  let matchBuffer = [];
-  /**
-   * @param {number} from
-   * @param {number} to
-   */
-  function matcHBufferAdd(from, to) {
+  let matchBuffer: number[] = [];
+
+  function matcHBufferAdd(from: number, to: number): void {
     matchBuffer.push(from, to);
   }
-  /**
-   * @param {number} idx
-   * @returns {{from: number, to:number}}
-   */
-  function matchBufferGet(idx) {
+  function matchBufferGet(idx: number): { from: number; to: number } {
     idx = idx * 2;
     if (idx >= matchBuffer.length) {
       return null;
@@ -109,12 +96,8 @@
     exceed: false,
   });
 
-  /**
-   * Compare equality of this query with the another one.
-   * @param {SearchQuery} other
-   */
   // @ts-ignore
-  function _compare(other) {
+  function _compare(other: SearchQuery): boolean {
     let res = untrack(() => query.eq(other) && query.literal == other.literal);
     return res;
   }
@@ -241,10 +224,7 @@
       tick().then(() => searchInputREf.focus());
     }
   }
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onKeyDown(ev) {
+  function onKeyDown(ev: KeyboardEvent): void {
     if (ev.key == "Enter") {
       if (ev.shiftKey) {
         prev();
@@ -286,10 +266,7 @@
     appState.searchRegex = !appState.searchRegex;
     console.log("matchRegex", appState.searchRegex);
   }
-  /**
-   * @param {boolean} isPressed
-   */
-  function btnPressedCls(isPressed) {
+  function btnPressedCls(isPressed: boolean): string {
     return isPressed
       ? "bg-gray-100 border-1 border-gray-300"
       : "bg-white border-1 border-white";

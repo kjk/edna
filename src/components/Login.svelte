@@ -3,10 +3,7 @@
   import { appState } from "../appstate.svelte";
   import { IconGitHub } from "./Icons.svelte";
 
-  /** @type { {
-    onclose: () => void,
-}}*/
-  let { onclose } = $props();
+  let { onclose }: { onclose: () => void } = $props();
 
   let waitingForMagicLink = $state(false);
 
@@ -38,10 +35,7 @@
     return "";
   });
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent): void {
     let key = ev.key;
 
     if (key === "Escape") {

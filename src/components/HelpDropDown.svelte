@@ -3,10 +3,7 @@
   import { kReleaseNotesSystemNoteName } from "../notes";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
-    selectItem: (name: string) => void,
-  }} */
-  let { selectItem } = $props();
+  let { selectItem }: { selectItem: (name: string) => void } = $props();
 
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
@@ -36,10 +33,7 @@
     },
   ];
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent): void {
     listboxRef.onkeydown(ev, true);
   }
 </script>
@@ -58,7 +52,7 @@
     {initialSelection}
     compact={false}
   >
-    {#snippet renderItem(item, /* @type {number} */ idx)}
+    {#snippet renderItem(item, idx: number)}
       <div
         title={item.key}
         class="text-left px-1 grow self-end max-w-[32ch] truncate"
