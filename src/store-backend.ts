@@ -22,13 +22,7 @@ import { len } from "./util";
 
 const kStoreDeleteFile = "delete-file";
 
-/**
- * @param {AppendStoreRecord[]} recs
- * @param {string} kind
- * @param {string} meta
- * @returns {AppendStoreRecord | null}
- */
-function findRecordForKey(recs, kind, meta) {
+function findRecordForKey(recs: AppendStoreRecord[], kind: string, meta: string): AppendStoreRecord | null {
   // searching from the end should be faster on average
   // we're more likely to search for recent content
   let lastIdx = len(recs) - 1;
@@ -56,41 +50,23 @@ function findRecordForKey(recs, kind, meta) {
 }
 
 export class ContentCache {
-  /** @type {AppendStore} */
-  store;
+  store: AppendStore;
 
-  /**
-   * @param {AppendStore} store
-   */
-  constructor(store) {
+  constructor(store: AppendStore) {
     this.store = store;
   }
 
-  /**
-   * @param {string} key
-   * @returns {boolean}
-   */
-  has(key) {
+  has(key: string): boolean {
     let recs = this.store.records();
     return findRecordForKey(recs, kStorePut, key) !== null;
   }
 
-  /**
-   * @param {string} key
-   * @param {string | Uint8Array} value
-   * @param {boolean} isEncrypted
-   * @returns {Promise<void>}
-   */
-  async put(key, value, isEncrypted) {
+  async put(key: string, value: string | Uint8Array, isEncrypted: boolean): Promise<void> {
     let kind = isEncrypted ? kStorePutEncrypted : kStorePut;
     await this.store.appendRecord(kind, key, value);
   }
 
-  /**
-   * @param {string} key
-   * @returns {Promise<{content: Uint8Array, isEncrypted: boolean}|null>}
-   */
-  async get(key) {
+  async get(key: string): Promise<{ content: Uint8Array; isEncrypted: boolean } | null> {
     let recs = this.store.records();
     let rec = findRecordForKey(recs, kStorePut, key);
     if (!rec) {
@@ -105,11 +81,7 @@ export class ContentCache {
     return { content, isEncrypted };
   }
 
-  /**
-   * @param {string} fileName
-   * @param {Uint8Array<ArrayBufferLike>} content
-   */
-  async writeFile(fileName, content) {
+  async writeFile(fileName: string, content: Uint8Array) {
     await this.store.appendRecord(kStoreWriteFile, fileName, content);
   }
   async readFile(fileName) {
@@ -134,28 +106,16 @@ export class ContentCache {
 }
 
 export class BackendStore {
-  /** @type {ContentCache} */
-  contentCache;
-  /** @type {LocalStore} */
-  offlineStore;
+  contentCache: ContentCache;
+  offlineStore: LocalStore;
+  notes: Note[];
 
-  /** @type {Note[]} */
-  notes;
-
-  /**
-   * @param {ContentCache} contentCache
-   * @param {LocalStore} offlineStore
-   */
-  constructor(contentCache, offlineStore) {
+  constructor(contentCache: ContentCache, offlineStore: LocalStore) {
     this.contentCache = contentCache;
     this.offlineStore = offlineStore;
   }
 
-  /**
-   * @param {string} key
-   * @returns {Promise<{content: Uint8Array, isEncrypted: boolean}|null>}
-   */
-  async get(key) {
+  async get(key: string): Promise<{ content: Uint8Array; isEncrypted: boolean } | null> {
     // check in cache first
     let store = this.contentCache.store;
     let rec = findPutRecord(store.records(), key);
@@ -190,12 +150,7 @@ export class BackendStore {
     return { content, isEncrypted };
   }
 
-  /**
-   * @param {string} key
-   * @param {string|Uint8Array} content
-   * @param {boolean} isEncrypted
-   */
-  async put(key, content, isEncrypted) {
+  async put(key: string, content: string | Uint8Array, isEncrypted: boolean) {
     await this.flushOfflineChanges();
 
     let body = toBytes(content);
@@ -227,11 +182,7 @@ export class BackendStore {
     await this.contentCache.put(key, body, isEncrypted);
   }
 
-  /**
-   * @param {string} fileName
-   * @param {string | Uint8Array} content
-   */
-  async writeFile(fileName, content) {
+  async writeFile(fileName: string, content: string | Uint8Array) {
     await this.flushOfflineChanges();
 
     let body = toBytes(content);
@@ -255,11 +206,7 @@ export class BackendStore {
     await this.offlineStore.writeFile(fileName, content);
   }
 
-  /**
-   * @param {string} fileName
-   * @returns {Promise<Uint8Array|null>}
-   */
-  async readFile(fileName) {
+  async readFile(fileName: string): Promise<Uint8Array | null> {
     // TODO: what scenarios could lead to reading stale data?
     let body = await this.contentCache.readFile(fileName);
     if (body) {
@@ -290,18 +237,11 @@ export class BackendStore {
     return null;
   }
 
-  /**
-   * @param {string} fileName
-   * @returns {Promise<void>}
-   */
-  async invalidateFile(fileName) {
+  async invalidateFile(fileName: string): Promise<void> {
     await this.contentCache.deleteFile(fileName);
   }
 
-  /**
-   * @param {Object} m
-   */
-  async writeNoteMeta(m) {
+  async writeNoteMeta(m: Object) {
     await this.flushOfflineChanges();
 
     let meta = encodeURIComponent(JSON.stringify(m));
@@ -320,10 +260,7 @@ export class BackendStore {
     await this.offlineStore.writeNoteMeta(m);
   }
 
-  /**
-   * @param {string} noteId
-   */
-  async deleteNote(noteId) {
+  async deleteNote(noteId: string) {
     await this.flushOfflineChanges();
 
     let uri = "/api/store/deleteNote?noteId=" + noteId;
@@ -347,12 +284,7 @@ export class BackendStore {
     await this.offlineStore.deleteNote(noteId);
   }
 
-  /**
-   * @param {string} noteId
-   * @param {string} name
-   * @return {Promise<Note>}
-   */
-  async createNote(noteId, name) {
+  async createNote(noteId: string, name: string): Promise<Note> {
     await this.flushOfflineChanges();
 
     let encName = encodeURI(name);
@@ -376,11 +308,7 @@ export class BackendStore {
     return note;
   }
 
-  /**
-   * @param {boolean} forceUpdate
-   * @returns {Promise<Note[]>}
-   */
-  async getAllNotes(forceUpdate = false) {
+  async getAllNotes(forceUpdate: boolean = false): Promise<Note[]> {
     if (this.notes && !forceUpdate) {
       return this.notes;
     }
@@ -390,10 +318,7 @@ export class BackendStore {
     return this.notes;
   }
 
-  /**
-   * @returns {Promise<void>}
-   */
-  async flushOfflineChanges() {
+  async flushOfflineChanges(): Promise<void> {
     let store = this.offlineStore.store;
     let recs = store.records();
     if (len(recs) === 0) {
@@ -450,11 +375,7 @@ export async function isOnlineForSure() {
   return appState.isOnline;
 }
 
-/**
- * @param {LocalStore} localStore
- * @returns
- */
-async function uploadOfflineStore(localStore) {
+async function uploadOfflineStore(localStore: LocalStore) {
   const blob = await createLocalStoreZip(localStore, false);
   if (!blob) {
     return;
@@ -477,11 +398,7 @@ async function uploadOfflineStore(localStore) {
   console.warn("uploadOfflineStore: migration completed");
 }
 
-/**
- * @param {string} s
- * @returns {any}
- */
-function parseLatestNotes(s) {
+function parseLatestNotes(s: string): any {
   let init = {
     Ver: 1,
     LastChangeID: 0,
@@ -501,11 +418,7 @@ function parseLatestNotes(s) {
 const kNoteFlagIsStarred = 0x01;
 const kNoteFlagIsArchived = 0x02;
 
-/**
- * @param {any[][]} compactNotes
- * @returns {Note[]}
- */
-function notesFromCompact(compactNotes) {
+function notesFromCompact(compactNotes: any[][]): Note[] {
   let res = [];
   for (let n of compactNotes) {
     let note = new Note();
@@ -526,10 +439,7 @@ function notesFromCompact(compactNotes) {
 // cached result of /api/store/getNotes in localStorage
 const kKeyLatestNotes = "elaris:latestNotes";
 
-/**
- * @returns {Promise<Note[]>}
- */
-async function getLatestNotes() {
+async function getLatestNotes(): Promise<Note[]> {
   console.log("getLatestNotes");
   let s = localStorage.getItem(kKeyLatestNotes);
   let curr = parseLatestNotes(s);
@@ -564,12 +474,7 @@ async function getLatestNotes() {
   return notes;
 }
 
-/**
- * @param {Note[]} notes
- * @param {ContentCache} cache
- * @returns {Promise<void>}
- */
-async function cacheLatestNoteVersions(notes, cache) {
+async function cacheLatestNoteVersions(notes: Note[], cache: ContentCache): Promise<void> {
   console.log("cacheLatestNoteVersions");
   let neededVerIds = [];
   for (let note of notes) {
