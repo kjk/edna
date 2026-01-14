@@ -1,15 +1,11 @@
 export class FileSystemMem {
+  files: Map<string, Blob>;
+
   constructor() {
-    /** @type {Map<string, Blob>} */
     this.files = new Map();
   }
 
-  /**
-   * @param {string} path
-   * @param {Uint8Array} blob
-   * @returns {Promise<number>}
-   */
-  async appendToFile(path, blob) {
+  async appendToFile(path: string, blob: Uint8Array): Promise<number> {
     const existingBlob = this.files.get(path);
     const offset = existingBlob ? existingBlob.size : 0;
 
@@ -27,12 +23,7 @@ export class FileSystemMem {
     return offset;
   }
 
-  /**
-   * @param {string} path
-   * @param {number} offset
-   * @param {Uint8Array} bytes
-   */
-  async writeToFileAtOffset(path, offset, bytes) {
+  async writeToFileAtOffset(path: string, offset: number, bytes: Uint8Array) {
     const existingBlob = this.files.get(path);
 
     if (!existingBlob) {
@@ -67,11 +58,7 @@ export class FileSystemMem {
     this.files.set(path, new Blob([newBytes]));
   }
 
-  /**
-   * @param {string} path
-   * @returns {Promise<ArrayBuffer|null>}
-   */
-  async readFile(path) {
+  async readFile(path: string): Promise<ArrayBuffer | null> {
     const blob = this.files.get(path);
     if (!blob) {
       return null;
@@ -79,22 +66,12 @@ export class FileSystemMem {
     return await blob.arrayBuffer();
   }
 
-  /**
-   * @param {string} path
-   * @returns {Promise<number>}
-   */
-  async getFileSize(path) {
+  async getFileSize(path: string): Promise<number> {
     const blob = this.files.get(path);
     return blob ? blob.size : -1;
   }
 
-  /**
-   * @param {string} path
-   * @param {number} offset
-   * @param {number} size
-   * @returns {Promise<Uint8Array>}
-   */
-  async readFileSegment(path, offset, size) {
+  async readFileSegment(path: string, offset: number, size: number): Promise<Uint8Array> {
     // const startTime = performance.now();
     const blob = this.files.get(path);
 
@@ -110,26 +87,16 @@ export class FileSystemMem {
     return new Uint8Array(data);
   }
 
-  /**
-   * @param {string} path
-   * @returns {Promise<boolean>}
-   */
-  async deleteFile(path) {
+  async deleteFile(path: string): Promise<boolean> {
     return this.files.delete(path);
   }
 
-  /**
-   * @returns {Promise<string[]>}
-   */
-  async listFiles() {
+  async listFiles(): Promise<string[]> {
     return Array.from(this.files.keys());
   }
 
-  /**
-   * Clear all files from memory
-   * @returns {Promise<void>}
-   */
-  async clear() {
+  // Clear all files from memory
+  async clear(): Promise<void> {
     this.files.clear();
   }
 }

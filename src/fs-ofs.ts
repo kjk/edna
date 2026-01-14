@@ -1,10 +1,6 @@
 import { len } from "./util";
 
-/**
- * @param {string} path
- * @returns {Promise<number>}
- */
-async function ofsGetFileSize(path) {
+async function ofsGetFileSize(path: string): Promise<number> {
   const root = await navigator.storage.getDirectory();
   try {
     const fh = await root.getFileHandle(path);
@@ -15,13 +11,7 @@ async function ofsGetFileSize(path) {
   }
 }
 
-/**
- * @param {string} path
- * @param {number} offset
- * @param {number} size
- * @returns {Promise<Uint8Array>}
- */
-async function ofsReadFileSegment(path, offset, size) {
+async function ofsReadFileSegment(path: string, offset: number, size: number): Promise<Uint8Array> {
   // const startTime = performance.now();
   const root = await navigator.storage.getDirectory();
   const fh = await root.getFileHandle(path);
@@ -32,11 +22,7 @@ async function ofsReadFileSegment(path, offset, size) {
   return new Uint8Array(data);
 }
 
-/**
- * @param {string} path
- * @returns {Promise<ArrayBuffer|null>}
- */
-export async function ofsReadFile(path) {
+export async function ofsReadFile(path: string): Promise<ArrayBuffer | null> {
   const root = await navigator.storage.getDirectory();
   try {
     const fh = await root.getFileHandle(path);
@@ -48,12 +34,7 @@ export async function ofsReadFile(path) {
   }
 }
 
-/**
- * @param {string} path
- * @param {number} offset
- * @param {Uint8Array} blob
- */
-async function ofsWriteToFileAtOffset(path, offset, blob) {
+async function ofsWriteToFileAtOffset(path: string, offset: number, blob: Uint8Array) {
   const root = await navigator.storage.getDirectory();
   const fh = await root.getFileHandle(path, {
     create: true,
@@ -68,12 +49,7 @@ async function ofsWriteToFileAtOffset(path, offset, blob) {
   return offset;
 }
 
-/**
- * @param {string} path
- * @param {Uint8Array} blob
- * @returns {Promise<number>}
- */
-async function ofsAppendToFile(path, blob) {
+async function ofsAppendToFile(path: string, blob: Uint8Array): Promise<number> {
   const root = await navigator.storage.getDirectory();
   const fh = await root.getFileHandle(path, {
     create: true,
@@ -90,10 +66,7 @@ async function ofsAppendToFile(path, blob) {
   return offset;
 }
 
-/**
- * @param {string[]} files
- */
-export async function ofsDeleteFiles(files = null) {
+export async function ofsDeleteFiles(files: string[] = null) {
   const root = await navigator.storage.getDirectory();
   // @ts-ignore
   for await (const name of root.keys()) {
@@ -104,15 +77,10 @@ export async function ofsDeleteFiles(files = null) {
   }
 }
 
-/**
- * @param {boolean} recursive
- * @param {FileSystemDirectoryHandle} dirHandle
- * @param {string} dir
- */
 export async function ofsListFiles(
-  recursive = false,
-  dirHandle = null,
-  dir = "",
+  recursive: boolean = false,
+  dirHandle: FileSystemDirectoryHandle = null,
+  dir: string = "",
 ) {
   if (dirHandle == null) {
     dirHandle = await navigator.storage.getDirectory();
@@ -140,53 +108,25 @@ export async function ofsListFiles(
 }
 
 export class FileSystemOFS {
-  /**
-   * @param {string} path
-   * @param {Uint8Array} blob
-   * @returns {Promise<number>}
-   */
-  async appendToFile(path, blob) {
+  async appendToFile(path: string, blob: Uint8Array): Promise<number> {
     return await ofsAppendToFile(path, blob);
   }
-  /**
-   * @param {string} path
-   * @param {number} offset
-   * @param {Uint8Array} bytes
-   */
-  async writeToFileAtOffset(path, offset, bytes) {
+  async writeToFileAtOffset(path: string, offset: number, bytes: Uint8Array) {
     await ofsWriteToFileAtOffset(path, offset, bytes);
   }
 
-  /**
-   * @param {string} path
-   * @returns {Promise<ArrayBuffer|null>}
-   */
-  async readFile(path) {
+  async readFile(path: string): Promise<ArrayBuffer | null> {
     return await ofsReadFile(path);
   }
 
-  /**
-   * @param {string} path
-   * @returns {Promise<number>}
-   */
-  async getFileSize(path) {
+  async getFileSize(path: string): Promise<number> {
     return await ofsGetFileSize(path);
   }
-  /**
-   * @param {string} path
-   * @param {number} offset
-   * @param {number} size
-   * @returns {Promise<Uint8Array>}
-   */
-  async readFileSegment(path, offset, size) {
+  async readFileSegment(path: string, offset: number, size: number): Promise<Uint8Array> {
     return await ofsReadFileSegment(path, offset, size);
   }
 
-  /**
-   * @param {string} path
-   * @returns {Promise<boolean>}
-   */
-  async deleteFile(path) {
+  async deleteFile(path: string): Promise<boolean> {
     const root = await navigator.storage.getDirectory();
     try {
       await root.removeEntry(path, { recursive: true });
