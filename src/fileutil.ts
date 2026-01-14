@@ -1,11 +1,6 @@
 import { throwIf } from "./util";
 
-/**
- * @param {any} fh
- * @param {boolean} withWrite
- * @returns {Promise<boolean>}
- */
-export async function requestHandlePermission(fh, withWrite) {
+export async function requestHandlePermission(fh: any, withWrite: boolean): Promise<boolean> {
   const opts = {};
   if (withWrite) {
     opts.mode = "readwrite";
@@ -13,12 +8,7 @@ export async function requestHandlePermission(fh, withWrite) {
   return (await fh.requestPermission(opts)) === "granted";
 }
 
-/**
- * @param {any} fh
- * @param {boolean} withWrite
- * @returns {Promise<boolean>}
- */
-export async function hasHandlePermission(fh, withWrite) {
+export async function hasHandlePermission(fh: any, withWrite: boolean): Promise<boolean> {
   const opts = {};
   if (withWrite) {
     opts.mode = "readwrite";
@@ -27,10 +17,7 @@ export async function hasHandlePermission(fh, withWrite) {
   return res === "granted";
 }
 
-/**
- * @returns {boolean}
- */
-export function isIFrame() {
+export function isIFrame(): boolean {
   let isIFrame = false;
   try {
     // in iframe, those are different
@@ -58,53 +45,32 @@ const dirEntriesIdx = 4;
 const metaIdx = 5;
 
 export class FsEntry extends Array {
-  /**
-   * @returns {string}
-   */
-  get name() {
+  get name(): string {
     return this[handleIdx].name;
   }
 
-  /**
-   * @returns {boolean}
-   */
-  get isDir() {
+  get isDir(): boolean {
     return this[handleIdx].kind === "directory";
   }
 
-  /**
-   * @returns {number}
-   */
-  get size() {
+  get size(): number {
     return this[sizeIdx];
   }
 
-  /**
-   * @param {number} n
-   */
-  set size(n) {
+  set size(n: number) {
     throwIf(!this.isDir);
     this[sizeIdx] = n;
   }
 
-  /**
-   * @returns {string}
-   */
-  get path() {
+  get path(): string {
     return this[pathIdx];
   }
 
-  /**
-   * @param {string} v
-   */
-  set path(v) {
+  set path(v: string) {
     this[pathIdx] = v;
   }
 
-  /**
-   * @return any
-   */
-  get meta() {
+  get meta(): any {
     return this[metaIdx];
   }
 
@@ -112,29 +78,18 @@ export class FsEntry extends Array {
     this[metaIdx] = o;
   }
 
-  /**
-   * @returns {Promise<File>}
-   */
-  async getFile() {
+  async getFile(): Promise<File> {
     throwIf(this.isDir);
     let h = this[handleIdx];
     return await h.getFile();
   }
 
-  /**
-   * @param {string} key
-   * @retruns {any}
-   */
-  getMeta(key) {
+  getMeta(key: string): any {
     let m = this[metaIdx];
     return m ? m[key] : undefined;
   }
 
-  /**
-   * @param {string} key
-   * @param {any} val
-   */
-  setMeta(key, val) {
+  setMeta(key: string, val: any) {
     let m = this[metaIdx] || {};
     m[key] = val;
     this[metaIdx] = m;
@@ -148,29 +103,17 @@ export class FsEntry extends Array {
     return this[parentHandleIdx];
   }
 
-  /**
-   * @returns {FsEntry[]}
-   */
-  get dirEntries() {
+  get dirEntries(): FsEntry[] {
     throwIf(!this.isDir);
     return this[dirEntriesIdx];
   }
 
-  /**
-   * @param {FsEntry[]} v
-   */
-  set dirEntries(v) {
+  set dirEntries(v: FsEntry[]) {
     throwIf(!this.isDir);
     this[dirEntriesIdx] = v;
   }
 
-  /**
-   * @param {any} handle
-   * @param {any} parentHandle
-   * @param {string} path
-   * @returns {Promise<FsEntry>}
-   */
-  static async fromHandle(handle, parentHandle, path) {
+  static async fromHandle(handle: any, parentHandle: any, path: string): Promise<FsEntry> {
     let size = 0;
     if (handle.kind === "file") {
       let file = await handle.getFile();
@@ -184,19 +127,12 @@ function dontSkip(entry, dir) {
   return false;
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dirHandle
- * @param {Function} skipEntryFn
- * @param {string} dir
- * @returns {Promise<FsEntry>}
- */
 export async function readDirRecur(
-  dirHandle,
-  skipEntryFn = dontSkip,
-  dir = dirHandle.name,
-) {
-  /** @type {FsEntry[]} */
-  let entries = [];
+  dirHandle: FileSystemDirectoryHandle,
+  skipEntryFn: Function = dontSkip,
+  dir: string = dirHandle.name,
+): Promise<FsEntry> {
+  let entries: FsEntry[] = [];
   // @ts-ignore
   for await (const handle of dirHandle.values()) {
     if (skipEntryFn(handle, dir)) {
@@ -217,19 +153,12 @@ export async function readDirRecur(
   return res;
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dirHandle
- * @param {Function} skipEntryFn
- * @param {string} dir
- * @returns {Promise<FsEntry>}
- */
 export async function readDir(
-  dirHandle,
-  skipEntryFn = dontSkip,
-  dir = dirHandle.name,
-) {
-  /** @type {FsEntry[]} */
-  let entries = [];
+  dirHandle: FileSystemDirectoryHandle,
+  skipEntryFn: Function = dontSkip,
+  dir: string = dirHandle.name,
+): Promise<FsEntry> {
+  let entries: FsEntry[] = [];
   // @ts-ignore
   for await (const handle of dirHandle.values()) {
     if (skipEntryFn(handle, dir)) {
@@ -244,12 +173,7 @@ export async function readDir(
   return res;
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dirHandle
- * @param {string} dir
- * @returns {Promise<File[]>}
- */
-export async function readDirRecurFiles(dirHandle, dir = dirHandle.name) {
+export async function readDirRecurFiles(dirHandle: FileSystemDirectoryHandle, dir: string = dirHandle.name): Promise<File[]> {
   const dirs = [];
   const files = [];
   // @ts-ignore
@@ -274,12 +198,7 @@ export async function readDirRecurFiles(dirHandle, dir = dirHandle.name) {
   return [...(await Promise.all(dirs)).flat(), ...(await Promise.all(files))];
 }
 
-/**
- *
- * @param {FsEntry} dir
- * @param {Function} fn
- */
-export function forEachFsEntry(dir, fn) {
+export function forEachFsEntry(dir: FsEntry, fn: Function) {
   let entries = dir.dirEntries;
   for (let e of entries) {
     let skip = fn(e);
@@ -290,12 +209,8 @@ export function forEachFsEntry(dir, fn) {
   fn(dir);
 }
 
-/**
- * https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker
- * @param {boolean} writeAccess
- * @returns {Promise<FileSystemDirectoryHandle>}
- */
-export async function openDirPicker(writeAccess) {
+// https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker
+export async function openDirPicker(writeAccess: boolean): Promise<FileSystemDirectoryHandle> {
   const opts = {
     mutltiple: false,
   };
@@ -312,84 +227,49 @@ export async function openDirPicker(writeAccess) {
   return null;
 }
 
-/**
- * @returns {boolean}
- */
-export function supportsFileSystem() {
+export function supportsFileSystem(): boolean {
   const ok = "showDirectoryPicker" in window && !isIFrame();
   return ok;
 }
 
-/**
- * chatgpt says the string is saved in utf-8
- * @param {FileSystemFileHandle} fh
- * @param {string} content
- */
-export async function fsFileHandleWriteText(fh, content) {
+// chatgpt says the string is saved in utf-8
+export async function fsFileHandleWriteText(fh: FileSystemFileHandle, content: string) {
   const writable = await fh.createWritable();
   await writable.write(content);
   await writable.close();
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} fileName
- * @param {string} content
- */
-export async function fsWriteTextFile(dh, fileName, content) {
+export async function fsWriteTextFile(dh: FileSystemDirectoryHandle, fileName: string, content: string) {
   console.log("writing to file:", fileName, content.length);
   let fh = await dh.getFileHandle(fileName, { create: true });
   fsFileHandleWriteText(fh, content);
 }
 
-/**
- * @param {FileSystemFileHandle} fh
- * @param {Blob} blob
- */
-export async function fsFileHandleWriteBlob(fh, blob) {
+export async function fsFileHandleWriteBlob(fh: FileSystemFileHandle, blob: Blob) {
   const writable = await fh.createWritable();
   await writable.write(blob);
   await writable.close();
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} fileName
- * @param {Blob} blob
- */
-export async function fsWriteBlob(dh, fileName, blob) {
+export async function fsWriteBlob(dh: FileSystemDirectoryHandle, fileName: string, blob: Blob) {
   console.log("writing to file:", fileName, blob.size);
   let fh = await dh.getFileHandle(fileName, { create: true });
   await fsFileHandleWriteBlob(fh, blob);
 }
 
-/**
- * @param {FileSystemFileHandle} fh
- * @returns {Promise<string>}
- */
-export async function fsFileHandleReadTextFile(fh) {
+export async function fsFileHandleReadTextFile(fh: FileSystemFileHandle): Promise<string> {
   const file = await fh.getFile();
   const res = await file.text(); // reads utf-8
   return res;
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} fileName
- * @returns {Promise<string>}
- */
-export async function fsReadTextFile(dh, fileName) {
+export async function fsReadTextFile(dh: FileSystemDirectoryHandle, fileName: string): Promise<string> {
   // console.log("fsReadTextFile:", fileName);
   let fh = await dh.getFileHandle(fileName, { create: false });
   return await fsFileHandleReadTextFile(fh);
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} fileName
- * @returns {Promise<Uint8Array>}
- */
-export async function fsReadBinaryFile(dh, fileName) {
+export async function fsReadBinaryFile(dh: FileSystemDirectoryHandle, fileName: string): Promise<Uint8Array> {
   // console.log("fsReadBinaryFile:", fileName);
   let fh = await dh.getFileHandle(fileName, { create: false });
   const blob = await fh.getFile();
@@ -397,25 +277,14 @@ export async function fsReadBinaryFile(dh, fileName) {
   return res;
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} oldName
- * @param {string} newName
- * @returns {Promise<void>}
- */
-export async function fsRenameFileOld(dh, newName, oldName) {
+export async function fsRenameFileOld(dh: FileSystemDirectoryHandle, newName: string, oldName: string): Promise<void> {
   let d = await fsReadTextFile(dh, oldName);
   fsWriteTextFile(dh, newName, d);
   fsDeleteFile(dh, oldName);
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} oldName
- * @param {string} newName
- * @returns {Promise<boolean>} true if renamed, false if failed
- */
-export async function fsRenameFile(dh, oldName, newName) {
+// true if renamed, false if failed
+export async function fsRenameFile(dh: FileSystemDirectoryHandle, oldName: string, newName: string): Promise<boolean> {
   try {
     let f = await dh.getFileHandle(oldName);
     // @ts-ignore
@@ -428,12 +297,8 @@ export async function fsRenameFile(dh, oldName, newName) {
   return true;
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} fileName
- * @returns {Promise<boolean>} true if exists
- */
-export async function fsFileExists(dh, fileName) {
+// true if exists
+export async function fsFileExists(dh: FileSystemDirectoryHandle, fileName: string): Promise<boolean> {
   try {
     await dh.getFileHandle(fileName);
   } catch (e) {
@@ -444,23 +309,15 @@ export async function fsFileExists(dh, fileName) {
   return true;
 }
 
-/**
- * @param {FileSystemDirectoryHandle} dh
- * @param {string} name
- */
-export async function fsDeleteFile(dh, name) {
+export async function fsDeleteFile(dh: FileSystemDirectoryHandle, name: string) {
   await dh.removeEntry(name);
 }
 
-/**
- * @param {Blob} blob
- * @returns {Promise<Uint8Array>}
- */
-async function readBlobAsUint8Array(blob) {
+async function readBlobAsUint8Array(blob: Blob): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = function (ev) {
-      const arrayBuffer = /** @type {ArrayBuffer} */ (ev.target.result);
+      const arrayBuffer = ev.target.result as ArrayBuffer;
       const uint8Array = new Uint8Array(arrayBuffer);
       resolve(uint8Array);
     };
@@ -471,10 +328,6 @@ async function readBlobAsUint8Array(blob) {
   });
 }
 
-/**
- * @param {Uint8Array} ua
- * @returns {Blob}
- */
-export function blobFromUint8Array(ua) {
+export function blobFromUint8Array(ua: Uint8Array): Blob {
   return new Blob([ua]);
 }
