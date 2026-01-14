@@ -2,10 +2,7 @@ import { getNotesCount } from "./notes";
 import { getSessionDurationInMs } from "./state";
 import { throwIf } from "./util";
 
-/**
- * @param {Object} o
- */
-export function logEvent(o) {
+export function logEvent(o: Object): void {
   fetch("/api/le", {
     method: "POST",
     headers: {
@@ -25,7 +22,7 @@ export function logEvent(o) {
     });
 }
 
-export function logAppOpen() {
+export function logAppOpen(): void {
   let notesCount = getNotesCount();
   let e = {
     name: "appOpen",
@@ -34,7 +31,7 @@ export function logAppOpen() {
   logEvent(e);
 }
 
-export function logAppExit() {
+export function logAppExit(): void {
   let e = {
     name: "appExit",
     notesCount: getNotesCount,
@@ -43,11 +40,7 @@ export function logAppExit() {
   logEvent(e);
 }
 
-/**
- * @param {string} model
- * @param {string} apiProvider
- */
-export function logAskAI(model, apiProvider) {
+export function logAskAI(model: string, apiProvider: string): void {
   let e = {
     name: "askAI",
     model: model,
@@ -70,11 +63,11 @@ const validOps = [
   ,
 ];
 
-function validateNoteOp(op) {
+function validateNoteOp(op: string): void {
   throwIf(!validOps.includes(op), `invalid op: ${op}`);
 }
 
-export function logNoteOp(op) {
+export function logNoteOp(op: string): void {
   validateNoteOp(op);
   let e = {
     name: op,
@@ -83,7 +76,7 @@ export function logNoteOp(op) {
 }
 
 // TODO: don't log in production unless a debugging enabled
-export function warn(...args) {
+export function warn(...args: any[]): void {
   console.warn(...args);
 }
 

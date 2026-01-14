@@ -3,86 +3,53 @@
 import browser from "./browser";
 import { len } from "./util";
 
-/**
- * @param {KeyboardEvent} ev
- * @returns {boolean}
- */
-export function isEsc(ev) {
+export function isEsc(ev: KeyboardEvent): boolean {
   return ev.key === "Escape";
 }
 
-/**
- * @param {KeyboardEvent} ev
- * @returns {boolean}
- */
-export function isEnter(ev) {
+export function isEnter(ev: KeyboardEvent): boolean {
   return ev.key === "Enter";
 }
 
-/**
- * @param {KeyboardEvent} ev
- * @returns {boolean}
- */
-export function isUp(ev) {
+export function isUp(ev: KeyboardEvent): boolean {
   return ev.key == "ArrowUp" || ev.key == "Up";
 }
 
-/**
- * @param {KeyboardEvent} ev
- * @returns {boolean}
- */
-export function isDown(ev) {
+export function isDown(ev: KeyboardEvent): boolean {
   return ev.key == "ArrowDown" || ev.key == "Down";
 }
 
-/**
- * navigation up is: Up or Ctrl-P
- * @param {KeyboardEvent} ev
- * @returns {boolean}
- */
-export function isNavUp(ev) {
+// navigation up is: Up or Ctrl-P
+export function isNavUp(ev: KeyboardEvent): boolean {
   if (isUp(ev)) {
     return true;
   }
   return ev.ctrlKey && ev.code === "KeyP";
 }
 
-/**
- * navigation down is: Down or Ctrl-N
- * @param {KeyboardEvent} ev
- * @returns {boolean}
- */
-export function isNavDown(ev) {
+// navigation down is: Down or Ctrl-N
+export function isNavDown(ev: KeyboardEvent): boolean {
   if (isDown(ev)) {
     return true;
   }
   return ev.ctrlKey && ev.code === "KeyN";
 }
 
-/**
- * detect F1-F99
- * @param {string} s
- * @returns {boolean}
- */
-function isFuncKey(s) {
+// detect F1-F99
+function isFuncKey(s: string): boolean {
   return /F\d{1,2}/i.test(s);
 }
 
-/**
- * @typedef {Object} Shortcut
- * @property {boolean} shiftKey
- * @property {boolean} ctrlKey
- * @property {boolean} altKey
- * @property {boolean} metaKey // ctrl on windows, command on mac
- * @property {string} key
- * @property {string} [cmdId]
- */
+export type Shortcut = {
+  shiftKey: boolean;
+  ctrlKey: boolean;
+  altKey: boolean;
+  metaKey: boolean; // ctrl on windows, command on mac
+  key: string;
+  cmdId?: string;
+};
 
-/**
- * @param {Shortcut} s
- * @returns {string}
- */
-export function serializeShortuct(s) {
+export function serializeShortuct(s: Shortcut): string {
   let res = "";
   if (s.shiftKey) {
     if (browser.mac) {
@@ -140,12 +107,8 @@ export function serializeShortuct(s) {
   return res;
 }
 
-/**
- * shortuct can be "Ctrl+X" or "Ctrl+Z\tCmd+Z"" (first is for win/linux, second is for mac)
- * @param {string} s
- * @returns {Object}
- */
-export function parseShortcut(s) {
+// shortuct can be "Ctrl+X" or "Ctrl+Z\tCmd+Z"" (first is for win/linux, second is for mac)
+export function parseShortcut(s: string): Shortcut | null {
   let parts = s.split("\t");
   if (len(parts) > 1) {
     s = parts[0];
@@ -155,8 +118,7 @@ export function parseShortcut(s) {
   }
 
   // those fields match KeyboardEvent
-  /** @type Shortcut */
-  let res = {
+  let res: Shortcut = {
     shiftKey: false,
     ctrlKey: false,
     altKey: false,
@@ -256,10 +218,7 @@ export function parseShortcut(s) {
   return res;
 }
 
-/**
- * @param {string} txt
- */
-export function extractShortcut(txt) {
+export function extractShortcut(txt: string): string {
   const s = parseShortcut(txt);
   if (s === null) {
     return txt;
