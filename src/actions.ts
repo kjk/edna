@@ -1,9 +1,6 @@
 import tippy from "tippy.js";
 
-/**
- * @param {HTMLElement} node
- */
-export function focus(node, delay = 50) {
+export function focus(node: HTMLElement, delay = 50) {
   // note: not sure why I need this but e.g. if I have CodeMirror,
   // the codemirror element regains focus if I set my focus
   // immediately on mount. Delay of 100 seems to fix it (50 was too low)
@@ -13,10 +10,7 @@ export function focus(node, delay = 50) {
   }, delay);
 }
 
-/**
- * @param {HTMLElement} element
- */
-export function hasFocusedChild(element) {
+export function hasFocusedChild(element: HTMLElement) {
   // Get the currently focused element
   const activeElement = document.activeElement;
   // console.log("activeElement:", activeElement);
@@ -25,11 +19,8 @@ export function hasFocusedChild(element) {
   return element.contains(activeElement);
 }
 
-/**
- * focus but only if doesn't have focused children
- * @param {HTMLElement} node
- */
-export function smartfocus(node) {
+// focus but only if doesn't have focused children
+export function smartfocus(node: HTMLElement) {
   setTimeout(() => {
     if (hasFocusedChild(node)) {
       return;
@@ -39,10 +30,7 @@ export function smartfocus(node) {
 }
 
 // return {x, y} position that ensures that rect is visible inside window
-/**
- * @param {DOMRect} rect
- */
-export function ensureRectVisibleInWindow(rect) {
+export function ensureRectVisibleInWindow(rect: DOMRect) {
   let x = rect.x;
   const winDx = window.innerWidth;
   const rEndX = x + rect.width;
@@ -65,11 +53,8 @@ export function ensureRectVisibleInWindow(rect) {
   return { x: x, y: y };
 }
 
-/**
-/* action that ensures that the node is fully visible in the window
- * @param {HTMLElement} node
- */
-export function ensurevisible(node, makeFixed = false) {
+// action that ensures that the node is fully visible in the window
+export function ensurevisible(node: HTMLElement, makeFixed = false) {
   const r = node.getBoundingClientRect();
   const { x, y } = ensureRectVisibleInWindow(r);
   Object.assign(node.style, {
@@ -85,11 +70,7 @@ export function ensurevisible(node, makeFixed = false) {
   // );
 }
 
-/**
- * @param {HTMLElement} node
- * @param {KeyboardEvent} ev
- */
-export function trapFocusEvent(node, ev) {
+export function trapFocusEvent(node: HTMLElement, ev: KeyboardEvent) {
   const focusable = node.querySelectorAll(
     'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]',
   );
@@ -97,8 +78,8 @@ export function trapFocusEvent(node, ev) {
   // console.log("node:", node);
   // console.log("active:", active);
 
-  const first = /** @type {HTMLElement} */ (focusable[0]);
-  const last = /** @type {HTMLElement} */ (focusable[focusable.length - 1]);
+  const first = focusable[0] as HTMLElement;
+  const last = focusable[focusable.length - 1] as HTMLElement;
 
   // let isInList = false;
   // focusable.forEach((el) => {
@@ -124,14 +105,8 @@ export function trapFocusEvent(node, ev) {
   }
 }
 
-/**
- * @param {HTMLElement} node
- */
-export function trapfocus(node) {
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function handleKeydown(ev) {
+export function trapfocus(node: HTMLElement) {
+  function handleKeydown(ev: KeyboardEvent) {
     if (ev.key === "Tab") {
       trapFocusEvent(node, ev);
     }
@@ -145,11 +120,7 @@ export function trapfocus(node) {
   };
 }
 
-/**
- * @param {HTMLFormElement} node
- * @param {() => void} callback
- */
-export function clickOutside(node, callback) {
+export function clickOutside(node: HTMLFormElement, callback: () => void) {
   function handleClick(event) {
     if (!node.contains(event.target) && !event.defaultPrevented) {
       callback();
@@ -167,10 +138,7 @@ export function clickOutside(node, callback) {
   };
 }
 
-/**
- * @param {HTMLElement} element
- */
-export function tooltip(element) {
+export function tooltip(element: HTMLElement) {
   let content = element.getAttribute("title");
   if (!content) {
     content = element.getAttribute("aria-label");

@@ -2,32 +2,23 @@ export const kTabURL = "url";
 export const kTabNote = "note";
 
 export class Tab {
-  /** @type {string} */
-  kind;
-  /** @type {string} */
-  value;
+  kind: string;
+  value: string;
 
-  /**
-   * @param {string} kind
-   * @param {string} value
-   */
-  constructor(kind, value) {
+  constructor(kind: string, value: string) {
     this.kind = kind;
     this.value = value;
   }
 
-  isURL() {
+  isURL(): boolean {
     return this.kind === kTabURL;
   }
-  isNote() {
+  isNote(): boolean {
     return this.kind === kTabNote;
   }
 }
 
-/**
- * @param {string} s
- */
-export function parseTab(s) {
+export function parseTab(s: string): Tab {
   let kind, value;
   if (s.startsWith("url:")) {
     kind = "url";

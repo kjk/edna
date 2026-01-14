@@ -3,32 +3,23 @@ import { throwIf } from "./util";
 
 // convert falsy values to undefined so that JSON serialization
 // doesn't include them, making the JSON smaller and easier to read
-function toUndef(v) {
+function toUndef(v: any): any {
   return v ? v : undefined;
 }
 
 export class Note {
-  /** @type {string} */
-  id;
-  /** @type {string} */
-  name;
-  /** @type {boolean} */
-  isArchived;
-  /** @type {boolean} */
-  isStarred;
-  /** @type {string}  */
-  altShortcut;
+  id: string;
+  name: string;
+  isArchived: boolean;
+  isStarred: boolean;
+  altShortcut: string;
 
   // those are transient i.e. not saved in metadata
-  /** @type {string[]} */
-  versionIds = [];
-  /** @type {number} */
-  createdAt;
-  /** @type {number} */
-  updatedAt;
+  versionIds: string[] = [];
+  createdAt: number;
+  updatedAt: number;
 
-  /** @type {boolean} */
-  isDeleted;
+  isDeleted: boolean;
 
   getMetadata() {
     // by using toUndef() we make JSON-serialized version
@@ -46,7 +37,7 @@ export class Note {
 
   // reverse of getMetadata()
   // note that if a field in m is missing, it's false / undefined
-  applyMetadata(m) {
+  applyMetadata(m: any): void {
     throwIf(this.id != m.id, "id mismatch");
     this.name = m.name;
     this.isArchived = m.isArchived;
@@ -54,16 +45,12 @@ export class Note {
     this.altShortcut = m.altShortcut;
   }
 
-  /**
-   * @param {string} [id]
-   * @param {string} [name]
-   */
-  constructor(id, name) {
+  constructor(id?: string, name?: string) {
     this.id = id;
     this.name = name;
   }
 
-  currContentVersionId() {
+  currContentVersionId(): string {
     return this.versionIds[this.versionIds.length - 1];
   }
 }
@@ -72,22 +59,15 @@ export class Note {
 const kNoteIdLen = 4;
 const kNoteCotentIdLen = 4;
 
-/**
- * @returns {string}
- */
-export function mkRandomNoteId() {
+export function mkRandomNoteId(): string {
   return nanoid(kNoteIdLen);
 }
 
-/**
- * @param {string} noteID
- * @returns {string}
- */
-export function mkRandomContentId(noteID) {
+export function mkRandomContentId(noteID: string): string {
   return noteID + ":" + nanoid(kNoteCotentIdLen);
 }
 
-export function parseNoteIdFromVerId(verId) {
+export function parseNoteIdFromVerId(verId: string): string | null {
   if (verId.length !== kNoteIdLen + kNoteCotentIdLen + 1) {
     return null;
   }

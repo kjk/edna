@@ -4,15 +4,11 @@ export function isDev() {
   return host.startsWith("localhost");
 }
 
-export function len(o) {
+export function len(o: any): number {
   return o ? o.length : 0;
 }
 
-/**
- * @param {boolean} cond
- * @param {string} [msg]
- */
-export function throwIf(cond, msg) {
+export function throwIf(cond: boolean, msg?: string): void {
   if (cond) {
     if (msg) {
       console.error(msg);
@@ -21,16 +17,16 @@ export function throwIf(cond, msg) {
   }
 }
 
-export function objectEqualDeep(a, b) {
+export function objectEqualDeep(a: any, b: any): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export function cloneObjectShallow(o) {
+export function cloneObjectShallow(o: any): any {
   // could also be return { ...o };
   return Object.assign({}, o);
 }
 
-export function cloneObjectDeep(o) {
+export function cloneObjectDeep(o: any): any {
   return JSON.parse(JSON.stringify(o));
 }
 
@@ -41,8 +37,7 @@ export let platform = {
   isLinux: false,
 };
 
-/** @type {string} */
-export let platformName;
+export let platformName: string;
 
 let uadPlat, navPlat;
 let nav = typeof window !== "undefined" ? window.navigator : null;
@@ -72,34 +67,29 @@ if (uaPlatform.indexOf("Win") !== -1) {
   platformName = "darwin";
 }
 
-export function getModChar(platform = platformName) {
+export function getModChar(platform = platformName): string {
   return platform === "darwin" ? "⌘" : "Ctrl";
 }
 
-export function getAltChar(platform = platformName) {
+export function getAltChar(platform = platformName): string {
   return platform === "darwin" ? "⌥" : "Alt";
 }
 
 const utf8Encoder = new TextEncoder(); // perf: a single globar encoder
 
-export function toUtf8(text) {
+export function toUtf8(text: string): Uint8Array {
   return utf8Encoder.encode(text);
 }
 
 // Maybe(perf): if text.length > 1 MB, return text.length
 // TODO(perf): don't allocate utf8Bytes, iterate over chars and count bytes
-export function stringSizeInUtf8Bytes(text) {
+export function stringSizeInUtf8Bytes(text: string): number {
   let utf8Bytes = toUtf8(text);
   return utf8Bytes.length;
 }
 
-/**
- * @param {number} n
- * @returns {string}
- */
-export function fmtSize(n) {
-  // @type {[][number, string]}
-  const a = [
+export function fmtSize(n: number): string {
+  const a: [number, string][] = [
     [1024 * 1024 * 1024 * 1024, "TB"],
     [1024 * 1024 * 1024, "GB"],
     [1024 * 1024, "MB"],
@@ -115,11 +105,7 @@ export function fmtSize(n) {
   return `${n} B`;
 }
 
-/**
- * @param {number} ms
- * @returns {string}
- */
-export function formatDuration(ms) {
+export function formatDuration(ms: number): string {
   const days = Math.floor(ms / 86400000); // 1 day = 86400000 ms
   const hours = Math.floor((ms % 86400000) / 3600000); // 1 hour = 3600000 ms
   const mins = Math.floor((ms % 3600000) / 60000); // 1 minute = 60000 ms
@@ -134,11 +120,7 @@ export function formatDuration(ms) {
   return res.trim();
 }
 
-/**
- * @param {number} ms
- * @returns {string}
- */
-export function formatDurationShort(ms) {
+export function formatDurationShort(ms: number): string {
   const days = Math.floor(ms / 86400000); // 1 day = 86400000 ms
   const hours = Math.floor((ms % 86400000) / 3600000); // 1 hour = 3600000 ms
   const mins = Math.floor((ms % 3600000) / 60000); // 1 minute = 60000 ms
@@ -153,23 +135,16 @@ export function formatDurationShort(ms) {
   return res.trim();
 }
 
-/**
- * returns a function that, when called, returns number of elapsed milliseconds
- * @returns {function(): number}
- */
-export function startTimer() {
+// returns a function that, when called, returns number of elapsed milliseconds
+export function startTimer(): () => number {
   const timeStart = performance.now();
   return function () {
     return Math.round(performance.now() - timeStart);
   };
 }
 
-/**
- * returns current date in YYYY-MM-DD format
- * @param {Date} date
- * @returns {string}
- */
-export function formatDateYYYYMMDD(date = new Date()) {
+// returns current date in YYYY-MM-DD format
+export function formatDateYYYYMMDD(date: Date = new Date()): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -186,11 +161,7 @@ const daysOfWeek = [
   "Saturday",
 ];
 
-/**
- * @param {Date} date
- * @returns {string}
- */
-export function formatDateYYYYMMDDDay(date = new Date()) {
+export function formatDateYYYYMMDDDay(date: Date = new Date()): string {
   let year = date.getFullYear();
   let month = ("0" + (date.getMonth() + 1)).slice(-2); // Months are zero based
   let day = ("0" + date.getDate()).slice(-2);
@@ -200,12 +171,8 @@ export function formatDateYYYYMMDDDay(date = new Date()) {
   return formattedDate;
 }
 
-/**
- * "foo.TxT" => ".txt"
- * @param {string} fileName
- * @returns {string}
- */
-export function fileExt(fileName) {
+// "foo.TxT" => ".txt"
+export function fileExt(fileName: string): string {
   const idx = fileName.lastIndexOf(".");
   if (idx === -1) {
     return "";
@@ -214,12 +181,8 @@ export function fileExt(fileName) {
   return ext.toLowerCase();
 }
 
-/**
- * Alt +
- * @param {KeyboardEvent} e
- * @returns {string|null} - returns "0" - "9" or null
- */
-export function isAltNumEvent(e) {
+// returns "0" - "9" or null
+export function isAltNumEvent(e: KeyboardEvent): string | null {
   if (e.metaKey || e.ctrlKey || e.shiftKey || !e.altKey) {
     return null;
   }
@@ -232,10 +195,7 @@ export function isAltNumEvent(e) {
   return String.fromCharCode(e.keyCode);
 }
 
-/**
- * @param {string} tabStr
- */
-export function addTabToBrowserHistory(tabStr) {
+export function addTabToBrowserHistory(tabStr: string): void {
   // @ts-ignore
   let url = new URL(window.location);
   url.hash = encodeURIComponent(tabStr);
@@ -244,13 +204,9 @@ export function addTabToBrowserHistory(tabStr) {
   //console.log("window.history.pushState:", tabStr);
 }
 
-let sleepSetTimeout_ctrl;
+let sleepSetTimeout_ctrl: any;
 
-/**
- * @param {number} ms
- * @returns {Promise<void>}
- */
-export function sleep(ms) {
+export function sleep(ms: number): Promise<void> {
   clearInterval(sleepSetTimeout_ctrl);
   return new Promise(
     (resolve) => (sleepSetTimeout_ctrl = setTimeout(resolve, ms)),
@@ -258,10 +214,8 @@ export function sleep(ms) {
 }
 
 let cachedScrollbarDx = 0;
-/**
- * @returns number
- */
-export function getScrollbarWidth() {
+
+export function getScrollbarWidth(): number {
   /*
   needs the following css:
   .scrollbar-width-detector {
@@ -283,15 +237,9 @@ export function getScrollbarWidth() {
   return cachedScrollbarDx;
 }
 
-/**
- * split("a.b.c", "." 2) => ["a" "b.c"]
- * which is different from "a.b.c".split(".",2) => ["a", "b"]
- * @param {string} s
- * @param {string} sep
- * @param {number} max
- * @returns {string[]}
- */
-export function splitMax(s, sep, max) {
+// split("a.b.c", "." 2) => ["a" "b.c"]
+// which is different from "a.b.c".split(".",2) => ["a", "b"]
+export function splitMax(s: string, sep: string, max: number): string[] {
   throwIf(max === 0);
   let parts = s.split(sep);
   if (parts.length <= max) {
@@ -303,30 +251,21 @@ export function splitMax(s, sep, max) {
   return parts.slice(0, max);
 }
 
-/**
- * @param {string} s
- * @param {string} prefix
- * @returns
- */
-export function trimPrefix(s, prefix) {
+export function trimPrefix(s: string, prefix: string): string {
   if (!s.startsWith(prefix)) {
     return s;
   }
   return s.substring(prefix.length);
 }
 
-export function trimSuffix(s, suffix) {
+export function trimSuffix(s: string, suffix: string): string {
   if (!s.endsWith(suffix)) {
     return s;
   }
   return s.substring(0, s.length - suffix.length);
 }
 
-/**
- * @param {string[]} a
- * @returns {string[]}
- */
-export function removeDuplicates(a) {
+export function removeDuplicates(a: string[]): string[] {
   let res = new Array(a.length);
   let n = 0;
   for (let s of a) {
@@ -340,12 +279,7 @@ export function removeDuplicates(a) {
   return res;
 }
 
-/**
- * @param {string} s
- * @param {string[]} parts
- * @returns {boolean}
- */
-export function stringMatchesParts(s, parts) {
+export function stringMatchesParts(s: string, parts: string[]): boolean {
   for (let p of parts) {
     if (s.indexOf(p) === -1) {
       return false;
@@ -354,19 +288,13 @@ export function stringMatchesParts(s, parts) {
   return true;
 }
 
-/**
- * Find items whose string propety itemKey matches a filter string
- * We lowercase filter and split it by whitespace
- * item matches if its itemKey property string includes all of the filter parts
- * itemKey should be lowercased. for performance lowercasing should be
- * pre-computed by the caller. We assume filtering is done multiple
- * times over the same items so pre-computing it once saves allocations
- * @param {any[]} items
- * @param {string} filter
- * @param {string} itemKey
- * @returns {any[]}
- */
-export function findMatchingItems(items, filter, itemKey) {
+// Find items whose string propety itemKey matches a filter string
+// We lowercase filter and split it by whitespace
+// item matches if its itemKey property string includes all of the filter parts
+// itemKey should be lowercased. for performance lowercasing should be
+// pre-computed by the caller. We assume filtering is done multiple
+// times over the same items so pre-computing it once saves allocations
+export function findMatchingItems(items: any[], filter: string, itemKey: string): any[] {
   filter = filter.trim();
   if (filter === "") {
     return items;
@@ -389,19 +317,13 @@ export function findMatchingItems(items, filter, itemKey) {
   return res;
 }
 
-/**
- * Find items whose string propety itemKey matches a filter string
- * We lowercase filter and split it by whitespace
- * item matches if its itemKey property string includes all of the filter parts
- * itemKey should be lowercased. for performance lowercasing should be
- * pre-computed by the caller. We assume filtering is done multiple
- * times over the same items so pre-computing it once saves allocations
- * @param {any[]} items
- * @param {string} filter
- * @param {(item) => any} itemKeyFn
- * @returns {any[]}
- */
-export function findMatchingItemsFn(items, filter, itemKeyFn) {
+// Find items whose string propety itemKey matches a filter string
+// We lowercase filter and split it by whitespace
+// item matches if its itemKey property string includes all of the filter parts
+// itemKey should be lowercased. for performance lowercasing should be
+// pre-computed by the caller. We assume filtering is done multiple
+// times over the same items so pre-computing it once saves allocations
+export function findMatchingItemsFn(items: any[], filter: string, itemKeyFn: (item: any) => any): any[] {
   filter = filter.trim();
   if (filter === "") {
     return [...items];
@@ -425,11 +347,7 @@ export function findMatchingItemsFn(items, filter, itemKeyFn) {
   return res;
 }
 
-/**
- * @param {string} s
- * @returns {string}
- */
-export function ensureStringEndsWithNL(s) {
+export function ensureStringEndsWithNL(s: string): string {
   if (!s.endsWith("\n")) {
     return s + "\n";
   }
@@ -438,12 +356,8 @@ export function ensureStringEndsWithNL(s) {
 
 const charCode0 = "0".charCodeAt(0);
 
-/**
- * returns 0 ... 9 if ev represents char '0' ... '9', or -1 otherwise
- * @param {KeyboardEvent} ev
- * @returns {number}
- */
-export function getKeyEventNumber(ev) {
+// returns 0 ... 9 if ev represents char '0' ... '9', or -1 otherwise
+export function getKeyEventNumber(ev: KeyboardEvent): number {
   // TODO: key could be a string like "Enter", not sure
   // if any of them could start with a number
   let n = ev.key.charCodeAt(0) - charCode0;
@@ -453,7 +367,7 @@ export function getKeyEventNumber(ev) {
   return n;
 }
 
-export async function getClipboardText() {
+export async function getClipboardText(): Promise<string> {
   try {
     return await navigator.clipboard.readText();
   } catch (error) {
@@ -462,7 +376,7 @@ export async function getClipboardText() {
   }
 }
 
-export async function hasClipboardPermissions() {
+export async function hasClipboardPermissions(): Promise<boolean> {
   try {
     const permissionStatus = await navigator.permissions.query({
       // @ts-ignore
@@ -481,12 +395,7 @@ export async function hasClipboardPermissions() {
   }
 }
 
-/**
- * @param {string} oldName
- * @param {string} newName
- * @returns
- */
-export function renameLS(oldName, newName) {
+export function renameLS(oldName: string, newName: string): void {
   let s = localStorage.getItem(oldName);
   if (s === null) {
     // doesn't exist
@@ -496,16 +405,11 @@ export function renameLS(oldName, newName) {
   localStorage.removeItem(oldName);
 }
 
-export function noOp() {
+export function noOp(): void {
   // do nothing
 }
 
-/**
- * @param {string} s
- * @param {number} startIdx
- * @param {number} endIdx
- */
-export function isWholeWord(s, startIdx, endIdx) {
+export function isWholeWord(s: string, startIdx: number, endIdx: number): boolean {
   // Ensure indices are within the string boundaries
   if (startIdx < 0 || endIdx > s.length || startIdx >= endIdx) {
     return false;
@@ -518,10 +422,7 @@ export function isWholeWord(s, startIdx, endIdx) {
   return startOk && endOk;
 }
 
-/**
- * @param {string} input
- */
-export function splitStringPreservingQuotes(input) {
+export function splitStringPreservingQuotes(input: string): string[] {
   // This regex matches sequences of characters that are either:
   // 1. Enclosed in double quotes ("quoted text")
   // 2. Non-space characters (words)
@@ -539,11 +440,7 @@ export function splitStringPreservingQuotes(input) {
   return result;
 }
 
-/**
- * @param {string} filter
- * @returns {RegExp}
- */
-export function makeHilightRegExp(filter) {
+export function makeHilightRegExp(filter: string): RegExp {
   let parts = splitStringPreservingQuotes(filter);
   let a = [];
   for (let s of parts) {
@@ -555,20 +452,12 @@ export function makeHilightRegExp(filter) {
   return new RegExp(`(${s})`, "gi");
 }
 
-/**
- * @param {string} s
- * @param {RegExp} regexp
- */
-export function hilightText(s, regexp) {
+export function hilightText(s: string, regexp: RegExp): string {
   // console.log("hilightText:", s, regexp);
   return s.replace(regexp, '<span class="hili">$1</span>');
 }
 
-/**
- * @param {object} src
- * @param {string[]} keys
- */
-export function copyObj(src, keys) {
+export function copyObj(src: object, keys: string[]): object {
   let res = {};
   for (let k of keys) {
     res[k] = src[k];
@@ -576,48 +465,28 @@ export function copyObj(src, keys) {
   return res;
 }
 
-/**
- * @param {any[]} arr
- * @param {any} item
- */
-export function pushIfNotExists(arr, item) {
+export function pushIfNotExists(arr: any[], item: any): void {
   if (!arr.includes(item)) {
     arr.push(item);
   }
 }
 
-/**
- * @param {any[]} arr
- * @param {any} item
- */
-export function arrayRemove(arr, item) {
+export function arrayRemove(arr: any[], item: any): void {
   let i = arr.indexOf(item);
   if (i >= 0) {
     arr.splice(i, 1);
   }
 }
 
-/**
- * @param {KeyboardEvent} ev
- * @returns {boolean}
- */
-export function isKeyCtrlDelete(ev) {
+export function isKeyCtrlDelete(ev: KeyboardEvent): boolean {
   return (ev.key === "Delete" || ev.key === "Backspace") && ev.ctrlKey;
 }
 
-/**
- * @param {KeyboardEvent} ev
- * @returns {boolean}
- */
-export function isKeyCtrlEnter(ev) {
+export function isKeyCtrlEnter(ev: KeyboardEvent): boolean {
   return ev.key === "Enter" && ev.ctrlKey;
 }
 
-/**
- * @param {number} price
- * @returns {string}
- */
-export function humanPrice(price) {
+export function humanPrice(price: number): string {
   if (price == 0) {
     return "0";
   }
@@ -629,23 +498,14 @@ export function humanPrice(price) {
   return res;
 }
 
-/**
- * @param {number} startTime
- * @param {string} prefix
- * @returns {string}
- */
-export function logDur(startTime, prefix = "") {
+export function logDur(startTime: number, prefix: string = ""): string {
   const endTime = performance.now();
   const dur = (endTime - startTime).toFixed(2);
   console.log(`${prefix} took ${dur} ms`);
   return dur;
 }
 
-/**
- * @param {Blob} blob
- * @param {string} name
- */
-export function browserDownloadBlob(blob, name) {
+export function browserDownloadBlob(blob: Blob, name: string): void {
   let url = URL.createObjectURL(blob);
   let a = document.createElement("a");
   a.href = url;
@@ -656,10 +516,7 @@ export function browserDownloadBlob(blob, name) {
   URL.revokeObjectURL(url);
 }
 
-/**
- * @param {string} key
- */
-export function getLocalStorageAsJSON(key) {
+export function getLocalStorageAsJSON(key: string): any {
   // console.log("getLocalStorageAsJSON:", key);
   const v = localStorage.getItem(key);
   if (v) {
@@ -669,23 +526,14 @@ export function getLocalStorageAsJSON(key) {
   return null;
 }
 
-/**
- * @param {string} key
- * @param {*} js
- */
-export function setLocalStorageFromJSON(key, js) {
+export function setLocalStorageFromJSON(key: string, js: any): void {
   const s = JSON.stringify(js);
   // console.log("setLocalStorageFromJSON:", key, "size:", len(s));
   localStorage.setItem(key, s);
 }
 
-/**
- * Iterator that yields substrings separated by a character
- * @param {string} s
- * @param {string} sep
- * @returns {Generator<string>}
- */
-export function* stringIter(s, sep) {
+// Iterator that yields substrings separated by a character
+export function* stringIter(s: string, sep: string): Generator<string> {
   let start = 0;
   for (let i = 0; i < s.length; i++) {
     if (s[i] === sep) {
@@ -699,13 +547,7 @@ export function* stringIter(s, sep) {
   }
 }
 
-/**
- * @param {string} s
- * @param {string} sep
- * @param {number} n
- * @return {string[]}
- */
-export function splitStringN(s, sep, n) {
+export function splitStringN(s: string, sep: string, n: number): string[] {
   if (n <= 0) {
     return [];
   }

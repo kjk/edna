@@ -8,13 +8,10 @@ import {
 import { genRandomID } from "./nanoid";
 import { logDur, throwIf } from "./util";
 
-/** @typedef {{kind: string, meta: string | null, data: string}} TestRecord */
-/**
- * Generates an array of test records.
- * @param {number} n
- * @returns {TestRecord[]}
- */
-function genTestRecords(n) {
+type TestRecord = {kind: string; meta: string | null; data: string};
+
+// Generates an array of test records.
+function genTestRecords(n: number): TestRecord[] {
   return Array.from({ length: n }, (_, i) => ({
     kind: `test-kind-${i % 13}`,
     meta: i % 5 === 0 ? null : `meta-${(i % 8) + 4}`,
@@ -22,13 +19,8 @@ function genTestRecords(n) {
   }));
 }
 
-/**
- * Verifies that the records in the store match the expected test records.
- * @param {AppendStore} store
- * @param {AppendStoreRecord[]} recs
- * @param {TestRecord[]} trecs
- */
-async function verifyRecs(store, recs, trecs) {
+// Verifies that the records in the store match the expected test records.
+async function verifyRecs(store: AppendStore, recs: AppendStoreRecord[], trecs: TestRecord[]) {
   let nRecs = trecs.length;
   throwIf(
     recs.length !== nRecs,
@@ -45,21 +37,13 @@ async function verifyRecs(store, recs, trecs) {
   }
 }
 
-/**
- * Gets the last record from the store.
- * @param {AppendStore} store
- * @returns {AppendStoreRecord | null}
- */
-function getLastRecord(store) {
+// Gets the last record from the store.
+function getLastRecord(store: AppendStore): AppendStoreRecord | null {
   const recs = store.records();
   return recs.length > 0 ? recs[recs.length - 1] : null;
 }
 
-/**
- * @param {string} fsType
- * @param {string} prefix
- */
-export async function testAppendOverwrite(fsType, prefix) {
+export async function testAppendOverwrite(fsType: string, prefix: string) {
   let store = await AppendStore.create(prefix, fsType, true);
   store.overWriteDataExpandPercent = 100;
   let kind = "file";
@@ -125,11 +109,7 @@ export async function testAppendOverwrite(fsType, prefix) {
   throwIf(!rec.overWritten, `Expected first record to be overwritten`);
 }
 
-/**
- * @param {string} fsType
- * @param {string} prefix
- */
-async function testAppendMany(fsType, prefix) {
+async function testAppendMany(fsType: string, prefix: string) {
   const startTime = performance.now();
   let trecs = genTestRecords(500);
   console.log("Testing AppendStore...");
@@ -159,11 +139,7 @@ async function testAppendMany(fsType, prefix) {
   recs = store.records();
   await verifyRecs(store, recs, trecs);
 }
-/**
- * @param {string} fsType
- * @param {string} prefix
- */
-export async function testAppendStoreWithFS(fsType, prefix) {
+export async function testAppendStoreWithFS(fsType: string, prefix: string) {
   const startTime = performance.now();
   testAppendOverwrite(fsType, prefix);
   testAppendMany(fsType, prefix);

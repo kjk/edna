@@ -1,11 +1,7 @@
 import { keyValueMarshal, keyValueUnmarshal } from "./appendstore_kv";
 
 // Helper function to format strings like Go's fmt.Sprintf
-/**
- * @param {string} format
- * @param {any[]} args
- */
-function f(format, ...args) {
+function f(format: string, ...args: any[]) {
   let result = format;
   args.forEach((arg, index) => {
     result = result.replace(/%[vqd]/, arg);
@@ -14,11 +10,7 @@ function f(format, ...args) {
 }
 
 // Helper function for assertions
-/**
- * @param {boolean} condition
- * @param {string} message
- */
-function assert(condition, message) {
+function assert(condition: boolean, message: string) {
   if (!condition) {
     throw new Error(message);
   }

@@ -4,25 +4,19 @@ import { FileSystemWorkerOFS, getFileSystemWorkerOfs } from "./fs-worker-ofs";
 import { len, throwIf } from "./util";
 
 export class AppendStoreRecord {
-  /** @type {number} */
-  sizeInFile = 0;
-  /**
-   * @param {number} offset
-   * @param {number} size
-   * @param {number} timestampMs
-   * @param {string} kind
-   * @param {string} meta
-   */
-  constructor(offset, size, timestampMs, kind, meta = null) {
-    /** @type {number} */
+  sizeInFile: number = 0;
+  offset: number;
+  size: number;
+  timestampMs: number;
+  kind: string;
+  meta: string | null;
+  overWritten: boolean;
+
+  constructor(offset: number, size: number, timestampMs: number, kind: string, meta: string | null = null) {
     this.offset = offset;
-    /** @type {number} */
     this.size = size;
-    /** @type {number} */
     this.timestampMs = timestampMs;
-    /** @type {string} */
     this.kind = kind;
-    /** @type {string?} */
     this.meta = meta;
     this.overWritten = false;
   }
@@ -31,12 +25,8 @@ export class AppendStoreRecord {
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder();
 
-/**
- * if string, encodes as UTF-8
- * @param {string|Uint8Array} data
- * @returns {Uint8Array|null}
- */
-export function toBytes(data) {
+// if string, encodes as UTF-8
+export function toBytes(data: string | Uint8Array | null): Uint8Array | null {
   if (!data) {
     return null;
   }
@@ -48,11 +38,7 @@ export function toBytes(data) {
   throw new Error("Invalid data type: must be string or Uint8Array");
 }
 
-/**
- * @param {Uint8Array} bytes
- * @param {number} padSize
- */
-function padBytes(bytes, padSize) {
+function padBytes(bytes: Uint8Array, padSize: number) {
   const paddedBytes = new Uint8Array(bytes.length + padSize);
   paddedBytes.fill(32); // Fill with spaces
   paddedBytes.set(bytes);
@@ -60,11 +46,7 @@ function padBytes(bytes, padSize) {
   return paddedBytes;
 }
 
-/**
- * @param {AppendStoreRecord} rec
- * @returns {Uint8Array}
- */
-function serializeRecord(rec) {
+function serializeRecord(rec: AppendStoreRecord): Uint8Array {
   let sz = "";
   if (rec.sizeInFile > 0) {
     sz = `${rec.size}:${rec.sizeInFile}`;
@@ -83,16 +65,11 @@ export const kFileSystemMem = "mem";
 export const kFileSystemWorkerOFS = "worker-ofs";
 
 export class AppendStore {
-  /** @type {AppendStoreRecord[]} */
-  _allRecords = [];
-  /** @type {AppendStoreRecord[]} */
-  _nonOverwritten = [];
-  /** @type {string} */
-  indexPath;
-  /** @type {string} */
-  dataPath;
-  /** @type {FileSystemOFS | FileSystemMem | FileSystemWorkerOFS} */
-  fs;
+  _allRecords: AppendStoreRecord[] = [];
+  _nonOverwritten: AppendStoreRecord[] = [];
+  indexPath: string;
+  dataPath: string;
+  fs: FileSystemOFS | FileSystemMem | FileSystemWorkerOFS;
 
   // when over-writing a record, we expand the data by this much to minimize
   // the amount written to file.
@@ -101,17 +78,11 @@ export class AppendStore {
   // 100 means we expand the data by 100%
   overWriteDataExpandPercent = 100;
 
-  /**
-   * @param {string} fileNamePrefix
-   * @param {string} fsType
-   * @param {boolean} clear
-   * @returns {Promise<AppendStore>}
-   */
   static async create(
     fileNamePrefix = "appendStore",
     fsType = kFileSystemOFS,
     clear = false,
-  ) {
+  ): Promise<AppendStore> {
     const indexPath = `${fileNamePrefix}_index.txt`;
     const dataPath = `${fileNamePrefix}_data.bin`;
     let res = new AppendStore(indexPath, dataPath);
@@ -161,22 +132,12 @@ export class AppendStore {
     this._nonOverwritten = res;
   }
 
-  /**
-   * @param {string} indexPath
-   * @param {string} dataPath
-   */
-  constructor(indexPath, dataPath) {
+  constructor(indexPath: string, dataPath: string) {
     this.indexPath = indexPath;
     this.dataPath = dataPath;
   }
 
-  /**
-   * @param {string | Uint8Array | null} data
-   * @param {number} offset
-   * @param {string} kind
-   * @param {string} meta
-   */
-  async _writeDataAtOffset(offset, data, kind, meta) {
+  async _writeDataAtOffset(offset: number, data: string | Uint8Array | null, kind: string, meta: string) {
     // high-precision UTC time in milliseconds
     const timestampMs = currTimestampMs();
     let bytes = toBytes(data);
@@ -186,14 +147,7 @@ export class AppendStore {
     return new AppendStoreRecord(offset, size, timestampMs, kind, meta);
   }
 
-  /**
-   * @param {Uint8Array | null} bytes
-   * @param {string} kind
-   * @param {string} meta
-   * @param {number} additionalBytes
-   * @returns {Promise<AppendStoreRecord>}
-   */
-  async _writeBytes(bytes, kind, meta, additionalBytes = 0) {
+  async _writeBytes(bytes: Uint8Array | null, kind: string, meta: string, additionalBytes: number = 0): Promise<AppendStoreRecord> {
     // high-precision UTC time in milliseconds
     const timestampMs = currTimestampMs();
     let size = len(bytes);
@@ -212,22 +166,14 @@ export class AppendStore {
     return rec;
   }
 
-  /**
-   * @param {AppendStoreRecord} rec
-   */
-  async _writeRecordToIndex(rec) {
+  async _writeRecordToIndex(rec: AppendStoreRecord) {
     const indexBytes = serializeRecord(rec);
     await this.fs.appendToFile(this.indexPath, indexBytes);
     this._allRecords.push(rec);
     this._calcNonOverwritten();
   }
 
-  /**
-   *
-   * @param {AppendStoreRecord} rec
-   * @param {string|Uint8Array|null} data
-   */
-  async appendRecordPreserveTimestamp(rec, data) {
+  async appendRecordPreserveTimestamp(rec: AppendStoreRecord, data: string | Uint8Array | null) {
     let { kind, meta } = rec;
     validateKindAndMeta(kind, meta);
     let bytes = toBytes(data);
@@ -236,33 +182,20 @@ export class AppendStore {
     await this._writeRecordToIndex(recNew);
   }
 
-  /**
-   * @param {string} kind
-   * @param {string|Uint8Array|null} data
-   * @param {string} meta
-   * @param {number} additionalBytes
-   * @return {Promise<void>}
-   */
-  async appendRecord(kind, meta, data, additionalBytes = 0) {
+  async appendRecord(kind: string, meta: string, data: string | Uint8Array | null, additionalBytes: number = 0): Promise<void> {
     validateKindAndMeta(kind, meta);
     let bytes = toBytes(data);
     let rec = await this._writeBytes(bytes, kind, meta, additionalBytes);
     await this._writeRecordToIndex(rec);
   }
 
-  /**
-   * Potentially overwrites existing record with the same kind and meta.
-   * Meant for files for which we don't need to keep history and are frequently
-   * written to, like metadata.
-   * If we find an existing record with the same kind and meta and
-   * enough space for the file, we append new record to index but overwrite
-   * the data.
-   * @param {string|Uint8Array|null} data
-   * @param {string} kind
-   * @param {string} meta
-   * @return {Promise<void>}
-   */
-  async overWriteRecord(kind, meta, data) {
+  // Potentially overwrites existing record with the same kind and meta.
+  // Meant for files for which we don't need to keep history and are frequently
+  // written to, like metadata.
+  // If we find an existing record with the same kind and meta and
+  // enough space for the file, we append new record to index but overwrite
+  // the data.
+  async overWriteRecord(kind: string, meta: string, data: string | Uint8Array | null): Promise<void> {
     // const startTime = performance.now();
     validateKindAndMeta(kind, meta);
 
@@ -308,11 +241,7 @@ export class AppendStore {
     await this._writeRecordToIndex(rec);
   }
 
-  /**
-   * @param {AppendStoreRecord} rec
-   * @returns {Promise<Uint8Array>}
-   */
-  async readRecord(rec) {
+  async readRecord(rec: AppendStoreRecord): Promise<Uint8Array> {
     const { offset, size } = rec;
     if (offset < 0 || size < 0) {
       throw new Error(`Invalid offset '${offset}' or size '${size}`);
@@ -326,20 +255,13 @@ export class AppendStore {
     return bytes;
   }
 
-  /**
-   * Reads a record from the store as a string
-   * @param {AppendStoreRecord} rec
-   * @returns {Promise<string|null>}
-   */
-  async readRecordAsString(rec) {
+  // Reads a record from the store as a string
+  async readRecordAsString(rec: AppendStoreRecord): Promise<string | null> {
     let bytes = await this.readRecord(rec);
     return bytes ? utf8Decoder.decode(bytes) : null;
   }
 
-  /**
-   * @returns {Promise<AppendStoreRecord[]>}
-   */
-  async _readIndex() {
+  async _readIndex(): Promise<AppendStoreRecord[]> {
     const d = await this.fs.readFile(this.indexPath);
     if (!d) {
       return [];
@@ -348,37 +270,24 @@ export class AppendStore {
     return parseIndex(text);
   }
 
-  /**
-   * for debugging
-   * @returns {Promise<ArrayBuffer|null>}
-   */
-  async getIndexContent() {
+  // for debugging
+  async getIndexContent(): Promise<ArrayBuffer | null> {
     return await this.fs.readFile(this.indexPath);
   }
 
-  /**
-   * for debugging
-   * @returns {Promise<ArrayBuffer|null>}
-   */
-  async getDataContent() {
+  // for debugging
+  async getDataContent(): Promise<ArrayBuffer | null> {
     return await this.fs.readFile(this.dataPath);
   }
 
-  /**
-   * for debugging
-   * @returns {Promise<string>}
-   */
-  async getIndexAsString() {
+  // for debugging
+  async getIndexAsString(): Promise<string> {
     const d = await this.getIndexContent();
     return d ? utf8Decoder.decode(d) : "";
   }
 }
 
-/**
- * @param {string} s
- * @param {(line: string, record: AppendStoreRecord) => void} callback
- */
-export function parseIndexCb(s, callback) {
+export function parseIndexCb(s: string, callback: (line: string, record: AppendStoreRecord) => void) {
   const lines = s.split("\n");
   let n = lines.length;
   console.warn(`parseIndexCb: ${n} lines`);
@@ -429,11 +338,7 @@ export function parseIndexCb(s, callback) {
   }
 }
 
-/**
- * @param {string} s
- * @returns {AppendStoreRecord[]}
- */
-function parseIndex(s) {
+function parseIndex(s: string): AppendStoreRecord[] {
   const records = [];
   parseIndexCb(s, (line, record) => {
     records.push(record);
@@ -441,11 +346,7 @@ function parseIndex(s) {
   return records;
 }
 
-/**
- * @param {string} kind
- * @param {string} meta
- */
-function validateKindAndMeta(kind, meta) {
+function validateKindAndMeta(kind: string, meta: string) {
   if (!kind || kind.includes(" ") || kind.includes("\n")) {
     throw new Error(
       "Kind must be a non-empty string without spaces or newlines",

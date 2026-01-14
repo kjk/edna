@@ -1,6 +1,6 @@
 import { getAltChar, getModChar, platformName } from "./util";
 
-export function fixUpShortcuts(s, platform = platformName) {
+export function fixUpShortcuts(s: string, platform: string = platformName): string {
   let modChar = getModChar(platform);
   let altChar = getAltChar(platform);
   s = s.replace(/Alt/g, altChar);
@@ -8,11 +8,11 @@ export function fixUpShortcuts(s, platform = platformName) {
   return s;
 }
 
-function getKeyHelp(platform = platformName) {
+function getKeyHelp(platform: string = platformName): [string, string][] {
   const modChar = getModChar(platform);
   const altChar = getAltChar(platform);
   let isMac = platform === "darwin";
-  let res = [
+  let res: [string, string][] = [
     [`Mod + K`, "Open, create or delete a note"],
     [`Mod + P`, ``],
     [`Mod + O`, ``],
@@ -88,11 +88,7 @@ function getKeyHelp(platform = platformName) {
   return res;
 }
 
-/**
- * @param {string} platform
- * @returns {string}
- */
-export function keyHelpStr(platform = platformName) {
+export function keyHelpStr(platform: string = platformName): string {
   const keyHelp = getKeyHelp(platform);
   const keyMaxLength = keyHelp
     .map(([key]) => key.length)

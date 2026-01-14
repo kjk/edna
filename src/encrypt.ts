@@ -9,10 +9,7 @@ export const kLSPassowrdKey = "elaris-password";
 // each password
 const kElarisSalt = "360180182a560f063c6acf4a10462817dbd";
 
-/**
- * @param {string} pwd
- */
-export function rememberPassword(pwd) {
+export function rememberPassword(pwd: string) {
   localStorage.setItem(kLSPassowrdKey, pwd);
 }
 
@@ -20,19 +17,12 @@ export function removePassword() {
   localStorage.removeItem(kLSPassowrdKey);
 }
 
-/**
- * @param {string} pwd
- * @returns {string}
- */
-export function saltPassword(pwd) {
+export function saltPassword(pwd: string): string {
   let pwdHash = hash({ key: pwd, salt: kElarisSalt });
   return pwdHash;
 }
 
-/**
- * @returns {string|null}
- */
-export function getPasswordHash() {
+export function getPasswordHash(): string | null {
   let pwd = localStorage.getItem(kLSPassowrdKey);
   if (!pwd) {
     return null;
@@ -41,19 +31,12 @@ export function getPasswordHash() {
   return pwdHash;
 }
 
-/**
- * @returns {boolean}
- */
-export function isUsingEncryption() {
+export function isUsingEncryption(): boolean {
   let pwdHash = getPasswordHash();
   return pwdHash ? true : false;
 }
 
-/**
- * @param {string} msg
- * @returns {Promise<string>}
- */
-export async function getPasswordHashMust(msg) {
+export async function getPasswordHashMust(msg: string): Promise<string> {
   let pwdHash = getPasswordHash();
   let simulateNoPassword = false;
   if (simulateNoPassword) {
