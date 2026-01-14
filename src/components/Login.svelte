@@ -104,7 +104,7 @@
   <div class="mb-4">
     <a
       href="/auth/ghlogin"
-      class="relative flex items-center justify-center w-full py-2 px-4 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors font-medium"
+      class="relative flex items-center justify-center w-full py-1 px-4 text-gray-600 rounded-md hover:bg-gray-100 transition-colors font-medium border border-gray-600"
     >
       {@render IconGitHub("mr-2")}
       Login with GitHub
