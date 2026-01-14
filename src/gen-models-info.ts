@@ -135,11 +135,7 @@ function findProviderID(id) {
   return -1; // Not found
 }
 
-/**
- * @param {string} id
- * @returns {string}
- */
-function shortenModelID(id) {
+function shortenModelID(id: string): string {
   // e.g. "openai/gpt-4o" -> "gpt-4o"
   const parts = id.split("/");
   if (parts.length < 2) {
@@ -148,11 +144,7 @@ function shortenModelID(id) {
   return parts[1]; // Return the second part (the model name)
 }
 
-/**
- * @param {string} name
- * @returns {string}
- */
-function shortenModelName(name) {
+function shortenModelName(name: string): string {
   // e.g. "Google: Gemini 1.5 Pro" -> "Gemini 1.5 Pro"
   const parts = name.split(": ");
   if (parts.length < 2) {

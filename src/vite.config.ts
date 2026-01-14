@@ -21,10 +21,7 @@ let pwaPlugin = VitePWA({
   },
 });
 
-/**
- * @param {string} id
- */
-function manualChunks(id) {
+function manualChunks(id: string) {
   // pack all .css files in the same chunk
   if (id.endsWith(".css")) {
     return;

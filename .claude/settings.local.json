@@ -17,7 +17,8 @@
       "Bash(for f in *.ts)",
       "Bash(do if grep -l \"@param\\\\|@returns\\\\|@type\" \"$f\")",
       "Bash(then echo \"$f\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)"
     ]
   }
 }

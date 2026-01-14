@@ -52,10 +52,7 @@ export async function importEdnaNotesFromZipFile() {
   }
   let notesMeta = await readMetadata();
   console.warn("len(notesMeta.notes):", len(notesMeta.notes));
-  /**
-   * @param {string} name
-   */
-  function findNoteMeta(name) {
+  function findNoteMeta(name: string) {
     for (let n of notesMeta.notes) {
       if (n.name === name) {
         return n;
@@ -67,22 +64,14 @@ export async function importEdnaNotesFromZipFile() {
   const kEdnaFileExt = ".edna.txt";
   const kEdnaEncrFileExt = ".encr.edna.txt";
 
-  /**
-   * @param {string} name
-   * @returns {string}
-   */
-  function trimEdnaExt(name) {
+  function trimEdnaExt(name: string): string {
     let s = trimSuffix(name, kEdnaEncrFileExt);
     s = trimSuffix(s, kEdnaFileExt);
     throwIf(s === name); // assumes we chacked before calling
     return s;
   }
-  /**
-   * returns null if not a valid name
-   * @param {string} fileName
-   * @returns {string}
-   */
-  function noteNameFromFileNameFS(fileName) {
+  // returns null if not a valid name
+  function noteNameFromFileNameFS(fileName: string): string {
     // throwIf(!isValidFileName(fileName));
     if (!isValidFileName(fileName)) {
       return null;
