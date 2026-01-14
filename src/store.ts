@@ -28,56 +28,32 @@ import {
 } from "./store-local";
 import { len, throwIf } from "./util";
 
-/** @type { LocalStore | BackendStore } */
-let store;
+let store: LocalStore | BackendStore;
 
 let utf8Decoder = new TextDecoder();
 
-/**
- * @param {Object} m
- */
-export async function storeWriteNoteMeta(m) {
+export async function storeWriteNoteMeta(m: Object) {
   await store.writeNoteMeta(m);
 }
 
-/**
- * @param {string} fileName
- * @param {string|Uint8Array} s
- */
-export async function storeWriteFile(fileName, s) {
+export async function storeWriteFile(fileName: string, s: string | Uint8Array) {
   await store.writeFile(fileName, s);
 }
 
-/**
- * @param {string} fileName
- * @returns {Promise<string>}
- */
-export async function storeReadFileAsString(fileName) {
+export async function storeReadFileAsString(fileName: string): Promise<string> {
   let data = await store.readFile(fileName);
   return data ? utf8Decoder.decode(data) : null;
 }
 
-/**
- * @param {string} noteId
- */
-export async function storeDeleteNote(noteId) {
+export async function storeDeleteNote(noteId: string) {
   await store.deleteNote(noteId);
 }
 
-/**
- * @param {string} noteId
- * @param {string} name
- * @returns {Promise<Note>}
- */
-export async function storeCreateNote(noteId, name) {
+export async function storeCreateNote(noteId: string, name: string): Promise<Note> {
   return await store.createNote(noteId, name);
 }
 
-/**
- * @param {string} verId
- * @param {string} content
- */
-export async function storeWriteNoteContent(verId, content) {
+export async function storeWriteNoteContent(verId: string, content: string) {
   let pwdHash = getPasswordHash();
   if (!pwdHash) {
     await store.put(verId, content, false);
@@ -87,12 +63,8 @@ export async function storeWriteNoteContent(verId, content) {
   await store.put(verId, d, true);
 }
 
-/**
- * TODO: test returning null and handle that in the UI
- * @param {string} contentId
- * @returns {Promise<string|null>}
- */
-export async function storeGetString(contentId) {
+// TODO: test returning null and handle that in the UI
+export async function storeGetString(contentId: string): Promise<string | null> {
   let res = await store.get(contentId);
   if (!res) {
     console.error(`storeGetString: no content for id ${contentId}`);
@@ -107,13 +79,9 @@ export async function storeGetString(contentId) {
   return s;
 }
 
-/** @type { LocalStore } */
-export let localStore;
+export let localStore: LocalStore;
 
-/**
- * @returns {Promise<LocalStore>}
- */
-export async function openLocalStore() {
+export async function openLocalStore(): Promise<LocalStore> {
   throwIf(!!store, "store already opened");
   localStore = await createLocalStore();
   store = localStore;
@@ -125,13 +93,9 @@ export function closeLocalStore() {
   store = null;
 }
 
-/** @type { BackendStore } */
-export let backendStore;
+export let backendStore: BackendStore;
 
-/**
- * @returns {Promise<BackendStore>}
- */
-export async function openBackendStore() {
+export async function openBackendStore(): Promise<BackendStore> {
   throwIf(!!store, "store already opened");
   backendStore = await createBackendStore();
   store = backendStore;
@@ -147,11 +111,7 @@ export async function storeDumpIndex() {
   store.dumpIndex();
 }
 
-/**
- * @param {Uint8Array} blob
- * @returns {Promise<Uint8Array>}
- */
-async function decryptBlobInteractive(blob) {
+async function decryptBlobInteractive(blob: Uint8Array): Promise<Uint8Array> {
   if (blob.length === 0) {
     return blob;
   }
@@ -181,10 +141,8 @@ async function decryptBlobInteractive(blob) {
 }
 
 const kDecryptedPrefix = "decrypted_store";
-/**
- * @returns {Promise<number>}
- */
-export async function localStoreDecryptAllNotes() {
+
+export async function localStoreDecryptAllNotes(): Promise<number> {
   let currStore = localStore.store;
   let recs = currStore.records();
   let decryptedStore = await AppendStore.create(
@@ -194,8 +152,7 @@ export async function localStoreDecryptAllNotes() {
   );
   let nDecrypted = 0;
 
-  /** @type {Map<string, Note>} */
-  let idToNote = new Map();
+  let idToNote: Map<string, Note> = new Map();
   let data;
   // TODO: could skip deleted notes
   for (let rec of recs) {
@@ -262,11 +219,8 @@ export async function localStoreDecryptAllNotes() {
 }
 
 const kEncryptedPrefix = "encrypted_store";
-/**
- * @param {string} pwdHash
- * @returns {Promise<number>}
- */
-export async function localStoreEncryptAllNotes(pwdHash) {
+
+export async function localStoreEncryptAllNotes(pwdHash: string): Promise<number> {
   let currStore = localStore.store;
   let recs = currStore.records();
   let encryptedStore = await AppendStore.create(
@@ -276,8 +230,7 @@ export async function localStoreEncryptAllNotes(pwdHash) {
   );
   let nEncrypted = 0;
 
-  /** @type {Map<string, Note>} */
-  let idToNote = new Map();
+  let idToNote: Map<string, Note> = new Map();
   let data;
   // TODO: could skip deleted notes
   for (let rec of recs) {
@@ -342,11 +295,7 @@ export async function localStoreEncryptAllNotes(pwdHash) {
   return nEncrypted;
 }
 
-/**
- * @param {string} pwdHash
- * @returns {Promise<number>}
- */
-export async function backendStoreEncryptAllNotes(pwdHash) {
+export async function backendStoreEncryptAllNotes(pwdHash: string): Promise<number> {
   let rsp = await elarisFetch("/api/store/getVersionsToEncrypt");
   if (!rsp.ok) {
     console.error(
@@ -393,10 +342,7 @@ export async function backendStoreEncryptAllNotes(pwdHash) {
   return nEntries;
 }
 
-/**
- * @returns {Promise<number>}
- */
-export async function backendStoreDecryptAllNotes() {
+export async function backendStoreDecryptAllNotes(): Promise<number> {
   let rsp = await elarisFetch("/api/store/getVersionsToDecrypt");
   if (!rsp.ok) {
     console.error(
@@ -446,11 +392,7 @@ export async function backendStoreDecryptAllNotes() {
   return nEntries;
 }
 
-/**
- * @param {string} pwdHash
- * @returns {Promise<number>}
- */
-export async function storeEncryptAllNotes(pwdHash) {
+export async function storeEncryptAllNotes(pwdHash: string): Promise<number> {
   if (!store) {
     console.error("store not initialized");
     return;
@@ -466,10 +408,7 @@ export async function storeEncryptAllNotes(pwdHash) {
   console.error("neither local nor backend store");
 }
 
-/**
- * @returns {Promise<number>}
- */
-export async function storeDecryptAllNotes() {
+export async function storeDecryptAllNotes(): Promise<number> {
   if (!store) {
     console.error("store not initialized");
     return;
