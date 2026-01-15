@@ -3,7 +3,7 @@ import "./markdown-anti-tailwind.css";
 import "highlight.js/styles/github.css";
 import "tippy.js/themes/light-border.css";
 import "tippy.js/themes/light.css";
-import { mount, unmount } from "svelte";
+import { mount, MountOptions, unmount } from "svelte";
 import posthog from "posthog-js";
 import { testAppendStore } from "./apppendstore.test";
 import { appState } from "./appstate.svelte";
@@ -29,7 +29,7 @@ import { isDev, len } from "./util";
 
 // window.onunhandledrejection = console.warn;
 
-let appSvelte;
+let appSvelte: Record<string, any>;
 
 function resetApp() {
   console.log("unmounting app");
@@ -216,10 +216,10 @@ export async function boot() {
   if (appSvelte) {
     unmount(appSvelte);
   }
-  const args = {
-    target: document.getElementById("app"),
+  const opts: MountOptions = {
+    target: document.getElementById("app") as Element,
   };
-  appSvelte = mount(App, args);
+  appSvelte = mount(App, opts);
 }
 
 boot().then(() => {

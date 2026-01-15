@@ -10,7 +10,7 @@ import {
 } from "./encrypt";
 import { getFileSystemWorkerOfs } from "./fs-worker-ofs";
 import { updateAfterNoteStateChange } from "./globals";
-import { elarisFetch } from "./httputil";
+import { appFetch } from "./httputil";
 import { Note } from "./note";
 import { BackendStore, createBackendStore } from "./store-backend";
 import {
@@ -49,7 +49,10 @@ export async function storeDeleteNote(noteId: string) {
   await store.deleteNote(noteId);
 }
 
-export async function storeCreateNote(noteId: string, name: string): Promise<Note> {
+export async function storeCreateNote(
+  noteId: string,
+  name: string,
+): Promise<Note> {
   return await store.createNote(noteId, name);
 }
 
@@ -64,7 +67,9 @@ export async function storeWriteNoteContent(verId: string, content: string) {
 }
 
 // TODO: test returning null and handle that in the UI
-export async function storeGetString(contentId: string): Promise<string | null> {
+export async function storeGetString(
+  contentId: string,
+): Promise<string | null> {
   let res = await store.get(contentId);
   if (!res) {
     console.error(`storeGetString: no content for id ${contentId}`);
@@ -220,7 +225,9 @@ export async function localStoreDecryptAllNotes(): Promise<number> {
 
 const kEncryptedPrefix = "encrypted_store";
 
-export async function localStoreEncryptAllNotes(pwdHash: string): Promise<number> {
+export async function localStoreEncryptAllNotes(
+  pwdHash: string,
+): Promise<number> {
   let currStore = localStore.store;
   let recs = currStore.records();
   let encryptedStore = await AppendStore.create(
@@ -295,8 +302,10 @@ export async function localStoreEncryptAllNotes(pwdHash: string): Promise<number
   return nEncrypted;
 }
 
-export async function backendStoreEncryptAllNotes(pwdHash: string): Promise<number> {
-  let rsp = await elarisFetch("/api/store/getVersionsToEncrypt");
+export async function backendStoreEncryptAllNotes(
+  pwdHash: string,
+): Promise<number> {
+  let rsp = await appFetch("/api/store/getVersionsToEncrypt");
   if (!rsp.ok) {
     console.error(
       "backendStoreEncryptAllNotes: failed to get versions to encrypt",
@@ -327,7 +336,7 @@ export async function backendStoreEncryptAllNotes(pwdHash: string): Promise<numb
   let body = await zipWriter.close();
 
   modalInfoState.addMessage("Uploading encrypted versions");
-  rsp = await elarisFetch("/api/store/uploadEncrypted", {
+  rsp = await appFetch("/api/store/uploadEncrypted", {
     method: "POST",
     body: body,
   });
@@ -343,7 +352,7 @@ export async function backendStoreEncryptAllNotes(pwdHash: string): Promise<numb
 }
 
 export async function backendStoreDecryptAllNotes(): Promise<number> {
-  let rsp = await elarisFetch("/api/store/getVersionsToDecrypt");
+  let rsp = await appFetch("/api/store/getVersionsToDecrypt");
   if (!rsp.ok) {
     console.error(
       "backendStoreDecryptAllNotes: failed to get versions to decrypt",
@@ -374,7 +383,7 @@ export async function backendStoreDecryptAllNotes(): Promise<number> {
   let body = await zipWriter.close();
 
   modalInfoState.addMessage("Uploading decrypted versions");
-  rsp = await elarisFetch("/api/store/uploadDecrypted", {
+  rsp = await appFetch("/api/store/uploadDecrypted", {
     method: "POST",
     body: body,
   });

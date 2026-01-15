@@ -2,7 +2,7 @@ import type { UserInfo } from "./login";
 import { Note } from "./note";
 
 class AppState {
-  user: UserInfo;
+  user?: UserInfo;
 
   /* regular, arhived, deleted notes */
   allNotes: Note[] = $state([]);
@@ -98,7 +98,10 @@ export function getNotes(): Note[] {
 }
 
 // set if you don't expect note to exist
-export function findNoteByName(name: string, quiet: boolean = false): Note | null {
+export function findNoteByName(
+  name: string,
+  quiet: boolean = false,
+): Note | null {
   for (let note of appState.allNotes) {
     if (note.name === name) {
       return note;

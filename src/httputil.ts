@@ -11,7 +11,10 @@ export const mimeApplicationJson = "application/json";
 // it can avoid telling us about changes we made
 export const sessionId = nanoid(6);
 
-export async function elarisFetch(url: string | URL | Request, opts: any = {}): Promise<Response> {
+export async function appFetch(
+  url: string | URL | Request,
+  opts: any = {},
+): Promise<Response> {
   if (!opts.headers) {
     opts.headers = {};
   }

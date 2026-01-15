@@ -1,7 +1,5 @@
-import { appState } from "./appstate.svelte";
-import { elarisFetch } from "./httputil";
+import { appFetch } from "./httputil";
 import { error, log } from "./log";
-import { getLocalStorageAsJSON, setLocalStorageFromJSON } from "./util";
 
 export type UserInfo = {
   user: string;
@@ -14,12 +12,12 @@ export type UserInfo = {
 
 const kCachedUserKey = "elaris:cacheduser";
 
-export async function getLoggedUser(): Promise<UserInfo | null> {
-  let user = null;
+export async function getLoggedUser(): Promise<UserInfo | undefined> {
+  let user: any;
   try {
-    let rsp = await elarisFetch("/auth/user");
+    let rsp = await appFetch("/auth/user");
     if (rsp.status !== 200) {
-      return null;
+      return;
     }
     user = await rsp.json();
   } catch (e) {
@@ -32,7 +30,7 @@ export async function getLoggedUser(): Promise<UserInfo | null> {
   }
   if (user.error) {
     log("getLoggedUser: error:", user.error);
-    return null;
+    return;
   }
   localStorage.setItem(kCachedUserKey, JSON.stringify(user));
   return user;

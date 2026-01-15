@@ -8,7 +8,7 @@ import {
 import { appState } from "./appstate.svelte";
 import { ofsListFiles } from "./fs-ofs";
 import { updateAfterNoteStateChange } from "./globals";
-import { elarisFetch } from "./httputil";
+import { appFetch } from "./httputil";
 import { Note } from "./note";
 import {
   createLocalStoreZip,
@@ -22,7 +22,11 @@ import { len } from "./util";
 
 const kStoreDeleteFile = "delete-file";
 
-function findRecordForKey(recs: AppendStoreRecord[], kind: string, meta: string): AppendStoreRecord | null {
+function findRecordForKey(
+  recs: AppendStoreRecord[],
+  kind: string,
+  meta: string,
+): AppendStoreRecord | null {
   // searching from the end should be faster on average
   // we're more likely to search for recent content
   let lastIdx = len(recs) - 1;
@@ -61,12 +65,18 @@ export class ContentCache {
     return findRecordForKey(recs, kStorePut, key) !== null;
   }
 
-  async put(key: string, value: string | Uint8Array, isEncrypted: boolean): Promise<void> {
+  async put(
+    key: string,
+    value: string | Uint8Array,
+    isEncrypted: boolean,
+  ): Promise<void> {
     let kind = isEncrypted ? kStorePutEncrypted : kStorePut;
     await this.store.appendRecord(kind, key, value);
   }
 
-  async get(key: string): Promise<{ content: Uint8Array; isEncrypted: boolean } | null> {
+  async get(
+    key: string,
+  ): Promise<{ content: Uint8Array; isEncrypted: boolean } | null> {
     let recs = this.store.records();
     let rec = findRecordForKey(recs, kStorePut, key);
     if (!rec) {
@@ -115,7 +125,9 @@ export class BackendStore {
     this.offlineStore = offlineStore;
   }
 
-  async get(key: string): Promise<{ content: Uint8Array; isEncrypted: boolean } | null> {
+  async get(
+    key: string,
+  ): Promise<{ content: Uint8Array; isEncrypted: boolean } | null> {
     // check in cache first
     let store = this.contentCache.store;
     let rec = findPutRecord(store.records(), key);
@@ -132,7 +144,7 @@ export class BackendStore {
     let uri = "/api/store/get?key=" + encodeURIComponent(key);
     let rsp;
     try {
-      rsp = await elarisFetch(uri);
+      rsp = await appFetch(uri);
       if (!rsp.ok) {
         console.error("get error:", rsp.status, rsp.statusText);
         return null;
@@ -160,7 +172,7 @@ export class BackendStore {
       "&key=" +
       encodeURIComponent(key);
     try {
-      let rsp = await elarisFetch(uri, {
+      let rsp = await appFetch(uri, {
         method: "POST",
         headers: {
           "Content-Type": "application/octet-stream",
@@ -188,7 +200,7 @@ export class BackendStore {
     let body = toBytes(content);
     let uri = "/api/store/writeFile?name=" + encodeURIComponent(fileName);
     try {
-      let rsp = await elarisFetch(uri, {
+      let rsp = await appFetch(uri, {
         method: "POST",
         headers: {
           "Content-Type": "application/octet-stream",
@@ -216,7 +228,7 @@ export class BackendStore {
     let ab;
     let uri = "/api/store/readFile?name=" + encodeURIComponent(fileName);
     try {
-      let rsp = await elarisFetch(uri);
+      let rsp = await appFetch(uri);
       appState.isOnline = true;
       if (rsp.status === 404) {
         console.warn(`File ${fileName} not found`);
@@ -247,7 +259,7 @@ export class BackendStore {
     let meta = encodeURIComponent(JSON.stringify(m));
     let uri = "/api/store/writeNoteMeta?meta=" + meta;
     try {
-      let rsp = await elarisFetch(uri);
+      let rsp = await appFetch(uri);
       console.log("writeNoteMeta rsp:", rsp);
       // TODO: update metadata for this note
       appState.isOnline = true;
@@ -265,7 +277,7 @@ export class BackendStore {
 
     let uri = "/api/store/deleteNote?noteId=" + noteId;
     try {
-      let rsp = await elarisFetch(uri);
+      let rsp = await appFetch(uri);
       console.log("deleteNote rsp:", rsp);
       let notes = this.notes;
       for (let i = 0; i < notes.length; i++) {
@@ -290,7 +302,7 @@ export class BackendStore {
     let encName = encodeURI(name);
     let uri = "/api/store/createNote?noteId=" + noteId + "&name=" + encName;
     try {
-      let rsp = await elarisFetch(uri);
+      let rsp = await appFetch(uri);
       console.log("createNote rsp:", rsp);
       let note = new Note(noteId, name);
       note.createdAt = currTimestampMs();
@@ -361,7 +373,7 @@ export class BackendStore {
 export async function isOnlineForSure() {
   let uri = "/ping";
   try {
-    let rsp = await elarisFetch(uri);
+    let rsp = await appFetch(uri);
     if (!rsp.ok) {
       console.error("isOnlineForSure failed:", rsp.status);
       appState.isOnline = false;
@@ -382,7 +394,7 @@ async function uploadOfflineStore(localStore: LocalStore) {
   }
   let uri = "/api/store/uploadOfflineChanges";
   try {
-    let rsp = await elarisFetch(uri, {
+    let rsp = await appFetch(uri, {
       method: "POST",
       headers: {
         "Content-Type": "application/octet-stream",
@@ -445,7 +457,7 @@ async function getLatestNotes(): Promise<Note[]> {
   let curr = parseLatestNotes(s);
   let cachedNotes = notesFromCompact(curr.NotesCompact);
   try {
-    let rsp = await elarisFetch(
+    let rsp = await appFetch(
       "/api/store/getNotes?lastChangeID=" + curr.LastChangeID,
     );
     // must check before rsp.ok because it's false for 304 (seems wrong)
@@ -474,7 +486,10 @@ async function getLatestNotes(): Promise<Note[]> {
   return notes;
 }
 
-async function cacheLatestNoteVersions(notes: Note[], cache: ContentCache): Promise<void> {
+async function cacheLatestNoteVersions(
+  notes: Note[],
+  cache: ContentCache,
+): Promise<void> {
   console.log("cacheLatestNoteVersions");
   let neededVerIds = [];
   for (let note of notes) {
@@ -493,7 +508,7 @@ async function cacheLatestNoteVersions(notes: Note[], cache: ContentCache): Prom
   };
   let zipBlob;
   try {
-    let rsp = await elarisFetch("/api/store/getNotesMultiContent", {
+    let rsp = await appFetch("/api/store/getNotesMultiContent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
