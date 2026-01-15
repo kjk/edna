@@ -2,7 +2,6 @@ package server
 
 import (
 	"bytes"
-	"context"
 	"embed"
 	"fmt"
 	"io"
@@ -11,11 +10,13 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/felixge/httpsnoop"
@@ -255,14 +256,13 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 
 // returns a function that listens for SIGINT or SIGKILL and shuts down the server gracefully
 func serverListen(httpSrv *http.Server) func() {
+	logf("serverListenAndWait: listening on '%s', isDevOrLocal: %v\n", httpSrv.Addr, isDevOrLocal())
+
 	chServerClosed := make(chan bool, 1)
 	go func() {
 		err := httpSrv.ListenAndServe()
 		// mute error caused by Shutdown()
-		if err == http.ErrServerClosed {
-			err = nil
-		}
-		if err == nil {
+		if err == nil || err == http.ErrServerClosed {
 			logf("HTTP server shutdown gracefully\n")
 		} else {
 			logf("httpSrv.ListenAndServe error '%s'\n", err)
@@ -271,15 +271,26 @@ func serverListen(httpSrv *http.Server) func() {
 	}()
 
 	return func() {
-		waitForSigIntOrKill()
+		sctx, stop := signal.NotifyContext(ctx(), os.Interrupt /*SIGINT*/, os.Kill /* SIGKILL */, syscall.SIGTERM)
+		defer stop()
 
-		logf("Got one of the signals. Shutting down http server\n")
-		sseNotifyExit()
+		select {
+		case <-sctx.Done():
+			logf("Got Ctrl+C stop signal. Shutting down http server\n")
+			_ = httpSrv.Shutdown(ctx())
+		case <-chServerClosed:
+			logf("server stopped")
+			return
+		}
 
-		ctx, cancel := context.WithTimeout(ctx(), 5*time.Second)
-		defer cancel()
-		_ = httpSrv.Shutdown(ctx)
-		<-chServerClosed
+		// got ctrl-c signal, wait for server to close
+		select {
+		case <-chServerClosed:
+			// do nothing
+		case <-time.After(time.Second * 5):
+			// timeout
+			logf("timed out trying to shut down http server")
+		}
 	}
 }
 

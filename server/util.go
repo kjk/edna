@@ -6,9 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	"github.com/kjk/common/u"
 )
@@ -80,13 +78,6 @@ func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {
 	return func() {
 		cmd.Process.Kill()
 	}, nil
-}
-
-func waitForSigIntOrKill() {
-	// Ctrl-C sends SIGINT
-	sctx, stop := signal.NotifyContext(ctx(), os.Interrupt /*SIGINT*/, os.Kill /* SIGKILL */, syscall.SIGTERM)
-	defer stop()
-	<-sctx.Done()
 }
 
 func printFS(fsys fs.FS) {
