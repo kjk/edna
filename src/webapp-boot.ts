@@ -4,7 +4,6 @@ import "highlight.js/styles/github.css";
 import "tippy.js/themes/light-border.css";
 import "tippy.js/themes/light.css";
 import { mount, MountOptions, unmount } from "svelte";
-import posthog from "posthog-js";
 import { testAppendStore } from "./apppendstore.test";
 import { appState } from "./appstate.svelte";
 import App from "./components/App.svelte";
@@ -101,37 +100,8 @@ async function createDefaultNotes(existingNotes: Note[]): Promise<string[]> {
   return createdNotes;
 }
 
-function setupPosthog() {
-  if (isDev()) {
-    return;
-  }
-
-  posthog.init("phc_9Wxk6imiVX44DmN7ofvp4wOBRq9CglvGGlHZQhXr5sz", {
-    //api_host: "https://us.i.posthog.com",
-    api_host: "https://ph.arslexis.io",
-    ui_host: "https://us.posthog.com",
-    person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
-  });
-
-  const originalConsoleError = console.error;
-  function myConsoleError(...args: any[]) {
-    originalConsoleError.apply(console, args);
-
-    let err;
-    if (args.length === 1 && args[0] instanceof Error) {
-      err = args[0];
-    } else {
-      let msg = args.join(" ");
-      err = new Error("console.error: " + msg);
-    }
-    posthog.captureException(err);
-  }
-  console.error = myConsoleError;
-}
-
 export async function boot() {
   console.log("booting");
-  setupPosthog();
 
   setupWindowDebug();
   // await testFuncs();
