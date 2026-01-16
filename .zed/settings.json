@@ -1,23 +1,9 @@
-// Folder-specific settings
-//
-// For a full list of overridable settings, and general information on folder-specific settings,
-// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+// https://zed.dev/docs/configuring-zed#settings-files
 {
   "languages": {
     "CSS": {
       "language_servers": ["tailwindcss-language-server"],
       "formatter": "language_server",
-    },
-  },
-  "lsp": {
-    "svelte-language-server": {
-      "settings": {
-        "css": {
-          "lint": {
-            "unknownAtRules": "ignore",
-          },
-        },
-      },
     },
   },
 }

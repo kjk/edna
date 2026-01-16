@@ -308,7 +308,7 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
   @reference "../main.css";
 
   .clickable-icon {
