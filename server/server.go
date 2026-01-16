@@ -12,11 +12,13 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/felixge/httpsnoop"
@@ -153,7 +155,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			return
 		}
 		if strings.HasPrefix(uri, "/event") {
-			apiLogEvent(w, r)
+			handleEvent(w, r)
 			return
 		}
 		if uri == "/help" {
@@ -214,8 +216,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 				http.Error(w, errStr, http.StatusInternalServerError)
 				return
 			}
-			logHttpRequest(r, m.Code, m.Written, m.Duration)
-			// axiomLogHTTPReq(ctx(), r, m.Code, int(m.Written), m.Duration)
+			logHTTPRequest(r, m.Code, m.Written, m.Duration)
 		}()
 	})
 
@@ -233,16 +234,14 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 	return httpSrv
 }
 
-// returns a function that listens for SIGINT or SIGKILL and shuts down the server gracefully
-func serverListen(httpSrv *http.Server) func() {
+func serverListenAndWait(httpSrv *http.Server) func() {
+	logf("serverListenAndWait: listening on '%s', isDevOrLocal: %v\n", httpSrv.Addr, isDevOrLocal())
+
 	chServerClosed := make(chan bool, 1)
 	go func() {
 		err := httpSrv.ListenAndServe()
 		// mute error caused by Shutdown()
-		if err == http.ErrServerClosed {
-			err = nil
-		}
-		if err == nil {
+		if err == nil || err == http.ErrServerClosed {
 			logf("HTTP server shutdown gracefully\n")
 		} else {
 			logf("httpSrv.ListenAndServe error '%s'\n", err)
@@ -251,10 +250,19 @@ func serverListen(httpSrv *http.Server) func() {
 	}()
 
 	return func() {
-		waitForSigIntOrKill()
+		sctx, stop := signal.NotifyContext(ctx(), os.Interrupt /*SIGINT*/, os.Kill /* SIGKILL */, syscall.SIGTERM)
+		defer stop()
 
-		logf("Got one of the signals. Shutting down http server\n")
-		_ = httpSrv.Shutdown(ctx())
+		select {
+		case <-sctx.Done():
+			logf("Got Ctrl+C stop signal. Shutting down http server\n")
+			_ = httpSrv.Shutdown(ctx())
+		case <-chServerClosed:
+			logf("server stopped")
+			return
+		}
+
+		// got ctrl-c signal, wait for server to close
 		select {
 		case <-chServerClosed:
 			// do nothing
@@ -344,11 +352,7 @@ func runServerDev() {
 	serveOpts.DirPrefix = "./"
 	httpSrv := makeHTTPServer(serveOpts, proxyHandler)
 
-	//closeHTTPLog := OpenHTTPLog("onlinetool")
-	//defer closeHTTPLog()
-
-	logf("runServerDev(): starting on '%s', dev: %v\n", httpSrv.Addr, isDev())
-	waitFn := serverListen(httpSrv)
+	waitFn := serverListenAndWait(httpSrv)
 	if isWinOrMac() {
 		openBrowserForServerMust(httpSrv)
 	}
@@ -363,9 +367,8 @@ func runServerProd() {
 
 	serveOpts := mkServeFileOptions(fsys)
 	httpSrv := makeHTTPServer(serveOpts, nil)
-	logf("runServerProd(): starting on 'http://%s', dev: %v, prod: %v, testingProd: %v\n", httpSrv.Addr, flgRunDev, flgRunProd, testingProd)
 
-	waitFn := serverListen(httpSrv)
+	waitFn := serverListenAndWait(httpSrv)
 	if testingProd {
 		openBrowserForServerMust(httpSrv)
 	}

@@ -1,18 +1,12 @@
 package server
 
 import (
-	"bytes"
 	"flag"
-	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
-	"github.com/andybalholm/brotli"
 	"github.com/dustin/go-humanize"
-	"github.com/klauspost/compress/gzip"
-	"github.com/klauspost/compress/zstd"
 
 	"github.com/kjk/common/u"
 )
@@ -97,20 +91,11 @@ func loadSecrets() {
 	// // getEnv("COOKIE_ENCR_KEY", &cookieEncrKeyHex, 64, must)
 
 	// // those are only required in prod
-	// getEnv("LOGTASTIC_API_KEY", &logtastic.ApiKey, 30, must)
-	// getEnv("PIRSCH_SECRET", &pirschClientSecret, 64, must)
 	// getEnv("GITHUB_SECRET_ONLINETOOL", &secretGitHubOnlineTool, 40, must)
 	// getEnv("GITHUB_SECRET_TOOLS_ARSLEXIS", &secretGitHubToolsArslexis, 40, must)
 	// getEnv("GITHUB_SECRET_LOCAL", &secretGitHubLocal, 40, must)
 	// getEnv("MAILGUN_DOMAIN", &mailgunDomain, 4, must)
 	// getEnv("MAILGUN_API_KEY", &mailgunAPIKey, 32, must)
-
-	// // when running locally we shouldn't send axiom / pirsch
-	// if isDev() || flgRunProdLocal {
-	// 	axiomApiToken = ""
-	// 	pirschClientSecret = ""
-	// }
-
 }
 
 var (
@@ -122,6 +107,10 @@ var (
 
 func isDev() bool {
 	return flgRunDev
+}
+
+func isDevOrLocal() bool {
+	return flgRunDev || isWinOrMac()
 }
 
 func measureDuration() func() {
@@ -161,7 +150,6 @@ func Main() {
 			testRunServerProd()
 		} else {
 			// make it reachable for compilation
-			testCompress()
 			clean()
 			updateGoDeps(true)
 		}
@@ -197,19 +185,6 @@ func Main() {
 		return
 	}
 
-	n := 0
-	if flgRunDev {
-		n++
-	}
-	if flgRunProd {
-		n++
-	}
-	if n == 0 {
-		flag.Usage()
-		return
-	}
-	panicIf(n > 1, "can only use one of: -run-dev, -run-prod, -run-local-prod")
-
 	loadSecrets()
 
 	if flgRunDev {
@@ -237,97 +212,7 @@ type benchResult struct {
 	dur  time.Duration
 }
 
-func benchFileCompress(path string) {
-	d, err := os.ReadFile(path)
-	panicIfErr(err)
-
-	var results []benchResult
-	gzipCompress := func(d []byte) []byte {
-		var buf bytes.Buffer
-		w, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-		panicIfErr(err)
-		_, err = w.Write(d)
-		panicIfErr(err)
-		err = w.Close()
-		panicIfErr(err)
-		return buf.Bytes()
-	}
-
-	zstdCompress := func(d []byte, level zstd.EncoderLevel) []byte {
-		var buf bytes.Buffer
-		w, err := zstd.NewWriter(&buf, zstd.WithEncoderLevel(level), zstd.WithEncoderConcurrency(1))
-		panicIfErr(err)
-		_, err = w.Write(d)
-		panicIfErr(err)
-		err = w.Close()
-		panicIfErr(err)
-		return buf.Bytes()
-	}
-
-	brCompress := func(d []byte, level int) []byte {
-		var dst bytes.Buffer
-		w := brotli.NewWriterLevel(&dst, level)
-		_, err := w.Write(d)
-		panicIfErr(err)
-		err = w.Close()
-		panicIfErr(err)
-		return dst.Bytes()
-	}
-
-	var cd []byte
-	logf("compressing with gzip\n")
-	t := time.Now()
-	cd = gzipCompress(d)
-	push(&results, benchResult{"gzip", cd, time.Since(t)})
-
-	logf("compressing with brotli: default (level 6)\n")
-	t = time.Now()
-	cd = brCompress(d, brotli.DefaultCompression)
-	push(&results, benchResult{"brotli default", cd, time.Since(t)})
-
-	logf("compressing with brotli: best (level 11)\n")
-	t = time.Now()
-	cd = brCompress(d, brotli.BestCompression)
-	push(&results, benchResult{"brotli best", cd, time.Since(t)})
-
-	logf("compressing with zstd level: better (3)\n")
-	t = time.Now()
-	cd = zstdCompress(d, zstd.SpeedBetterCompression)
-	push(&results, benchResult{"zstd better", cd, time.Since(t)})
-
-	logf("compressing with zstd level: best (4)\n")
-	t = time.Now()
-	cd = zstdCompress(d, zstd.SpeedBestCompression)
-	push(&results, benchResult{"zstd best", cd, time.Since(t)})
-
-	for _, r := range results {
-		logf("%14s: %6d (%s) in %s\n", r.name, len(r.data), humanSize(len(r.data)), r.dur)
-	}
-}
-
 func humanSize(n int) string {
 	un := uint64(n)
 	return humanize.Bytes(un)
-}
-
-func testCompress() {
-	logf("testCompress()\n")
-	rebuildFrontend()
-	u.RunLoggedInDirMust(".", "bun", "run", "build")
-
-	dir := filepath.Join("dist", "assets")
-	files, err := os.ReadDir(dir)
-	panicIfErr(err)
-	var e fs.DirEntry
-	for _, f := range files {
-		if strings.HasPrefix(f.Name(), "index-") && strings.HasSuffix(f.Name(), ".js") {
-			e = f
-			break
-		}
-	}
-
-	info, _ := e.Info()
-	logf("found %s of size %d (%s)\n", e.Name(), info.Size(), humanSize(int(info.Size())))
-	path := filepath.Join(dir, e.Name())
-	benchFileCompress(path)
 }
