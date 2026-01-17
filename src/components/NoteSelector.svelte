@@ -91,7 +91,6 @@
 </script>
 
 <script lang="ts">
-  import { SvelteComponent } from "svelte";
   import { focus, tooltip } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
   import { Note } from "../note";

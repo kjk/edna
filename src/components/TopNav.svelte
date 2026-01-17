@@ -209,7 +209,7 @@
         {@const noteNameCls = tabCls(tab)}
         <button
           {@attach tooltip}
-          class="truncate justify-between items-center whitespace-nowrap flex-[1] ml-2 flex dark:bg-gray-700 clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 group {cls}"
+          class="truncate justify-between items-center whitespace-nowrap flex-1 ml-2 flex dark:bg-gray-700 clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 group {cls}"
           onclick={() => openTab(tab)}
           data-tooltip={tt}
         >
@@ -253,9 +253,9 @@
       showingQuickAccess = false;
       focusEditor();
     }}
-    class="clickable-icon mt-[-2px] relative"
+    class="clickable-icon -mt-0.5 relative"
   >
-    <div class="mt-[2px]">{@render IconGrokIconDown()}</div>
+    <div class="mt-0.5">{@render IconGrokIconDown()}</div>
     {#if showingQuickAccess}
       <QuickAccess openNote={myOpenNote} forHistory={false} />
     {/if}
@@ -285,14 +285,14 @@
           />
         {/if}
         <div class="text-sm">{appState.user.login}</div>
-        <div class="text-gray-700 ml-[-4px] flex">
-          <div class="mt-[2px]">{@render IconGrokIconDown()}</div>
+        <div class="text-gray-700 -ml-1 flex">
+          <div class="mt-0.5">{@render IconGrokIconDown()}</div>
           <div
             class="hidden absolute text-sm flex-col border shadow left-0 top-full py-2 z-20 group-hover:flex bg-white"
           >
             <a
               href="/auth/ghlogout"
-              class="hover:bg-gray-100 py-0.5 px-4 min-w-[6rem]">Logout</a
+              class="hover:bg-gray-100 py-0.5 px-4 min-w-24">Logout</a
             >
           </div>
         </div>

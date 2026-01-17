@@ -67,9 +67,9 @@
   import { fromFileName, isValidFileName, toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, supportsFileSystem } from "../fileutil";
   import {
-    BoopFunction,
     parseUserFunctions,
     runBoopFunction,
+    type BoopFunction,
   } from "../functions";
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
