@@ -1,29 +1,9 @@
-// Folder-specific settings
-//
-// For a full list of overridable settings, and general information on folder-specific settings,
-// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+// https://zed.dev/docs/configuring-zed#settings-files
 {
   "languages": {
-    "Svelte": {
-      "language_servers": [
-        "tailwindcss-language-server",
-        "!vscode-css-language-server",
-      ],
+    "CSS": {
+      "language_servers": ["tailwindcss-language-server"],
+      "formatter": "language_server",
     },
-  },
-  "lsp": {
-    "vscode-css-language-server": {
-      "settings": {
-        "css": {
-          "lint": {
-            "unknownAtRules": "ignore",
-          },
-        },
-      },
-    },
-  },
-  "status_bar": {
-    // TODO: doesn't take effect?
-    "line_endings_button": true,
   },
 }

@@ -1,13 +1,13 @@
 <script module lang="ts">
   type NoteInfo = {
-    key: number,
-    name: string,
-    nameLC: string,
-    isStarred: boolean,
-    isArchived: boolean,
-    altShortcut?: number, // if present, 1 to 9 for Alt-1 to Alt-9
-    ref: HTMLElement,
-  }
+    key: number;
+    name: string;
+    nameLC: string;
+    isStarred: boolean;
+    isArchived: boolean;
+    altShortcut?: number; // if present, 1 to 9 for Alt-1 to Alt-9
+    ref: HTMLElement;
+  };
 
   /**
    * -1 if a < b
@@ -91,6 +91,7 @@
 </script>
 
 <script lang="ts">
+  import { SvelteComponent } from "svelte";
   import { focus, tooltip } from "../actions";
   import { appState, findNoteByName } from "../appstate.svelte";
   import { Note } from "../note";
@@ -126,14 +127,14 @@
     switchToWideNoteSelector = noOp,
     forMoveBlock = false,
   }: {
-    header?: string,
-    openNote: (name: string, newTab: boolean) => void,
-    createNote: (name: string) => void,
-    deleteNote: (name: string, showNotif: boolean) => Promise<void>,
-    switchToCommandPalette?: () => void,
-    switchToWideNoteSelector?: () => void,
-    forMoveBlock?: boolean,
-} = $props();
+    header?: string;
+    openNote: (name: string, newTab: boolean) => void;
+    createNote: (name: string) => void;
+    deleteNote: (name: string, showNotif: boolean) => Promise<void>;
+    switchToCommandPalette?: () => void;
+    switchToWideNoteSelector?: () => void;
+    forMoveBlock?: boolean;
+  } = $props();
 
   function localBuildNoteInfos(regular: Note[], archived: Note[]) {
     let notes = [...regular];
@@ -188,7 +189,7 @@
     return `${n} of ${nItems} notes`;
   });
 
-  function recalcAvailableActions(item, name: string) {
+  function recalcAvailableActions(item: NoteInfo, name: string) {
     canOpenSelected = !!selectedNote;
     canCreateWithEnter = !(len(name) == 0) && !canOpenSelected;
     canCreate = len(name) > 0;
@@ -301,8 +302,8 @@
     appState.noteSelectorInfoCollapsed = !appState.noteSelectorInfoCollapsed;
   }
 
-  let inputRef;
-  let listboxRef;
+  let inputRef: HTMLInputElement;
+  let listboxRef: ListBox;
 
   function toggleShowArchived() {
     appState.showingArchived = !appState.showingArchived;
@@ -311,7 +312,7 @@
     return isShowing ? "hide" : "show";
   }
 
-  function noteCls(noteInfo) {
+  function noteCls(noteInfo: NoteInfo) {
     let name = noteInfo.name;
     let note = findNoteByName(name);
     let isArchived = note && note.isArchived;
@@ -321,10 +322,7 @@
     return "";
   }
 
-  /**
-   * @param {FocusEvent} ev
-   */
-  function onblur(ev) {
+  function onblur(ev: FocusEvent) {
     // hack: delete note via Ctrl + Delete might trigger closing a tab
     //  with that note and loading another note, which focuses the editor
     // this regains focus into input field
@@ -499,7 +497,7 @@
     {selectionChanged}
     onclick={(item, ev) => emitOpenNote(item, ev.ctrlKey || ev.metaKey)}
   >
-    {#snippet renderItem(noteInfo)}
+    {#snippet renderItem(noteInfo: NoteInfo)}
       {@const hili = hilightText(noteInfo.name, hiliRegExp)}
       <div class="flex w-full items-center group">
         <button
@@ -590,7 +588,7 @@
   {/if}
 </form>
 
-<style>
+<style lang="postcss">
   @reference "../main.css";
 
   .clickable-icon {

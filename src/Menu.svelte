@@ -1,6 +1,6 @@
 <script module lang="ts">
-  type MenuItemDef = [string, number | MenuItemDef[]];
-  type MenuDef = MenuItemDef[];
+  export type MenuItemDef = [string, number | MenuItemDef[]];
+  export type MenuDef = MenuItemDef[];
 
   // when used as menu id this will show as a text, not a menu item
   export const kMenuIdJustText = -1;
@@ -52,7 +52,7 @@
   function buildMenuFromDef(
     menuDef: MenuDef,
     nest: number,
-    menuItemStatus: (mi: MenuItemDef) => number
+    menuItemStatus: (mi: MenuItemDef) => number,
   ): MenuItem[] {
     let res: MenuItem[] = [];
     for (let mi of menuDef) {

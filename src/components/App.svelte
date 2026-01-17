@@ -12,6 +12,7 @@
     searchPanelOpen,
   } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
+  import { EditorView } from "@codemirror/view";
   import {
     appState,
     findNoteByName,
@@ -65,7 +66,11 @@
   import { isUsingEncryption } from "../encrypt";
   import { fromFileName, isValidFileName, toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, supportsFileSystem } from "../fileutil";
-  import { parseUserFunctions, runBoopFunction } from "../functions";
+  import {
+    BoopFunction,
+    parseUserFunctions,
+    runBoopFunction,
+  } from "../functions";
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
   import { importEdnaNotesFromZipFile } from "../import-edna-notes";
@@ -158,7 +163,6 @@
   import TopNav from "./TopNav.svelte";
 
   type MenuItemDef = import("../Menu.svelte").MenuItemDef;
-  type BoopFunction = import("../functions").BoopFunction;
 
   const isMac = platform.isMac;
 
@@ -421,26 +425,19 @@
     }
   }
 
-  /**
-   * @param {string} name
-   */
-  function isShowingNote(name) {
+  function isShowingNote(name: string): boolean {
     return currTab.isNote() && name === currTab.value;
   }
 
   let closeDecryptPassword = $state(null);
   let onDecryptPassword = $state(null);
 
-  /**
-   * @param {string} [msg]
-   * @returns {Promise<string>}
-   */
-  async function getPassword(msg = "") {
+  async function getPassword(msg: string = ""): Promise<string> {
     showingDecryptPassword = true;
     showingDecryptMessage = msg;
     hideModalMessage();
     return new Promise((resolve, reject) => {
-      onDecryptPassword = (pwd) => {
+      onDecryptPassword = (pwd: string) => {
         resolve(pwd);
         showingDecryptPassword = false;
       };
@@ -455,20 +452,13 @@
     showingEncryptPassword = true;
   }
 
-  /**
-   * @param {string} pwd
-   */
-  function onEncryptPassword(pwd) {
+  function onEncryptPassword(pwd: string) {
     console.log("got encryption password:", pwd);
     closeDialogs();
     encryptAllNotes(pwd);
   }
 
-  /**
-   * @param {Blob} blob
-   * @param {string} fileName
-   */
-  async function exportBlobToFile(blob, fileName) {
+  async function exportBlobToFile(blob: Blob, fileName: string) {
     if (!supportsFileSystem()) {
       browserDownloadBlob(blob, fileName);
       return;
@@ -523,13 +513,7 @@
     logNoteOp("noteCreate");
   }
 
-  /**
-   * @param {string} c
-   * @param {number} from
-   * @param {number} to
-   * @returns {string}
-   */
-  function extractBlockTitle(c, from, to) {
+  function extractBlockTitle(c: string, from: number, to: number): string {
     let s = c.substring(from, to);
     s = s.trim();
     let idx = s.indexOf("\n");
@@ -662,12 +646,10 @@
 
   type BoopFunctionArg = import("../functions").BoopFunctionArg;
 
-  /**
-   * @param {BoopFunction} f
-   * @param {string} txt
-   * @returns {Promise<BoopFunctionArg>}
-   */
-  export async function runBoopFunctionWithText(f, txt) {
+  export async function runBoopFunctionWithText(
+    f: BoopFunction,
+    txt: string,
+  ): Promise<BoopFunctionArg> {
     let input = {
       text: txt,
       fullText: txt,
@@ -685,13 +667,11 @@
     return input;
   }
 
-  /**
-   * @param {EditorView} view
-   * @param {BoopFunction} fdef
-   * @param {boolean} replace
-   * @returns {Promise<boolean>}
-   */
-  async function runBoopFunctionWithSelection(view, fdef, replace) {
+  async function runBoopFunctionWithSelection(
+    view: EditorView,
+    fdef: BoopFunction,
+    replace: boolean,
+  ): Promise<boolean> {
     // TOOD: selection can cross blocks so for now not implementing replace
     replace = false;
 
@@ -731,14 +711,11 @@
     }
   }
 
-  type EditorView = import("@codemirror/view").EditorView;
-  /**
-   * @param {EditorView} view
-   * @param {BoopFunction} fdef
-   * @param {boolean} replace
-   * @returns {Promise<boolean>}
-   */
-  async function runBoopFunctionWithBlockContent(view, fdef, replace) {
+  async function runBoopFunctionWithBlockContent(
+    view: EditorView,
+    fdef: BoopFunction,
+    replace: boolean,
+  ): Promise<boolean> {
     const { state } = view;
     if (state.readOnly) return false;
     const block = getActiveNoteBlock(state);
@@ -791,11 +768,7 @@
     }
   }
 
-  /**
-   * @param {BoopFunction} fdef
-   * @param {boolean} replace
-   */
-  async function runFunction(fdef, replace) {
+  async function runFunction(fdef: BoopFunction, replace: boolean) {
     console.log("runFunction");
     showingFunctionSelector = false;
     let view = getEditorView();
@@ -821,10 +794,7 @@
     showingLanguageSelector = true;
   }
 
-  /**
-   * @param {string} lang
-   */
-  function onSelectLanguage(lang) {
+  function onSelectLanguage(lang: string) {
     showingLanguageSelector = false;
     let view = getEditorView();
     let auto = false;
@@ -1065,8 +1035,7 @@
     "Create New Note",
   ];
 
-  /** @type {MenuItemDef[]} */
-  const commandPaletteAdditions = [
+  const commandPaletteAdditions: MenuItemDef[] = [
     ["Import Edna notes", kCmdImportEdnaNotes],
     ["Create New Scratch Note", kCmdCreateScratchNote],
     ["Open recent note", kCmdOpenQuickAccess],
@@ -1232,10 +1201,7 @@
     return kMenuStatusNormal;
   }
 
-  /**
-   * @returns {boolean}
-   */
-  function hasSelection() {
+  function hasSelection(): boolean {
     let view = getEditorView();
     let { selectedText } = getCurrentSelection(view.state);
     return selectedText != "";
@@ -1247,11 +1213,7 @@
     openSearchPanel(view);
   }
 
-  /**
-   * @param {number} cmdId
-   * @param ev
-   */
-  async function onmenucmd(cmdId) {
+  async function onmenucmd(cmdId: number) {
     // console.log("cmd:", cmdId);
     showingContextMenu = false;
     let view = getEditorView();
@@ -1499,11 +1461,7 @@
     showingContextMenu = true;
   }
 
-  /**
-   * @param {number} id
-   * @param {string} [name]
-   */
-  function commandNameOverride(id, name) {
+  function commandNameOverride(id: number, name: string) {
     if (!currTab.isNote()) {
       return name;
     }
@@ -1586,10 +1544,7 @@
     commandsDef = cmds;
   }
 
-  /**
-   * @param {string} url
-   */
-  function openURLInTab(url, noPushHistory = false) {
+  function openURLInTab(url: string, noPushHistory = false) {
     let tabStr = "url:" + url;
     settings.addTab(tabStr);
     settings.currentTab = tabStr;
@@ -1598,10 +1553,7 @@
     }
   }
 
-  /**
-   * @param {string} tabStr
-   */
-  function openTab(tabStr) {
+  function openTab(tabStr: string) {
     let tab = parseTab(tabStr);
     if (tab.isURL()) {
       settings.currentTab = tabStr;
@@ -1613,10 +1565,7 @@
     openNote(noteName, false);
   }
 
-  /**
-   * @param {string} tabStr
-   */
-  function closeTab(tabStr) {
+  function closeTab(tabStr: string) {
     if (tabStr != settings.currentTab) {
       settings.removeTab(tabStr);
       return;
@@ -1653,10 +1602,7 @@
     showingCommandPalette = true;
   }
 
-  /**
-   * @param {number} cmdId
-   */
-  async function executeCommand(cmdId) {
+  async function executeCommand(cmdId: number) {
     // console.log("executeCommand:", cmdId);
     showingCommandPalette = false;
     onmenucmd(cmdId);
@@ -1670,10 +1616,7 @@
     return editorRef.getEditor();
   }
 
-  /**
-   * @returns {import("@codemirror/view").EditorView}
-   */
-  function getEditorView() {
+  function getEditorView(): EditorView {
     if (!editorRef) {
       return null;
     }
