@@ -8,11 +8,11 @@
     blur = false,
     children,
   }: {
-   onclose?: () => void, // if given, will call it when clicked on overlay (but not on children)
-   noCloseOnEsc?: boolean, // disable close() on Esc
-   children: Function,
-   blur?: boolean,
-} = $props();
+    onclose?: () => void; // if given, will call it when clicked on overlay (but not on children)
+    noCloseOnEsc?: boolean; // disable close() on Esc
+    children: Function;
+    blur?: boolean;
+  } = $props();
 
   // if noCloseOnEsc is false, we must have onclose
   // svelte-ignore state_referenced_locally
@@ -57,7 +57,7 @@
   ></button>
 </div>
 
-<style>
+<style lang="postcss">
   @reference "../main.css";
 
   .bg-blur {

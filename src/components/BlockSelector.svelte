@@ -1,9 +1,9 @@
 <script module lang="ts">
-  type Item = {
-   block: any,
-   text: string,
-   key: number,
-  }
+  export type Item = {
+    block: any;
+    text: string;
+    key: number;
+  };
 </script>
 
 <script lang="ts">
@@ -20,11 +20,16 @@
   import { IconTablerFold } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  let { view, blocks, selectBlock, initialSelection = 0 }: {
-    view: EditorView,
-    blocks: Item[],
-    selectBlock: (block : Item) => void,
-    initialSelection?: number,
+  let {
+    view,
+    blocks,
+    selectBlock,
+    initialSelection = 0,
+  }: {
+    view: EditorView;
+    blocks: Item[];
+    selectBlock: (block: Item) => void;
+    initialSelection?: number;
   } = $props();
 
   let filter: string = $state("");
@@ -37,7 +42,7 @@
     blockCountMsg = `1 block`;
   }
 
-  type BlockItem = {item: Item, textLC: string, key: number }
+  type BlockItem = { item: Item; textLC: string; key: number };
 
   function buildItems(): BlockItem[] {
     let res: BlockItem[] = [];
@@ -54,7 +59,9 @@
 
   let items: BlockItem[] = buildItems();
 
-  let itemsFiltered: BlockItem[] = $derived(findMatchingItems(items, filter, "textLC"));
+  let itemsFiltered: BlockItem[] = $derived(
+    findMatchingItems(items, filter, "textLC"),
+  );
 
   function onkeydown(ev: KeyboardEvent) {
     // Ctrl + '0' ... '9' picks an item
@@ -105,7 +112,7 @@
     onclick={(item) => selectBlock(item.item)}
     {initialSelection}
   >
-    {#snippet renderItem(item, idx)}
+    {#snippet renderItem(item: BlockItem, idx: number)}
       {@const hili = hilightText(item.item.text, hiliRegExp)}
       <div class="truncate">
         {@html hili}
@@ -129,7 +136,7 @@
   </ListBox>
 </form>
 
-<style>
+<style lang="postcss">
   @reference "../main.css";
 
   .clickable-icon {

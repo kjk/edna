@@ -489,7 +489,7 @@
   {@render menuItems(rootMenu)}
 </div>
 
-<style>
+<style lang="postcss">
   @reference "./main.css";
 
   .is-selected {

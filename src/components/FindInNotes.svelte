@@ -336,7 +336,7 @@
   </div>
 </div>
 
-<style>
+<style lang="postcss">
   @reference "../main.css";
 
   input {

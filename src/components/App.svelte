@@ -49,6 +49,7 @@
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime } from "../editor/date-time";
   import { EdnaEditor, setReadOnly } from "../editor/editor";
+  import { SelectionChangeEvent } from "../editor/event";
   import {
     foldAllBlocks,
     foldBlock,
@@ -115,7 +116,13 @@
     unArchiveNote,
   } from "../notes";
   import { exportNotesToZip } from "../notes-export";
-  import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
+  import {
+    evalResultToString,
+    runGo,
+    runJS,
+    runJSWithArg,
+    type CapturingEval,
+  } from "../run";
   import { getSettings } from "../settings.svelte";
   import { startServerSideEvents } from "../sse";
   import { getMyFunctionsNote } from "../system-notes";
@@ -135,7 +142,7 @@
     trimSuffix,
   } from "../util";
   import AskAI from "./AskAI.svelte";
-  import BlockSelector from "./BlockSelector.svelte";
+  import BlockSelector, { type Item } from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
   import Editor from "./Editor.svelte";
@@ -548,8 +555,7 @@
     return s;
   }
 
-  /** @type {import("./BlockSelector.svelte").Item[]} */
-  let blockItems = $state([]);
+  let blockItems: Item[] = $state([]);
   let blockView = $state(null);
   let initialBlockSelection = $state(0);
 
@@ -560,8 +566,7 @@
     let blocks = editor.getBlocks();
     let activeBlock = getActiveNoteBlock(editor.view.state);
     let content = editor.getContent();
-    /** @type {import("./BlockSelector.svelte").Item[]} */
-    let items = [];
+    let items: Item[] = [];
     let blockNo = 0;
     let currBlockNo = 0;
     for (let b of blocks) {
@@ -587,7 +592,7 @@
     showingCreateNewNote = true;
   }
 
-  function selectBlock(blockItem) {
+  function selectBlock(blockItem: Item) {
     // console.log("selectBlock", $state.snapshot(blockItem));
     let n = blockItem.key;
     let view = getEditorView();
@@ -653,11 +658,11 @@
     let input = {
       text: txt,
       fullText: txt,
-      postInfo: (s) => {
+      postInfo: (s: string) => {
         console.log("postInfo:", s);
         showToast(s, 0);
       },
-      postError: (s) => {
+      postError: (s: string) => {
         console.log("postError:", s);
         showError("Error:" + s, 0);
       },
@@ -1430,10 +1435,7 @@
   }
 
   let contextMenuDef = $state(null);
-  /**
-   * @param {MouseEvent} ev
-   */
-  async function oncontextmenu(ev) {
+  async function oncontextmenu(ev: MouseEvent) {
     if (isShowingDialog) {
       console.log("oncontestmenu: isShowingDialog");
       return;
@@ -1448,11 +1450,10 @@
     await openContextMenu(ev);
   }
 
-  /**
-   * @param {MouseEvent} ev
-   * @param {{x: number, y: number}} pos
-   */
-  async function openContextMenu(ev, pos = null) {
+  async function openContextMenu(
+    ev: MouseEvent,
+    pos: { x: number; y: number } = null,
+  ) {
     ev.preventDefault();
     ev.stopPropagation();
     ev.stopImmediatePropagation();
@@ -1461,7 +1462,7 @@
     showingContextMenu = true;
   }
 
-  function commandNameOverride(id: number, name: string) {
+  function commandNameOverride(id: number, name?: string) {
     if (!currTab.isNote()) {
       return name;
     }
@@ -1492,7 +1493,7 @@
 
   function buildCommandsDef() {
     let a = [];
-    function addMenuItems(items) {
+    function addMenuItems(items: MenuItemDef[]) {
       for (let mi of items) {
         // console.log(mi);
         let name = mi[0];
@@ -1636,10 +1637,7 @@
     getEditor().focus();
   }
 
-  /**
-   * @param {string} s
-   */
-  function insertAskAIResponse(s) {
+  function insertAskAIResponse(s: string) {
     let view = getEditorView();
     if (isReadOnly(view)) {
       return false;
@@ -1648,11 +1646,7 @@
     insertAfterActiveBlock(view, text);
   }
 
-  /**
-   * @param {EditorView} view
-   * @returns {Promise<boolean>}
-   */
-  export async function runBlockContent(view) {
+  export async function runBlockContent(view: EditorView): Promise<boolean> {
     const { state } = view;
     if (isReadOnly(view)) {
       return false;
@@ -1670,19 +1664,19 @@
     setReadOnly(view, true);
     let output = "";
     let token = lang.token;
-    /** @type { import("../run").CapturingEval} */
-    let res = null;
+    let res: CapturingEval;
     if (token === "golang") {
       res = await runGo(content);
+      output = evalResultToString(res);
     } else if (token === "javascript") {
       res = await runJS(content);
+      output = evalResultToString(res);
     } else {
       output = `Error: invalid block lang ${lang.token}`;
     }
     setReadOnly(view, false);
     hideModalMessage();
 
-    output = evalResultToString(res);
     if (!output) {
       output = "executed code returned empty output";
     }
@@ -1698,12 +1692,10 @@
     return true;
   }
 
-  /**
-   * @param {EditorView} view
-   * @param {string} arg
-   * @returns {Promise<boolean>}
-   */
-  export async function runBlockContentWithArg(view, arg) {
+  export async function runBlockContentWithArg(
+    view: EditorView,
+    arg: string,
+  ): Promise<boolean> {
     const { state } = view;
     if (isReadOnly(view)) {
       return false;
@@ -1721,8 +1713,7 @@
     showModalMessageHTML("running code", 300);
     setReadOnly(view, true);
 
-    /** @type {import("../run").CapturingEval} */
-    let res = null;
+    let res: CapturingEval;
     let token = lang.token;
 
     if (token === "javascript") {
@@ -1775,11 +1766,7 @@
     logNoteOp("runBlockWithBlock");
   }
 
-  /**
-   * @param {EditorState} state
-   * @returns {boolean}
-   */
-  function currentBlockSupportsRun(state) {
+  function currentBlockSupportsRun(state: EditorState): boolean {
     const block = getActiveNoteBlock(state);
     const lang = getLanguage(block.language.name);
     // console.log("runBlockContent: lang:", lang);
@@ -1836,10 +1823,7 @@
     // }
   }
 
-  /**
-   * @param {string} anchor
-   */
-  function showHTMLHelpInTab(anchor = "") {
+  function showHTMLHelpInTab(anchor: string = "") {
     // let uri = window.location.origin + "/help"
     let uri = "/help";
     if (anchor != "") {
@@ -1849,10 +1833,7 @@
     // window.open(uri, "_blank");
   }
 
-  /**
-   * @param {string} newName
-   */
-  async function onRename(newName) {
+  async function onRename(newName: string) {
     let noteName = settings.currentTab;
     closeDialogs();
     await renameNote(noteName, newName);
@@ -1864,10 +1845,7 @@
     showingQuickAccess = true;
   }
 
-  /**
-   * @param {string} name
-   */
-  async function onOpenNote(name, newTab = false) {
+  async function onOpenNote(name: string, newTab = false) {
     // must get before closeDialg()
     let forceNewTab = appState.forceNewTab;
 
@@ -1894,12 +1872,11 @@
     await openNote(name);
   }
 
-  /**
-   * @param {string} name
-   * @param {boolean} skipSave
-   * @param {boolean} noPushHistory
-   */
-  async function openNote(name, skipSave = false, noPushHistory = false) {
+  async function openNote(
+    name: string,
+    skipSave: boolean = false,
+    noPushHistory: boolean = false,
+  ) {
     console.log("App.openNote:", name);
     let msg = `Loading <span class="font-bold">${name}</span>...`;
     showModalMessageHTML(msg, 300);
@@ -1910,11 +1887,7 @@
     getEditorComp().focus();
   }
 
-  /**
-   * @param {string} name
-   * @param {number} pos
-   */
-  function openNoteFromFind(name, pos) {
+  function openNoteFromFind(name: string, pos: number) {
     closeDialogs();
     openNote(name).then(() => {
       // TODO: this is not reliable, must pass pos down via openNote()
@@ -1935,10 +1908,7 @@
     showingBlockMoveSelector = true;
   }
 
-  /**
-   * @param {string} name
-   */
-  async function onMoveBlockToNote(name) {
+  async function onMoveBlockToNote(name: string) {
     showingBlockMoveSelector = false;
     // name can be new or existing note
     let state = getEditorView().state;
@@ -1952,10 +1922,7 @@
     view.focus();
   }
 
-  /**
-   * @param {string} name
-   */
-  async function onCreateNote(name) {
+  async function onCreateNote(name: string) {
     closeDialogs();
     await createNoteWithName(name);
     openNote(name);
@@ -1964,11 +1931,7 @@
     logNoteOp("noteCreate");
   }
 
-  /**
-   * @param {string} name
-   * @returns {Promise<void>}
-   */
-  async function closeTabWithName(name) {
+  async function closeTabWithName(name: string): Promise<void> {
     let settings = getSettings();
     let noteTabIdx = settings.tabs.indexOf(name);
     if (noteTabIdx >= 0) {
@@ -1981,11 +1944,7 @@
     }
   }
 
-  /**
-   * @param {string} name
-   * @returns {Promise<void>}
-   */
-  async function reloadIfCurrent(name) {
+  async function reloadIfCurrent(name: string): Promise<void> {
     let settings = getSettings();
     let noteTabIdx = settings.tabs.indexOf(name);
     if (noteTabIdx < 0) {
@@ -1996,11 +1955,7 @@
     }
   }
 
-  /**
-   * @param {string} name
-   * @param {boolean} showNotif
-   */
-  async function deleteNotePermanently(name, showNotif) {
+  async function deleteNotePermanently(name: string, showNotif: boolean) {
     if (!canDeleteNote(name)) {
       showWarning(`Can't delete special note ${name}`);
       console.log("cannot delete note:", name);
@@ -2016,12 +1971,7 @@
     logNoteOp("noteDelete");
   }
 
-  /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
-
-  /**
-   * @param {SelectionChangeEvent} e
-   */
-  function onCursorChange(e) {
+  function onCursorChange(e: SelectionChangeEvent) {
     line = e.cursorLine.line;
     column = e.cursorLine.col;
     selectionSize = e.selectionSize;
@@ -2035,10 +1985,7 @@
     docSize = stringSizeInUtf8Bytes(c);
   }
 
-  /**
-   * @param {EdnaEditor} editor
-   */
-  function autoCreateDayInJournal(editor) {
+  function autoCreateDayInJournal(editor: EdnaEditor) {
     // create block for a current day if doesn't exist
     let s = blockHdrMarkdown + "# " + formatDateYYYYMMDDDay();
     let content = editor.getContent();
@@ -2065,11 +2012,7 @@
     );
   }
 
-  /**
-   * @param {string} name
-   * @param {boolean} noPushHistory
-   */
-  function didLoadNote(name, noPushHistory = false) {
+  function didLoadNote(name: string, noPushHistory: boolean = false) {
     console.log("didLoadNote:", name);
     throwIf(!name);
     console.log("onDocChanged: just opened");

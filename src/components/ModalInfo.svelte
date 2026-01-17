@@ -131,7 +131,7 @@
   </div>
 </div>
 
-<style>
+<style lang="postcss">
   @reference "../main.css";
 
   .bg-blur {
