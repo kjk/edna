@@ -3,7 +3,7 @@
   import { throwIf } from "../util";
 
   let {
-    onclose = null,
+    onclose,
     noCloseOnEsc = false,
     blur = false,
     children,
@@ -28,7 +28,7 @@
     onclose();
   }
 
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     // console.log("onkeydown:", ev);
     if (!onclose || noCloseOnEsc) {
       return;
@@ -49,12 +49,7 @@
     {@render children()}
   </div>
   <!-- this captures the click outside of the actual element -->
-  <button
-    {onclick}
-    class="absolute inset-0 z-10"
-    class:bg-blur={blur}
-    aria-label="close"
-  ></button>
+  <button {onclick} class="absolute inset-0 z-10" class:bg-blur={blur} aria-label="close"></button>
 </div>
 
 <style lang="postcss">

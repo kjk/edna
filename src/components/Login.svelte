@@ -1,6 +1,5 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import { appState } from "../appstate.svelte";
   import { IconGitHub } from "./Icons.svelte";
 
   let { onclose }: { onclose: () => void } = $props();

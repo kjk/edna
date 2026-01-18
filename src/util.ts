@@ -151,15 +151,7 @@ export function formatDateYYYYMMDD(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-const daysOfWeek = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function formatDateYYYYMMDDDay(date: Date = new Date()): string {
   let year = date.getFullYear();
@@ -208,9 +200,7 @@ let sleepSetTimeout_ctrl: any;
 
 export function sleep(ms: number): Promise<void> {
   clearInterval(sleepSetTimeout_ctrl);
-  return new Promise(
-    (resolve) => (sleepSetTimeout_ctrl = setTimeout(resolve, ms)),
-  );
+  return new Promise((resolve) => (sleepSetTimeout_ctrl = setTimeout(resolve, ms)));
 }
 
 let cachedScrollbarDx = 0;

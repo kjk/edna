@@ -1,29 +1,13 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import {
-    toggleBlockComment,
-    toggleComment,
-    toggleLineComment,
-  } from "@codemirror/commands";
+  import { toggleBlockComment, toggleComment, toggleLineComment } from "@codemirror/commands";
   import { foldCode, unfoldCode } from "@codemirror/language";
-  import {
-    closeSearchPanel,
-    openSearchPanel,
-    searchPanelOpen,
-  } from "@codemirror/search";
+  import { closeSearchPanel, openSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import { EditorView } from "@codemirror/view";
-  import {
-    appState,
-    findNoteByName,
-    updateAppStateAfterNotesChange,
-  } from "../appstate.svelte";
+  import { appState, findNoteByName, updateAppStateAfterNotesChange } from "../appstate.svelte";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
-  import {
-    getActiveNoteBlock,
-    getBlockN,
-    getBlocksInfo,
-  } from "../editor/block/block";
+  import { getActiveNoteBlock, getBlockN, getBlocksInfo } from "../editor/block/block";
   import {
     addNewBlockAfterCurrent,
     addNewBlockAfterLast,
@@ -41,10 +25,7 @@
     moveLineUp,
     selectAll,
   } from "../editor/block/commands";
-  import {
-    formatBlockContent,
-    insertAfterActiveBlock,
-  } from "../editor/block/format-code";
+  import { formatBlockContent, insertAfterActiveBlock } from "../editor/block/format-code";
   import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime } from "../editor/date-time";
@@ -58,20 +39,11 @@
     unfoldBlock,
     unfoldEverything,
   } from "../editor/fold-gutter";
-  import {
-    extForLang,
-    getLanguage,
-    langSupportsFormat,
-    langSupportsRun,
-  } from "../editor/languages";
+  import { extForLang, getLanguage, langSupportsFormat, langSupportsRun } from "../editor/languages";
   import { isUsingEncryption } from "../encrypt";
   import { fromFileName, isValidFileName, toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, supportsFileSystem } from "../fileutil";
-  import {
-    parseUserFunctions,
-    runBoopFunction,
-    type BoopFunction,
-  } from "../functions";
+  import { parseUserFunctions, runBoopFunction, type BoopFunction } from "../functions";
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
   import { importEdnaNotesFromZipFile } from "../import-edna-notes";
@@ -116,13 +88,7 @@
     unArchiveNote,
   } from "../notes";
   import { exportNotesToZip } from "../notes-export";
-  import {
-    evalResultToString,
-    runGo,
-    runJS,
-    runJSWithArg,
-    type CapturingEval,
-  } from "../run";
+  import { evalResultToString, runGo, runJS, runJSWithArg, type CapturingEval } from "../run";
   import { getSettings } from "../settings.svelte";
   import { startServerSideEvents } from "../sse";
   import { getMyFunctionsNote } from "../system-notes";
@@ -153,11 +119,7 @@
   import LanguageSelector from "./LanguageSelector.svelte";
   import Login from "./Login.svelte";
   import ModalInfo, { modalInfoState } from "./ModalInfo.svelte";
-  import ModalMessage, {
-    hideModalMessage,
-    modalMessageState,
-    showModalMessageHTML,
-  } from "./ModalMessage.svelte";
+  import ModalMessage, { hideModalMessage, modalMessageState, showModalMessageHTML } from "./ModalMessage.svelte";
   import NoteSelector from "./NoteSelector.svelte";
   import NoteSelectorWide from "./NoteSelectorWide.svelte";
   import Overlay from "./Overlay.svelte";
@@ -436,8 +398,10 @@
     return currTab.isNote() && name === currTab.value;
   }
 
+  function noOpStr(s: string) {}
+
   let closeDecryptPassword = $state(null);
-  let onDecryptPassword = $state(null);
+  let onDecryptPassword = $state(noOpStr);
 
   async function getPassword(msg: string = ""): Promise<string> {
     showingDecryptPassword = true;
@@ -651,10 +615,7 @@
 
   type BoopFunctionArg = import("../functions").BoopFunctionArg;
 
-  export async function runBoopFunctionWithText(
-    f: BoopFunction,
-    txt: string,
-  ): Promise<BoopFunctionArg> {
+  export async function runBoopFunctionWithText(f: BoopFunction, txt: string): Promise<BoopFunctionArg> {
     let input = {
       text: txt,
       fullText: txt,
@@ -716,11 +677,7 @@
     }
   }
 
-  async function runBoopFunctionWithBlockContent(
-    view: EditorView,
-    fdef: BoopFunction,
-    replace: boolean,
-  ): Promise<boolean> {
+  async function runBoopFunctionWithBlockContent(view: EditorView, fdef: BoopFunction, replace: boolean) {
     const { state } = view;
     if (state.readOnly) return false;
     const block = getActiveNoteBlock(state);
@@ -753,9 +710,7 @@
             to: block.content.to,
             insert: res,
           },
-          selection: EditorSelection.cursor(
-            block.content.from + Math.min(cursorOffset, res.length),
-          ),
+          selection: EditorSelection.cursor(block.content.from + Math.min(cursorOffset, res.length)),
         },
         {
           userEvent: "input",
@@ -959,10 +914,7 @@
       ["Run this block", kCmdRunBlock],
       ["Run this block with another block", kCmdRunBlockWithAnotherBlock],
       ["Run this block with clipboard", kCmdRunBlockWithClipboard],
-      [
-        "Run function with this block\tAlt + Shift + R",
-        kCmdRunFunctionWithBlockContent,
-      ],
+      ["Run function with this block\tAlt + Shift + R", kCmdRunFunctionWithBlockContent],
       ["Run function with selection", kCmdRunFunctionWithSelection],
       ["Show built-in functions", kCmdShowBuiltInFunctions],
       ["Create your own functions", kCmdCreateYourOwnFunctions],
@@ -1171,10 +1123,7 @@
       if (isSystemNoteName(noteName)) {
         return kMenuStatusDisabled;
       }
-    } else if (
-      mid === kCmdRunFunctionWithBlockContent ||
-      mid === kCmdRunFunctionWithSelection
-    ) {
+    } else if (mid === kCmdRunFunctionWithBlockContent || mid === kCmdRunFunctionWithSelection) {
       if (mid === kCmdRunFunctionWithSelection && !hasSel) {
         return kMenuStatusDisabled;
       }
@@ -1450,10 +1399,7 @@
     await openContextMenu(ev);
   }
 
-  async function openContextMenu(
-    ev: MouseEvent,
-    pos: { x: number; y: number } = null,
-  ) {
+  async function openContextMenu(ev: MouseEvent, pos: { x: number; y: number } = null) {
     ev.preventDefault();
     ev.stopPropagation();
     ev.stopImmediatePropagation();
@@ -1592,9 +1538,7 @@
     let b = getActiveNoteBlock(view.state);
     let { from, to } = b.content;
     let { selectedText } = getCurrentSelection(view.state);
-    askAIStartText = selectedText
-      ? selectedText
-      : view.state.sliceDoc(from, to);
+    askAIStartText = selectedText ? selectedText : view.state.sliceDoc(from, to);
     showingAskAI = true;
   }
 
@@ -1692,10 +1636,7 @@
     return true;
   }
 
-  export async function runBlockContentWithArg(
-    view: EditorView,
-    arg: string,
-  ): Promise<boolean> {
+  export async function runBlockContentWithArg(view: EditorView, arg: string): Promise<boolean> {
     const { state } = view;
     if (isReadOnly(view)) {
       return false;
@@ -1872,11 +1813,7 @@
     await openNote(name);
   }
 
-  async function openNote(
-    name: string,
-    skipSave: boolean = false,
-    noPushHistory: boolean = false,
-  ) {
+  async function openNote(name: string, skipSave: boolean = false, noPushHistory: boolean = false) {
     console.log("App.openNote:", name);
     let msg = `Loading <span class="font-bold">${name}</span>...`;
     showModalMessageHTML(msg, 300);
@@ -2076,21 +2013,13 @@
   />
   {#if currTab.isURL()}
     <div class="row-start-2 col-start-2 z-10 bg-white">
-      <iframe title="Preview" src={currTab.value} class="w-full h-full"
-      ></iframe>
+      <iframe title="Preview" src={currTab.value} class="w-full h-full"></iframe>
     </div>
   {/if}
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav
-    {openTab}
-    openNote={onOpenNote}
-    {closeTab}
-    {menuItemStatus}
-    {onmenucmd}
-    {buildMenuDef}
-  />
+  <TopNav {openTab} openNote={onOpenNote} {closeTab} {menuItemStatus} {onmenucmd} {buildMenuDef} />
 {/if}
 <StatusBar
   {line}
@@ -2113,8 +2042,7 @@
 
 {#if showingCreateNewNote}
   <Overlay onclose={closeDialogs} blur={true}>
-    <CreateNewNote createNewNote={onCreateNote} onclose={closeDialogs}
-    ></CreateNewNote>
+    <CreateNewNote createNewNote={onCreateNote} onclose={closeDialogs}></CreateNewNote>
   </Overlay>
 {/if}
 
@@ -2131,8 +2059,7 @@
 
 {#if showingFunctionSelector}
   <Overlay onclose={closeDialogs} blur={true}>
-    <FunctionSelector context={functionContext} {userFunctions} {runFunction}
-    ></FunctionSelector>
+    <FunctionSelector context={functionContext} {userFunctions} {runFunction}></FunctionSelector>
   </Overlay>
 {/if}
 
@@ -2188,11 +2115,7 @@
 
 {#if showingRenameNote}
   <Overlay onclose={closeDialogs} blur={true}>
-    <RenameNote
-      onclose={closeDialogs}
-      rename={onRename}
-      oldName={currTab.value}
-    />
+    <RenameNote onclose={closeDialogs} rename={onRename} oldName={currTab.value} />
   </Overlay>
 {/if}
 
@@ -2211,12 +2134,7 @@
 
 {#if showingContextMenu}
   <Overlay onclose={closeDialogs}>
-    <Menu
-      {menuItemStatus}
-      {onmenucmd}
-      menuDef={contextMenuDef}
-      pos={contextMenuPos}
-    />
+    <Menu {menuItemStatus} {onmenucmd} menuDef={contextMenuDef} pos={contextMenuPos} />
   </Overlay>
 {/if}
 
@@ -2228,27 +2146,19 @@
 
 {#if showingEncryptPassword}
   <Overlay onclose={closeDialogs} blur={true}>
-    <EnterEncryptPassword onclose={closeDialogs} onpassword={onEncryptPassword}
-    ></EnterEncryptPassword>
+    <EnterEncryptPassword onclose={closeDialogs} onpassword={onEncryptPassword}></EnterEncryptPassword>
   </Overlay>
 {/if}
 
 {#if showingDecryptPassword}
   <Overlay onclose={closeDialogs} blur={true}>
-    <EnterDecryptPassword
-      msg={showingDecryptMessage}
-      onpassword={onDecryptPassword}
-    ></EnterDecryptPassword>
+    <EnterDecryptPassword msg={showingDecryptMessage} onpassword={onDecryptPassword}></EnterDecryptPassword>
   </Overlay>
 {/if}
 
 {#if showingAskAI}
   <Overlay blur={true} onclose={closeDialogs}>
-    <AskAI
-      close={closeDialogs}
-      startText={askAIStartText}
-      insertResponse={insertAskAIResponse}
-    ></AskAI>
+    <AskAI close={closeDialogs} startText={askAIStartText} insertResponse={insertAskAIResponse}></AskAI>
   </Overlay>
 {/if}
 
