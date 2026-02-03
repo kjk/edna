@@ -12,6 +12,7 @@
     "build_grammar": "lezer-generator src/editor/lang-heynote/heynote.grammar -o src/editor/lang-heynote/parser.js",
     "dev": "vite",
     "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.json --noEmit",
     "gen": "bun ./src/gen.ts",
     "test": "playwright test",
     "test:ui": "playwright test --ui"
@@ -29,6 +30,7 @@
     "markdown-it-anchor": "^9.2.0",
     "prettier-plugin-svelte": "^3.4.1",
     "svelte": "^5.49.1",
+    "svelte-check": "^4.3.4",
     "tailwindcss": "^4.1.18",
     "vite": "^7.3.1"
   },
