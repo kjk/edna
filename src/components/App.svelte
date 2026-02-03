@@ -276,6 +276,7 @@
       if (appState.isDirty) {
         // show a dialog that the content might be lost
         ev.preventDefault();
+        // @ts-ignore
         ev.returnValue = true;
       } else {
         logAppExit();
@@ -405,15 +406,15 @@
     await preLoadAllNotes();
   }
 
-  let closeDecryptPassword = $state(null);
-  let onDecryptPassword = $state(null);
+  let closeDecryptPassword = $state();
+  let onDecryptPassword = $state();
 
   async function getPassword(msg: string = ""): Promise<string> {
     showingDecryptPassword = true;
     showingDecryptMessage = msg;
     clearModalMessage();
     return new Promise((resolve, reject) => {
-      onDecryptPassword = (pwd) => {
+      onDecryptPassword = (pwd: string) => {
         resolve(pwd);
         showingDecryptPassword = false;
       };
@@ -637,7 +638,7 @@
     showingCreateNewNote = true;
   }
 
-  function selectBlock(blockItem) {
+  function selectBlock(blockItem: BlockItem) {
     // console.log("selectBlock", $state.snapshot(blockItem));
     let n = blockItem.key;
     let view = getEditorView();
@@ -698,11 +699,11 @@
     let input = {
       text: txt,
       fullText: txt,
-      postInfo: (s) => {
+      postInfo: (s: string) => {
         console.log("postInfo:", s);
         showToast(s, 0);
       },
-      postError: (s) => {
+      postError: (s: string) => {
         console.log("postError:", s);
         showError("Error:" + s, 0);
       },
@@ -1507,14 +1508,14 @@
     showingContextMenu = true;
   }
 
-  function commandNameOverride(id: number, name?: string) {
+  function commandNameOverride(id: number, name?: string): string {
     if (id === kCmdToggleSpellChecking) {
       return (isSpellChecking ? "Disable" : "Enable") + " spell checking";
     }
     let n = len(commandNameOverrides);
     for (let i = 0; i < n; i += 2) {
       if (id == commandNameOverrides[i]) {
-        return commandNameOverrides[i + 1];
+        return commandNameOverrides[i + 1] as string;
       }
     }
     if (id >= kCmdBlockFirst && id <= kCmdBlockLast) {
@@ -1534,7 +1535,7 @@
 
   function buildCommandsDef() {
     let a = [];
-    function addMenuItems(items) {
+    function addMenuItems(items: MenuItemDef[]) {
       for (let mi of items) {
         // console.log(mi);
         let name = mi[0];
@@ -1566,7 +1567,7 @@
     return a;
   }
 
-  let commandsDef = $state(null);
+  let commandsDef: MenuItemDef[] = $state([]);
 
   function buildCommandPaletteDef() {
     commandsDef = buildCommandsDef();
@@ -1582,7 +1583,7 @@
     commandsDef.push([name, kCmdToggleSpellChecking]);
   }
 
-  function closeTab(noteName) {
+  function closeTab(noteName: string) {
     if (noteName != settings.currentNoteName) {
       settings.removeTab(noteName);
       return;

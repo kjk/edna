@@ -52,7 +52,7 @@
     return res;
   }
 
-  let listboxRef;
+  let listboxComp: ListBox;
 
   function onkeydown(ev: KeyboardEvent) {
     if (ev.code === "Escape") {
@@ -67,7 +67,7 @@
       filter += " ";
       return;
     }
-    listboxRef.onkeydown(ev, true);
+    listboxComp.onkeydown(ev, true);
   }
 
   async function toggleStarred(model) {
@@ -113,7 +113,7 @@
     </div>
   </div>
   <ListBox
-    bind:this={listboxRef}
+    bind:this={listboxComp}
     items={models}
     onclick={(model, metaPressed) => {
       selectModel(model);

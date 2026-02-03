@@ -228,12 +228,12 @@
     }
     let idx = items.indexOf(mi);
     if (idx < 0) {
-      return null;
+      return;
     }
     while (true) {
       idx += dir;
       if (idx < 0 || idx >= len(items)) {
-        return null;
+        return;
       }
       mi = items[idx];
       if (!mi.isDisabled && !mi.isRemoved) {
@@ -242,7 +242,7 @@
     }
   }
 
-  function isSelectable(mi) {
+  function isSelectable(mi: MenuItem): boolean {
     if (mi.isRemoved || mi.isDisabled || mi.isSeparator) {
       return false;
     }
@@ -260,7 +260,7 @@
     }
   }
 
-  function selectSibling(dir) {
+  function selectSibling(dir: number) {
     let mi = findCurrentlySelected();
     if (!mi) {
       selectFirst(rootMenu);
@@ -415,7 +415,7 @@
   {/if}
 {/snippet}
 
-{#snippet submenu(mi)}
+{#snippet submenu(mi: MenuItem)}
   <!-- svelte-ignore a11y_mouse_events_have_key_events -->
   <div role="menuitem" tabindex="-1" class="relative my-1" class:is-selected={mi.isSelected} bind:this={mi.element}>
     <button class="flex w-full items-center justify-between pl-3 pr-2 py-0.5">
@@ -433,7 +433,7 @@
   </div>
 {/snippet}
 
-{#snippet menuItems(items)}
+{#snippet menuItems(items: MenuItem[])}
   {#each items as mi}
     {#if !mi.isRemoved}
       {#if mi.isSubMenu}
