@@ -747,7 +747,7 @@
     } else {
       // TODO: be more intelligent
       if (res === "") {
-        return;
+        return false;
       }
       let text = res;
       if (!res.startsWith("\n∞∞∞")) {
@@ -755,6 +755,7 @@
       }
       insertAfterActiveBlock(view, text);
     }
+    return true;
   }
 
   async function runBoopFunctionWithBlockContent(
@@ -810,6 +811,7 @@
       }
       insertAfterActiveBlock(view, text);
     }
+    return true;
   }
 
   async function runFunction(fdef: BoopFunction, replace: boolean) {

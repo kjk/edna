@@ -1,15 +1,7 @@
 import { appState } from "./appstate.svelte";
 import { kModelIDIdx, modelsShort } from "./models-short";
 import { kScratchNoteName } from "./notes";
-import {
-  arrayRemove,
-  copyObj,
-  len,
-  objectEqualDeep,
-  platform,
-  pushIfNotExists,
-  throwIf,
-} from "./util";
+import { arrayRemove, copyObj, len, objectEqualDeep, platform, pushIfNotExists, throwIf } from "./util";
 
 const settingsKeys = [
   "bracketClosing",
@@ -37,10 +29,10 @@ const settingsKeys = [
 export class Settings {
   bracketClosing = $state(true);
   currentNoteName = $state(kScratchNoteName);
-  tabs = $state([]);
+  tabs: string[] = $state([]);
   emacsMetaKey = $state("alt");
-  fontFamily: string = $state(undefined);
-  fontSize: number = $state(undefined);
+  fontFamily?: string = $state();
+  fontSize?: number = $state();
   keymap = $state("default");
   showFoldGutter = $state(true);
   showLineNumberGutter = $state(true);
@@ -258,9 +250,7 @@ function saveSettings(newSettings: Settings): boolean {
     return false;
   }
   for (let key of changed) {
-    console.log(
-      `saveSettings: ${key} changed from ${lastSettingsRaw[key]} to ${settingsRaw[key]}`,
-    );
+    console.log(`saveSettings: ${key} changed from ${lastSettingsRaw[key]} to ${settingsRaw[key]}`);
   }
 
   // console.log("saveSettings:", s);

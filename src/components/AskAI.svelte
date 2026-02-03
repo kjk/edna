@@ -80,12 +80,7 @@
   let apiProviderOpenAI = $derived(apiProvider == kApiProviderOpenAI);
   let apiProviderXAI = $derived(apiProvider == kApiProviderXAi);
   let { maybeValidApiKey, apiProviderToUse } = $derived(
-    pickApiKeyForProvider(
-      apiProvider,
-      settings.openAIKey,
-      settings.xAIKey,
-      settings.openRouterKey,
-    ),
+    pickApiKeyForProvider(apiProvider, settings.openAIKey, settings.xAIKey, settings.openRouterKey),
   );
   let hasAPIKey = $derived(maybeValidApiKey != "");
 
@@ -135,7 +130,7 @@
       await streamChatGPTResponse(questionText, maybeValidApiKey, baseURL);
       // looks like a valid key, remember it
       reqFinished = true;
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       console.error(e.cause ? e.cause : "");
       err = e.toString();
@@ -369,8 +364,7 @@
           ev.preventDefault();
           ev.stopPropagation();
         }}
-        class="ml-4 link hover:text-gray-900"
-        >{forceShowingApiKey ? "hide" : "show"} api key</button
+        class="ml-4 link hover:text-gray-900">{forceShowingApiKey ? "hide" : "show"} api key</button
       >
     {/if}
     <div class="grow"></div>
@@ -408,20 +402,11 @@
         <div class="flex">
           <div class="grow">
             To use {aiModelName} you need
-            <a class="link" target="_blank" href="/help#getting-openai-api-key"
-              >OpenAI API Key</a
-            >:
+            <a class="link" target="_blank" href="/help#getting-openai-api-key">OpenAI API Key</a>:
           </div>
-          <a class="link" target="_blank" href="/help#getting-openai-api-key"
-            >learn more</a
-          >
+          <a class="link" target="_blank" href="/help#getting-openai-api-key">learn more</a>
         </div>
-        <input
-          placeholder="Enter OpenAI API key"
-          use:focus
-          bind:value={settings.openAIKey}
-          class="px-1 py-px"
-        />
+        <input placeholder="Enter OpenAI API key" use:focus bind:value={settings.openAIKey} class="px-1 py-px" />
       </div>
     {/if}
 
@@ -430,26 +415,13 @@
         <div class="flex">
           <div class="grow">
             To use {aiModelName} you need
-            <a
-              class="link"
-              target="_blank"
-              href="/help#getting-xai-(grok)-api-key">xAI API Key</a
-            >
+            <a class="link" target="_blank" href="/help#getting-xai-(grok)-api-key">xAI API Key</a>
             :
           </div>
 
-          <a
-            class="link"
-            target="_blank"
-            href="/help#getting-xai-(grok)-api-key">learn more</a
-          >
+          <a class="link" target="_blank" href="/help#getting-xai-(grok)-api-key">learn more</a>
         </div>
-        <input
-          placeholder="Enter xAI API key"
-          use:focus
-          bind:value={settings.xAIKey}
-          class="px-1 py-px"
-        />
+        <input placeholder="Enter xAI API key" use:focus bind:value={settings.xAIKey} class="px-1 py-px" />
       </div>
     {/if}
 
@@ -457,42 +429,21 @@
       {#if apiProviderOpenAI || apiProviderXAI}
         <div class="flex">
           <div class="grow">
-            Or <a
-              class="link"
-              target="_blank"
-              href="/help#getting-openrouter-api-key">OpenRouter API Key</a
-            >
+            Or <a class="link" target="_blank" href="/help#getting-openrouter-api-key">OpenRouter API Key</a>
             :
           </div>
-          <a
-            class="link"
-            target="_blank"
-            href="/help#getting-openrouter-api-key">learn more</a
-          >
+          <a class="link" target="_blank" href="/help#getting-openrouter-api-key">learn more</a>
         </div>
       {:else}
         <div class="flex">
           <div class="grow">
             To use {aiModelName} you need
-            <a
-              class="link"
-              target="_blank"
-              href="/help#getting-openrouter-api-key">OpenRouter API Key</a
-            >:
+            <a class="link" target="_blank" href="/help#getting-openrouter-api-key">OpenRouter API Key</a>:
           </div>
-          <a
-            class="link"
-            target="_blank"
-            href="/help#getting-openrouter-api-key">learn more</a
-          >
+          <a class="link" target="_blank" href="/help#getting-openrouter-api-key">learn more</a>
         </div>
       {/if}
-      <input
-        use:focus
-        bind:value={settings.openRouterKey}
-        placeholder="Enter OpenRouter API key"
-        class="px-1 py-px"
-      />
+      <input use:focus bind:value={settings.openRouterKey} placeholder="Enter OpenRouter API key" class="px-1 py-px" />
     </div>
   {/if}
 
@@ -521,27 +472,20 @@
     {/if}
   {/if}
   {#if err}
-    <div
-      class="flex mt-2 text-red-600 px-2 py-[2px] whitespace-pre-line overflow-auto"
-    >
+    <div class="flex mt-2 text-red-600 px-2 py-[2px] whitespace-pre-line overflow-auto">
       {err}
     </div>
   {/if}
   <div class="flex mt-2 items-center">
     {#if !hasAPIKey}
-      <div class=" text-red-600 ml-2 whitespace-pre-line overflow-auto">
-        Need a valid API key
-      </div>
+      <div class=" text-red-600 ml-2 whitespace-pre-line overflow-auto">Need a valid API key</div>
       <a target="_blank" class="ml-2 link" href="/help#api-keys">learn more</a>
     {/if}
     {#if reqInProgress}
       <div class="ml-2 font-bold">thinking...</div>
     {:else}{/if}
     <div class="grow"></div>
-    <button
-      bind:this={btnInsertRef}
-      onclick={insertRsp}
-      class="button-outline {reqFinished ? 'visible' : 'invisible'}"
+    <button bind:this={btnInsertRef} onclick={insertRsp} class="button-outline {reqFinished ? 'visible' : 'invisible'}"
       >Insert response as block</button
     >
     <button onclick={askai} disabled={askAIDisabled} class="ml-2 button-outline"

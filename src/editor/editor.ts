@@ -69,9 +69,9 @@ export class EdnaEditor {
   contentLoaded: boolean;
   view: EditorView;
   loadNotePromise: Promise<void>;
-  diskContent: string;
-  defaultBlockToken: string;
-  defaultBlockAutoDetect: boolean;
+  diskContent: string = "";
+  defaultBlockToken: string = "";
+  defaultBlockAutoDetect: boolean = false;
   constructor({
     element,
     noteName,
@@ -203,7 +203,7 @@ export class EdnaEditor {
     this.noteName = noteName;
     this.setReadOnly(true);
     // TODO: show a message
-    const content = await loadNote(noteName);
+    const content = (await loadNote(noteName)) || "";
     this.diskContent = content;
     await this.setContent(content);
     this.contentLoaded = true;

@@ -17,14 +17,18 @@
     name: string;
     nameLC: string;
     shortcut: string;
-    ref: HTMLElement;
+    ref?: HTMLElement;
   }
 
   function verifyCommandsAreUnique() {
     let m = new Map();
     for (let i = 0; i < len(commandsDef); i++) {
-      let s = commandsDef[i][0];
-      let id = commandsDef[i][1];
+      let cmd = commandsDef[i];
+      if (!cmd) {
+        continue;
+      }
+      let s = cmd[0];
+      let id = cmd[1];
       if (m.has(id)) {
         console.log(`Duplicate items with id ${id}: '${s}' and '${m.get(id)}'`);
       }
@@ -40,10 +44,14 @@
     // console.log("rebuildCommands:", commands);
     let res: Item[] = Array(len(commandsDef));
     for (let i = 0; i < len(commandsDef); i++) {
-      let s = commandsDef[i][0];
-      let id = commandsDef[i][1] as number;
+      let cmd = commandsDef[i];
+      if (!cmd) {
+        continue;
+      }
+      let s = cmd[0];
+      let id = cmd[1] as number;
       let parts = splitMax(s, "\t", 2);
-      let name = parts[0];
+      let name = parts[0] as string;
       let shortcut = null;
       if (len(parts) > 1) {
         shortcut = extractShortcut(parts[1]);
@@ -54,7 +62,6 @@
         name: name,
         nameLC: name.toLowerCase(),
         shortcut: shortcut,
-        ref: null,
       };
       res[i] = item;
     }

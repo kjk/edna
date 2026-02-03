@@ -1,10 +1,7 @@
 import { tick } from "svelte";
 import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
 import { appState } from "./appstate.svelte";
-import {
-  clearModalMessage,
-  showModalMessageHTML,
-} from "./components/ModalMessage.svelte";
+import { clearModalMessage, showModalMessageHTML } from "./components/ModalMessage.svelte";
 import { KV } from "./dbutil";
 import { fromFileName, isValidFileName, toFileName } from "./filenamify";
 import {
@@ -30,12 +27,7 @@ import {
   renameNoteInMetadata,
 } from "./metadata";
 import { getSettings } from "./settings.svelte";
-import {
-  getStats,
-  incNoteCreateCount,
-  incNoteDeleteCount,
-  incNoteSaveCount,
-} from "./state";
+import { getStats, incNoteCreateCount, incNoteDeleteCount, incNoteSaveCount } from "./state";
 import {
   getBuiltInFunctionsNote,
   getHelp,
@@ -45,23 +37,17 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import {
-  formatDateYYYYMMDDDay,
-  len,
-  removeDuplicates,
-  throwIf,
-  trimSuffix,
-} from "./util";
+import { formatDateYYYYMMDDDay, len, removeDuplicates, throwIf, trimSuffix } from "./util";
 
 // is set if we store notes on disk, null if in localStorage
-let storageFS: FileSystemDirectoryHandle | null = null;
+let storageFS: FileSystemDirectoryHandle | undefined;
 
-export function getStorageFS(): FileSystemDirectoryHandle | null {
+export function getStorageFS(): FileSystemDirectoryHandle | undefined {
   // console.log("getStorageFS:", storageFS);
   return storageFS;
 }
 
-export function setStorageFS(dh: FileSystemDirectoryHandle | null) {
+export function setStorageFS(dh: FileSystemDirectoryHandle | undefined) {
   console.log("setStorageFS:", dh);
   storageFS = dh;
 }
@@ -81,10 +67,10 @@ function removePassword() {
   localStorage.removeItem(kLSPassowrdKey);
 }
 
-function getPasswordHash(): string | null {
+function getPasswordHash(): string | undefined {
   let pwd = localStorage.getItem(kLSPassowrdKey);
   if (!pwd) {
-    return null;
+    return;
   }
   let pwdHash = saltPassword(pwd);
   return pwdHash;
@@ -94,7 +80,7 @@ async function getPasswordHashMust(msg: string): Promise<string> {
   let pwdHash = getPasswordHash();
   let simulateNoPassword = false;
   if (simulateNoPassword) {
-    pwdHash = null;
+    pwdHash = undefined;
   }
   if (pwdHash) {
     return pwdHash;
@@ -105,9 +91,9 @@ async function getPasswordHashMust(msg: string): Promise<string> {
   return saltPassword(pwd);
 }
 
-export async function dbGetDirHandle(): Promise<FileSystemDirectoryHandle | null> {
+export async function dbGetDirHandle(): Promise<FileSystemDirectoryHandle | undefined> {
   let dh = await db.get(kStorageDirHandleKey);
-  setStorageFS(dh ? dh : null);
+  setStorageFS(dh);
   return storageFS;
 }
 
@@ -118,7 +104,7 @@ export async function dbSetDirHandle(dh: FileSystemDirectoryHandle) {
 
 export async function dbDelDirHandle() {
   await db.del(kStorageDirHandleKey);
-  storageFS = null;
+  storageFS = undefined;
 }
 
 export const kEdnaFileExt = ".edna.txt";
@@ -138,7 +124,7 @@ function trimEdnaExt(name: string): string {
   return s;
 }
 
-export function notePathFromNameFS(name: string, isEncr: boolean = undefined): string {
+export function notePathFromNameFS(name: string, isEncr?: boolean): string {
   if (isEncr === undefined) {
     isEncr = isEncryptedNote(name);
   }
@@ -210,9 +196,7 @@ export async function createIfNotExists(name: string, content: string, existingN
 
 export async function createDefaultNotes(existingNotes: string[]): Promise<number> {
   let isFirstRun = getStats().appOpenCount < 2;
-  console.log(
-    `isFirstRun: ${isFirstRun}, len(existingNotes): ${len(existingNotes)}`,
-  );
+  console.log(`isFirstRun: ${isFirstRun}, len(existingNotes): ${len(existingNotes)}`);
   if (len(existingNotes) == 0) {
     // scenario: moved notes to disk and switched back to local storage
     isFirstRun = true;
@@ -220,22 +204,14 @@ export async function createDefaultNotes(existingNotes: string[]): Promise<numbe
 
   let welcomeNote = getWelcomeNote();
 
-  let nCreated = await createIfNotExists(
-    kScratchNoteName,
-    welcomeNote,
-    existingNotes,
-  );
+  let nCreated = await createIfNotExists(kScratchNoteName, welcomeNote, existingNotes);
   // scratch note must always exist but the user can delete inbox / daily journal notes
   if (isFirstRun) {
     let inbox = getInboxNote();
     nCreated += await createIfNotExists(kInboxNoteName, inbox, existingNotes);
     // re-create those notes if the user hasn't deleted them
     let journal = getJournalNote();
-    nCreated += await createIfNotExists(
-      kDailyJournalNoteName,
-      journal,
-      existingNotes,
-    );
+    nCreated += await createIfNotExists(kDailyJournalNoteName, journal, existingNotes);
   }
   if (nCreated > 0) {
     await loadNoteNames();
@@ -251,9 +227,9 @@ export async function createDefaultNotes(existingNotes: string[]): Promise<numbe
 
 function getLSKeys(): string[] {
   let nKeys = localStorage.length;
-  let keys = [];
+  let keys: string[] = [];
   for (let i = 0; i < nKeys; i++) {
-    const key = localStorage.key(i);
+    const key = localStorage.key(i) as string;
     keys.push(key);
   }
   return keys;
@@ -319,9 +295,7 @@ function getOpenedNote(noteName: string): OpenedNote | null {
 }
 
 export function unrememberOpenedNote(noteName: string) {
-  openedNotes = openedNotes.filter(
-    (openedNote) => openedNote.noteName !== noteName,
-  );
+  openedNotes = openedNotes.filter((openedNote) => openedNote.noteName !== noteName);
   appState.allNotes = appState.allNotes.filter((name) => name != noteName);
 }
 
@@ -387,7 +361,10 @@ export async function ensureValidNoteNamesFS(dh: FileSystemDirectoryHandle): Pro
   }
 }
 
-export async function forEachNoteFileFS(dh: FileSystemDirectoryHandle, fn: (fileName: string, noteName: string, isEncr: boolean) => Promise<void>) {
+export async function forEachNoteFileFS(
+  dh: FileSystemDirectoryHandle,
+  fn: (fileName: string, noteName: string, isEncr: boolean) => Promise<void>,
+) {
   let fsEntries = await readDir(dh);
   // console.log("files", fsEntries);
   for (let e of fsEntries.dirEntries) {
@@ -552,10 +529,7 @@ export async function createNoteWithName(name: string, content: string | null = 
 }
 
 export async function appendToNote(name: string, content: string) {
-  throwIf(
-    !startsWithBlockHeader(content),
-    "content must start with block header ~~~",
-  );
+  throwIf(!startsWithBlockHeader(content), "content must start with block header ~~~");
 
   let dh = getStorageFS();
   if (!dh) {
@@ -597,12 +571,13 @@ function isEncryptedNote(name: string): boolean {
   return res;
 }
 
-function loadNoteLS(name: string): string | null {
+function loadNoteLS(name: string): string | undefined {
   let key = kLSKeyPrefix + name;
   if (isEncryptedNote(name)) {
     key = kLSKeyEncrPrefix + name;
   }
-  return localStorage.getItem(key);
+  let res = localStorage.getItem(key);
+  return res ? res : undefined;
 }
 
 export function noteExists(name: string): boolean {
@@ -610,14 +585,14 @@ export function noteExists(name: string): boolean {
   return notes.includes(name) || isSystemNoteName(name);
 }
 
-export async function loadNoteIfExists(name: string): Promise<string | null> {
+export async function loadNoteIfExists(name: string): Promise<string | undefined> {
   if (!noteExists(name)) {
-    return null;
+    return;
   }
   return await loadNote(name);
 }
 
-export async function loadNote(name: string): Promise<string | null> {
+export async function loadNote(name: string): Promise<string | undefined> {
   // console.log("loadNote:", name);
   let res;
   if (isSystemNoteName(name)) {
@@ -635,8 +610,8 @@ export async function loadNote(name: string): Promise<string | null> {
       }
     }
   }
-  if (res === null) {
-    return null;
+  if (!res) {
+    return;
   }
   return fixUpNoteContent(res);
 }
@@ -689,7 +664,12 @@ async function writeMaybeEncryptedFS(dh: FileSystemDirectoryHandle, name: string
   await writeEncryptedFS(dh, pwdHash, path, content);
 }
 
-async function writeEncryptedFS(dh: FileSystemDirectoryHandle, pwdHash: string, fileName: string, s: string): Promise<void> {
+async function writeEncryptedFS(
+  dh: FileSystemDirectoryHandle,
+  pwdHash: string,
+  fileName: string,
+  s: string,
+): Promise<void> {
   let d = await encryptStringAsBlob({ key: pwdHash, plaintext: s });
   let blob = blobFromUint8Array(d);
   await fsWriteBlob(dh, fileName, blob);
@@ -782,24 +762,19 @@ export async function renameNote(oldName: string, newName: string, content: stri
 
 async function migrateNote(noteName: string, diskNoteNames: string[], dh: FileSystemDirectoryHandle) {
   let name = noteName;
-  let noteInfoOnDisk: string;
+  let noteInfoOnDisk: string | undefined;
   for (let ni of diskNoteNames) {
     if (ni === name) {
       noteInfoOnDisk = ni;
       break;
     }
   }
-  let content = loadNoteLS(noteName);
+  let content = loadNoteLS(noteName) || "";
   if (!noteInfoOnDisk) {
     // didn't find a note with the same name so create
     let fileName = notePathFromNameFS(name);
     await fsWriteTextFile(dh, fileName, content);
-    console.log(
-      "migrateNote: created new note",
-      fileName,
-      "from note with name",
-      name,
-    );
+    console.log("migrateNote: created new note", fileName, "from note with name", name);
     return;
   }
   let path = notePathFromNameFS(name);
@@ -812,21 +787,16 @@ async function migrateNote(noteName: string, diskNoteNames: string[], dh: FileSy
   let newName = pickUniqueName(name, diskNoteNames);
   let fileName = notePathFromName(newName);
   await fsWriteTextFile(dh, fileName, content);
-  console.log(
-    "migrateNote: created new note",
-    fileName,
-    "because of different content with",
-    name,
-  );
+  console.log("migrateNote: created new note", fileName, "because of different content with", name);
 }
 
 // when notes are stored on disk, they can be stored on replicated online
 // storage like OneDrive
 // just in case we pre-load them to force downloading them to local drive
 // to make future access faster
-export async function preLoadAllNotes(): Promise<number> {
+export async function preLoadAllNotes(): Promise<number | undefined> {
   let dh = getStorageFS();
-  if (dh === null) {
+  if (!dh) {
     return;
   }
   let n = 0;
@@ -851,7 +821,7 @@ async function moveLSToFS(lsKeyName: string, dh: FileSystemDirectoryHandle, file
 export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle) {
   console.log("switchToStoringNotesOnDisk");
   let res = await loadNoteNamesFS(dh);
-  let diskNoteNames = res[0];
+  let diskNoteNames = res[0] as string[];
 
   // migrate notes
   let latestNoteNames = appState.allNotes;
@@ -971,7 +941,9 @@ function saltPassword(pwd: string): string {
 export async function encryptAllNotes(pwd: string) {
   let dh = getStorageFS();
   throwIf(!db, "no encryption for local storage notes");
-
+  if (!dh) {
+    return;
+  }
   rememberPassword(pwd);
 
   let pwdHash = saltPassword(pwd);
@@ -991,7 +963,9 @@ export async function encryptAllNotes(pwd: string) {
 export async function decryptAllNotes() {
   let dh = getStorageFS();
   throwIf(!db, "no decryption for local storage notes");
-
+  if (!dh) {
+    return;
+  }
   await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
     if (!isEncr) {
       return;
