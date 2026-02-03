@@ -98,17 +98,17 @@ export function getBlocksInfo(state: EditorState): BlocksInfo {
 
 export function getFirstNoteBlock(state: EditorState): Block {
   let blocks = state.field(blockState);
-  return blocks[0];
+  return blocks[0] as Block;
 }
 
 export function getLastNoteBlock(state: EditorState): Block {
   let blocks = state.field(blockState);
-  return blocks[blocks.length - 1];
+  return blocks[blocks.length - 1] as Block;
 }
 
 export function getBlockN(state: EditorState, n: number): Block {
   let blocks = state.field(blockState);
-  return blocks[n];
+  return blocks[n] as Block;
 }
 
 export function getNoteBlockFromPos(state: EditorState, pos: number): Block | undefined {
@@ -155,7 +155,7 @@ const noteBlockWidget = () => {
   const decorate = (state) => {
     const widgets = [];
 
-    state.field(blockState).forEach((block) => {
+    state.field(blockState).forEach((block: Block) => {
       let delimiter = block.delimiter;
       let deco = Decoration.replace({
         widget: new NoteBlockStart(delimiter.from === 0 ? true : false),

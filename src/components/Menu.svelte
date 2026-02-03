@@ -20,7 +20,7 @@
     s = s.replace("&", "");
     // remove keyboard shortcut
     let parts = s.split("\t");
-    return parts[0];
+    return parts[0] as string;
   }
 
   function getShortcut(mi: MenuItemDef): string {
@@ -35,11 +35,11 @@
   class MenuItem {
     text = "";
     shortcut = "";
-    children: MenuItem[] = null;
+    children?: MenuItem[];
     cmdId = 0;
-    element: HTMLElement = $state(null);
-    submenuElement: HTMLElement = null;
-    parent: MenuItem = null;
+    element?: HTMLElement = $state();
+    submenuElement?: HTMLElement;
+    parent?: MenuItem;
     zIndex = 30;
 
     isSeparator = false;
@@ -92,7 +92,7 @@
     menuItemStatus?: (mi: MenuItemDef) => number;
     onmenucmd: (cmd: number) => void;
   }
-  let { menuDef: menuDef, pos, menuItemStatus = null, onmenucmd }: Props = $props();
+  let { menuDef: menuDef, pos, menuItemStatus = undefined, onmenucmd }: Props = $props();
 
   function menuItemStatusDefault(mid: MenuItemDef): number {
     return kMenuStatusNormal;
@@ -104,12 +104,15 @@
     let toVisit: MenuItem[][] = [rootMenu];
     while (len(toVisit) > 0) {
       let items = toVisit.shift();
+      if (!items) {
+        continue;
+      }
       for (let mi of items) {
         let cont = visit(mi);
         if (!cont) {
           return;
         }
-        if (mi.isSubMenu) {
+        if (mi.isSubMenu && mi.children) {
           toVisit.push(mi.children);
         }
       }
@@ -169,7 +172,7 @@
   }
 
   function findMenuItem(ev: Event): MenuItem | undefined {
-    let el = ev.target as HTMLElement;
+    let el: HTMLElement | null = ev.target as HTMLElement;
     while (el && el.role != "menuitem") {
       el = el.parentElement;
     }
@@ -199,7 +202,7 @@
 
   function findCurrentlySelected(): MenuItem | undefined {
     // find the most nested selected
-    let found: MenuItem;
+    let found: MenuItem | undefined;
     let foundNest: number;
     forEachMenuItem((mi) => {
       if (!mi.isSelected || !isSelectable(mi)) {
@@ -222,8 +225,8 @@
   }
 
   function findSibling(mi: MenuItem, dir: number): MenuItem | undefined {
-    let items = rootMenu;
-    if (mi.parent) {
+    let items: MenuItem[] = rootMenu;
+    if (mi.parent && mi.parent.children) {
       items = mi.parent.children;
     }
     let idx = items.indexOf(mi);
@@ -235,7 +238,7 @@
       if (idx < 0 || idx >= len(items)) {
         return;
       }
-      mi = items[idx];
+      mi = items[idx] as MenuItem;
       if (!mi.isDisabled && !mi.isRemoved) {
         return mi;
       }
@@ -283,7 +286,7 @@
 
   function selectChild() {
     let mi = findCurrentlySelected();
-    if (!mi || !mi.isSubMenu) {
+    if (!mi || !mi.isSubMenu || !mi.children) {
       return;
     }
     selectFirst(mi.children);
@@ -293,7 +296,7 @@
     let key = ev.key;
     // console.log("key:", key);
     if (key === "Enter") {
-      let found: MenuItem | null = null;
+      let found: MenuItem | undefined;
       forEachMenuItem((mi) => {
         if (mi.isSelected && !mi.isSubMenu) {
           found = mi;
@@ -369,7 +372,7 @@
   });
 </script>
 
-{#snippet separator(mi)}
+{#snippet separator(mi: MenuItem)}
   <div class="border-y border-gray-200 mt-1 mb-1"></div>
 {/snippet}
 
@@ -392,7 +395,7 @@
   </svg>
 {/snippet}
 
-{#snippet menuItem(mi)}
+{#snippet menuItem(mi: MenuItem)}
   <!-- svelte-ignore a11y_mouse_events_have_key_events -->
   {#if mi.isSeparator}
     {@render separator(mi)}
@@ -428,7 +431,7 @@
       style:z-index={mi.zIndex}
       class="sub-menu-wrapper absolute top-0 hidden rounded-md border bg-white dark:bg-gray-700 border-neutral-50 py-1 shadow-lg"
     >
-      {@render menuItems(mi.children)}
+      {@render menuItems(mi.children as MenuItem[])}
     </div>
   </div>
 {/snippet}

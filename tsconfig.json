@@ -3,8 +3,12 @@
     "moduleResolution": "bundler",
     "target": "esnext",
     "module": "esnext",
+    "strict": true,
+
+    "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
+
     "sourceMap": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -12,11 +16,11 @@
     "checkJs": true,
 
     "useDefineForClassFields": true,
-    // "strict": true,
     "jsx": "preserve",
     "lib": ["ESNext", "DOM"],
-    "noEmit": true,
     "allowJs": true,
+
+    "noEmit": true,
 
     // https://twitter.com/housecor/status/1768283265889136835
     "noUncheckedIndexedAccess": true,
@@ -29,6 +33,10 @@
     "composite": true,
     "allowSyntheticDefaultImports": true,
   },
+  /**
+   * Use global.d.ts instead of compilerOptions.types
+   * to avoid limiting type declarations.
+   */
   "include": [
     "./src/**/*.d.ts",
     "./src/**/*.ts",

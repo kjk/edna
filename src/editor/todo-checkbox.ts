@@ -1,4 +1,5 @@
-import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
+import type { ChangeSpec } from "@codemirror/state";
+import { Decoration, EditorView, ViewPlugin, ViewUpdate, WidgetType, type DecorationSet } from "@codemirror/view";
 import { SET_FONT, transactionsHasAnnotation } from "./annotation";
 import { getNoteBlockFromPos } from "./block/block";
 import { isMonospaceFont } from "./theme/font-theme";
@@ -60,7 +61,7 @@ function checkboxes(view: EditorView) {
 
   for (let { from, to } of view.visibleRanges) {
     let range = view.state.sliceDoc(from, to);
-    let match;
+    let match: RegExpExecArray;
     while ((match = checkboxRegex.exec(range))) {
       if (getNoteBlockFromPos(view.state, from + match.index)?.language?.name === "markdown") {
         let deco = Decoration.replace({
@@ -76,7 +77,7 @@ function checkboxes(view: EditorView) {
 
 function toggleBoolean(view: EditorView, pos: number) {
   let before = view.state.doc.sliceString(pos - 4, pos).toLowerCase();
-  let change;
+  let change: ChangeSpec;
   if (before === "[x] ") {
     change = { from: pos - 4, to: pos, insert: "[ ] " };
   } else if (before === "[ ] ") {
