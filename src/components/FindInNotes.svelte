@@ -190,7 +190,7 @@
 
 // svelte-ignore non_reactive_update
 {#snippet InsideInput()}
-  <div class="absolute right-[0.25rem] top-[6px] flex">
+  <div class="absolute right-1 top-1.5 flex">
     <button class="btn-icon {matchCaseCls}" onclick={matchCase} title="Match Case"
       >{@render IconTablerLetterCase()}</button
     >
@@ -225,7 +225,7 @@
 {/snippet}
 
 <div
-  class="absolute top-[2rem] left-1/2 -translate-x-1/2 z-20 bg-white dark:text-sm w-4/5 shadow-lg border border-gray-300 max-h-[90vh] flex flex-col p-2 selector-colors"
+  class="absolute top-8 left-1/2 -translate-x-1/2 z-20 bg-white dark:text-sm w-4/5 shadow-lg border border-gray-300 max-h-[90vh] flex flex-col p-2 selector-colors"
   use:trapfocus
 >
   <div class="flex flex-row mb-2">
@@ -305,10 +305,10 @@
   @reference "tailwindcss";
 
   input {
-    @apply bg-white px-2 py-1 border-1 border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;
+    @apply bg-white px-2 py-1 border border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;
   }
 
   .btn-icon {
-    @apply px-[6px] py-[2px] hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
+    @apply px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
   }
 </style>

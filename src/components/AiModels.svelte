@@ -1,14 +1,7 @@
 <script lang="ts">
   import { clickOutside, focus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import {
-    arrayRemove,
-    findMatchingItemsFn,
-    hilightText,
-    humanPrice,
-    len,
-    makeHilightRegExp,
-  } from "../util";
+  import { arrayRemove, findMatchingItemsFn, hilightText, humanPrice, len, makeHilightRegExp } from "../util";
   import {
     kModelIDIdx,
     kModelNameIdx,
@@ -111,16 +104,11 @@
   use:clickOutside={close}
   {onkeydown}
   tabindex="-1"
-  class="absolute flex flex-col pt-[4px] z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-[24px] border-gray-400 right-0 max-h-[50vh] min-w-[40ch]"
+  class="absolute flex flex-col pt-1 z-20 text-sm py-2 px-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden top-6 border-gray-400 right-0 max-h-[50vh] min-w-[40ch]"
 >
   <div class="relative">
-    <input
-      use:focus
-      bind:value={filter}
-      type="text"
-      class="px-1 py-0.5 mb-2 w-full text-xs"
-    />
-    <div class="absolute right-[0.5rem] top-[1px] italic text-gray-400">
+    <input use:focus bind:value={filter} type="text" class="px-1 py-0.5 mb-2 w-full text-xs" />
+    <div class="absolute right-2 top-px italic text-gray-400">
       {modelsCountMsg}
     </div>
   </div>
@@ -147,7 +135,7 @@
 
       <button
         tabindex="-1"
-        class="ml-[-6px] cursor-pointer hover:text-yellow-600"
+        class="-ml-1.5 cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
           ev.preventDefault();
           ev.stopPropagation();

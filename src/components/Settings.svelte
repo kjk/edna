@@ -218,7 +218,7 @@
   @reference "tailwindcss";
 
   select {
-    @apply w-[200px];
+    @apply w-50;
     @apply ml-4;
     @apply border border-gray-400;
     @apply px-1 py-1;
