@@ -1,28 +1,13 @@
 import { markdown, markdownKeymap } from "@codemirror/lang-markdown";
 import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
-import {
-  Compartment,
-  EditorSelection,
-  EditorState,
-  Prec,
-  Transaction,
-} from "@codemirror/state";
-import {
-  keymap as cmKeymap,
-  drawSelection,
-  EditorView,
-  lineNumbers,
-} from "@codemirror/view";
+import { Compartment, EditorSelection, EditorState, Prec, Transaction } from "@codemirror/state";
+import { keymap as cmKeymap, drawSelection, EditorView, lineNumbers } from "@codemirror/view";
 import { getNoteMeta, saveNotesMetadata } from "../metadata";
 import { loadNote, saveNote } from "../notes";
 import { findEditorByView } from "../state";
 import { len, objectEqualDeep } from "../util";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
-import {
-  blockLineNumbers,
-  blockState,
-  noteBlockExtension,
-} from "./block/block";
+import { blockLineNumbers, blockState, noteBlockExtension } from "./block/block";
 import { triggerCurrenciesLoaded } from "./block/commands";
 import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
 import { heynoteCopyCut } from "./copy-paste";
@@ -49,7 +34,44 @@ function getKeymapExtensions(editor: EdnaEditor, keymap: string) {
   }
 }
 
+interface EdnaEditorConfig {
+  element: HTMLElement;
+  noteName: string;
+  focus?: boolean;
+  theme?: "light" | "dark";
+  keymap?: "default" | "emacs";
+  emacsMetaKey?: "alt" | "meta" | "ctrl";
+  showLineNumberGutter?: boolean;
+  showFoldGutter?: boolean;
+  bracketClosing?: boolean;
+  useTabs: boolean;
+  tabSize: number;
+  defaultBlockToken?: string;
+  defaultBlockAutoDetect?: boolean;
+  fontFamily?: string;
+  fontSize?: number;
+}
+
 export class EdnaEditor {
+  element: HTMLElement;
+  themeCompartment: Compartment;
+  keymapCompartment: Compartment;
+  lineNumberCompartmentPre: Compartment;
+  lineNumberCompartment: Compartment;
+  foldGutterCompartment: Compartment;
+  readOnlyCompartment: Compartment;
+  closeBracketsCompartment: Compartment;
+  tabsCompartment: Compartment;
+  deselectOnCopy: boolean;
+  emacsMetaKey: string;
+  fontTheme: Compartment;
+  noteName: string;
+  contentLoaded: boolean;
+  view: EditorView;
+  loadNotePromise: Promise<void>;
+  diskContent: string;
+  defaultBlockToken: string;
+  defaultBlockAutoDetect: boolean;
   constructor({
     element,
     noteName,
@@ -66,7 +88,7 @@ export class EdnaEditor {
     defaultBlockAutoDetect,
     fontFamily,
     fontSize,
-  }) {
+  }: EdnaEditorConfig) {
     this.element = element;
     this.themeCompartment = new Compartment();
     this.keymapCompartment = new Compartment();
@@ -83,7 +105,7 @@ export class EdnaEditor {
     this.noteName = noteName;
     this.contentLoaded = false;
 
-    const makeTabState = (useTabs, tabSize) => {
+    const makeTabState = (useTabs: boolean, tabSize: number) => {
       const indentChar = useTabs ? "\t" : " ".repeat(tabSize);
       const v = indentUnit.of(indentChar);
       return this.tabsCompartment.of(v);
@@ -104,17 +126,11 @@ export class EdnaEditor {
         heynoteCopyCut(this),
 
         //minimalSetup,
-        this.lineNumberCompartment.of(
-          showLineNumberGutter ? [lineNumbers(), blockLineNumbers] : [],
-        ),
+        this.lineNumberCompartment.of(showLineNumberGutter ? [lineNumbers(), blockLineNumbers] : []),
         customSetup,
-        this.foldGutterCompartment.of(
-          showFoldGutter ? [foldGutterExtension()] : [],
-        ),
+        this.foldGutterCompartment.of(showFoldGutter ? [foldGutterExtension()] : []),
 
-        this.closeBracketsCompartment.of(
-          bracketClosing ? createDynamicCloseBracketsExtension() : [],
-        ),
+        this.closeBracketsCompartment.of(bracketClosing ? createDynamicCloseBracketsExtension() : []),
 
         this.readOnlyCompartment.of([]),
 
@@ -135,9 +151,7 @@ export class EdnaEditor {
         // add CSS class depending on dark/light theme
         EditorView.editorAttributes.of((view) => {
           return {
-            class: view.state.facet(EditorView.darkTheme)
-              ? "dark-theme"
-              : "light-theme",
+            class: view.state.facet(EditorView.darkTheme) ? "dark-theme" : "light-theme",
           };
         }),
 
@@ -184,7 +198,7 @@ export class EdnaEditor {
     return this.view.state.sliceDoc();
   }
 
-  async loadNote(noteName) {
+  async loadNote(noteName: string) {
     //console.log("loadNote:", noteName)
     this.noteName = noteName;
     this.setReadOnly(true);
@@ -196,8 +210,8 @@ export class EdnaEditor {
     this.setReadOnly(false);
   }
 
-  setContent(content) {
-    return new Promise((resolve) => {
+  setContent(content: string) {
+    return new Promise<void>((resolve) => {
       // set buffer content
       this.view.dispatch({
         changes: {
@@ -205,10 +219,7 @@ export class EdnaEditor {
           to: this.view.state.doc.length,
           insert: content,
         },
-        annotations: [
-          heynoteEvent.of(SET_CONTENT),
-          Transaction.addToHistory.of(false),
-        ],
+        annotations: [heynoteEvent.of(SET_CONTENT), Transaction.addToHistory.of(false)],
       });
 
       // Ensure we have a parsed syntax tree when buffer is loaded. This prevents errors for large buffers
@@ -322,9 +333,7 @@ export class EdnaEditor {
 
   setReadOnly(readOnly) {
     this.view.dispatch({
-      effects: this.readOnlyCompartment.reconfigure(
-        readOnly ? [EditorState.readOnly.of(true)] : [],
-      ),
+      effects: this.readOnlyCompartment.reconfigure(readOnly ? [EditorState.readOnly.of(true)] : []),
     });
   }
 
@@ -332,44 +341,33 @@ export class EdnaEditor {
     let ff = getFontTheme(fontFamily, fontSize);
     this.view.dispatch({
       effects: this.fontTheme.reconfigure(ff),
-      annotations: [
-        heynoteEvent.of(SET_FONT),
-        Transaction.addToHistory.of(false),
-      ],
+      annotations: [heynoteEvent.of(SET_FONT), Transaction.addToHistory.of(false)],
     });
   }
 
-  setTheme(theme) {
+  setTheme(theme: string) {
     this.view.dispatch({
-      effects: this.themeCompartment.reconfigure(
-        theme === "dark" ? heynoteDark : heynoteLight,
-      ),
+      effects: this.themeCompartment.reconfigure(theme === "dark" ? heynoteDark : heynoteLight),
     });
   }
 
-  setKeymap(keymap, emacsMetaKey) {
+  setKeymap(keymap: string, emacsMetaKey: string) {
     this.deselectOnCopy = keymap === "emacs";
     this.emacsMetaKey = emacsMetaKey;
     this.view.dispatch({
-      effects: this.keymapCompartment.reconfigure(
-        getKeymapExtensions(this, keymap),
-      ),
+      effects: this.keymapCompartment.reconfigure(getKeymapExtensions(this, keymap)),
     });
   }
 
-  setLineNumberGutter(show) {
+  setLineNumberGutter(show: boolean) {
     this.view.dispatch({
-      effects: this.lineNumberCompartment.reconfigure(
-        show ? [lineNumbers(), blockLineNumbers] : [],
-      ),
+      effects: this.lineNumberCompartment.reconfigure(show ? [lineNumbers(), blockLineNumbers] : []),
     });
   }
 
-  setFoldGutter(show) {
+  setFoldGutter(show: boolean) {
     this.view.dispatch({
-      effects: this.foldGutterCompartment.reconfigure(
-        show ? [foldGutterExtension()] : [],
-      ),
+      effects: this.foldGutterCompartment.reconfigure(show ? [foldGutterExtension()] : []),
     });
   }
 
@@ -382,11 +380,9 @@ export class EdnaEditor {
     triggerCurrenciesLoaded(this.view);
   }
 
-  setBracketClosing(value) {
+  setBracketClosing(value: boolean) {
     this.view.dispatch({
-      effects: this.closeBracketsCompartment.reconfigure(
-        value ? createDynamicCloseBracketsExtension() : [],
-      ),
+      effects: this.closeBracketsCompartment.reconfigure(value ? createDynamicCloseBracketsExtension() : []),
     });
   }
 
