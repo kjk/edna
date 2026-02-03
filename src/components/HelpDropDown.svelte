@@ -11,7 +11,7 @@
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
 
-  let listboxRef;
+  let listboxComp: ListBox;
 
   let items = [
     {
@@ -37,7 +37,7 @@
   ];
 
   function onkeydown(ev: KeyboardEvent) {
-    listboxRef.onkeydown(ev, true);
+    listboxComp.onkeydown(ev, true);
   }
 </script>
 
@@ -46,20 +46,11 @@
   {onkeydown}
   tabindex="-1"
   use:focus
-  class="absolute left-[-1rem] flex flex-col mt-[-2px] z-20 text-sm p-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden"
+  class="absolute -left-4 flex flex-col -mt-0.5 z-20 text-sm p-2 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-500 border rounded-lg focus:outline-hidden"
 >
-  <ListBox
-    bind:this={listboxRef}
-    {items}
-    onclick={(item) => selectItem(item.key)}
-    {initialSelection}
-    compact={false}
-  >
+  <ListBox bind:this={listboxComp} {items} onclick={(item) => selectItem(item.key)} {initialSelection} compact={false}>
     {#snippet renderItem(item, idx)}
-      <div
-        title={item.key}
-        class="text-left px-1 grow self-end max-w-[32ch] truncate"
-      >
+      <div title={item.key} class="text-left px-1 grow self-end max-w-[32ch] truncate">
         {item.name}
       </div>
     {/snippet}

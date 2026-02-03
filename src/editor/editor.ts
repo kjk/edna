@@ -331,13 +331,13 @@ export class EdnaEditor {
     return isReadOnly(this.view);
   }
 
-  setReadOnly(readOnly) {
+  setReadOnly(readOnly: boolean) {
     this.view.dispatch({
       effects: this.readOnlyCompartment.reconfigure(readOnly ? [EditorState.readOnly.of(true)] : []),
     });
   }
 
-  setFont(fontFamily, fontSize) {
+  setFont(fontFamily: string, fontSize: number) {
     let ff = getFontTheme(fontFamily, fontSize);
     this.view.dispatch({
       effects: this.fontTheme.reconfigure(ff),
