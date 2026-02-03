@@ -90,6 +90,7 @@
 <script>
   import { len } from "../util";
   import { getScrollbarWidth } from "../util.js";
+
   let style = $state("");
   $effect(() => {
     let dx = getScrollbarWidth();
@@ -105,11 +106,9 @@
     // );
   }
   function bgClass(type) {
-    let res =
-      "bg-white dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500";
+    let res = "bg-white dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500";
     if (type === kToastWarning) {
-      res =
-        "bg-yellow-100 dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500";
+      res = "bg-yellow-100 dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500";
     }
     if (type === kToastError) {
       res =
@@ -123,23 +122,18 @@
   <div class="toast-wrap fixed top-10 right-[19px] text-sm" {style}>
     {#each toasts as t}
       <div
-        class="flex justify-between items-center mb-4 border rounded-md py-2 pl-4 pr-2 min-w-[14ch] {bgClass(
-          t.type,
-        )}"
+        class="flex justify-between items-center mb-4 border rounded-md py-2 pl-4 pr-2 min-w-[14ch] {bgClass(t.type)}"
       >
         <div class="">
           {t.msg}
         </div>
-        <button
-          class="px-2 py-0.5 ml-2 hover:bg-gray-200"
-          onclick={() => removeToast(t.id)}>x</button
-        >
+        <button class="px-2 py-0.5 ml-2 hover:bg-gray-200" onclick={() => removeToast(t.id)}>x</button>
       </div>
     {/each}
   </div>
 {/if}
 
-<style>
+<style lang="postcss">
   .toast-wrap {
     max-width: calc(min(120ch, 40%));
   }

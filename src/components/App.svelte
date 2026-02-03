@@ -1,24 +1,12 @@
 <script>
   import { tick } from "svelte";
-  import {
-    toggleBlockComment,
-    toggleComment,
-    toggleLineComment,
-  } from "@codemirror/commands";
+  import { toggleBlockComment, toggleComment, toggleLineComment } from "@codemirror/commands";
   import { foldCode, unfoldCode } from "@codemirror/language";
-  import {
-    closeSearchPanel,
-    openSearchPanel,
-    searchPanelOpen,
-  } from "@codemirror/search";
+  import { closeSearchPanel, openSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
-  import {
-    getActiveNoteBlock,
-    getBlockN,
-    getBlocksInfo,
-  } from "../editor/block/block";
+  import { getActiveNoteBlock, getBlockN, getBlocksInfo } from "../editor/block/block";
   import {
     addNewBlockAfterCurrent,
     addNewBlockAfterLast,
@@ -36,10 +24,7 @@
     moveLineUp,
     selectAll,
   } from "../editor/block/commands";
-  import {
-    formatBlockContent,
-    insertAfterActiveBlock,
-  } from "../editor/block/format-code";
+  import { formatBlockContent, insertAfterActiveBlock } from "../editor/block/format-code";
   import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime, insertTime } from "../editor/date-time";
@@ -52,30 +37,13 @@
     unfoldBlock,
     unfoldEverything,
   } from "../editor/fold-gutter";
-  import {
-    extForLang,
-    getLanguage,
-    langSupportsFormat,
-    langSupportsRun,
-  } from "../editor/languages";
+  import { extForLang, getLanguage, langSupportsFormat, langSupportsRun } from "../editor/languages";
   import { toFileName } from "../filenamify";
-  import {
-    fsFileHandleWriteBlob,
-    hasHandlePermission,
-    openDirPicker,
-    supportsFileSystem,
-  } from "../fileutil";
+  import { fsFileHandleWriteBlob, hasHandlePermission, openDirPicker, supportsFileSystem } from "../fileutil";
   import { parseUserFunctions, runBoopFunction } from "../functions";
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
-  import Menu, {
-    kMenuIdJustText,
-    kMenuSeparator,
-    kMenuStatusDisabled,
-    kMenuStatusNormal,
-    kMenuStatusRemoved,
-  } from "../Menu.svelte";
   import {
     archiveNote,
     getNoteMeta,
@@ -147,11 +115,14 @@
   import FindInNotes from "./FindInNotes.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
-  import ModalMessage, {
-    clearModalMessage,
-    modalMessageState,
-    showModalMessageHTML,
-  } from "./ModalMessage.svelte";
+  import Menu, {
+    kMenuIdJustText,
+    kMenuSeparator,
+    kMenuStatusDisabled,
+    kMenuStatusNormal,
+    kMenuStatusRemoved,
+  } from "./Menu.svelte";
+  import ModalMessage, { clearModalMessage, modalMessageState, showModalMessageHTML } from "./ModalMessage.svelte";
   import NoteSelector from "./NoteSelector.svelte";
   import NoteSelectorWide from "./NoteSelectorWide.svelte";
   import Overlay from "./Overlay.svelte";
@@ -163,7 +134,7 @@
   import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
   import TopNav from "./TopNav.svelte";
 
-  /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
+  /** @typedef {import("./Menu.svelte").MenuItemDef} MenuItemDef */
   /** @typedef {import("../functions").BoopFunction} BoopFunction */
 
   const isMac = platform.isMac;
@@ -312,10 +283,7 @@
     window.addEventListener("popstate", function (ev) {
       let state = ev.state;
       if (!state || !state.noteName) {
-        console.log(
-          "popstate: state is null or has no 'noteName' field:",
-          state,
-        );
+        console.log("popstate: state is null or has no 'noteName' field:", state);
         return;
       }
       let name = state.noteName;
@@ -472,10 +440,7 @@
    */
   async function requestFileWritePermission(fh) {
     if (hasHandlePermission(fh, true)) {
-      console.log(
-        "requestFileWritePermission: already have write permissions to",
-        fh,
-      );
+      console.log("requestFileWritePermission: already have write permissions to", fh);
       return true;
     }
     fileWritePermissionsFileHandle = fh;
@@ -863,9 +828,7 @@
             to: block.content.to,
             insert: res,
           },
-          selection: EditorSelection.cursor(
-            block.content.from + Math.min(cursorOffset, res.length),
-          ),
+          selection: EditorSelection.cursor(block.content.from + Math.min(cursorOffset, res.length)),
         },
         {
           userEvent: "input",
@@ -1073,10 +1036,7 @@
       ["Run this block", kCmdRunBlock],
       ["Run this block with another block", kCmdRunBlockWithAnotherBlock],
       ["Run this block with clipboard", kCmdRunBlockWithClipboard],
-      [
-        "Run function with this block\tAlt + Shift + R",
-        kCmdRunFunctionWithBlockContent,
-      ],
+      ["Run function with this block\tAlt + Shift + R", kCmdRunFunctionWithBlockContent],
       ["Run function with selection", kCmdRunFunctionWithSelection],
       ["Show built-in functions", kCmdShowBuiltInFunctions],
       ["Create your own functions", kCmdCreateYourOwnFunctions],
@@ -1308,10 +1268,7 @@
       if (isSystemNoteName(noteName)) {
         return kMenuStatusDisabled;
       }
-    } else if (
-      mid === kCmdRunFunctionWithBlockContent ||
-      mid === kCmdRunFunctionWithSelection
-    ) {
+    } else if (mid === kCmdRunFunctionWithBlockContent || mid === kCmdRunFunctionWithSelection) {
       if (mid === kCmdRunFunctionWithSelection && !hasSel) {
         return kMenuStatusDisabled;
       }
@@ -1715,9 +1672,7 @@
     let b = getActiveNoteBlock(view.state);
     let { from, to } = b.content;
     let { selectedText } = getCurrentSelection(view.state);
-    askAIStartText = selectedText
-      ? selectedText
-      : view.state.sliceDoc(from, to);
+    askAIStartText = selectedText ? selectedText : view.state.sliceDoc(from, to);
     showingAskAI = true;
   }
 
@@ -2253,13 +2208,7 @@
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav
-    openNote={onOpenNote}
-    {closeTab}
-    {menuItemStatus}
-    {onmenucmd}
-    {buildMenuDef}
-  />
+  <TopNav openNote={onOpenNote} {closeTab} {menuItemStatus} {onmenucmd} {buildMenuDef} />
 {/if}
 <StatusBar
   {line}
@@ -2282,25 +2231,20 @@
 
 {#if showingCreateNewNote}
   <Overlay onclose={closeDialogs} blur={true}>
-    <CreateNewNote createNewNote={onCreateNote} onclose={closeDialogs}
-    ></CreateNewNote>
+    <CreateNewNote createNewNote={onCreateNote} onclose={closeDialogs}></CreateNewNote>
   </Overlay>
 {/if}
 
 {#if showingBlockSelector}
   <Overlay onclose={closeDialogs} blur={true}>
-    <BlockSelector
-      blocks={blockItems}
-      selectBlock={fnSelectBlock}
-      initialSelection={initialBlockSelection}
+    <BlockSelector blocks={blockItems} selectBlock={fnSelectBlock} initialSelection={initialBlockSelection}
     ></BlockSelector>
   </Overlay>
 {/if}
 
 {#if showingFunctionSelector}
   <Overlay onclose={closeDialogs} blur={true}>
-    <FunctionSelector context={functionContext} {userFunctions} {runFunction}
-    ></FunctionSelector>
+    <FunctionSelector context={functionContext} {userFunctions} {runFunction}></FunctionSelector>
   </Overlay>
 {/if}
 
@@ -2371,12 +2315,7 @@
 
 {#if showingContextMenu}
   <Overlay onclose={closeDialogs}>
-    <Menu
-      {menuItemStatus}
-      {onmenucmd}
-      menuDef={contextMenuDef}
-      pos={contextMenuPos}
-    />
+    <Menu {menuItemStatus} {onmenucmd} menuDef={contextMenuDef} pos={contextMenuPos} />
   </Overlay>
 {/if}
 
@@ -2388,37 +2327,25 @@
 
 {#if showingEncryptPassword}
   <Overlay onclose={closeEncryptPassword} blur={true}>
-    <EnterEncryptPassword
-      onclose={closeEncryptPassword}
-      onpassword={onEncryptPassword}
-    ></EnterEncryptPassword>
+    <EnterEncryptPassword onclose={closeEncryptPassword} onpassword={onEncryptPassword}></EnterEncryptPassword>
   </Overlay>
 {/if}
 
 {#if showingDecryptPassword}
   <Overlay onclose={closeDecryptPassword} blur={true}>
-    <EnterDecryptPassword
-      msg={showingDecryptMessage}
-      onpassword={onDecryptPassword}
-    ></EnterDecryptPassword>
+    <EnterDecryptPassword msg={showingDecryptMessage} onpassword={onDecryptPassword}></EnterDecryptPassword>
   </Overlay>
 {/if}
 
 {#if showingAskFileWritePermissions}
   <Overlay noCloseOnEsc={true} blur={true}>
-    <AskFileWritePermissions
-      fileHandle={fileWritePermissionsFileHandle}
-      close={askFileWritePermissionsClose}
+    <AskFileWritePermissions fileHandle={fileWritePermissionsFileHandle} close={askFileWritePermissionsClose}
     ></AskFileWritePermissions>
   </Overlay>
 {/if}
 
 {#if showingAskAI}
   <Overlay blur={true} onclose={closeDialogs}>
-    <AskAI
-      close={closeDialogs}
-      startText={askAIStartText}
-      insertResponse={insertAskAIResponse}
-    ></AskAI>
+    <AskAI close={closeDialogs} startText={askAIStartText} insertResponse={insertAskAIResponse}></AskAI>
   </Overlay>
 {/if}

@@ -5,13 +5,7 @@
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
   import { loadNote } from "../notes";
-  import {
-    hilightText,
-    isWholeWord,
-    len,
-    makeHilightRegExp,
-    splitStringPreservingQuotes,
-  } from "../util";
+  import { hilightText, isWholeWord, len, makeHilightRegExp, splitStringPreservingQuotes } from "../util";
   import { IconFluentWholeWord, IconTablerLetterCase } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
@@ -149,20 +143,8 @@
     if (ev.key == "Enter") {
       ev.preventDefault();
       let sameSearchTerm = searchTerm == currSearchTerm;
-      console.log(
-        "searchTerm:",
-        searchTerm,
-        "currSearchTerm:",
-        currSearchTerm,
-        "same:",
-        sameSearchTerm,
-      );
-      if (
-        sameSearchTerm &&
-        lastChangeNo == changeNo &&
-        len(results) > 0 &&
-        selectedItem
-      ) {
+      console.log("searchTerm:", searchTerm, "currSearchTerm:", currSearchTerm, "same:", sameSearchTerm);
+      if (sameSearchTerm && lastChangeNo == changeNo && len(results) > 0 && selectedItem) {
         openItem(selectedItem);
       } else {
         searchAllNotes(searchTerm);
@@ -199,14 +181,10 @@
     focusInput();
   }
   function btnPressedCls(isPressed) {
-    return isPressed
-      ? "bg-gray-100 border-1 border-gray-300"
-      : "bg-white border-1 border-white";
+    return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";
   }
   let matchCaseCls = $derived(btnPressedCls(appState.searchNotesMatchCase));
-  let matchWholeWordCls = $derived(
-    btnPressedCls(appState.searchNotesMatchWholeWord),
-  );
+  let matchWholeWordCls = $derived(btnPressedCls(appState.searchNotesMatchWholeWord));
 
   function openItem(item) {
     // console.log("openItem:", $state.snapshot(item));
@@ -222,15 +200,11 @@
 // svelte-ignore non_reactive_update
 {#snippet InsideInput()}
   <div class="absolute right-[0.25rem] top-[6px] flex">
-    <button
-      class="btn-icon {matchCaseCls}"
-      onclick={matchCase}
-      title="Match Case">{@render IconTablerLetterCase()}</button
+    <button class="btn-icon {matchCaseCls}" onclick={matchCase} title="Match Case"
+      >{@render IconTablerLetterCase()}</button
     >
-    <button
-      class="btn-icon {matchWholeWordCls}"
-      onclick={matchWholeWOrd}
-      title="Match Whole Word">{@render IconFluentWholeWord()}</button
+    <button class="btn-icon {matchWholeWordCls}" onclick={matchWholeWOrd} title="Match Whole Word"
+      >{@render IconFluentWholeWord()}</button
     >
   </div>
 {/snippet}
@@ -281,22 +255,14 @@
     </div>
   {/if}
   {#if len(results) > 0}
-    <ListBox
-      bind:this={listboxRef}
-      items={results}
-      {selectionChanged}
-      onclick={(item) => openItem(item)}
-    >
+    <ListBox bind:this={listboxRef} items={results} {selectionChanged} onclick={(item) => openItem(item)}>
       {#snippet renderItem(searchResult)}
         {@const hili = hilightText(searchResult.line, hiliRegExp)}
         <div class="ml-2 truncate">
           {@html hili}
         </div>
         <div class="grow"></div>
-        <div
-          class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap max-w-[24ch] truncate"
-          title={searchResult.note}
-        >
+        <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap max-w-[24ch] truncate" title={searchResult.note}>
           {searchResult.note}
         </div>
       {/snippet}
@@ -344,8 +310,8 @@
   </div>
 </div>
 
-<style>
-  @reference "../main.css";
+<style lang="postcss">
+  @reference "tailwindcss";
 
   input {
     @apply bg-white px-2 py-1 border-1 border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;

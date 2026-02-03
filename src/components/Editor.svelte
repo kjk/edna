@@ -18,13 +18,7 @@
     docDidChange: () => void,
     didLoadNote: (name: string, noPushHistory: boolean) => void,
    }}*/
-  let {
-    class: klass = "",
-    debugSyntaxTree,
-    cursorChange,
-    docDidChange,
-    didLoadNote,
-  } = $props();
+  let { class: klass = "", debugSyntaxTree, cursorChange, docDidChange, didLoadNote } = $props();
 
   let syntaxTreeDebugContent = $state(null);
   let settings = getSettings();
@@ -39,7 +33,7 @@
   $effect(() => {
     /* TODO: it's not reactive if I do:
       editor?.setLineNumberGutter(settings.showLineNumberGutter);
-      also, reactive breaks if I do: 
+      also, reactive breaks if I do:
       if (!editor) { return; }
     */
     let showLineNumberGutter = settings.showLineNumberGutter;
@@ -152,10 +146,7 @@
       }, 1000);
     }
     return () => {
-      window.document.removeEventListener(
-        "currenciesLoaded",
-        didLoadCurrencies,
-      );
+      window.document.removeEventListener("currenciesLoaded", didLoadCurrencies);
     };
   }
 
@@ -207,11 +198,7 @@
   /**
    * @param {string} name
    */
-  export async function openNote(
-    name,
-    skipSave = false,
-    noPushHistory = false,
-  ) {
+  export async function openNote(name, skipSave = false, noPushHistory = false) {
     console.log("openNote:", name);
     if (!skipSave) {
       // TODO: this is async so let's hope it works
@@ -235,7 +222,7 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
   :global(.debug-syntax-tree) {
     position: absolute;
     top: 0;

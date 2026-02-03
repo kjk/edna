@@ -115,11 +115,7 @@
     toggleNoteStarred,
     unArchiveNote,
   } from "../metadata";
-  import {
-    isNoteArchivable,
-    isSystemNoteName,
-    sanitizeNoteName,
-  } from "../notes";
+  import { isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
   import {
     findMatchingItems,
     getAltChar,
@@ -130,11 +126,7 @@
     makeHilightRegExp,
     noOp,
   } from "../util";
-  import {
-    IconTablerArchive,
-    IconTablerStar,
-    IconTablerTrash,
-  } from "./Icons.svelte";
+  import { IconTablerArchive, IconTablerStar, IconTablerTrash } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{
@@ -163,10 +155,7 @@
     return res;
   }
   let noteInfos = $derived(
-    localBuildNoteInfos(
-      appState.regularNotes,
-      appState.showingArchived ? appState.archivedNotes : [],
-    ),
+    localBuildNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []),
   );
 
   let filter = $state("");
@@ -551,9 +540,7 @@
             toggleStarred(noteInfo);
           }}
         >
-          {@render IconTablerStar(
-            noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
-          )}
+          {@render IconTablerStar(noteInfo.isStarred ? "var(--color-yellow-300)" : "none")}
         </button>
         <div class="ml-2 truncate {noteCls(noteInfo)}">
           {@html hili}
@@ -607,9 +594,7 @@
 
   <div class="flex justify-center mt-2">
     {#if canCreate}
-      <button
-        onclick={() => emitCreateNote(sanitizedFilter)}
-        class="truncate button-outline cursor-pointer max-w-[80%]"
+      <button onclick={() => emitCreateNote(sanitizedFilter)} class="truncate button-outline cursor-pointer max-w-[80%]"
         >Create Note <b>{sanitizedFilter}</b></button
       >
     {/if}
@@ -629,8 +614,8 @@
   {/if}
 </form>
 
-<style>
-  @reference "../main.css";
+<style lang="postcss">
+  @reference "tailwindcss";
 
   .clickable-icon {
     @apply cursor-pointer px-1 py-1;

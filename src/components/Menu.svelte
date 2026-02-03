@@ -100,9 +100,9 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script>
   import { onMount } from "svelte";
-  import { ensurevisible, focus } from "./actions.js";
-  import { extractShortcut } from "./keys.js";
-  import { len, splitMax } from "./util.js";
+  import { ensurevisible, focus } from "../actions.js";
+  import { extractShortcut } from "../keys.js";
+  import { len, splitMax } from "../util.js";
 
   /** @type {{
    menuDef: MenuDef,
@@ -119,11 +119,7 @@
     return kMenuStatusNormal;
   }
 
-  let rootMenu = buildMenuFromDef(
-    menuDef,
-    1,
-    menuItemStatus || menuItemStatusDefault,
-  );
+  let rootMenu = buildMenuFromDef(menuDef, 1, menuItemStatus || menuItemStatusDefault);
 
   /**
    * @param {(mi: MenuItem) => boolean} visit
@@ -445,23 +441,13 @@
     stroke-width="2"
     stroke="currentColor"
   >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      d="M8.25 4.5l7.5 7.5-7.5 7.5"
-    />
+    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
   </svg>
 {/snippet}
 
 {#snippet checkmark()}
-  <svg
-    class="w-4 h-4 check invisible"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    ><path
-      fill="currentColor"
-      d="m10 16.4l-4-4L7.4 11l2.6 2.6L16.6 7L18 8.4Z"
-    />
+  <svg class="w-4 h-4 check invisible" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+    ><path fill="currentColor" d="m10 16.4l-4-4L7.4 11l2.6 2.6L16.6 7L18 8.4Z" />
   </svg>
 {/snippet}
 
@@ -490,13 +476,7 @@
 
 {#snippet submenu(mi)}
   <!-- svelte-ignore a11y_mouse_events_have_key_events -->
-  <div
-    role="menuitem"
-    tabindex="-1"
-    class="relative my-1"
-    class:is-selected={mi.isSelected}
-    bind:this={mi.element}
-  >
+  <div role="menuitem" tabindex="-1" class="relative my-1" class:is-selected={mi.isSelected} bind:this={mi.element}>
     <button class="flex w-full items-center justify-between pl-3 pr-2 py-0.5">
       <span>{mi.text}</span>
       {@render arrow()}
@@ -540,8 +520,8 @@
   {@render menuItems(rootMenu)}
 </div>
 
-<style>
-  @reference "./main.css";
+<style lang="postcss">
+  @reference "tailwindcss";
 
   .is-selected {
     @apply bg-gray-100 dark:bg-gray-600;

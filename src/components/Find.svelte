@@ -277,14 +277,10 @@
     console.log("matchRegex", appState.searchRegex);
   }
   function btnPressedCls(isPressed) {
-    return isPressed
-      ? "bg-gray-100 border-1 border-gray-300"
-      : "bg-white border-1 border-white";
+    return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";
   }
   let matchCaseCls = $derived(btnPressedCls(appState.searchMatchCase));
-  let matchWholeWordCls = $derived(
-    btnPressedCls(appState.searchMatchWholeWord),
-  );
+  let matchWholeWordCls = $derived(btnPressedCls(appState.searchMatchWholeWord));
   let matchRegexCls = $derived(btnPressedCls(appState.searchRegex));
 </script>
 
@@ -295,32 +291,20 @@
         {counter.current} of {counter.total}
       </div>
     {/if}
-    <button class={matchCaseCls} onclick={matchCase} title="Match Case"
-      >{@render IconTablerLetterCase()}</button
+    <button class={matchCaseCls} onclick={matchCase} title="Match Case">{@render IconTablerLetterCase()}</button>
+    <button class={matchWholeWordCls} onclick={matchWholeWOrd} title="Match Whole Word"
+      >{@render IconFluentWholeWord()}</button
     >
-    <button
-      class={matchWholeWordCls}
-      onclick={matchWholeWOrd}
-      title="Match Whole Word">{@render IconFluentWholeWord()}</button
-    >
-    <button
-      class={matchRegexCls}
-      onclick={matchRegex}
-      title="Match Regular Expression">{@render IconTablerRegex()}</button
+    <button class={matchRegexCls} onclick={matchRegex} title="Match Regular Expression"
+      >{@render IconTablerRegex()}</button
     >
   </div>
 {/snippet}
 
 {#snippet NextToInputButtons()}
-  <button onclick={next} title="Find Next (Enter}" class="ml-2"
-    >{@render IconTablerArrowDown()}</button
-  >
-  <button onclick={prev} title="Find Previous (Shift + Enter)"
-    >{@render IconTablerArrowUp()}</button
-  >
-  <button onclick={all} title="Find All"
-    >{@render IconLucideTextSelect()}</button
-  >
+  <button onclick={next} title="Find Next (Enter}" class="ml-2">{@render IconTablerArrowDown()}</button>
+  <button onclick={prev} title="Find Previous (Shift + Enter)">{@render IconTablerArrowUp()}</button>
+  <button onclick={all} title="Find All">{@render IconLucideTextSelect()}</button>
   <button onclick={close} title="Close">{@render IconTablerX()}</button>
 {/snippet}
 
@@ -355,13 +339,9 @@
   <div class="flex flex-row">
     <div class="flex mr-1">
       {#if showReplace}
-        <button onclick={toggleShowReplace} title="hide replace"
-          >{@render IconTablerChevronDown()}</button
-        >
+        <button onclick={toggleShowReplace} title="hide replace">{@render IconTablerChevronDown()}</button>
       {:else}
-        <button onclick={toggleShowReplace} title="show replace"
-          >{@render IconTablerChevronRight()}</button
-        >
+        <button onclick={toggleShowReplace} title="show replace">{@render IconTablerChevronRight()}</button>
       {/if}
     </div>
 
@@ -379,12 +359,8 @@
           <!-- bottom row -->
           <div class="flex mt-2">
             {@render InputBottom()}
-            <button class="ml-2" title="replace" onclick={replace}
-              >{@render IconLucideReplace()}</button
-            >
-            <button title="replace all" onclick={_replaceAll}
-              >{@render IconLucideReplaceAll()}</button
-            >
+            <button class="ml-2" title="replace" onclick={replace}>{@render IconLucideReplace()}</button>
+            <button title="replace all" onclick={_replaceAll}>{@render IconLucideReplaceAll()}</button>
           </div>
         </div>
       {/if}
@@ -392,8 +368,8 @@
   </div>
 </div>
 
-<style>
-  @reference "../main.css";
+<style lang="postcss">
+  @reference "tailwindcss";
 
   input {
     @apply bg-white px-2 py-1 border-1 border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;

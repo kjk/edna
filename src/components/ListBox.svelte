@@ -132,8 +132,7 @@
   export function onkeydown(ev, allowLeftRight = false) {
     let key = ev.key;
     let isUp = key === "ArrowUp" || (key === "ArrowLeft" && allowLeftRight);
-    let isDown =
-      key === "ArrowDown" || (key === "ArrowRight" && allowLeftRight);
+    let isDown = key === "ArrowDown" || (key === "ArrowRight" && allowLeftRight);
     let isEnter = selectedItem && key === "Enter";
     let res = true;
     if (isEnter) {
@@ -232,7 +231,7 @@
   {/each}
 </ul>
 
-<style>
+<style lang="postcss">
   :global(.os-scrollbar) {
     --os-size: 10px;
   }

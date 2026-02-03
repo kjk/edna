@@ -69,22 +69,12 @@
   {#if pwdError}
     <div class="text-red-500 mt-2 ml-1">{pwdError}</div>
   {:else}
-    <div class="mt-2 ml-1 font-bold">
-      Note: if you lose the password, you'll lose access to notes.
-    </div>
+    <div class="mt-2 ml-1 font-bold">Note: if you lose the password, you'll lose access to notes.</div>
   {/if}
   <div class="flex items-baseline mt-2">
-    <a
-      target="_blank"
-      href="/help#encryption"
-      class="ml-1 text-lg link text-blue-700">about encryption</a
-    >
+    <a target="_blank" href="/help#encryption" class="ml-1 text-lg link text-blue-700">about encryption</a>
     <div class="grow"></div>
-    <button
-      onclick={onclose}
-      class="mr-4 px-4 py-1 border border-black hover:bg-gray-100"
-      >Cancel</button
-    >
+    <button onclick={onclose} class="mr-4 px-4 py-1 border border-black hover:bg-gray-100">Cancel</button>
     <button
       onclick={() => emitGotPassword()}
       disabled={!validPassword}
@@ -94,7 +84,7 @@
   </div>
 </div>
 
-<style>
+<style lang="postcss">
   input[type="checkbox"] {
     position: relative;
     top: 2px;

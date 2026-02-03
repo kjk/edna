@@ -107,8 +107,7 @@
       // of text and we're at first item
       return;
     }
-    let isDown =
-      key === "ArrowDown" || (key === "ArrowRight" && allowLeftRight);
+    let isDown = key === "ArrowDown" || (key === "ArrowRight" && allowLeftRight);
     let isEnter = selectedItem && key === "Enter";
     let res = true;
     if (isEnter) {
@@ -229,7 +228,7 @@
   {/each}
 </div>
 
-<style>
+<style lang="postcss">
   :global(.os-scrollbar) {
     --os-size: 10px;
   }

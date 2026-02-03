@@ -1,13 +1,9 @@
 node_modules/
-release
-.env
 /test-results/
 /playwright-report/
-/blob-report/
 /playwright/.cache/
-yarn.lock
-package-lock.json
 secrets.env
 edna-*
 data/
+dist/gitkeep.txt
 dist/

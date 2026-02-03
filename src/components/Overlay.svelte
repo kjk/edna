@@ -9,12 +9,7 @@
    children: Function,
    blur?: boolean,
 }} */
-  let {
-    onclose = null,
-    noCloseOnEsc = false,
-    blur = false,
-    children,
-  } = $props();
+  let { onclose = null, noCloseOnEsc = false, blur = false, children } = $props();
 
   // if noCloseOnEsc is false, we must have onclose
   // svelte-ignore state_referenced_locally
@@ -54,16 +49,11 @@
     {@render children()}
   </div>
   <!-- this captures the click outside of the actual element -->
-  <button
-    {onclick}
-    class="absolute inset-0 z-10"
-    class:bg-blur={blur}
-    aria-label="close"
-  ></button>
+  <button {onclick} class="absolute inset-0 z-10" class:bg-blur={blur} aria-label="close"></button>
 </div>
 
-<style>
-  @reference "../main.css";
+<style lang="postcss">
+  @reference "tailwindcss";
 
   .bg-blur {
     @apply dark:bg-gray-400/30 bg-black/50;

@@ -59,12 +59,12 @@ function manualChunksFn(id) {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  publicDir: "./public",
+  publicDir: "./src/public",
 
   plugins: [svelte(), tailwindcss()],
 
   build: {
-    outDir: "../dist",
+    outDir: "./dist",
     // target: "esnext", // needed for top-level await
     // this prevents pre-laoding manual chunks
     modulePreload: {

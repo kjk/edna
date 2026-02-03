@@ -8,5 +8,6 @@
   ],
   "importOrder": ["^svelte$", "<THIRD_PARTY_MODULES>", "^@/", "^[./]"],
   "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true
+  "importOrderSortSpecifiers": true,
+  "printWidth": 120
 }

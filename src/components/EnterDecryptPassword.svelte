@@ -78,11 +78,7 @@
     <div class="text-red-500 mt-2 ml-1">{pwdError}</div>
   {/if}
   <div class="flex items-baseline mt-2">
-    <a
-      target="_blank"
-      href="/help#encryption"
-      class="ml-1 text-lg link text-blue-700">about encryption</a
-    >
+    <a target="_blank" href="/help#encryption" class="ml-1 text-lg link text-blue-700">about encryption</a>
     <div class="grow"></div>
     <button
       onclick={() => emitGotPassword()}
@@ -93,7 +89,7 @@
   </div>
 </div>
 
-<style>
+<style lang="postcss">
   input[type="checkbox"] {
     position: relative;
     top: 2px;

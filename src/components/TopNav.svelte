@@ -1,7 +1,6 @@
 <script>
   import { appState } from "../appstate.svelte.js";
   import { focusEditor, openNoteSelector } from "../globals.js";
-  import Menu from "../Menu.svelte";
   import { getNoteMeta } from "../metadata.js";
   import { isMoving } from "../mouse-track.svelte.js";
   import { isSystemNoteName } from "../notes.js";
@@ -16,10 +15,11 @@
     IconTablerPlus,
     IconTablerX,
   } from "./Icons.svelte";
+  import Menu from "./Menu.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
-  /** @typedef {import("../Menu.svelte").MenuDef} MenuDef */
-  /** @typedef {import("../Menu.svelte").MenuItemDef} MenuItemDef */
+  /** @typedef {import("./Menu.svelte").MenuDef} MenuDef */
+  /** @typedef {import("./Menu.svelte").MenuItemDef} MenuItemDef */
 
   /** @type {{
     class?: string,
@@ -31,14 +31,7 @@
     onmenucmd: (cmd: number) => void,
 
   }} */
-  let {
-    class: klass = "",
-    openNote,
-    closeTab,
-    buildMenuDef,
-    menuItemStatus,
-    onmenucmd,
-  } = $props();
+  let { class: klass = "", openNote, closeTab, buildMenuDef, menuItemStatus, onmenucmd } = $props();
 
   let altChar = getAltChar();
 
@@ -147,19 +140,11 @@
   class="flex bg-gray-200 text-sm px-1 select-none text-gray-900 dark:bg-gray-500 dark:text-gray-300 items-center {cls} hover:visible {klass}"
 >
   {#if settings.showSidebar}
-    <button
-      onclick={() => (settings.showSidebar = false)}
-      class="clickable-icon"
-      title={"Hide Sidebar"}
-    >
+    <button onclick={() => (settings.showSidebar = false)} class="clickable-icon" title={"Hide Sidebar"}>
       {@render IconMdiArrowCollapseLeft()}
     </button>
   {:else}
-    <button
-      onclick={() => (settings.showSidebar = true)}
-      class="clickable-icon"
-      title={"Show Sidebar"}
-    >
+    <button onclick={() => (settings.showSidebar = true)} class="clickable-icon" title={"Show Sidebar"}>
       {@render IconMdiArrowCollapseRight()}
     </button>
   {/if}
@@ -309,7 +294,7 @@
 </div>
 
 <style lang="postcss">
-  @reference "../main.css";
+  @reference "tailwindcss";
 
   .clickable-icon {
     @apply cursor-pointer px-2 py-1;

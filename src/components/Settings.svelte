@@ -1,13 +1,7 @@
 <script>
   import { focus } from "../actions";
   import { getSessionDur } from "../globals";
-  import {
-    getGitHash,
-    getSettings,
-    getVersion,
-    kDefaultFontFamily,
-    kDefaultFontSize,
-  } from "../settings.svelte";
+  import { getGitHash, getSettings, getVersion, kDefaultFontFamily, kDefaultFontSize } from "../settings.svelte";
   import { platform } from "../util";
 
   let keymaps = [
@@ -100,9 +94,7 @@
       {#each indentWith as t}
         {@const th = t[0]}
         {@const label = t[1]}
-        <option selected={th === settings.indentType} value={th}
-          >{label}
-        </option>
+        <option selected={th === settings.indentType} value={th}>{label} </option>
       {/each}
     </select>
   </div>
@@ -135,9 +127,7 @@
     <h2 class="w-[12ch] text-right">Keymap</h2>
     <select bind:value={settings.keymap}>
       {#each keymaps as km (km.value)}
-        <option selected={km.value === settings.keymap} value={km.value}
-          >{km.name}</option
-        >
+        <option selected={km.value === settings.keymap} value={km.value}>{km.name}</option>
       {/each}
     </select>
   </div>
@@ -146,12 +136,8 @@
     <div class="mt-2 flex items-center">
       <h2 class="w-[12ch] text-right">Meta Key</h2>
       <select bind:value={settings.emacsMetaKey}>
-        <option selected={settings.emacsMetaKey === "meta"} value="meta"
-          >Command</option
-        >
-        <option selected={settings.emacsMetaKey === "alt"} value="alt"
-          >Option</option
-        >
+        <option selected={settings.emacsMetaKey === "meta"} value="meta">Command</option>
+        <option selected={settings.emacsMetaKey === "alt"} value="alt">Option</option>
       </select>
     </div>
   {/if}
@@ -162,9 +148,7 @@
       {#each systemFonts as font}
         {@const family = font[0]}
         {@const label = font[1]}
-        <option selected={family === settings.fontFamily} value={family}
-          >{label}
-        </option>
+        <option selected={family === settings.fontFamily} value={family}>{label} </option>
       {/each}
     </select>
   </div>
@@ -193,29 +177,17 @@
 
   <label class="flex-col mt-2">
     <h2 class="font-bold text-left">OpenAI API Key</h2>
-    <input
-      class="w-full mt-0.5 px-1 py-1"
-      type="text"
-      bind:value={settings.openAIKey}
-    />
+    <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.openAIKey} />
   </label>
 
   <label class="flex-col mt-2">
     <h2 class="font-bold text-left">Grok API Key</h2>
-    <input
-      class="w-full mt-0.5 px-1 py-1"
-      type="text"
-      bind:value={settings.xAIKey}
-    />
+    <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.xAIKey} />
   </label>
 
   <label class="flex-col mt-2">
     <h2 class="font-bold text-left">OpenRouter API Key</h2>
-    <input
-      class="w-full mt-0.5 px-1 py-1"
-      type="text"
-      bind:value={settings.openRouterKey}
-    />
+    <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.openRouterKey} />
   </label>
 
   <div class="mt-2 flex flex-col">
@@ -243,8 +215,8 @@
   </div>
 </div>
 
-<style>
-  @reference "../main.css";
+<style lang="postcss">
+  @reference "tailwindcss";
 
   select {
     @apply w-[200px];
