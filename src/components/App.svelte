@@ -44,6 +44,7 @@
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
+  import { boot } from "../main";
   import {
     archiveNote,
     getNoteMeta,
@@ -103,7 +104,6 @@
     trimPrefix,
     trimSuffix,
   } from "../util";
-  import { boot } from "../webapp-boot";
   import AskAI from "./AskAI.svelte";
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";

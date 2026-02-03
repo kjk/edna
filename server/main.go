@@ -157,7 +157,7 @@ func Main() {
 	}
 
 	if flgGen {
-		path := filepath.Join("src", "gen.mjs")
+		path := filepath.Join("src", "gen.t")
 		u.RunLoggedInDirMust(".", "bun", "run", path)
 		return
 	}
