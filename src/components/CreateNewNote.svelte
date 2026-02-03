@@ -3,11 +3,11 @@
   import { appState } from "../appstate.svelte";
   import { sanitizeNoteName } from "../notes";
 
-  /** @type { {
-    onclose: () => void,
-    createNewNote: (newName: string) => void,
-}}*/
-  let { onclose, createNewNote } = $props();
+  interface Props {
+    onclose: () => void;
+    createNewNote: (newName: string) => void;
+  }
+  let { onclose, createNewNote }: Props = $props();
 
   let newName = $state("");
 
@@ -34,10 +34,7 @@
     return "";
   });
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     let key = ev.key;
 
     if (canCreate && key === "Enter") {

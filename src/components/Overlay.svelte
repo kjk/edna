@@ -1,24 +1,21 @@
 <script lang="ts">
+  import type { Snippet } from "svelte";
   import { smartfocus, trapfocus } from "../actions";
   import { throwIf } from "../util";
 
-  /**
-   * @type {{
-   onclose?: () => void, // if given, will call it when clicked on overlay (but not on children)
-   noCloseOnEsc?: boolean, // disable close() on Esc
-   children: Function,
-   blur?: boolean,
-}} */
-  let { onclose = null, noCloseOnEsc = false, blur = false, children } = $props();
+  interface Props {
+    onclose?: () => void; // if given, will call it when clicked on overlay (but not on children)
+    noCloseOnEsc?: boolean; // disable close() on Esc
+    children: Snippet;
+    blur?: boolean;
+  }
+  let { onclose = null, noCloseOnEsc = false, blur = false, children }: Props = $props();
 
   // if noCloseOnEsc is false, we must have onclose
   // svelte-ignore state_referenced_locally
   throwIf(!onclose && !noCloseOnEsc);
 
-  /**
-   * @param {MouseEvent} ev
-   */
-  function onclick(ev) {
+  function onclick(ev: MouseEvent) {
     // console.log("onclick", ev);
     if (!onclose) {
       return;

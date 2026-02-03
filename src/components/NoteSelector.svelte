@@ -1,23 +1,20 @@
 <script module lang="ts">
-  /** @typedef {{
-    key: number,
-    name: string,
-    nameLC: string,
-    isStarred: boolean,
-    isArchived: boolean,
-    altShortcut?: number, // if present, 1 to 9 for Alt-1 to Alt-9
-    ref: HTMLElement,
-  }} NoteInfo
-*/
+  export interface NoteInfo {
+    key: number;
+    name: string;
+    nameLC: string;
+    isStarred: boolean;
+    isArchived: boolean;
+    altShortcut?: number; // if present, 1 to 9 for Alt-1 to Alt-9
+    ref: HTMLElement;
+  }
 
   /**
    * -1 if a < b
    * 0 if a = b
    * 1 if a > b
-   * @param {NoteInfo} a
-   * @param {NoteInfo} b
    */
-  export function sortNotes(a, b) {
+  export function sortNotes(a: NoteInfo, b: NoteInfo): number {
     // first archived
     if (a.isArchived && !b.isArchived) {
       return -1;
@@ -57,11 +54,7 @@
 
   let lastKey = 0;
 
-  /**
-   * @param {string} name
-   * @returns {NoteInfo}
-   */
-  export function buildNoteInfo(name) {
+  export function buildNoteInfo(name: string): NoteInfo {
     let isArchived = false;
     let isStarred = false;
     let m = getNoteMeta(name, false);
@@ -69,8 +62,7 @@
       isStarred = m.isStarred;
       isArchived = m.isArchived;
     }
-    /** @type {NoteInfo} */
-    let item = {
+    let item: NoteInfo = {
       key: lastKey,
       name: name,
       nameLC: name.toLowerCase(),
@@ -86,14 +78,9 @@
     return item;
   }
 
-  /**
-   * @param {string[]} noteNames
-   * @returns {NoteInfo[]}
-   */
-  export function buildNoteInfos(noteNames) {
+  export function buildNoteInfos(noteNames: string[]): NoteInfo[] {
     // console.log("buildItems, notes", noteInfos)
-    /** @type {NoteInfo[]} */
-    let res = Array(len(noteNames));
+    let res: NoteInfo[] = Array(len(noteNames));
     for (let i = 0; i < len(noteNames); i++) {
       let name = noteNames[i];
       let item = buildNoteInfo(name);
@@ -129,15 +116,15 @@
   import { IconTablerArchive, IconTablerStar, IconTablerTrash } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
-    header?: string,
-    openNote: (name: string, newTab: boolean) => void,
-    createNote: (name: string) => void,
-    deleteNote: (name: string, showNotif: boolean) => Promise<void>,
-    switchToCommandPalette?: () => void,
-    switchToWideNoteSelector?: () => void,
-    forMoveBlock?: boolean,
-}}*/
+  interface Props {
+    header?: string;
+    openNote: (name: string, newTab: boolean) => void;
+    createNote: (name: string) => void;
+    deleteNote: (name: string, showNotif: boolean) => Promise<void>;
+    switchToCommandPalette?: () => void;
+    switchToWideNoteSelector?: () => void;
+    forMoveBlock?: boolean;
+  }
   let {
     header = undefined,
     openNote,
@@ -146,7 +133,7 @@
     switchToCommandPalette = noOp,
     switchToWideNoteSelector = noOp,
     forMoveBlock = false,
-  } = $props();
+  }: Props = $props();
 
   function localBuildNoteInfos(regular, archived) {
     let notes = [...regular];
@@ -189,8 +176,7 @@
     return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
-  /** @type {NoteInfo} */
-  let selectedNote = $state(null);
+  let selectedNote: NoteInfo = $state(null);
   let selectedName = $state("");
   let canOpenSelected = $state(false);
   let canCreate = $state(false);
@@ -232,28 +218,17 @@
     showDelete = canOpenSelected;
   }
 
-  /**
-   * @param {NoteInfo} item
-   * @param {number} idx
-   */
-  function selectionChanged(item, idx) {
+  function selectionChanged(item: NoteInfo, idx: number) {
     selectedNote = item;
     selectedName = item ? selectedNote.name : "";
     recalcAvailableActions(item, sanitizedFilter);
   }
 
-  /**
-   * @param {NoteInfo} note
-   * @returns {string}
-   */
-  function noteShortcut(note) {
+  function noteShortcut(note: NoteInfo): string {
     return note.altShortcut ? altChar + " + " + note.altShortcut : "";
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  async function onKeydown(ev) {
+  async function onKeydown(ev: KeyboardEvent) {
     // console.log("onKeyDown:", event);
     let altN = isAltNumEvent(ev);
     if (altN !== null) {
@@ -303,27 +278,17 @@
     listboxRef.onkeydown(ev, filter === "");
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   * @param {boolean} newTab
-   */
-  function emitOpenNote(noteInfo, newTab) {
+  function emitOpenNote(noteInfo: NoteInfo, newTab: boolean) {
     // console.log("emitOpenNote", noteInfo.name, "newTab:", newTab);
     openNote(noteInfo.name, newTab);
   }
 
-  /**
-   * @param {string} name
-   */
-  function emitCreateNote(name) {
+  function emitCreateNote(name: string) {
     // log("create note", name);
     createNote(name);
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   */
-  async function toggleStarred(noteInfo) {
+  async function toggleStarred(noteInfo: NoteInfo) {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
     // because we wait until metadata file is saved

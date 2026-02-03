@@ -61,8 +61,7 @@
     let fonts = await qlf();
     let seen = []; // queryLocalFonts() returns duplicates
     for (let f of fonts) {
-      /** @type {string} */
-      let fam = f.family;
+      let fam: string = f.family;
       if (fam === kDefaultFontFamily) {
         continue;
       }

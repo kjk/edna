@@ -8,11 +8,11 @@
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
 
-  /** @type {{
-    openNote: (name: string, newTab?: boolean) => void,
-    forHistory: boolean,
-  }} */
-  let { forHistory, openNote } = $props();
+  interface Props {
+    openNote: (name: string, newTab?: boolean) => void;
+    forHistory: boolean;
+  }
+  let { forHistory, openNote }: Props = $props();
 
   let altChar = getAltChar();
   let modChar = getModChar();
@@ -28,16 +28,10 @@
 
   const kMaxHistory = 10;
 
-  /**
-   * @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo }
-   * @param {string[]} starred
-   * @param {string[]} withShortcuts
-   * @param {string[]} history
-   * @returns {NoteInfo[]}
-   */
-  function buildQuickAccessNotes(starred, withShortcuts, history) {
-    /** @type {string[]} */
-    let notes = [...starred, ...withShortcuts];
+  import type { NoteInfo } from "./NoteSelector.svelte";
+
+  function buildQuickAccessNotes(starred: string[], withShortcuts: string[], history: string[]): NoteInfo[] {
+    let notes: string[] = [...starred, ...withShortcuts];
     // remove duplicate names in notes
     notes = [...new Set(notes)];
     let res = buildNoteInfos(notes);
@@ -66,21 +60,14 @@
     ),
   );
 
-  /**
-   * @param {NoteInfo} note
-   * @returns {string}
-   */
-  function getNoteShortcut(note) {
+  function getNoteShortcut(note: NoteInfo): string {
     if (note.altShortcut) {
       return `${altChar} + ${note.altShortcut}`;
     }
     return "";
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     // '0' ... '9' picks an item
     let idx = getKeyEventNumber(ev);
     let lastIdx = len(history) - 1;
@@ -94,10 +81,7 @@
     listboxRef.onkeydown(ev, true);
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   */
-  async function toggleStarred(noteInfo) {
+  async function toggleStarred(noteInfo: NoteInfo) {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
     // because we wait until metadata file is saved

@@ -12,34 +12,27 @@
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  /** @typedef {import("../functions").BoopFunction} BoopFunction */
+  import type { BoopFunction } from "../functions";
 
-  /** @type {{
-   userFunctions: BoopFunction[],
-   runFunction: (fn: BoopFunction, replace: boolean) => void,
-   context: string
-  }}*/
+  interface Props {
+    userFunctions: BoopFunction[];
+    runFunction: (fn: BoopFunction, replace: boolean) => void;
+    context: string;
+  }
+  let { userFunctions, runFunction, context }: Props = $props();
 
-  let { userFunctions, runFunction, context } = $props();
-
-  /** @typedef {{
-    fdef: BoopFunction,
-    key: number,
-    name: string,
-    nameLC: string,
-    isStarred: boolean,
-    ref: HTMLElement,
-   }} Item
-  */
+  interface Item {
+    fdef: BoopFunction;
+    key: number;
+    name: string;
+    nameLC: string;
+    isStarred: boolean;
+    ref: HTMLElement;
+  }
 
   let altChar = getAltChar();
 
-  /**
-   * @param {BoopFunction} fdef
-   * @param {number} key
-   * @returns {Item}
-   */
-  function mkItem(fdef, key) {
+  function mkItem(fdef: BoopFunction, key: number): Item {
     let name = fdef.name;
     let nameLC = name.toLowerCase();
     let ref = null;
@@ -60,10 +53,8 @@
    * -1 if a < b
    * 0 if a = b
    * 1 if a > b
-   * @param {Item} a
-   * @param {Item} b
    */
-  function sortItem(a, b) {
+  function sortItem(a: Item, b: Item): number {
     // started before not starred
     if (a.isStarred && !b.isStarred) {
       return -1;
@@ -74,10 +65,7 @@
     return a.name.localeCompare(b.name);
   }
 
-  /**
-   * @returns {Item[]}
-   */
-  function buildItems() {
+  function buildItems(): Item[] {
     let blockFunctions = getBoopFunctions();
     let n = len(blockFunctions);
     let res = Array(n);
@@ -96,27 +84,16 @@
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
 
-  /**
-   * @returns {Item[]}
-   */
-  let itemsFiltered = $derived(findMatchingItems(items, filter, "nameLC"));
+  let itemsFiltered: Item[] = $derived(findMatchingItems(items, filter, "nameLC"));
 
-  /** @type {Item} */
-  let selectedItem = $state(null);
+  let selectedItem: Item = $state(null);
 
-  /**
-   * @param {Item} item
-   * @param {boolean} replace
-   */
-  function emitRunFunction(item, replace) {
+  function emitRunFunction(item: Item, replace: boolean) {
     console.log("emitRunFunction:", item);
     runFunction(item.fdef, replace);
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onKeydown(ev) {
+  function onKeydown(ev: KeyboardEvent) {
     // console.log("onKeyDown:", event);
     let key = ev.key;
 
@@ -146,10 +123,7 @@
     return `${n} of ${nItems} funcs`;
   });
 
-  /**
-   * @param {Item} item
-   */
-  async function toggleStarred(item) {
+  async function toggleStarred(item: Item) {
     item.isStarred = await toggleFunctionStarred(item.name);
     console.log("toggleStarred:", item, "isStarred:", item.isStarred);
     inputRef.focus();

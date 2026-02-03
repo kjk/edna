@@ -3,10 +3,10 @@
   import { kReleaseNotesSystemNoteName } from "../notes";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
-    selectItem: (name: string) => void,
-  }} */
-  let { selectItem } = $props();
+  interface Props {
+    selectItem: (name: string) => void;
+  }
+  let { selectItem }: Props = $props();
 
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
@@ -36,10 +36,7 @@
     },
   ];
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     listboxRef.onkeydown(ev, true);
   }
 </script>

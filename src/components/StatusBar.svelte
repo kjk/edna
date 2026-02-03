@@ -10,18 +10,18 @@
   import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
 
-  /** @type { {
-    line: number,
-    column: number,
-    docSize: number,
-    selectionSize: number,
-    language: string,
-    languageAuto: boolean,
-    isSpellChecking: boolean,
-    toggleSpellCheck: (ev) => void,
-    smartRun: (ev) => void,
-    formatCurrentBlock: (ev) => void,
-  } } */
+  interface Props {
+    line?: number;
+    column?: number;
+    docSize?: number;
+    selectionSize?: number;
+    language?: string;
+    languageAuto?: boolean;
+    isSpellChecking?: boolean;
+    toggleSpellCheck: (ev: Event) => void;
+    smartRun: (ev: Event) => void;
+    formatCurrentBlock: (ev: Event) => void;
+  }
   let {
     line = 0,
     column = 0,
@@ -33,7 +33,7 @@
     toggleSpellCheck,
     smartRun,
     formatCurrentBlock,
-  } = $props();
+  }: Props = $props();
 
   let style = $state("");
   $effect(() => {

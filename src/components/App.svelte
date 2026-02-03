@@ -134,8 +134,12 @@
   import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
   import TopNav from "./TopNav.svelte";
 
-  /** @typedef {import("./Menu.svelte").MenuItemDef} MenuItemDef */
-  /** @typedef {import("../functions").BoopFunction} BoopFunction */
+  import type { MenuItemDef } from "./Menu.svelte";
+  import type { BoopFunction, BoopFunctionArg } from "../functions";
+  import type { EditorView } from "@codemirror/view";
+  import type { SelectionChangeEvent } from "../editor/event";
+  import type { Item as BlockItem } from "./BlockSelector.svelte";
+  import type { CapturingEval } from "../run";
 
   const isMac = platform.isMac;
 
@@ -218,8 +222,7 @@
   // /** @type {import("../editor/editor").EdnaEditor} */
   // let ednaEditor = $state(null);
 
-  /** @type {Editor} */
-  let editorRef;
+  let editorRef: Editor;
 
   $effect(() => {
     isMoving.disableMoveTracking = isShowingDialog;
@@ -306,10 +309,7 @@
     };
   });
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onKeyDown(ev) {
+  function onKeyDown(ev: KeyboardEvent) {
     // we bind Mod-h in CocdeMirror which only works if CodeMirror has
     // focus. We have to prevent it here to disable the default
     // behavior of hiding a window
@@ -378,7 +378,7 @@
     // hack: stop Ctrl + O unless it originates from code mirror (because then it
     // triggers NoteSelector)
     if (ev.key == "o" && ev.ctrlKey && !ev.altKey && !ev.shiftKey) {
-      let target = /** @type {HTMLElement} */ (ev.target);
+      let target = ev.target as HTMLElement;
       let fromCodeMirror = target && target.className.includes("cm-content");
       if (!fromCodeMirror) {
         ev.preventDefault();
@@ -409,11 +409,7 @@
   let closeDecryptPassword = $state(null);
   let onDecryptPassword = $state(null);
 
-  /**
-   * @param {string} [msg]
-   * @returns {Promise<string>}
-   */
-  async function getPassword(msg = "") {
+  async function getPassword(msg: string = ""): Promise<string> {
     showingDecryptPassword = true;
     showingDecryptMessage = msg;
     clearModalMessage();
@@ -429,16 +425,10 @@
     });
   }
 
-  /** @type {FileSystemFileHandle} */
-  let fileWritePermissionsFileHandle = $state(null);
-  /** @type {(boolean) => void} */
-  let askFileWritePermissionsClose = $state(null);
+  let fileWritePermissionsFileHandle: FileSystemFileHandle = $state(null);
+  let askFileWritePermissionsClose: (ok: boolean) => void = $state(null);
 
-  /**
-   * @param {FileSystemFileHandle} fh
-   * @returns {Promise<boolean>}
-   */
-  async function requestFileWritePermission(fh) {
+  async function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
     if (hasHandlePermission(fh, true)) {
       console.log("requestFileWritePermission: already have write permissions to", fh);
       return true;
@@ -517,11 +507,7 @@
     }
   }
 
-  /**
-   * @param {Blob} blob
-   * @param {string} fileName
-   */
-  async function exportBlobToFile(blob, fileName) {
+  async function exportBlobToFile(blob: Blob, fileName: string) {
     if (!supportsFileSystem()) {
       browserDownloadBlob(blob, fileName);
       return;
@@ -582,13 +568,7 @@
     await boot();
   }
 
-  /**
-   * @param {string} c
-   * @param {number} from
-   * @param {number} to
-   * @returns {string}
-   */
-  function extractBlockTitle(c, from, to) {
+  function extractBlockTitle(c: string, from: number, to: number): string {
     let s = c.substring(from, to);
     s = s.trim();
     let idx = s.indexOf("\n");
@@ -623,8 +603,7 @@
     return s;
   }
 
-  /** @type {import("./BlockSelector.svelte").Item[]} */
-  let blockItems = $state([]);
+  let blockItems: BlockItem[] = $state([]);
   let initialBlockSelection = $state(0);
 
   function openBlockSelector(fn = selectBlock) {
@@ -634,8 +613,7 @@
     let blocks = editor.getBlocks();
     let activeBlock = getActiveNoteBlock(editor.view.state);
     let content = editor.getContent();
-    /** @type {import("./BlockSelector.svelte").Item[]} */
-    let items = [];
+    let items: BlockItem[] = [];
     let blockNo = 0;
     let currBlockNo = 0;
     for (let b of blocks) {
@@ -717,14 +695,7 @@
     showingFunctionSelector = true;
   }
 
-  /** @typedef {import("../functions").BoopFunctionArg} BoopFunctionArg*/
-
-  /**
-   * @param {BoopFunction} f
-   * @param {string} txt
-   * @returns {Promise<BoopFunctionArg>}
-   */
-  export async function runBoopFunctionWithText(f, txt) {
+  export async function runBoopFunctionWithText(f: BoopFunction, txt: string): Promise<BoopFunctionArg> {
     let input = {
       text: txt,
       fullText: txt,
@@ -742,13 +713,7 @@
     return input;
   }
 
-  /**
-   * @param {EditorView} view
-   * @param {BoopFunction} fdef
-   * @param {boolean} replace
-   * @returns {Promise<boolean>}
-   */
-  async function runBoopFunctionWithSelection(view, fdef, replace) {
+  async function runBoopFunctionWithSelection(view: EditorView, fdef: BoopFunction, replace: boolean): Promise<boolean> {
     // TOOD: selection can cross blocks so for now not implementing replace
     replace = false;
 
@@ -788,14 +753,7 @@
     }
   }
 
-  /** @typedef {import("@codemirror/view").EditorView} EditorView */
-  /**
-   * @param {EditorView} view
-   * @param {BoopFunction} fdef
-   * @param {boolean} replace
-   * @returns {Promise<boolean>}
-   */
-  async function runBoopFunctionWithBlockContent(view, fdef, replace) {
+  async function runBoopFunctionWithBlockContent(view: EditorView, fdef: BoopFunction, replace: boolean): Promise<boolean> {
     const { state } = view;
     if (state.readOnly) return false;
     const block = getActiveNoteBlock(state);
@@ -846,11 +804,7 @@
     }
   }
 
-  /**
-   * @param {BoopFunction} fdef
-   * @param {boolean} replace
-   */
-  async function runFunction(fdef, replace) {
+  async function runFunction(fdef: BoopFunction, replace: boolean) {
     console.log("runFunction");
     showingFunctionSelector = false;
     let view = getEditorView();
@@ -876,10 +830,7 @@
     showingLanguageSelector = true;
   }
 
-  /**
-   * @param {string} lang
-   */
-  function onSelectLanguage(lang) {
+  function onSelectLanguage(lang: string) {
     showingLanguageSelector = false;
     let view = getEditorView();
     let auto = false;
@@ -1125,8 +1076,7 @@
     "Un-archive note",
   ];
 
-  /** @type {MenuItemDef[]} */
-  const commandPaletteAdditions = [
+  const commandPaletteAdditions: MenuItemDef[] = [
     ["Test error tracking", kCmdTestErrorTracking],
     ["Create New Scratch Note", kCmdCreateScratchNote],
     // ["Create New Note", kCmdCreateNewNote],
@@ -1165,12 +1115,8 @@
         ]),
   ];
 
-  /**
-   * @param {MenuItemDef} mi
-   * @returns {number}
-   */
-  function menuItemStatus(mi) {
-    let mid = /** @type {number} */ (mi[1]);
+  function menuItemStatus(mi: MenuItemDef): number {
+    let mid = mi[1] as number;
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
     }
@@ -1300,10 +1246,7 @@
     return kMenuStatusNormal;
   }
 
-  /**
-   * @returns {boolean}
-   */
-  function hasSelection() {
+  function hasSelection(): boolean {
     let view = getEditorView();
     let { selectedText } = getCurrentSelection(view.state);
     return selectedText != "";
@@ -1314,11 +1257,7 @@
     openSearchPanel(view);
   }
 
-  /**
-   * @param {number} cmdId
-   * @param ev
-   */
-  async function onmenucmd(cmdId) {
+  async function onmenucmd(cmdId: number) {
     // console.log("cmd:", cmdId);
     showingContextMenu = false;
     let view = getEditorView();
@@ -1535,10 +1474,8 @@
   }
 
   let contextMenuDef = $state(null);
-  /**
-   * @param {MouseEvent} ev
-   */
-  async function oncontextmenu(ev) {
+
+  async function oncontextmenu(ev: MouseEvent) {
     console.log("oncontextmenu");
     if (isShowingDialog) {
       console.log("oncontestmenu: isShowingDialog");
@@ -1554,11 +1491,7 @@
     await openContextMenu(ev);
   }
 
-  /**
-   * @param {MouseEvent} ev
-   * @param {{x: number, y: number}} pos
-   */
-  async function openContextMenu(ev, pos = null) {
+  async function openContextMenu(ev: MouseEvent, pos: { x: number; y: number } = null) {
     ev.preventDefault();
     ev.stopPropagation();
     ev.stopImmediatePropagation();
@@ -1567,11 +1500,7 @@
     showingContextMenu = true;
   }
 
-  /**
-   * @param {number} id
-   * @param {string} [name]
-   */
-  function commandNameOverride(id, name) {
+  function commandNameOverride(id: number, name?: string) {
     if (id === kCmdToggleSpellChecking) {
       return (isSpellChecking ? "Disable" : "Enable") + " spell checking";
     }
@@ -1681,33 +1610,21 @@
     showingCommandPalette = true;
   }
 
-  /**
-   * @param {number} cmdId
-   */
-  async function executeCommand(cmdId) {
+  async function executeCommand(cmdId: number) {
     // console.log("executeCommand:", cmdId);
     showingCommandPalette = false;
     onmenucmd(cmdId);
   }
 
-  /**
-   * @returns {Editor}
-   */
-  function getEditorComp() {
+  function getEditorComp(): Editor {
     return editorRef;
   }
 
-  /**
-   * @returns {EdnaEditor}
-   */
-  function getEditor() {
+  function getEditor(): EdnaEditor {
     return editorRef.getEditor();
   }
 
-  /**
-   * @returns {import("@codemirror/view").EditorView}
-   */
-  function getEditorView() {
+  function getEditorView(): EditorView {
     if (!editorRef) {
       return null;
     }
@@ -1726,10 +1643,7 @@
     getEditor().focus();
   }
 
-  /**
-   * @param {string} s
-   */
-  function insertAskAIResponse(s) {
+  function insertAskAIResponse(s: string) {
     let view = getEditorView();
     if (isReadOnly(view)) {
       return false;
@@ -1738,11 +1652,7 @@
     insertAfterActiveBlock(view, text);
   }
 
-  /**
-   * @param {EditorView} view
-   * @returns {Promise<boolean>}
-   */
-  export async function runBlockContent(view) {
+  export async function runBlockContent(view: EditorView): Promise<boolean> {
     const { state } = view;
     if (isReadOnly(view)) {
       return false;
@@ -1760,8 +1670,7 @@
     setReadOnly(view, true);
     let output = "";
     let token = lang.token;
-    /** @type { import("../run").CapturingEval} */
-    let res = null;
+    let res: CapturingEval = null;
     if (token === "golang") {
       res = await runGo(content);
     } else if (token === "javascript") {
@@ -1788,12 +1697,7 @@
     return true;
   }
 
-  /**
-   * @param {EditorView} view
-   * @param {string} arg
-   * @returns {Promise<boolean>}
-   */
-  export async function runBlockContentWithArg(view, arg) {
+  export async function runBlockContentWithArg(view: EditorView, arg: string): Promise<boolean> {
     const { state } = view;
     if (isReadOnly(view)) {
       return false;
@@ -1811,8 +1715,7 @@
     showModalMessageHTML("running code", 300);
     setReadOnly(view, true);
 
-    /** @type {import("../run").CapturingEval} */
-    let res = null;
+    let res: CapturingEval = null;
     let token = lang.token;
 
     if (token === "javascript") {
@@ -1865,11 +1768,7 @@
     logNoteOp("runBlockWithBlock");
   }
 
-  /**
-   * @param {EditorState} state
-   * @returns {boolean}
-   */
-  function currentBlockSupportsRun(state) {
+  function currentBlockSupportsRun(state: EditorState): boolean {
     const block = getActiveNoteBlock(state);
     const lang = getLanguage(block.language.name);
     // console.log("runBlockContent: lang:", lang);
@@ -1926,10 +1825,7 @@
     // }
   }
 
-  /**
-   * @param {string} anchor
-   */
-  function showHTMLHelp(anchor = "") {
+  function showHTMLHelp(anchor: string = "") {
     // let uri = window.location.origin + "/help"
     let uri = "/help";
     if (anchor != "") {
@@ -1938,10 +1834,7 @@
     window.open(uri, "_blank");
   }
 
-  /**
-   * @param {string} newName
-   */
-  async function onRename(newName) {
+  async function onRename(newName: string) {
     let noteName = settings.currentNoteName;
     closeDialogs();
     let editor = getEditor();
@@ -1955,10 +1848,7 @@
     showingQuickAccess = true;
   }
 
-  /**
-   * @param {string} name
-   */
-  async function onOpenNote(name, newTab = false) {
+  async function onOpenNote(name: string, newTab = false) {
     // must get before closeDialg()
     let forceNewTab = appState.forceNewTab;
 
@@ -1985,12 +1875,7 @@
     await openNote(name);
   }
 
-  /**
-   * @param {string} name
-   * @param {boolean} skipSave
-   * @param {boolean} noPushHistory
-   */
-  async function openNote(name, skipSave = false, noPushHistory = false) {
+  async function openNote(name: string, skipSave = false, noPushHistory = false) {
     console.log("App.openNote:", name);
     let msg = `Loading <span class="font-bold">${name}</span>...`;
     showModalMessageHTML(msg, 300);
@@ -2001,11 +1886,7 @@
     getEditorComp().focus();
   }
 
-  /**
-   * @param {string} name
-   * @param {number} pos
-   */
-  function openNoteFromFind(name, pos) {
+  function openNoteFromFind(name: string, pos: number) {
     closeDialogs();
     openNote(name).then(() => {
       // TODO: this is not reliable, must pass pos down via openNote()
@@ -2026,10 +1907,7 @@
     showingBlockMoveSelector = true;
   }
 
-  /**
-   * @param {string} name
-   */
-  async function onMoveBlockToNote(name) {
+  async function onMoveBlockToNote(name: string) {
     showingBlockMoveSelector = false;
     // name can be new or existing note
     let state = getEditorView().state;
@@ -2043,10 +1921,7 @@
     view.focus();
   }
 
-  /**
-   * @param {string} name
-   */
-  async function onCreateNote(name) {
+  async function onCreateNote(name: string) {
     closeDialogs();
     await createNoteWithName(name);
     openNote(name);
@@ -2055,11 +1930,7 @@
     logNoteOp("noteCreate");
   }
 
-  /**
-   * @param {string} name
-   * @param {boolean} showNotif
-   */
-  async function deleteNotePermanently(name, showNotif) {
+  async function deleteNotePermanently(name: string, showNotif: boolean) {
     if (!canDeleteNote(name)) {
       showWarning(`Can't delete special note ${name}`);
       console.log("cannot delete note:", name);
@@ -2085,12 +1956,7 @@
     logNoteOp("noteDelete");
   }
 
-  /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
-
-  /**
-   * @param {SelectionChangeEvent} e
-   */
-  function onCursorChange(e) {
+  function onCursorChange(e: SelectionChangeEvent) {
     line = e.cursorLine.line;
     column = e.cursorLine.col;
     selectionSize = e.selectionSize;
@@ -2104,10 +1970,7 @@
     docSize = stringSizeInUtf8Bytes(c);
   }
 
-  /**
-   * @param {EdnaEditor} editor
-   */
-  function autoCreateDayInJournal(editor) {
+  function autoCreateDayInJournal(editor: EdnaEditor) {
     // create block for a current day if doesn't exist
     let s = blockHdrMarkdown + "# " + formatDateYYYYMMDDDay();
     let content = editor.getContent();
@@ -2134,11 +1997,7 @@
     );
   }
 
-  /**
-   * @param {string} name
-   * @param {boolean} noPushHistory
-   */
-  function didLoadNote(name, noPushHistory = false) {
+  function didLoadNote(name: string, noPushHistory = false) {
     console.log("didLoadNote:", name);
     throwIf(!name);
     console.log("onDocChanged: just opened");

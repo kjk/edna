@@ -1,16 +1,13 @@
 <script lang="ts">
-  /** @type { {
-    class: string,
-    formatTime?: (date: Date) => string,
-  } } */
-  let { class: className = "", formatTime = formatTimeMyStyle } = $props();
+  interface Props {
+    class?: string;
+    formatTime?: (date: Date) => string;
+  }
+  let { class: className = "", formatTime = formatTimeMyStyle }: Props = $props();
 
   let formattedTime = $state("");
 
-  /**
-   * @param {Date} dt
-   */
-  function formatTimeMyStyle(dt) {
+  function formatTimeMyStyle(dt: Date): string {
     return dt.toLocaleString("en-US", {
       weekday: "short",
       month: "2-digit",

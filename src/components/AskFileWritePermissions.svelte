@@ -1,11 +1,11 @@
 <script lang="ts">
   import { requestHandlePermission } from "../fileutil";
 
-  /** @type {{
-   close: (boolean) => void,
-   fileHandle: FileSystemHandle,
-  }}*/
-  let { close, fileHandle } = $props();
+  interface Props {
+    close: (ok: boolean) => void;
+    fileHandle: FileSystemHandle;
+  }
+  let { close, fileHandle }: Props = $props();
 
   // svelte-ignore state_referenced_locally
   let fileName = $state(fileHandle.name);

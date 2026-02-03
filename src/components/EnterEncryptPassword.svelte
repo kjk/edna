@@ -3,11 +3,11 @@
   import { getNotesCount } from "../notes";
   import { len } from "../util";
 
-  /** @type { {
-    onclose: () => void,
-    onpassword: (newName: string) => void,
-}}*/
-  let { onclose, onpassword } = $props();
+  interface Props {
+    onclose: () => void;
+    onpassword: (newName: string) => void;
+  }
+  let { onclose, onpassword }: Props = $props();
 
   let password = $state("");
 
@@ -21,10 +21,7 @@
     return "password must be at least 8 characters long";
   });
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     let key = ev.key;
 
     if (key === "Enter") {
@@ -40,8 +37,7 @@
   }
   let hidePassword = $state(true);
 
-  /** @type {HTMLElement} */
-  let inputRef;
+  let inputRef: HTMLElement;
   function onchange(ev) {
     inputRef.focus();
   }

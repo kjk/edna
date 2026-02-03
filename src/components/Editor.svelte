@@ -9,26 +9,24 @@
   import { rememberEditor } from "../state";
   import { throwIf } from "../util";
 
-  /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
+  import type { SelectionChangeEvent } from "../editor/event";
 
-  /** @type {{
-    class?: string,
-    debugSyntaxTree: boolean,
-    cursorChange: (e: SelectionChangeEvent) => void,
-    docDidChange: () => void,
-    didLoadNote: (name: string, noPushHistory: boolean) => void,
-   }}*/
-  let { class: klass = "", debugSyntaxTree, cursorChange, docDidChange, didLoadNote } = $props();
+  interface Props {
+    class?: string;
+    debugSyntaxTree: boolean;
+    cursorChange: (e: SelectionChangeEvent) => void;
+    docDidChange: () => void;
+    didLoadNote: (name: string, noPushHistory: boolean) => void;
+  }
+  let { class: klass = "", debugSyntaxTree, cursorChange, docDidChange, didLoadNote }: Props = $props();
 
   let syntaxTreeDebugContent = $state(null);
   let settings = getSettings();
   let theme = settings.theme;
 
-  /** @type {EdnaEditor} */
-  let editor;
+  let editor: EdnaEditor;
 
-  /** @type {HTMLElement} */
-  let editorRef;
+  let editorRef: HTMLElement;
 
   $effect(() => {
     /* TODO: it's not reactive if I do:
@@ -78,10 +76,7 @@
     window.document.addEventListener("currenciesLoaded", didLoadCurrencies);
     // forward events dispatched from editor.js
 
-    /**
-     * @param {SelectionChangeEvent} ev
-     */
-    function onSelChange(ev) {
+    function onSelChange(ev: SelectionChangeEvent) {
       cursorChange(ev);
     }
     editorRef.addEventListener("selectionChange", onSelChange);
@@ -177,17 +172,11 @@
     return ce.getAttribute("spellcheck") === "true";
   }
 
-  /**
-   * @returns {EditorView}
-   */
-  export function getEditorView() {
+  export function getEditorView(): EditorView {
     return editor.view;
   }
 
-  /**
-   * @returns {EdnaEditor}
-   */
-  export function getEditor() {
+  export function getEditor(): EdnaEditor {
     return editor;
   }
 
@@ -195,10 +184,7 @@
     editor.focus();
   }
 
-  /**
-   * @param {string} name
-   */
-  export async function openNote(name, skipSave = false, noPushHistory = false) {
+  export async function openNote(name: string, skipSave = false, noPushHistory = false) {
     console.log("openNote:", name);
     if (!skipSave) {
       // TODO: this is async so let's hope it works

@@ -3,12 +3,12 @@
   import { appState } from "../appstate.svelte";
   import { isSystemNoteName, sanitizeNoteName } from "../notes";
 
-  /** @type { {
-    onclose: () => void,
-    oldName: string,
-    rename: (newName: string) => void,
-}}*/
-  let { oldName, onclose, rename } = $props();
+  interface Props {
+    onclose: () => void;
+    oldName: string;
+    rename: (newName: string) => void;
+  }
+  let { oldName, onclose, rename }: Props = $props();
 
   // svelte-ignore state_referenced_locally
   let newName = $state(oldName);
@@ -41,10 +41,7 @@
     return "";
   });
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     let key = ev.key;
 
     if (canRename && key === "Enter") {

@@ -15,31 +15,22 @@
     IconTablerPlus,
     IconTablerX,
   } from "./Icons.svelte";
-  import Menu from "./Menu.svelte";
+  import Menu, { type MenuDef, type MenuItemDef } from "./Menu.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
-  /** @typedef {import("./Menu.svelte").MenuDef} MenuDef */
-  /** @typedef {import("./Menu.svelte").MenuItemDef} MenuItemDef */
-
-  /** @type {{
-    class?: string,
-    openNote: (name: string, newTab: boolean) => void,
-    closeTab: (name: string) => void,
-
-    buildMenuDef: any,
-    menuItemStatus?: (mi: MenuItemDef) => number,
-    onmenucmd: (cmd: number) => void,
-
-  }} */
-  let { class: klass = "", openNote, closeTab, buildMenuDef, menuItemStatus, onmenucmd } = $props();
+  interface Props {
+    class?: string;
+    openNote: (name: string, newTab: boolean) => void;
+    closeTab: (name: string) => void;
+    buildMenuDef: () => MenuDef;
+    menuItemStatus?: (mi: MenuItemDef) => number;
+    onmenucmd: (cmd: number) => void;
+  }
+  let { class: klass = "", openNote, closeTab, buildMenuDef, menuItemStatus, onmenucmd }: Props = $props();
 
   let altChar = getAltChar();
 
-  /**
-   * @param {string} noteName
-   * @returns {string}
-   */
-  function getNameWithShortcut(noteName) {
+  function getNameWithShortcut(noteName: string): string {
     let m = getNoteMeta(noteName);
     if (m && m.altShortcut) {
       return `${noteName}  (${altChar} + ${m.altShortcut})`;
@@ -47,11 +38,7 @@
     return noteName;
   }
 
-  /**
-   * @param {string} noteName
-   * @param {boolean} newTab
-   */
-  function myOpenNote(noteName, newTab) {
+  function myOpenNote(noteName: string, newTab: boolean) {
     showingQuickAccess = false;
     openNote(noteName, newTab);
   }
@@ -68,8 +55,7 @@
     return "invisible fixed top-0 z-10 right-0";
   });
 
-  /** @type {HTMLElement} */
-  let ednaRef = $state(null);
+  let ednaRef: HTMLElement = $state(null);
 
   const colors = [
     "red",

@@ -1,10 +1,9 @@
 <script module lang="ts">
-  /** @typedef {{
-   block: any,
-   text: string,
-   key: number,
-  }} Item
-  */
+  export interface Item {
+    block: any;
+    text: string;
+    key: number;
+  }
 </script>
 
 <!-- svelte-ignore state_referenced_locally -->
@@ -19,15 +18,14 @@
   } from "../util";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
-   blocks: Item[],
-   selectBlock: (block : Item) => void,
-   initialSelection?: number,
-  }}*/
-  let { blocks, selectBlock, initialSelection = 0 } = $props();
+  interface Props {
+    blocks: Item[];
+    selectBlock: (block: Item) => void;
+    initialSelection?: number;
+  }
+  let { blocks, selectBlock, initialSelection = 0 }: Props = $props();
 
-  /** @type {string} */
-  let filter = $state("");
+  let filter: string = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
 
   let blockCountMsg = $state(`${len(blocks)} blocks`);
@@ -35,14 +33,14 @@
     blockCountMsg = `1 block`;
   }
 
-  /** @typedef {{item: Item, textLC: string, key: number }} BlockItem */
+  interface BlockItem {
+    item: Item;
+    textLC: string;
+    key: number;
+  }
 
-  /**
-   * @returns {BlockItem[]}
-   */
-  function buildItems() {
-    /** @type {BlockItem[]} */
-    let res = [];
+  function buildItems(): BlockItem[] {
+    let res: BlockItem[] = [];
     for (let block of blocks) {
       let bi = {
         item: block,
@@ -54,16 +52,11 @@
     return res;
   }
 
-  /** @type {BlockItem[]} */
-  let items = buildItems();
+  let items: BlockItem[] = buildItems();
 
-  /** @type {BlockItem[]} */
-  let itemsFiltered = $derived(findMatchingItems(items, filter, "textLC"));
+  let itemsFiltered: BlockItem[] = $derived(findMatchingItems(items, filter, "textLC"));
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     // Ctrl + '0' ... '9' picks an item
     // TODO: extend it to `a` .. `z` ?
     if (ev.ctrlKey) {

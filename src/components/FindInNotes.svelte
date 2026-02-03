@@ -9,10 +9,10 @@
   import { IconFluentWholeWord, IconTablerLetterCase } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  /** @type {{
-    openNote: (name: string, pos: number) => void,
-}}*/
-  let { openNote } = $props();
+  interface Props {
+    openNote: (name: string, pos: number) => void;
+  }
+  let { openNote }: Props = $props();
 
   let searchTerm = $state("");
   let replaceTerm = $state("");
@@ -20,14 +20,11 @@
   let currSearchTerm = "";
   let selectedItem;
 
-  /** @type {HTMLInputElement} */
-  let searchInputRef;
+  let searchInputRef: HTMLInputElement;
 
-  /** @type {HTMLInputElement} */
-  let replaceInputRef = $state(undefined);
+  let replaceInputRef: HTMLInputElement = $state(undefined);
 
-  /** @type {{key: number, note: string}[]}*/
-  let results = $state([]);
+  let results: { key: number; note: string; line?: string; pos?: number }[] = $state([]);
   let noteBeingSearched = $state("");
 
   // svelte-ignore non_reactive_update
@@ -42,10 +39,7 @@
 
   let noResultsMsg = $state("");
 
-  /**
-   * @param {string} searchTerm
-   */
-  async function searchAllNotes(searchTerm) {
+  async function searchAllNotes(searchTerm: string) {
     currSearchTerm = searchTerm;
     hiliRegExp = makeHilightRegExp(searchTerm);
     results = [];
@@ -136,10 +130,7 @@
     }
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  function onKeyDown(ev) {
+  function onKeyDown(ev: KeyboardEvent) {
     if (ev.key == "Enter") {
       ev.preventDefault();
       let sameSearchTerm = searchTerm == currSearchTerm;

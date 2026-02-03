@@ -20,22 +20,22 @@
   import ListBox2 from "./ListBox2.svelte";
   import { buildNoteInfos } from "./NoteSelector.svelte";
 
-  /** @typedef {import("./NoteSelector.svelte").NoteInfo} NoteInfo */
+  import type { NoteInfo } from "./NoteSelector.svelte";
 
-  /** @type {{
-    openNote: (name: string, newTab: boolean) => void,
-    createNote: (name: string) => void,
-    deleteNote: (name: string, showNotif: boolean) => Promise<void>,
-    switchToCommandPalette: () => void,
-    switchToRegularNoteSelector: () => void,
-}}*/
+  interface Props {
+    openNote: (name: string, newTab: boolean) => void;
+    createNote: (name: string) => void;
+    deleteNote: (name: string, showNotif: boolean) => Promise<void>;
+    switchToCommandPalette: () => void;
+    switchToRegularNoteSelector: () => void;
+  }
   let {
     openNote,
     createNote,
     deleteNote,
     switchToCommandPalette,
     switchToRegularNoteSelector,
-  } = $props();
+  }: Props = $props();
 
   function localBuildNoteInfos(regular, archived) {
     let notes = [...regular];
@@ -78,8 +78,7 @@
     return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
-  /** @type {NoteInfo} */
-  let selectedItem = $state(null);
+  let selectedItem: NoteInfo = $state(null);
   let selectedName = $state("");
   let canOpenSelected = $state(false);
   let canCreate = $state(false);
@@ -99,11 +98,7 @@
     return `${n} of ${nItems} notes`;
   });
 
-  /**
-   * @param {NoteInfo} item
-   * @param {number} idx
-   */
-  function selectionChanged(item, idx) {
+  function selectionChanged(item: NoteInfo, idx: number) {
     // console.log("selection: ", idx, item.name);
     selectedItem = item;
     selectedName = item ? selectedItem.name : "";
@@ -137,11 +132,7 @@
     showDelete = canOpenSelected;
   }
 
-  /**
-   * @param {NoteInfo} note
-   * @returns {string}
-   */
-  function noteShortcut(note) {
+  function noteShortcut(note: NoteInfo): string {
     if (note.altShortcut) {
       //console.log("noteShortcut:", note);
       return `${altChar} + ${note.altShortcut}`;
@@ -149,10 +140,7 @@
     return "";
   }
 
-  /**
-   * @param {KeyboardEvent} ev
-   */
-  async function onKeydown(ev) {
+  async function onKeydown(ev: KeyboardEvent) {
     // console.log("onKeyDown:", event);
     let altN = isAltNumEvent(ev);
     if (altN !== null) {
@@ -207,11 +195,7 @@
     return cursorPosition === inputLength;
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   * @param {boolean} newTab
-   */
-  function emitOpenNote(noteInfo, newTab) {
+  function emitOpenNote(noteInfo: NoteInfo, newTab: boolean) {
     // console.log("emitOpenNote", noteInfo.name, "newTab:", newTab);
     openNote(noteInfo.name, newTab);
   }
@@ -221,10 +205,7 @@
     createNote(name);
   }
 
-  /**
-   * @param {NoteInfo} noteInfo
-   */
-  async function toggleStarred(noteInfo) {
+  async function toggleStarred(noteInfo: NoteInfo) {
     // there's a noticeable UI lag when we do the obvious:
     // item.isStarred = toggleNoteStarred(item.name);
     // because we wait until metadata file is saved
