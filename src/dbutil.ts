@@ -1,17 +1,11 @@
 import { openDB } from "idb";
 
 export class KV {
-  /** @type {string} */
-  dbName;
-  /** @type {string} */
-  storeName;
+  dbName: string;
+  storeName: string;
   dbPromise;
 
-  /**
-   * @param {string} dbName
-   * @param {string} storeName
-   */
-  constructor(dbName, storeName) {
+  constructor(dbName: string, storeName: string) {
     this.dbName = dbName;
     this.storeName = storeName;
     this.dbPromise = openDB(dbName, 1, {
@@ -21,33 +15,19 @@ export class KV {
     });
   }
 
-  /**
-   * @param {string} key
-   */
-  async get(key) {
+  async get(key: string) {
     return (await this.dbPromise).get(this.storeName, key);
   }
-  /**
-   * @param {string} key
-   * @param {any} val
-   */
-  async set(key, val) {
+  async set(key: string, val: any) {
     let db = await this.dbPromise;
     return db.put(this.storeName, val, key);
   }
-  /**
-   * rejects if already exists
-   * @param {string} key
-   * @param {any} val
-   */
-  async add(key, val) {
+  // rejects if already exists
+  async add(key: string, val: any) {
     let db = await this.dbPromise;
     return db.add(this.storeName, val, key);
   }
-  /**
-   * @param {string} key
-   */
-  async del(key) {
+  async del(key: string) {
     let db = await this.dbPromise;
     return db.delete(this.storeName, key);
   }
@@ -55,10 +35,7 @@ export class KV {
     let db = await this.dbPromise;
     return db.clear(this.storeName);
   }
-  /**
-   * @returns {Promise<IDBValidKey[]>}
-   */
-  async keys() {
+  async keys(): Promise<IDBValidKey[]> {
     let db = await this.dbPromise;
     return db.getAllKeys(this.storeName);
   }

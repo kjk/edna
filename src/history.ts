@@ -4,10 +4,7 @@ import { appState } from "./appstate.svelte";
 
 const kMaxHistory = 16;
 
-/**
- * @param {string} name
- */
-export function addNoteToHistory(name) {
+export function addNoteToHistory(name: string) {
   // console.log("historyPush:", name);
   removeNoteFromHistory(name);
   appState.history.unshift(name); // insert at the beginning
@@ -16,21 +13,14 @@ export function addNoteToHistory(name) {
   }
 }
 
-/**
- * @param {string} oldName
- * @param {string} newName
- */
-export function renameNoteInHistory(oldName, newName) {
+export function renameNoteInHistory(oldName: string, newName: string) {
   let i = appState.history.indexOf(oldName);
   if (i >= 0) {
     appState.history[i] = newName;
   }
 }
 
-/**
- * @param {string} name
- */
-export function removeNoteFromHistory(name) {
+export function removeNoteFromHistory(name: string) {
   let i = appState.history.indexOf(name);
   if (i >= 0) {
     appState.history.splice(i, 1);

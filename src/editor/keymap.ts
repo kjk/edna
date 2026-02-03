@@ -42,7 +42,7 @@ import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
 
 const isMac = platform.isMac;
 
-export function keymapFromSpec(specs) {
+export function keymapFromSpec(specs: any[]) {
   return keymap.of(
     specs.map((spec) => {
       if (spec.run) {
@@ -63,10 +63,7 @@ export function keymapFromSpec(specs) {
   );
 }
 
-/**
- * @param {import("./editor.js").EdnaEditor} editor
- */
-export function ednaKeymap(editor) {
+export function ednaKeymap(editor: any) {
   let spec = [
     ["Mod-c", copyCommand(editor)],
     ["Mod-v", pasteCommand],

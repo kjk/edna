@@ -8,11 +8,7 @@ import {
 } from "../languages";
 import { getActiveNoteBlock } from "./block";
 
-/**
- * @param {string} s
- * @returns {Promise<string>}
- */
-async function formatGo(s) {
+async function formatGo(s: string): Promise<string | null> {
   // setProcessingMessage("Formatting code...");
   // const uri = "play.golang.org/fmt";
   const uri = "/api/goplay/fmt";
@@ -36,11 +32,7 @@ async function formatGo(s) {
   return res.Body;
 }
 
-/**
- * @param {EditorView} view
- * @returns {Promise<boolean>}
- */
-export async function formatBlockContent(view) {
+export async function formatBlockContent(view: EditorView): Promise<boolean> {
   const { state } = view;
   if (state.readOnly) return false;
   const block = getActiveNoteBlock(state);
@@ -171,12 +163,7 @@ export async function formatBlockContent(view) {
   return true;
 }
 
-/**
- * @param {EditorView} view
- * @param {string} text
- * @returns {boolean}
- */
-export function insertAfterActiveBlock(view, text) {
+export function insertAfterActiveBlock(view: EditorView, text: string): boolean {
   const { state } = view;
   if (state.readOnly) {
     return false;

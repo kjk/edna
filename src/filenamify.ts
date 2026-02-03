@@ -6,12 +6,7 @@
 // "con", "prn" etc. are for windows
 const reInvalidFileNames = /^(con|prn|aux|nul|com\d|lpt|\.|\.\.|\d)$/i;
 
-/**
- * escape each char code of the string as its %NNNN hex code
- * @param {string} s
- * @returns {string}
- */
-function stringHexEscape(s) {
+function stringHexEscape(s: string): string {
   let hexArray = [];
   for (let i = 0; i < s.length; i++) {
     let c = s.charCodeAt(i);
@@ -35,21 +30,12 @@ const ccZ = "Z".charCodeAt(0);
 // % is used for escaping so also needs to be escaped
 // in the order of ascii table https://www.cs.cmu.edu/~pattis/15-1XX/common/handouts/ascii.html
 const charsNoEscape = " !#$()+,-.=@[]_()~";
-/** @type {number[]} */
-const ccNoEscape = Array(charsNoEscape.length);
+const ccNoEscape: number[] = Array(charsNoEscape.length);
 for (let i = 0; i < charsNoEscape.length; i++) {
   ccNoEscape[i] = charsNoEscape.charCodeAt(i);
 }
 
-/**
- * return true if a given charCode (0-65536) needs to be escaped
- * when used in a file name
- * We're conservative i.e. we would rather encode more than stricly needed
- * then risk not encoding something we do need
- * @param {number} cc
- * @returns {boolean}
- */
-function charCodeNeedsEscaping(cc) {
+function charCodeNeedsEscaping(cc: number): boolean {
   if (cc >= cc0 && cc <= cc9) {
     return false;
   }
@@ -62,17 +48,12 @@ function charCodeNeedsEscaping(cc) {
   return !ccNoEscape.includes(cc);
 }
 
-/**
- * @param {string} s
- * @returns {string}
- */
-export function toFileName(s) {
+export function toFileName(s: string): string {
   if (reInvalidFileNames.test(s)) {
     return stringHexEscape(s);
   }
   let n = s.length;
-  /** @type {string[]} */
-  let res = Array(n);
+  let res: string[] = Array(n);
   for (let i = 0; i < n; i++) {
     let cc = s.charCodeAt(i);
     let s2 = String.fromCharCode(cc);
@@ -85,12 +66,7 @@ export function toFileName(s) {
   return s;
 }
 
-/**
- * returns null if s is not a valid encoded file name
- * @param {string} s
- * @returns {string}
- */
-export function fromFileName(s) {
+export function fromFileName(s: string): string {
   if (!s.includes("%")) {
     // perf: fast path for when no char was encoded
     return s;
@@ -111,13 +87,7 @@ export function fromFileName(s) {
   return res;
 }
 
-/**
- * returns true if file name is valid per our encoding
- * i.e. if decode => encode generates the same string
- * @param {string} s
- * @returns {boolean}
- */
-export function isValidFileName(s) {
+export function isValidFileName(s: string): boolean {
   let s2 = fromFileName(s);
   let s3 = toFileName(s2);
   return s3 == s;

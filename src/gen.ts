@@ -8,28 +8,15 @@ console.log(
   "Generating html-win.html and html-mac.html from note-help.edna.txt",
 );
 
-/**
- * @param {string} platform
- * @returns {string}
- */
-export function getModChar(platform) {
+export function getModChar(platform: string): string {
   return platform === "darwin" ? "⌘" : "Ctrl";
 }
 
-/**
- * @param {string} platform
- * @returns {string}
- */
-export function getAltChar(platform) {
+export function getAltChar(platform: string): string {
   return platform === "darwin" ? "⌥" : "Alt";
 }
 
-/**
- * @param {string} s
- * @param {string} platform
- * @returns {string}
- */
-function fixUpShortcuts(s, platform) {
+function fixUpShortcuts(s: string, platform: string): string {
   let modChar = getModChar(platform);
   let altChar = getAltChar(platform);
   s = s.replace(/`([^`]*)`/g, (match, p1) => {
@@ -41,20 +28,11 @@ function fixUpShortcuts(s, platform) {
   return s;
 }
 
-/**
- * @param {string[]} lines
- * @param {string} s
- * @returns {string[]}
- */
-function removeLineStartingWith(lines, s) {
+function removeLineStartingWith(lines: string[], s: string): string[] {
   return lines.filter((line) => !line.startsWith(s));
 }
 
-/**
- * @param {string[]} lines
- * @returns {string[]}
- */
-function replaceJSBlock(lines) {
+function replaceJSBlock(lines: string[]): string[] {
   let res = [];
   let inJS = false;
   for (let s of lines) {
@@ -81,11 +59,7 @@ function replaceJSBlock(lines) {
   return res;
 }
 
-/**
- * @param {string[]} lines
- * @returns {string[]}
- */
-function removeMathBlock(lines) {
+function removeMathBlock(lines: string[]): string[] {
   let res = [];
   let inMath = false;
   for (let s of lines) {
@@ -105,11 +79,7 @@ function removeMathBlock(lines) {
   return res;
 }
 
-/**
- * @param {string[]} lines
- * @returns {string[]}
- */
-function collapseMultipleEmptyLines(lines) {
+function collapseMultipleEmptyLines(lines: string[]): string[] {
   let newLines = [];
   let lastLineWasEmpty = false;
   for (let line of lines) {
@@ -126,11 +96,7 @@ function collapseMultipleEmptyLines(lines) {
   return newLines;
 }
 
-/**
- * @param {string} platform
- * @returns {string}
- */
-function getHelp(platform) {
+function getHelp(platform: string): string {
   let path = "./src/notes/note-help.edna.txt";
   let helpRaw = fs.readFileSync(path, "utf8");
 
@@ -153,11 +119,7 @@ function getHelp(platform) {
   return help;
 }
 
-/**
- * @param {string} s
- * @returns {string}
- */
-function cleanMd(s) {
+function cleanMd(s: string): string {
   let lines = s.split("\n");
   lines = lines.filter((line) => !line.startsWith("∞∞∞"));
   let res = lines.join("\n");
@@ -188,10 +150,7 @@ let htmlEnd = `
 </html>
 `;
 
-/**
- * @param {markdownIt} md
- */
-function addTargetBlank(md) {
+function addTargetBlank(md: markdownIt) {
   // Remember old renderer, if overridden, or proxy to default renderer
   var defaultRender =
     md.renderer.rules.link_open ||

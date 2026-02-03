@@ -2,29 +2,25 @@
 
 import { len } from "./util";
 
-/** @typedef {{
-  api: number,
-  name: string,
-  author: string,
-  description: string,
-  icon: string,
-  tags: string,
-  bias?: number,
-  code: string,
-}} BoopFunction */
+export interface BoopFunction {
+  api: number;
+  name: string;
+  author: string;
+  description: string;
+  icon: string;
+  tags: string;
+  bias?: number;
+  code: string;
+}
 
-/** @typedef {{
- text: string,
- fullText: string,
- postInfo: (s: string) => void,
- postError: (s: string) => void,
-}} BoopFunctionArg */
+export interface BoopFunctionArg {
+  text: string;
+  fullText: string;
+  postInfo: (s: string) => void;
+  postError: (s: string) => void;
+}
 
-/**
- * @param {string} s
- * @returns {BoopFunction}
- */
-export function parseBoopFunction(s) {
+export function parseBoopFunction(s: string): BoopFunction | null {
   let metaStart = s.indexOf("/**");
   let metaEnd = s.indexOf("**/");
   if (metaStart < 0 && metaEnd < 0) {
@@ -44,12 +40,7 @@ export function parseBoopFunction(s) {
   return meta;
 }
 
-/**
- * @param {BoopFunction[]} funcs
- * @param {string} name
- * @returns {BoopFunction}
- */
-export function findFunctionByName(funcs, name) {
+export function findFunctionByName(funcs: BoopFunction[], name: string): BoopFunction | null {
   for (let f of funcs) {
     if (f.name === name) {
       return f;
@@ -58,15 +49,10 @@ export function findFunctionByName(funcs, name) {
   return null;
 }
 
-/**
- * @param {string} s
- * @returns {BoopFunction[]}
- */
-export function parseBuiltInFunctions(s) {
+export function parseBuiltInFunctions(s: string): BoopFunction[] {
   let parts = s.split("// ----------------------------");
   let n = len(parts);
-  /** @type {BoopFunction[]} */
-  let res = Array(n);
+  let res: BoopFunction[] = Array(n);
   let i = 0;
   for (let p of parts) {
     let meta = parseBoopFunction(p);
@@ -78,15 +64,10 @@ export function parseBuiltInFunctions(s) {
   return res;
 }
 
-/**
- * @param {string} s
- * @returns {BoopFunction[]}
- */
-export function parseUserFunctions(s) {
+export function parseUserFunctions(s: string): BoopFunction[] {
   let parts = s.split("\n∞∞∞");
   let n = len(parts);
-  /** @type {BoopFunction[]} */
-  let res = Array(n);
+  let res: BoopFunction[] = Array(n);
   let i = 0;
   for (let p of parts) {
     let lines = p.split("\n");
@@ -102,12 +83,7 @@ export function parseUserFunctions(s) {
   return res;
 }
 
-/**
- * @param {BoopFunction} f
- * @param {BoopFunctionArg} arg
- * @return {Promise<void>}
- */
-export async function runBoopFunction(f, arg) {
+export async function runBoopFunction(f: BoopFunction, arg: BoopFunctionArg): Promise<void> {
   let jsCode =
     f.code +
     `

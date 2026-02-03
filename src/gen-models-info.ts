@@ -1,18 +1,14 @@
 import fs from "node:fs";
 import { humanPrice } from "./util";
 
-/**
- * @typedef {Object} Model
- * @property {string} id - The model ID
- * @property {string} name - The model name
- * @property {number} price_prompt - Price for prompt
- * @property {number} price_completion - Price for completion
- */
+interface Model {
+  id: string;
+  name: string;
+  price_prompt: number;
+  price_completion: number;
+}
 
-/**
- * @param {Model[]} models
- */
-function printSummary(models) {
+function printSummary(models: Model[]) {
   // Count frequency of each provider
   const providerCount = {};
   for (const model of models) {
@@ -77,10 +73,7 @@ async function downloadModelsJSON(force = false) {
   }
 }
 
-/**
- * @returns {Model[]}
- */
-function parseModelsJSON() {
+function parseModelsJSON(): Model[] {
   let s = fs.readFileSync(modelsFilePath, "utf8");
   let json = JSON.parse(s);
   let models = json.data;
@@ -110,10 +103,7 @@ function parseModelsJSON() {
   return res;
 }
 
-/**
- * @param {string} id
- */
-function findProviderID(id) {
+function findProviderID(id: string): number {
   for (let i = 0; i < providersInfo.length; i++) {
     if (id.startsWith(providersInfo[i][0])) {
       return i;
@@ -122,11 +112,7 @@ function findProviderID(id) {
   return -1; // Not found
 }
 
-/**
- * @param {string} id
- * @returns {string}
- */
-function shortenModelID(id) {
+function shortenModelID(id: string): string {
   // e.g. "openai/gpt-4o" -> "gpt-4o"
   const parts = id.split("/");
   if (parts.length < 2) {
@@ -135,11 +121,7 @@ function shortenModelID(id) {
   return parts[1]; // Return the second part (the model name)
 }
 
-/**
- * @param {string} name
- * @returns {string}
- */
-function shortenModelName(name) {
+function shortenModelName(name: string): string {
   // e.g. "Google: Gemini 1.5 Pro" -> "Gemini 1.5 Pro"
   const parts = name.split(": ");
   if (parts.length < 2) {
@@ -148,10 +130,7 @@ function shortenModelName(name) {
   return parts[1];
 }
 
-/**
- * @param {Model[]} models
- */
-function genShort(models) {
+function genShort(models: Model[]) {
   // convert to flat array
   let a = [];
   for (let m of models) {

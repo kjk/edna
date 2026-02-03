@@ -4,38 +4,22 @@ import { foldState } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
-/**
- * @param {EditorView} view
- * @returns {boolean}
- */
-export function isReadOnly(view) {
+export function isReadOnly(view: EditorView): boolean {
   return view.state.readOnly;
 }
 
-/**
- * @param {EditorState} state
- * @returns {{from: number, to: number, selectedText: string}}
- */
-export function getCurrentSelection(state) {
+export function getCurrentSelection(state: EditorState): { from: number; to: number; selectedText: string } {
   const { from, to } = state.selection.main;
   const selectedText = state.doc.sliceString(from, to);
   return { from, to, selectedText };
 }
 
-/**
- * @param {EditorState} state
- * @returns {boolean}
- */
-export function hasSelection(state) {
+export function hasSelection(state: EditorState): boolean {
   const { from, to } = state.selection.main;
   return from != to;
 }
 
-/**
- * try real hard to put focus in EditorView
- * @param {EditorView} view
- */
-export function focusEditorView(view) {
+export function focusEditorView(view: EditorView) {
   if (!view || view.hasFocus) {
     // console.log("focusEditorView: no editorView or already has focus")
     return;
@@ -56,7 +40,7 @@ export function focusEditorView(view) {
   }, 100);
 }
 
-export function getFoldedRanges(view) {
+export function getFoldedRanges(view: EditorView) {
   const foldedRanges = [];
   let state = view.state;
   state.field(foldState, false)?.between(0, state.doc.length, (from, to) => {

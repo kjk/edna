@@ -11,13 +11,7 @@ import {
 import { kSettingsPath } from "./settings.svelte";
 import { formatDateYYYYMMDD, len, throwIf } from "./util";
 
-/**
- * @param {any} libZip
- * @param {any} zipWriter
- * @param {string} fileName
- * @param {Blob} fileBlob
- */
-async function addBinaryBlob(libZip, zipWriter, fileName, fileBlob) {
+async function addBinaryBlob(libZip: any, zipWriter: any, fileName: string, fileBlob: Blob) {
   let blobReader = new libZip.BlobReader(fileBlob);
   let opts = {
     level: 9,
@@ -25,22 +19,12 @@ async function addBinaryBlob(libZip, zipWriter, fileName, fileBlob) {
   await zipWriter.add(fileName, blobReader, opts);
 }
 
-/**
- * @param {any} libZip
- * @param {any} zipWriter
- * @param {string} fileName
- * @param {string} text
- */
-async function addTextFile(libZip, zipWriter, fileName, text) {
+async function addTextFile(libZip: any, zipWriter: any, fileName: string, text: string) {
   let fileBlob = new Blob([text], { type: "text/plain" });
   await addBinaryBlob(libZip, zipWriter, fileName, fileBlob);
 }
 
-/**
- * packs all notes, un-encrypted, into a .zip blob
- * @returns {Promise<Blob>}
- */
-export async function exportUnencryptedNotesToZipBlob() {
+export async function exportUnencryptedNotesToZipBlob(): Promise<Blob> {
   console.log("exportUnencryptedNotesToZipBlob");
   let libZip = await import("@zip.js/zip.js");
   let blobWriter = new libZip.BlobWriter("application/zip");
@@ -66,12 +50,7 @@ export async function exportUnencryptedNotesToZipBlob() {
   return blob;
 }
 
-/**
- * packs all notes, possibly encrypted, into a .zip blob
- * only works for file system
- * @returns {Promise<Blob>}
- */
-export async function exportRawNotesToZipBlob() {
+export async function exportRawNotesToZipBlob(): Promise<Blob> {
   console.log("exportRawNotesToZipBlob");
   let dh = getStorageFS();
   throwIf(!dh, "only supported for a file system");
@@ -104,22 +83,14 @@ export async function exportNotesToZip() {
   browserDownloadBlob(blob, name);
 }
 
-/**
- * @param {string} fileName
- * @returns {boolean}
- */
-function isBackupFile(fileName) {
+function isBackupFile(fileName: string): boolean {
   if (!fileName.startsWith("edna.backup.")) {
     return false;
   }
   return fileName.endsWith(".zip");
 }
 
-/**
- * @param {Blob} blob
- * @param {string} name
- */
-export function browserDownloadBlob(blob, name) {
+export function browserDownloadBlob(blob: Blob, name: string) {
   let url = URL.createObjectURL(blob);
   let a = document.createElement("a");
   a.href = url;

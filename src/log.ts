@@ -2,10 +2,7 @@ import { getNotesCount } from "./notes";
 import { getSessionDurationInMs, getStats } from "./state";
 import { throwIf } from "./util";
 
-/**
- * @param {Object} o
- */
-export function logEvent(o) {
+export function logEvent(o: object) {
   fetch("/event", {
     method: "POST",
     headers: {
@@ -45,11 +42,7 @@ export function logAppExit() {
   logEvent(e);
 }
 
-/**
- * @param {string} model
- * @param {string} apiProvider
- */
-export function logAskAI(model, apiProvider) {
+export function logAskAI(model: string, apiProvider: string) {
   let e = {
     name: "askAI",
     model: model,
@@ -72,11 +65,11 @@ const validOps = [
   ,
 ];
 
-function validateNoteOp(op) {
+function validateNoteOp(op: string) {
   throwIf(!validOps.includes(op), `invalid op: ${op}`);
 }
 
-export function logNoteOp(op) {
+export function logNoteOp(op: string) {
   validateNoteOp(op);
   let e = {
     name: op,

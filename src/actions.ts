@@ -1,7 +1,4 @@
-/**
- * @param {HTMLElement} node
- */
-export function focus(node, delay = 50) {
+export function focus(node: HTMLElement, delay = 50) {
   // note: not sure why I need this but e.g. if I have CodeMirror,
   // the codemirror element regains focus if I set my focus
   // immediately on mount. Delay of 100 seems to fix it (50 was too low)
@@ -20,11 +17,8 @@ export function hasFocusedChild(element) {
   return element.contains(activeElement);
 }
 
-/**
- * focus but only if doesn't have focused children
- * @param {HTMLElement} node
- */
-export function smartfocus(node) {
+// focus but only if doesn't have focused children
+export function smartfocus(node: HTMLElement) {
   setTimeout(() => {
     if (hasFocusedChild(node)) {
       return;
@@ -57,11 +51,8 @@ export function ensureRectVisibleInWindow(rect) {
   return { x: x, y: y };
 }
 
-/**
-/* action that ensures that the node is fully visible in the window
- * @param {HTMLElement} node
- */
-export function ensurevisible(node, makeFixed = false) {
+// action that ensures that the node is fully visible in the window
+export function ensurevisible(node: HTMLElement, makeFixed = false) {
   const r = node.getBoundingClientRect();
   const { x, y } = ensureRectVisibleInWindow(r);
   Object.assign(node.style, {
@@ -77,11 +68,7 @@ export function ensurevisible(node, makeFixed = false) {
   // );
 }
 
-/**
- * @param {HTMLElement} node
- * @param {KeyboardEvent} ev
- */
-export function trapFocusEvent(node, ev) {
+export function trapFocusEvent(node: HTMLElement, ev: KeyboardEvent) {
   const focusable = node.querySelectorAll(
     'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]',
   );
@@ -89,8 +76,8 @@ export function trapFocusEvent(node, ev) {
   // console.log("node:", node);
   // console.log("active:", active);
 
-  const first = /** @type {HTMLElement} */ (focusable[0]);
-  const last = /** @type {HTMLElement} */ (focusable[focusable.length - 1]);
+  const first = focusable[0] as HTMLElement;
+  const last = focusable[focusable.length - 1] as HTMLElement;
 
   // let isInList = false;
   // focusable.forEach((el) => {
@@ -116,10 +103,7 @@ export function trapFocusEvent(node, ev) {
   }
 }
 
-/**
- * @param {HTMLElement} node
- */
-export function trapfocus(node) {
+export function trapfocus(node: HTMLElement) {
   function handleKeydown(ev) {
     if (ev.key === "Tab") {
       trapFocusEvent(node, ev);

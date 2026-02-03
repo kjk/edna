@@ -20,8 +20,6 @@ import {
 import { getSettings } from "./settings.svelte";
 import { isDev } from "./util";
 
-/** @typedef {import("./settings.svelte").Settings} Settings */
-
 // window.onunhandledrejection = console.warn;
 
 let appSvelte;
@@ -39,10 +37,7 @@ function setupPosthog() {
   });
 
   const originalConsoleError = console.error;
-  /**
-   * @param  {...any} args
-   */
-  function myConsoleError(...args) {
+  function myConsoleError(...args: any[]) {
     originalConsoleError.apply(console, args);
 
     let err;
@@ -108,11 +103,7 @@ export async function boot() {
     noteNames = await loadNoteNames();
   }
 
-  /**
-   * @param {string} name
-   * @returns {boolean}
-   */
-  function isValidNote(name) {
+  function isValidNote(name: string): boolean {
     if (!name) {
       return false;
     }

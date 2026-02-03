@@ -1,31 +1,25 @@
 import { ensureStringEndsWithNL, len } from "./util";
 
-/** @typedef {{
-  output: any,
-  exception: string,
-  consoleLogs: string[],
- }} CapturingEval
-*/
+export interface CapturingEval {
+  output: any;
+  exception: string | null;
+  consoleLogs: string[];
+}
 
-/** @typedef {{
-   Message: string,
-   Kind: string, // stdout or stderr
-   Delay: number,
- }} GoEvalEvent */
+interface GoEvalEvent {
+  Message: string;
+  Kind: string; // stdout or stderr
+  Delay: number;
+}
 
-/** @typedef {{
-  Body: string,
-  Events: GoEvalEvent[],
-  Error?: string,
-  Errors?: string,
- }} GoEvalResult */
+interface GoEvalResult {
+  Body: string;
+  Events: GoEvalEvent[];
+  Error?: string;
+  Errors?: string;
+}
 
-/**
- *
- * @param {GoEvalResult} res
- * @returns {string}
- */
-function getError(res) {
+function getError(res: GoEvalResult): string {
   // TODO: don't get why there are Error and Errors
   // maybe can improve backend code?
   if (res.Error && res.Error !== "") {
@@ -37,14 +31,9 @@ function getError(res) {
   return "";
 }
 
-/**
- * @param {string} code
- * @returns {Promise<CapturingEval>}
- */
-export async function runGo(code) {
+export async function runGo(code: string): Promise<CapturingEval> {
   const uri = "/api/goplay/compile";
-  /** @type {CapturingEval} */
-  let res = {
+  let res: CapturingEval = {
     output: "",
     exception: null,
     consoleLogs: [],
@@ -64,8 +53,7 @@ export async function runGo(code) {
     res.exception = `Error: bad HTTP status ${rsp.status} ${rsp.statusText}`;
     return res;
   }
-  /** @type {GoEvalResult} */
-  const rspJSON = await rsp.json();
+  const rspJSON: GoEvalResult = await rsp.json();
   console.log("rspJSON:", rspJSON);
   const err = getError(rspJSON);
   if (err != "") {
@@ -91,15 +79,8 @@ export async function runGo(code) {
   return res;
 }
 
-/**
- * returns last returned javascript expression
- * (undefined if there was no expression)
- * @param {string} code
- * @returns {Promise<CapturingEval>}
- */
-async function evalWithConsoleCapture(code) {
-  /** @type {string[]} */
-  const consoleLogs = [];
+async function evalWithConsoleCapture(code: string): Promise<CapturingEval> {
+  const consoleLogs: string[] = [];
   function logFn(...args) {
     let all = "";
     for (let arg of args) {
@@ -137,11 +118,7 @@ async function evalWithConsoleCapture(code) {
   };
 }
 
-/**
- * @param {CapturingEval} res
- * @returns {string}
- */
-export function evalResultToString(res) {
+export function evalResultToString(res: CapturingEval): string {
   let resTxt = res.exception || `${res.output}`;
   if (len(res.consoleLogs) > 0) {
     resTxt = ensureStringEndsWithNL(resTxt);
@@ -152,20 +129,11 @@ export function evalResultToString(res) {
   return resTxt;
 }
 
-/**
- * @param {string} code
- * @returns {Promise<CapturingEval>}
- */
-export async function runJS(code) {
+export async function runJS(code: string): Promise<CapturingEval> {
   return await evalWithConsoleCapture(code);
 }
 
-/**
- * @param {string} code
- * @param {string} arg
- * @returns {Promise<CapturingEval>}
- */
-export async function runJSWithArg(code, arg) {
+export async function runJSWithArg(code: string, arg: string): Promise<CapturingEval> {
   let qarg = JSON.stringify(arg);
   code = code + "\n" + `main(${qarg})`;
   // console.log("code:", code);

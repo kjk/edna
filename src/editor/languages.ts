@@ -44,16 +44,14 @@ export declare const squirrel: StreamParser<unknown>
 export declare const ceylon: StreamParser<unknown>
 */
 
-/** @typedef {{
-  token: string,
-  name: string,
-  guesslang: string,
-  ext?: string,
-}} Language
- */
+export interface Language {
+  token: string;
+  name: string;
+  guesslang: string | null;
+  ext?: string;
+}
 
-/** @type {Language[]} */
-export const kLanguages = [
+export const kLanguages: Language[] = [
   {
     token: "text",
     name: "Plain Text",
@@ -240,11 +238,7 @@ export const kLanguages = [
 
 export const LANGUAGES = kLanguages;
 
-/**
- * @param {string} lang
- * @returns {string}
- */
-export function extForLang(lang) {
+export function extForLang(lang: string): string {
   for (let i of kLanguages) {
     let found = lang == i.token || lang == i.name;
     if (!found) {
@@ -271,20 +265,16 @@ function buildTokenToLanguage() {
 
 const tokenToLanguage = buildTokenToLanguage();
 
-export function getLanguage(token) {
+export function getLanguage(token: string): Language | undefined {
   return tokenToLanguage[token];
 }
 
-export function getLanguageNameFromToken(token) {
+export function getLanguageNameFromToken(token: string): string {
   let lang = getLanguage(token);
   return lang ? lang.name : "Unknown";
 }
 
-/**
- * @param {Language} lang
- * @returns {boolean}
- */
-export function langSupportsRun(lang) {
+export function langSupportsRun(lang: Language | undefined): boolean {
   // console.log("langSupportsRun:", lang);
   let token = lang ? lang.token : "";
   switch (token) {
@@ -297,11 +287,7 @@ export function langSupportsRun(lang) {
 
 // TODO: should be async to support on-demand loading of parsers
 // TODO: StreamLanguage.define() should only happen once
-/**
- * @param {Language} lang
- * @returns {any}
- */
-export function langGetParser(lang) {
+export function langGetParser(lang: Language | undefined): any {
   if (!lang) {
     return null;
   }
@@ -411,17 +397,12 @@ export function langGetParser(lang) {
   return null;
 }
 
-/**
- * @typedef {Object} PrettierInfo
- * @property {string} parser
- * @property {any[]} plugins
- */
+export interface PrettierInfo {
+  parser: string;
+  plugins: any[];
+}
 
-/**
- * @param {Language} lang
- * @returns {Promise<PrettierInfo>}
- */
-export async function langGetPrettierInfo(lang) {
+export async function langGetPrettierInfo(lang: Language | undefined): Promise<PrettierInfo | null> {
   if (!lang) {
     return null;
   }
@@ -511,11 +492,7 @@ export async function langGetPrettierInfo(lang) {
   return null;
 }
 
-/**
- * @param {Language} lang
- * @returns {boolean}
- */
-export function langSupportsFormat(lang) {
+export function langSupportsFormat(lang: Language | undefined): boolean {
   if (!lang) {
     return false;
   }

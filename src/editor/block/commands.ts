@@ -19,11 +19,7 @@ import { selectAll } from "./select-all";
 
 export { moveLineDown, moveLineUp, selectAll };
 
-/**
- * @param {string} defaultToken
- * @param {boolean} autoDetect
- */
-export function getBlockDelimiter(defaultToken, autoDetect) {
+export function getBlockDelimiter(defaultToken: string, autoDetect: boolean): string {
   return `\n∞∞∞${autoDetect ? defaultToken + "-a" : defaultToken}\n`;
 }
 

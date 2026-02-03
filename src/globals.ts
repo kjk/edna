@@ -1,30 +1,27 @@
-/** @typedef {{
-  openSettings: () => void,
-  openLanguageSelector: () => void,
-  openCreateNewNote: () => void,
-  openNoteSelector: () => void,
-  openCommandPalette: () => void,
-  openFindInNotes: () => void,
-  openContextMenu: (MouseEvent) => void,
-  openQuickAccess: () => void,
-  createScratchNote: () => void,
-  openBlockSelector: () => void,
-  openFunctionSelector: (boolean) => void,
-  smartRun: () => void,
-  focusEditor: () => void,
-  getPassword: (msg: string) => Promise<string>,
-  requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>,
-  updateAfterNoteStateChange: () => void,
-}} GlobalFuncs
-*/
-
 import { formatDurationShort } from "./util";
 
+export interface GlobalFuncs {
+  openSettings: () => void;
+  openLanguageSelector: () => void;
+  openCreateNewNote: () => void;
+  openNoteSelector: () => void;
+  openCommandPalette: () => void;
+  openFindInNotes: () => void;
+  openContextMenu: (ev: MouseEvent) => void;
+  openQuickAccess: () => void;
+  createScratchNote: () => void;
+  openBlockSelector: () => void;
+  openFunctionSelector: (onSelection: boolean) => void;
+  smartRun: () => void;
+  focusEditor: () => void;
+  getPassword: (msg: string) => Promise<string>;
+  requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>;
+  updateAfterNoteStateChange: () => void;
+}
+
 let sessionStart = performance.now();
-/**
- * @returns {string}
- */
-export function getSessionDur() {
+
+export function getSessionDur(): string {
   let durMs = Math.round(performance.now() - sessionStart);
   return formatDurationShort(durMs);
 }
@@ -32,13 +29,9 @@ export function getSessionDur() {
 // it's easier to make some functions from App.vue available this way
 // then elaborate scheme of throwing and catching events
 // could also use setContext()
-/** @type {GlobalFuncs} */
-let globalFunctions;
+let globalFunctions: GlobalFuncs;
 
-/**
- * @param {GlobalFuncs} gf
- */
-export function setGlobalFuncs(gf) {
+export function setGlobalFuncs(gf: GlobalFuncs) {
   globalFunctions = gf;
 }
 
@@ -62,7 +55,7 @@ export function openCommandPalette() {
   globalFunctions.openCommandPalette();
 }
 
-export function openContextMenu(ev) {
+export function openContextMenu(ev: MouseEvent) {
   globalFunctions.openContextMenu(ev);
 }
 
@@ -98,17 +91,13 @@ export function updateAfterNoteStateChange() {
   globalFunctions?.updateAfterNoteStateChange();
 }
 
-/**
- * @param {string} msg
- * @returns {Promise<string>}
- */
-export async function getPasswordFromUser(msg) {
+export async function getPasswordFromUser(msg: string): Promise<string> {
   let pwd = await globalFunctions.getPassword(msg);
   console.log("got password:", pwd);
   return pwd;
 }
 
-export async function requestFileWritePermission(fh) {
+export async function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
   let ok = await globalFunctions.requestFileWritePermission(fh);
   console.log("ok:", ok);
   // TODO: check permissions

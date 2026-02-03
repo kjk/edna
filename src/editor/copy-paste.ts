@@ -10,7 +10,7 @@ const blockSeparatorRegex = new RegExp(
   "g",
 );
 
-function copiedRange(state) {
+function copiedRange(state: EditorState) {
   let content = [],
     ranges = [];
   for (let range of state.selection.ranges) {
@@ -40,7 +40,7 @@ function copiedRange(state) {
 /**
  * Set up event handlers for the browser's copy & cut events, that will replace block separators with newlines
  */
-export const heynoteCopyCut = (editor) => {
+export const heynoteCopyCut = (editor: any) => {
   let copy, cut;
   copy = cut = (event, view) => {
     let { text, ranges } = copiedRange(view.state);
@@ -82,7 +82,7 @@ export const heynoteCopyCut = (editor) => {
   });
 };
 
-const copyCut = (view, cut, editor) => {
+const copyCut = (view: EditorView, cut: boolean, editor: any) => {
   let { text, ranges } = copiedRange(view.state);
   text = text.replaceAll(blockSeparatorRegex, "\n\n");
   navigator.clipboard.writeText(text);
@@ -112,7 +112,7 @@ const copyCut = (view, cut, editor) => {
   }
 };
 
-function doPaste(view, input) {
+function doPaste(view: EditorView, input: string) {
   let { state } = view,
     changes,
     i = 1,
@@ -135,25 +135,14 @@ function doPaste(view, input) {
   });
 }
 
-/**
- * @param editor Editor instance
- * @returns CodeMirror command that copies the current selection to the clipboard
- */
-export function copyCommand(editor) {
+export function copyCommand(editor: any) {
   return (view) => copyCut(view, false, editor);
 }
 
-/**
- * @param editor Editor instance
- * @returns CodeMirror command that cuts the current selection to the clipboard
- */
-export function cutCommand(editor) {
+export function cutCommand(editor: any) {
   return (view) => copyCut(view, true, editor);
 }
 
-/**
- * CodeMirror command that pastes the clipboard content into the editor
- */
-export async function pasteCommand(view) {
+export async function pasteCommand(view: EditorView) {
   return doPaste(view, await navigator.clipboard.readText());
 }

@@ -25,6 +25,7 @@ import {
   undo,
 } from "@codemirror/commands";
 import { EditorSelection, EditorState, Prec } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 import {
   gotoNextBlock,
   gotoNextParagraph,
@@ -43,24 +44,21 @@ import { ednaKeymap, keymapFromSpec } from "./keymap";
 // if set to true, all keybindings for moving around is changed to their corresponding select commands
 let emacsMarkMode = false;
 
-export function setEmacsMarkMode(value) {
+export function setEmacsMarkMode(value: boolean) {
   emacsMarkMode = value;
 }
 
 /**
  * Return a command that will conditionally execute either the default command or the mark mode command
- *
- * @param defaultCmd Default command to execute
- * @param {*} markModeCmd Command to execute if mark mode is active
  */
-function emacsMoveCommand(defaultCmd, markModeCmd) {
+function emacsMoveCommand(defaultCmd: (view: EditorView) => boolean, markModeCmd: (view: EditorView) => boolean) {
   return (view) => (emacsMarkMode ? markModeCmd(view) : defaultCmd(view));
 }
 
 /**
  * C-g command that exits mark mode and simplifies selection
  */
-function emacsCancel(view) {
+function emacsCancel(view: EditorView) {
   simplifySelection(view);
   setEmacsMarkMode(false);
 }
@@ -68,12 +66,12 @@ function emacsCancel(view) {
 /**
  * Exit mark mode before executing selectAll command
  */
-function emacsSelectAll(view) {
+function emacsSelectAll(view: EditorView) {
   setEmacsMarkMode(false);
   return selectAll(view);
 }
 
-function emacsMetaKeyCommand(key, editor, command) {
+function emacsMetaKeyCommand(key: string, editor: any, command: (view: EditorView) => boolean) {
   const handler = (view, event) => {
     if (
       (editor.emacsMetaKey === "meta" && event.metaKey) ||
@@ -91,7 +89,7 @@ function emacsMetaKeyCommand(key, editor, command) {
   ];
 }
 
-export function emacsKeymap(editor) {
+export function emacsKeymap(editor: any) {
   return [
     ednaKeymap(editor),
     Prec.highest(

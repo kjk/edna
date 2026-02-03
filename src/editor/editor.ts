@@ -41,7 +41,7 @@ import { getFontTheme } from "./theme/font-theme";
 import { heynoteLight } from "./theme/light";
 import { todoCheckboxPlugin } from "./todo-checkbox";
 
-function getKeymapExtensions(editor, keymap) {
+function getKeymapExtensions(editor: EdnaEditor, keymap: string) {
   if (keymap === "emacs") {
     return emacsKeymap(editor);
   } else {
@@ -373,11 +373,7 @@ export class EdnaEditor {
     });
   }
 
-  /**
-   * @param {string} token
-   * @param {boolean?} autoDetect
-   */
-  setDefaultBlockLanguage(token, autoDetect) {
+  setDefaultBlockLanguage(token: string, autoDetect?: boolean) {
     this.defaultBlockToken = token || "text";
     this.defaultBlockAutoDetect = autoDetect === undefined ? true : autoDetect;
   }
@@ -394,11 +390,7 @@ export class EdnaEditor {
     });
   }
 
-  /**
-   * @param {boolean} useTabs
-   * @param {number} tabSpaces
-   */
-  setTabsState(useTabs, tabSpaces) {
+  setTabsState(useTabs: boolean, tabSpaces: number) {
     if (!this.view) return;
     const indentChar = useTabs ? "\t" : " ".repeat(tabSpaces);
     const v = indentUnit.of(indentChar);
@@ -420,11 +412,7 @@ editor.update([
     })
 ])*/
 
-/**
- * @param {EditorView} view
- * @param {boolean} ro
- */
-export function setReadOnly(view, ro) {
+export function setReadOnly(view: EditorView, ro: boolean) {
   let editor = findEditorByView(view);
   if (editor) {
     editor.setReadOnly(ro);

@@ -18,11 +18,12 @@ const markdownCloseBracketsConfig = {
   },
 };
 
+import type { Extension } from "@codemirror/state";
+
 /**
  * Creates a dynamic close brackets extension that changes behavior based on the current block's language.
- * @returns {import("@codemirror/state").Extension}
  */
-export function createDynamicCloseBracketsExtension() {
+export function createDynamicCloseBracketsExtension(): Extension {
   return [
     closeBrackets(),
     keymap.of(closeBracketsKeymap),

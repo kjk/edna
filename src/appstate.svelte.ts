@@ -1,21 +1,18 @@
 import { getNoteMeta } from "./metadata";
 
+import type { Settings } from "./settings.svelte";
+
 class AppState {
   /* regular, arhived, deleted notes */
-  /** @type {string[]} */
-  allNotes = $state([]);
+  allNotes: string[] = $state([]);
 
   /* regular notes, not archived or deleted */
-  /** @type {string[]} */
-  regularNotes = $derived(calcRegular(this.allNotes));
+  regularNotes: string[] = $derived(calcRegular(this.allNotes));
 
-  /** @type {string[]} */
-  archivedNotes = $derived(calcArchived(this.allNotes));
+  archivedNotes: string[] = $derived(calcArchived(this.allNotes));
 
-  /** @type {string[]} */
-  starredNotes = $derived(calcStarred(this.allNotes)); // starred notes
-  /** @type {string[]} */
-  withShortcuts = $derived(callcWithShortcuts(this.allNotes)); // notes with shortcuts
+  starredNotes: string[] = $derived(calcStarred(this.allNotes)); // starred notes
+  withShortcuts: string[] = $derived(callcWithShortcuts(this.allNotes)); // notes with shortcuts
   noteSelectorInfoCollapsed = $state(false);
 
   isDirty = $state(false);
@@ -32,21 +29,14 @@ class AppState {
 
   searchIncludeArchived = $state(false);
 
-  /** @type {string[]} */
-  history = $state([]); // names of opened notes
-  /** @type {import("./settings.svelte").Settings} */
-  settings = $state(undefined); // user settings
+  history: string[] = $state([]); // names of opened notes
+  settings: Settings = $state(undefined); // user settings
 
   forceNewTab = false;
 }
 
-/**
- * @param {string[]} noteNames
- * @returns {string[]}
- */
-function calcRegular(noteNames) {
-  /** @type {string[]} */
-  let res = [];
+function calcRegular(noteNames: string[]): string[] {
+  let res: string[] = [];
   for (let name of noteNames) {
     let m = getNoteMeta(name, false);
     if (m && m.isArchived) {
@@ -57,10 +47,8 @@ function calcRegular(noteNames) {
   return res;
 }
 
-/** @returns {string[]} */
-function calcWithBoolKey(noteNames, key) {
-  /** @type {string[]} */
-  let res = [];
+function calcWithBoolKey(noteNames: string[], key: string): string[] {
+  let res: string[] = [];
   for (let name of noteNames) {
     let m = getNoteMeta(name, false);
     if (m && m[key]) {
@@ -70,18 +58,15 @@ function calcWithBoolKey(noteNames, key) {
   return res;
 }
 
-/** @returns {string[]} */
-function calcStarred(noteNames) {
+function calcStarred(noteNames: string[]): string[] {
   return calcWithBoolKey(noteNames, "isStarred");
 }
 
-/** @returns {string[]} */
-function calcArchived(noteNames) {
+function calcArchived(noteNames: string[]): string[] {
   return calcWithBoolKey(noteNames, "isArchived");
 }
 
-/** @returns {string[]} */
-function callcWithShortcuts(noteNames) {
+function callcWithShortcuts(noteNames: string[]): string[] {
   // altShortcut is string not bool but it still works
   return calcWithBoolKey(noteNames, "altShortcut");
 }

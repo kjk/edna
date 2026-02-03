@@ -33,7 +33,7 @@ export const delimiterRegexWithoutNewline = /^∞∞∞[a-z]+?(-a)?$/;
  * the blocks are parsed from the string contents of the document, which is much faster
  * than waiting for the tree parsing to finish.
  */
-export function getBlocks(state) {
+export function getBlocks(state: EditorState): Block[] {
   if (syntaxTreeAvailable(state, state.doc.length)) {
     return getBlocksFromSyntaxTree(state);
   } else {
@@ -55,7 +55,7 @@ export const blockState = StateField.define({
   },
 });
 
-function findBlockWithPos(blocks, pos) {
+function findBlockWithPos(blocks: Block[], pos: number): Block | undefined {
   for (let block of blocks) {
     let r = block.range;
     if (r.from <= pos && r.to >= pos) {
@@ -65,12 +65,7 @@ function findBlockWithPos(blocks, pos) {
   return undefined;
 }
 
-/**
- * @param {Block[]} blocks
- * @param {number} pos
- * @returns {number}
- */
-function findBlocNokWithPos(blocks, pos) {
+function findBlocNokWithPos(blocks: Block[], pos: number): number {
   let no = 0;
   for (let block of blocks) {
     let r = block.range;
@@ -82,11 +77,7 @@ function findBlocNokWithPos(blocks, pos) {
   return -1;
 }
 
-/**
- * @param {EditorState} state
- * @returns {Block}
- */
-export function getActiveNoteBlock(state) {
+export function getActiveNoteBlock(state: EditorState): Block | undefined {
   // find which block the cursor is in
   const range = state.selection.asSingle().ranges[0];
   // @ts-ignore
@@ -94,26 +85,22 @@ export function getActiveNoteBlock(state) {
   return findBlockWithPos(blocks, range.head);
 }
 
-/** @typedef {{
- range: {from: number, to: number},
- content: {from: number, to: number},
- delimiter: {from: number, to: number},
- language: {
-  name: string,
-  auto: boolean,
-},
-}} Block */
+export interface Block {
+  range: { from: number; to: number };
+  content: { from: number; to: number };
+  delimiter: { from: number; to: number };
+  language: {
+    name: string;
+    auto: boolean;
+  };
+}
 
-/** @typedef {{
-  blocks: Block[],
-  active: number,
-}} BlocksInfo */
+export interface BlocksInfo {
+  blocks: Block[];
+  active: number;
+}
 
-/**
- * @param {EditorState} state
- * @returns {BlocksInfo}
- */
-export function getBlocksInfo(state) {
+export function getBlocksInfo(state: EditorState): BlocksInfo {
   // find which block the cursor is in
   const range = state.selection.asSingle().ranges[0];
   // @ts-ignore
@@ -128,44 +115,34 @@ export function getBlocksInfo(state) {
   };
 }
 
-/**
- * @returns {Block}
- */
-export function getFirstNoteBlock(state) {
+export function getFirstNoteBlock(state: EditorState): Block {
   let blocks = state.facet(blockState);
   return blocks[0];
 }
 
-/**
- * @returns {Block}
- */
-export function getLastNoteBlock(state) {
+export function getLastNoteBlock(state: EditorState): Block {
   let blocks = state.facet(blockState);
   return blocks[blocks.length - 1];
 }
 
-/**
- * @param {EditorState} state
- * @param {number} n
- */
-export function getBlockN(state, n) {
+export function getBlockN(state: EditorState, n: number): Block {
   // @ts-ignore
   let blocks = state.facet(blockState);
   return blocks[n];
 }
 
-export function getNoteBlockFromPos(state, pos) {
+export function getNoteBlockFromPos(state: EditorState, pos: number): Block | undefined {
   let blocks = state.facet(blockState);
   return findBlockWithPos(blocks, pos);
 }
 
-export function getNoteBlocksBetween(state, from, to) {
+export function getNoteBlocksBetween(state: EditorState, from: number, to: number): Block[] {
   return state
     .facet(blockState)
     .filter((block) => block.range.from < to && block.range.to >= from);
 }
 
-export function getNoteBlocksFromRangeSet(state, ranges) {
+export function getNoteBlocksFromRangeSet(state: EditorState, ranges: any): Block[] {
   const blocks = [];
   const seenBlockStarts = new Set();
   for (const range of ranges) {
@@ -398,7 +375,7 @@ const preventSelectionBeforeFirstBlock = EditorState.transactionFilter.of(
   },
 );
 
-export function getBlockLineFromPos(state, pos) {
+export function getBlockLineFromPos(state: EditorState, pos: number) {
   const line = state.doc.lineAt(pos);
   const block = state
     .facet(blockState)
@@ -429,7 +406,7 @@ export const blockLineNumbers = lineNumbers({
   },
 });
 
-function getSelectionSize(state, sel) {
+function getSelectionSize(state: EditorState, sel: any): number {
   let count = 0;
   let numBlocks = 0;
   for (const block of state.facet(blockState)) {

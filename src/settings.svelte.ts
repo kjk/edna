@@ -39,10 +39,8 @@ export class Settings {
   currentNoteName = $state(kScratchNoteName);
   tabs = $state([]);
   emacsMetaKey = $state("alt");
-  /** @type { string} */
-  fontFamily = $state(undefined);
-  /** @type { number } */
-  fontSize = $state(undefined);
+  fontFamily: string = $state(undefined);
+  fontSize: number = $state(undefined);
   keymap = $state("default");
   showFoldGutter = $state(true);
   showLineNumberGutter = $state(true);
@@ -58,7 +56,7 @@ export class Settings {
   aiModelID = $state("chatgpt-4o-latest");
   starredModels = $state(["grok-3", "chatgpt-4o-latest"]);
 
-  constructor(settings) {
+  constructor(settings: any) {
     if (!settings) {
       return;
     }
@@ -68,10 +66,10 @@ export class Settings {
       }
     }
   }
-  addTab(noteName) {
+  addTab(noteName: string) {
     pushIfNotExists(this.tabs, noteName);
   }
-  removeTab(noteName) {
+  removeTab(noteName: string) {
     arrayRemove(this.tabs, noteName);
   }
   toJSON() {
@@ -90,7 +88,7 @@ export let kDefaultFontSize = isMobileDevice ? 16 : 14;
 console.log("kDefaultFontSize:", kDefaultFontSize);
 export const kSettingsPath = "settings.json";
 
-function validateFontSize(fontSize) {
+function validateFontSize(fontSize: number): number {
   if (!fontSize) {
     return kDefaultFontSize;
   }
@@ -100,7 +98,7 @@ function validateFontSize(fontSize) {
   return fontSize;
 }
 
-function validateTabSize(tabSize) {
+function validateTabSize(tabSize: number): number {
   if (tabSize < 1) {
     return 1;
   }
@@ -110,11 +108,7 @@ function validateTabSize(tabSize) {
   return tabSize;
 }
 
-/**
- * @param {string} modelID
- * @returns {any[]}
- */
-export function findModelByID(modelID) {
+export function findModelByID(modelID: string): any[] | null {
   for (let m of modelsShort) {
     if (m[kModelIDIdx] == modelID) {
       return m;
@@ -123,11 +117,7 @@ export function findModelByID(modelID) {
   return null;
 }
 
-/**
- * @param {string} modelID
- * @returns {string}
- */
-function validateAiModelID(modelID) {
+function validateAiModelID(modelID: string): string {
   let model = findModelByID(modelID);
   if (model) {
     return modelID;
@@ -184,11 +174,7 @@ function getFreeModelID() {
   }
 }
 
-/**
- * @param {string[]} modelIDs
- * @returns {string[]}
- */
-function removeUnknownAiModels(modelIDs) {
+function removeUnknownAiModels(modelIDs: string[]): string[] {
   let validModels = [];
   for (let modelID of modelIDs) {
     let model = findModelByID(modelID);
@@ -201,10 +187,9 @@ function removeUnknownAiModels(modelIDs) {
   return validModels;
 }
 
-let lastSettingsRaw;
+let lastSettingsRaw: any;
 
-/** @returns {Settings} */
-export function getSettings() {
+export function getSettings(): Settings {
   if (appState.settings) {
     // console.log("getSettings: already loaded");
     // logSettings(appState.settings);
@@ -256,11 +241,7 @@ function updateWebsiteTheme() {
   }
 }
 
-/**
- * @param {Settings} newSettings
- * @returns {boolean}
- */
-function saveSettings(newSettings) {
+function saveSettings(newSettings: Settings): boolean {
   throwIf(!newSettings.currentNoteName);
   newSettings.tabSize = validateTabSize(newSettings.tabSize);
   let settingsRaw = $state.snapshot(newSettings.toJSON());
@@ -322,19 +303,13 @@ mediaMatch.addEventListener("change", async () => {
   }
 });
 
-/**
- * @returns {string}
- */
-export function getVersion() {
+export function getVersion(): string {
   // __APP_VERSION__ and __GIT_HASH__ are set in vite.config.js
   // @ts-ignore
   return __APP_VERSION__;
 }
 
-/**
- * @returns {string}
- */
-export function getGitHash() {
+export function getGitHash(): string {
   // @ts-ignore
   return __GIT_HASH__;
 }

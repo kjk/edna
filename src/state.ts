@@ -1,12 +1,11 @@
-/** @typedef {{
-  appOpenCount: number,
-  noteCreateCount: number,
-  noteDeleteCount: number,
-  noteSaveCount: number,
-}} Stats
-*/
-
 import { logNoteOp } from "./log";
+
+export interface Stats {
+  appOpenCount: number;
+  noteCreateCount: number;
+  noteDeleteCount: number;
+  noteSaveCount: number;
+}
 
 let sessionStart = performance.now();
 
@@ -20,13 +19,9 @@ const kStatsKey = "stats.json";
 // so that getCount() can get it from there and incCount()
 // doesn't have to read from localStorage and parse JSON
 
-/**
- * @returns {Stats}
- */
-export function getStats() {
+export function getStats(): Stats {
   let s = localStorage.getItem(kStatsKey) || "{}";
-  /** @type {Stats} */
-  let stats = JSON.parse(s);
+  let stats: Stats = JSON.parse(s);
   stats.appOpenCount = stats.appOpenCount || 0;
   stats.noteCreateCount = stats.noteCreateCount || 0;
   stats.noteDeleteCount = stats.noteDeleteCount || 0;
@@ -34,22 +29,14 @@ export function getStats() {
   return stats;
 }
 
-/**
- * @param {(Stats) => void} fn
- */
-export function updateStats(fn) {
+export function updateStats(fn: (stats: Stats) => void) {
   let stats = getStats();
   fn(stats);
   let s = JSON.stringify(stats, null, 2);
   localStorage.setItem(kStatsKey, s);
 }
 
-/**
- * TODO: a way to type key as one of the keys of Stats?
- * @param {string} key
- * @returns {number}
- * */
-function incCount(key) {
+function incCount(key: keyof Stats): number {
   let n;
   updateStats((stats) => {
     n = (stats[key] || 0) + 1;
@@ -58,24 +45,15 @@ function incCount(key) {
   return n;
 }
 
-/**
- * @returns {number}
- */
-export function incNoteCreateCount() {
+export function incNoteCreateCount(): number {
   return incCount("noteCreateCount");
 }
 
-/**
- * @returns {number}
- */
-export function incNoteDeleteCount() {
+export function incNoteDeleteCount(): number {
   return incCount("noteDeleteCount");
 }
 
-/**
- * @returns {number}
- */
-export function incNoteSaveCount() {
+export function incNoteSaveCount(): number {
   logNoteOp("noteSave");
   return incCount("noteSaveCount");
 }
@@ -94,7 +72,7 @@ incCount("appOpenCount");
 
 let editors = [];
 
-export function rememberEditor(editor) {
+export function rememberEditor(editor: any) {
   editors = []; // TODO: for now we only have one editor
   editors.push(editor);
   // TODO: this is for tests
@@ -102,7 +80,7 @@ export function rememberEditor(editor) {
   window.ednaCurrentEditor = editor;
 }
 
-export function findEditorByView(view) {
+export function findEditorByView(view: any) {
   for (let e of editors) {
     if (e.view === view) {
       return e;

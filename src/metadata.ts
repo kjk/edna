@@ -5,53 +5,43 @@ import { getStorageFS } from "./notes";
 
 export const kMetadataName = "__metadata.edna.json";
 
-/** @typedef {{
-    name: string,
-    altShortcut?: string,
-    isStarred?: boolean,
-    isArchived?: boolean,
-    foldedRanges?: { from: number, to: number }[],
-    selection? : any,
-}} NoteMetadata */
+export interface NoteMetadata {
+  name: string;
+  altShortcut?: string;
+  isStarred?: boolean;
+  isArchived?: boolean;
+  foldedRanges?: { from: number; to: number }[];
+  selection?: any;
+}
 
-/** @typedef {{
-    name: string,
-    isStarred?: boolean,
-}} FunctionMetadata */
+export interface FunctionMetadata {
+  name: string;
+  isStarred?: boolean;
+}
 
-/** @typedef {{
-  ver: number,
-  notes: NoteMetadata[],
-  functions: FunctionMetadata[],
-}} Metadata */
+export interface Metadata {
+  ver: number;
+  notes: NoteMetadata[];
+  functions: FunctionMetadata[];
+}
 
-/** @type {Metadata} */
-let metadata = null;
+let metadata: Metadata = null;
 
-export function getMetadata() {
+export function getMetadata(): Metadata {
   return metadata;
 }
 
-/**
- * @returns {NoteMetadata[]}
- */
-export function getNotesMetadata() {
+export function getNotesMetadata(): NoteMetadata[] {
   metadata.notes = metadata.notes || [];
   return metadata.notes;
 }
 
-/**
- * @returns {FunctionMetadata[]}
- */
-function getFunctionsMetadata() {
+function getFunctionsMetadata(): FunctionMetadata[] {
   metadata.functions = metadata.functions || [];
   return metadata.functions;
 }
 
-/**
- * @returns {Promise<Metadata>}
- */
-export async function loadNotesMetadata() {
+export async function loadNotesMetadata(): Promise<Metadata> {
   console.log("loadNotesMetadata: started");
   let dh = getStorageFS();
   let s;
@@ -72,10 +62,7 @@ export async function loadNotesMetadata() {
   return metadata;
 }
 
-/**
- * @param {Metadata} m
- */
-export async function saveNotesMetadata(m = metadata) {
+export async function saveNotesMetadata(m: Metadata = metadata) {
   let s = JSON.stringify(m, null, 2);
   let dh = getStorageFS();
   if (dh) {
@@ -91,13 +78,7 @@ export async function saveNotesMetadata(m = metadata) {
   return m;
 }
 
-/**
- * can return null if there is no metadata
- * @param {string} name
- * @param {boolean} createIfNotExists
- * @returns {NoteMetadata}
- */
-export function getNoteMeta(name, createIfNotExists = false) {
+export function getNoteMeta(name: string, createIfNotExists = false): NoteMetadata | null {
   // console.log("getNoteMeta:", name);
   let notes = getNotesMetadata();
   for (let m of notes) {
@@ -115,10 +96,7 @@ export function getNoteMeta(name, createIfNotExists = false) {
   return m;
 }
 
-/**
- * @param {string} name
- */
-export async function removeNoteFromMetadata(name) {
+export async function removeNoteFromMetadata(name: string) {
   let notes = getNotesMetadata();
   let newNotes = [];
   for (let m of notes) {
@@ -130,11 +108,7 @@ export async function removeNoteFromMetadata(name) {
   await saveNotesMetadata();
 }
 
-/**
- * @param {string} oldName
- * @param {string} newName
- */
-export async function renameNoteInMetadata(oldName, newName) {
+export async function renameNoteInMetadata(oldName: string, newName: string) {
   let notes = getNotesMetadata();
   for (let o of notes) {
     if (o.name === oldName) {
@@ -145,11 +119,7 @@ export async function renameNoteInMetadata(oldName, newName) {
   await saveNotesMetadata();
 }
 
-/**
- * @param {string} name
- * @param {string} altShortcut - "0" ... "9"
- */
-export async function reassignNoteShortcut(name, altShortcut) {
+export async function reassignNoteShortcut(name: string, altShortcut: string) {
   console.log("reassignNoteShortcut:", name, altShortcut);
   let notes = getNotesMetadata();
   for (let o of notes) {
@@ -173,31 +143,21 @@ export async function reassignNoteShortcut(name, altShortcut) {
   updateAfterNoteStateChange();
 }
 
-/**
- * @param {string} name
- */
-export async function archiveNote(name) {
+export async function archiveNote(name: string) {
   let m = getNoteMeta(name, true);
   m.isArchived = true;
   await saveNotesMetadata();
   updateAfterNoteStateChange();
 }
 
-/**
- * @param {string} name
- */
-export async function unArchiveNote(name) {
+export async function unArchiveNote(name: string) {
   let m = getNoteMeta(name, true);
   m.isArchived = false;
   await saveNotesMetadata();
   updateAfterNoteStateChange();
 }
 
-/**
- * @param {string} name
- * @returns {Promise<boolean>}
- */
-export async function toggleNoteStarred(name) {
+export async function toggleNoteStarred(name: string): Promise<boolean> {
   let meta = getNoteMeta(name, true);
   meta.isStarred = !meta.isStarred;
   await saveNotesMetadata();
@@ -205,11 +165,7 @@ export async function toggleNoteStarred(name) {
   return meta.isStarred;
 }
 
-/**
- * @param {string} name
- * @returns {boolean}
- */
-export function isNoteArchived(name) {
+export function isNoteArchived(name: string): boolean {
   let meta = getNoteMeta(name);
   if (!meta) {
     return false;
@@ -217,12 +173,7 @@ export function isNoteArchived(name) {
   return meta.isArchived === true;
 }
 
-/**
- * @param {string} name
- * @param {boolean} createIfNotExists
- * @returns {FunctionMetadata}
- */
-export function getFunctionMeta(name, createIfNotExists = false) {
+export function getFunctionMeta(name: string, createIfNotExists = false): FunctionMetadata | null {
   // console.log("getMetadataForFunction:", name);
   let functions = getFunctionsMetadata();
   for (let m of functions) {
@@ -240,11 +191,7 @@ export function getFunctionMeta(name, createIfNotExists = false) {
   return m;
 }
 
-/**
- * @param {string} name
- * @returns {Promise<boolean>}
- */
-export async function toggleFunctionStarred(name) {
+export async function toggleFunctionStarred(name: string): Promise<boolean> {
   let m = getFunctionMeta(name, true);
   m.isStarred = !m.isStarred;
   await saveNotesMetadata();
