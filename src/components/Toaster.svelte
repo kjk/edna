@@ -89,7 +89,7 @@
 
 <script>
   import { len } from "../util";
-  import { getScrollbarWidth } from "../util.js";
+  import { getScrollbarWidth } from "../util";
 
   let style = $state("");
   $effect(() => {

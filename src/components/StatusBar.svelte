@@ -4,9 +4,9 @@
     getLanguageNameFromToken,
     langSupportsFormat,
     langSupportsRun,
-  } from "../editor/languages.js";
-  import { openLanguageSelector } from "../globals.js";
-  import { fixUpShortcuts } from "../key-helper.js";
+  } from "../editor/languages";
+  import { openLanguageSelector } from "../globals";
+  import { fixUpShortcuts } from "../key-helper";
   import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
 

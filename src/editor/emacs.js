@@ -35,10 +35,10 @@ import {
   selectNextParagraph,
   selectPreviousBlock,
   selectPreviousParagraph,
-} from "./block/commands.js";
-import { transposeChars } from "./block/transpose-chars.js";
-import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
-import { ednaKeymap, keymapFromSpec } from "./keymap.js";
+} from "./block/commands";
+import { transposeChars } from "./block/transpose-chars";
+import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
+import { ednaKeymap, keymapFromSpec } from "./keymap";
 
 // if set to true, all keybindings for moving around is changed to their corresponding select commands
 let emacsMarkMode = false;

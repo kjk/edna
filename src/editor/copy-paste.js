@@ -1,8 +1,8 @@
 import { EditorState, EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
-import { kLanguages } from "./languages.js";
-import { setEmacsMarkMode } from "./emacs.js";
+import { kLanguages } from "./languages";
+import { setEmacsMarkMode } from "./emacs";
 
 const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
 const blockSeparatorRegex = new RegExp(

@@ -8,7 +8,7 @@ import {
 } from "@codemirror/language";
 import { RangeSet } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { FOLD_LABEL_LENGTH } from "../common/constants.js";
+import { FOLD_LABEL_LENGTH } from "../common/constants";
 import {
   ADD_NEW_BLOCK,
   heynoteEvent,
@@ -16,12 +16,12 @@ import {
   transactionsHasAnnotation,
   transactionsHasAnnotationsAny,
   transactionsHasHistoryEvent,
-} from "./annotation.js";
+} from "./annotation";
 import {
   delimiterRegexWithoutNewline,
   getBlocks,
   getNoteBlocksFromRangeSet,
-} from "./block/block.js";
+} from "./block/block";
 
 // This extension fixes so that a folded region is automatically unfolded if any changes happen
 // on either the start line or the end line of the folded region (even if the change is not within the folded region)

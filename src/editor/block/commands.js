@@ -6,7 +6,7 @@ import {
   heynoteEvent,
   LANGUAGE_CHANGE,
   MOVE_BLOCK,
-} from "../annotation.js";
+} from "../annotation";
 import {
   blockState,
   getActiveNoteBlock,
@@ -14,8 +14,8 @@ import {
   getLastNoteBlock,
   getNoteBlockFromPos,
 } from "./block";
-import { moveLineDown, moveLineUp } from "./move-lines.js";
-import { selectAll } from "./select-all.js";
+import { moveLineDown, moveLineUp } from "./move-lines";
+import { selectAll } from "./select-all";
 
 export { moveLineDown, moveLineUp, selectAll };
 

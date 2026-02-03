@@ -1,12 +1,12 @@
 <script>
-  import { focus } from "../actions.js";
-  import { kLanguages } from "../editor/languages.js";
+  import { focus } from "../actions";
+  import { kLanguages } from "../editor/languages";
   import {
     findMatchingItems,
     hilightText,
     len,
     makeHilightRegExp,
-  } from "../util.js";
+  } from "../util";
   import ListBox from "./ListBox.svelte";
 
   /** @type {{

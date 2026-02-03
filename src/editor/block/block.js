@@ -14,15 +14,15 @@ import {
   ViewPlugin,
   WidgetType,
 } from "@codemirror/view";
-import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation.js";
-import { SelectionChangeEvent } from "../event.js";
+import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation";
+import { SelectionChangeEvent } from "../event";
 import {
   firstBlockDelimiterSize,
   getBlocksFromString,
   getBlocksFromSyntaxTree,
-} from "./block-parsing.js";
-import { mathBlock } from "./math.js";
-import { emptyBlockSelected } from "./select-all.js";
+} from "./block-parsing";
+import { mathBlock } from "./math";
+import { emptyBlockSelected } from "./select-all";
 
 export const delimiterRegex = /^\n∞∞∞[a-z]+?(-a)?\n$/;
 export const delimiterRegexWithoutNewline = /^∞∞∞[a-z]+?(-a)?$/;

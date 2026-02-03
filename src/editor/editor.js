@@ -13,32 +13,32 @@ import {
   EditorView,
   lineNumbers,
 } from "@codemirror/view";
-import { getNoteMeta, saveNotesMetadata } from "../metadata.js";
-import { loadNote, saveNote } from "../notes.js";
-import { findEditorByView } from "../state.js";
-import { len, objectEqualDeep } from "../util.js";
-import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation.js";
+import { getNoteMeta, saveNotesMetadata } from "../metadata";
+import { loadNote, saveNote } from "../notes";
+import { findEditorByView } from "../state";
+import { len, objectEqualDeep } from "../util";
+import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
 import {
   blockLineNumbers,
   blockState,
   noteBlockExtension,
-} from "./block/block.js";
-import { triggerCurrenciesLoaded } from "./block/commands.js";
-import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils.js";
+} from "./block/block";
+import { triggerCurrenciesLoaded } from "./block/commands";
+import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
 import { heynoteCopyCut } from "./copy-paste";
-import { emacsKeymap } from "./emacs.js";
-import { createDynamicCloseBracketsExtension } from "./extensions.js";
-import { foldGutterExtension, unfoldEverything } from "./fold-gutter.js";
-import { ednaKeymap } from "./keymap.js";
-import { heynoteLang } from "./lang-heynote/heynote.js";
-import { languageDetection } from "./language-detection/autodetect.js";
-import { links } from "./links.js";
-import { autoSaveContent } from "./save.js";
-import { customSetup } from "./setup.js";
-import { heynoteBase } from "./theme/base.js";
-import { heynoteDark } from "./theme/dark.js";
-import { getFontTheme } from "./theme/font-theme.js";
-import { heynoteLight } from "./theme/light.js";
+import { emacsKeymap } from "./emacs";
+import { createDynamicCloseBracketsExtension } from "./extensions";
+import { foldGutterExtension, unfoldEverything } from "./fold-gutter";
+import { ednaKeymap } from "./keymap";
+import { heynoteLang } from "./lang-heynote/heynote";
+import { languageDetection } from "./language-detection/autodetect";
+import { links } from "./links";
+import { autoSaveContent } from "./save";
+import { customSetup } from "./setup";
+import { heynoteBase } from "./theme/base";
+import { heynoteDark } from "./theme/dark";
+import { getFontTheme } from "./theme/font-theme";
+import { heynoteLight } from "./theme/light";
 import { todoCheckboxPlugin } from "./todo-checkbox";
 
 function getKeymapExtensions(editor, keymap) {

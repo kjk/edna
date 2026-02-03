@@ -1,12 +1,12 @@
 import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { findEditorByView } from "../../state.js";
+import { findEditorByView } from "../../state";
 import {
   getLanguage,
   langGetPrettierInfo,
   langSupportsFormat,
-} from "../languages.js";
-import { getActiveNoteBlock } from "./block.js";
+} from "../languages";
+import { getActiveNoteBlock } from "./block";
 
 /**
  * @param {string} s

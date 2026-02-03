@@ -1,5 +1,5 @@
 import { EditorSelection } from "@codemirror/state";
-import { kLanguages } from "../languages.js";
+import { kLanguages } from "../languages";
 import { blockState } from "./block";
 
 const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");

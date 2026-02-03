@@ -1,8 +1,8 @@
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { EditorState } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
-import { getActiveNoteBlock } from "./block/block.js";
-import { hasSelection } from "./cmutils.js";
+import { getActiveNoteBlock } from "./block/block";
+import { hasSelection } from "./cmutils";
 
 const defaultCloseBracketsConfig = {
   closeBrackets: {

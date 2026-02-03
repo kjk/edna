@@ -100,9 +100,9 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script>
   import { onMount } from "svelte";
-  import { ensurevisible, focus } from "../actions.js";
-  import { extractShortcut } from "../keys.js";
-  import { len, splitMax } from "../util.js";
+  import { ensurevisible, focus } from "../actions";
+  import { extractShortcut } from "../keys";
+  import { len, splitMax } from "../util";
 
   /** @type {{
    menuDef: MenuDef,

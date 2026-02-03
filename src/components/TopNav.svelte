@@ -1,11 +1,11 @@
 <script>
-  import { appState } from "../appstate.svelte.js";
-  import { focusEditor, openNoteSelector } from "../globals.js";
-  import { getNoteMeta } from "../metadata.js";
-  import { isMoving } from "../mouse-track.svelte.js";
-  import { isSystemNoteName } from "../notes.js";
-  import { getSettings } from "../settings.svelte.js";
-  import { getAltChar, len } from "../util.js";
+  import { appState } from "../appstate.svelte";
+  import { focusEditor, openNoteSelector } from "../globals";
+  import { getNoteMeta } from "../metadata";
+  import { isMoving } from "../mouse-track.svelte";
+  import { isSystemNoteName } from "../notes";
+  import { getSettings } from "../settings.svelte";
+  import { getAltChar, len } from "../util";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
     IconGrokIconDown,

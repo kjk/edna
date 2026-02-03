@@ -1,6 +1,6 @@
 import { syntaxTree } from "@codemirror/language";
 import { IterMode } from "@lezer/common";
-import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms.js";
+import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms";
 
 // tracks the size of the first delimiter
 export let firstBlockDelimiterSize;

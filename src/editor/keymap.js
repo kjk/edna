@@ -11,8 +11,8 @@ import {
   openNoteSelector,
   openQuickAccess,
   smartRun,
-} from "../globals.js";
-import { platform } from "../util.js";
+} from "../globals";
+import { platform } from "../util";
 import {
   addNewBlockAfterCurrent,
   addNewBlockAfterLast,
@@ -34,11 +34,11 @@ import {
   selectNextParagraph,
   selectPreviousBlock,
   selectPreviousParagraph,
-} from "./block/commands.js";
-import { formatBlockContent } from "./block/format-code.js";
-import { copyCommand, cutCommand, pasteCommand } from "./copy-paste.js";
-import { insertDateAndTime } from "./date-time.js";
-import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter.js";
+} from "./block/commands";
+import { formatBlockContent } from "./block/format-code";
+import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
+import { insertDateAndTime } from "./date-time";
+import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
 
 const isMac = platform.isMac;
 

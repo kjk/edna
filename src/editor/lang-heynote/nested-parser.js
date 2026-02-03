@@ -1,6 +1,6 @@
 import { parseMixed } from "@lezer/common";
-import { getLanguage, langGetParser, LANGUAGES } from "../languages.js";
-import { NoteContent, NoteLanguage } from "./parser.terms.js";
+import { getLanguage, langGetParser, LANGUAGES } from "../languages";
+import { NoteContent, NoteLanguage } from "./parser.terms";
 
 const languageMapping = Object.fromEntries(
   LANGUAGES.map((l) => [l.token, langGetParser(l)]),

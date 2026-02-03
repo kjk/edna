@@ -2,12 +2,12 @@
   import { onMount } from "svelte";
   import { syntaxTree } from "@codemirror/language";
   import { EditorView } from "@codemirror/view";
-  import { appState } from "../appstate.svelte.js";
-  import { loadCurrencies } from "../currency.js";
-  import { EdnaEditor } from "../editor/editor.js";
-  import { getSettings } from "../settings.svelte.js";
-  import { rememberEditor } from "../state.js";
-  import { throwIf } from "../util.js";
+  import { appState } from "../appstate.svelte";
+  import { loadCurrencies } from "../currency";
+  import { EdnaEditor } from "../editor/editor";
+  import { getSettings } from "../settings.svelte";
+  import { rememberEditor } from "../state";
+  import { throwIf } from "../util";
 
   /** @typedef {import("../editor/event.js").SelectionChangeEvent} SelectionChangeEvent */
 

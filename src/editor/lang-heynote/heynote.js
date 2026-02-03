@@ -5,9 +5,9 @@ import {
   LRLanguage,
 } from "@codemirror/language";
 import { styleTags, tags as t } from "@lezer/highlight";
-import { FOLD_LABEL_LENGTH } from "../../common/constants.js";
-import { configureNesting } from "./nested-parser.js";
-import { parser } from "./parser.js";
+import { FOLD_LABEL_LENGTH } from "../../common/constants";
+import { configureNesting } from "./nested-parser";
+import { parser } from "./parser";
 
 function foldNode(node) {
   //console.log("foldNode", node);
