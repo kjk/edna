@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
   /**
    * @typedef {Object} Toast
    * @property {string} msg
@@ -87,7 +87,7 @@
   }
 </script>
 
-<script>
+<script lang="ts">
   import { len } from "../util";
   import { getScrollbarWidth } from "../util";
 

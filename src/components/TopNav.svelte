@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { appState } from "../appstate.svelte";
   import { focusEditor, openNoteSelector } from "../globals";
   import { getNoteMeta } from "../metadata";

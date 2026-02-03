@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { focus } from "../actions";
   import { kReleaseNotesSystemNoteName } from "../notes";
   import ListBox from "./ListBox.svelte";

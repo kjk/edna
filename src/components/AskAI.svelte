@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte";
   import hljs from "highlight.js";
   import markdownIt from "markdown-it";

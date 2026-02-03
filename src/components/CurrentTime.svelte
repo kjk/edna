@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   /** @type { {
     class: string,
     formatTime?: (date: Date) => string,

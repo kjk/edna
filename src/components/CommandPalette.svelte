@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { focus } from "../actions";
   import { extractShortcut } from "../keys";
   import {

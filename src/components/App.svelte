@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte";
   import { toggleBlockComment, toggleComment, toggleLineComment } from "@codemirror/commands";
   import { foldCode, unfoldCode } from "@codemirror/language";

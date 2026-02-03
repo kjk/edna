@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { focus } from "../actions";
   import { getNotesCount } from "../notes";
   import { len } from "../util";

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { requestHandlePermission } from "../fileutil";
   import { boot } from "../main";
   import { dbDelDirHandle, dbGetDirHandle, pickAnotherDirectory, preLoadAllNotes, setStorageFS } from "../notes";

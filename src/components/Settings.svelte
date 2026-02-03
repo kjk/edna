@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { focus } from "../actions";
   import { getSessionDur } from "../globals";
   import { getGitHash, getSettings, getVersion, kDefaultFontFamily, kDefaultFontSize } from "../settings.svelte";

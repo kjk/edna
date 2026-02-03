@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { requestHandlePermission } from "../fileutil";
 
   /** @type {{

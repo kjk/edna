@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
   /** @typedef {{
    block: any,
    text: string,
@@ -8,7 +8,7 @@
 </script>
 
 <!-- svelte-ignore state_referenced_locally -->
-<script>
+<script lang="ts">
   import { focus } from "../actions";
   import {
     findMatchingItems,

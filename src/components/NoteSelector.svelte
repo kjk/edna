@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
   /** @typedef {{
     key: number,
     name: string,
@@ -104,7 +104,7 @@
   }
 </script>
 
-<script>
+<script lang="ts">
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
   import {

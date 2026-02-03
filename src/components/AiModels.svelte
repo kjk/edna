@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { clickOutside, focus } from "../actions";
   import { appState } from "../appstate.svelte";
   import {
