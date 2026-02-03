@@ -9,7 +9,7 @@
   export const kMenuStatusDisabled = 1;
   export const kMenuStatusRemoved = 2;
 
-  export const kMenuSeparator = ["---", 0];
+  export const kMenuSeparator: MenuItemDef = ["---", 0];
 
   export function fixMenuName(s: string): string {
     if (!s) {
@@ -116,9 +116,9 @@
     }
   }
 
-  function findMenuItemForElement(el: HTMLElement): MenuItem | null {
-    let found = null;
-    function visit(mi) {
+  function findMenuItemForElement(el: HTMLElement): MenuItem | undefined {
+    let found: MenuItem | undefined;
+    function visit(mi: MenuItem) {
       if (mi.element === el) {
         found = mi;
         return false;
@@ -131,7 +131,7 @@
 
   const kMenuShowDelay = 300;
 
-  let showSubMenuTimer;
+  let showSubMenuTimer: number;
 
   function updateVisiblityState() {
     forEachMenuItem((mi) => {
@@ -163,19 +163,19 @@
       mi = mi.parent;
       mi.isSelected = true;
     }
-    showSubMenuTimer = setTimeout(() => {
+    showSubMenuTimer = window.setTimeout(() => {
       updateVisiblityState();
     }, kMenuShowDelay);
   }
 
-  function findMenuItem(ev: Event): MenuItem | null {
+  function findMenuItem(ev: Event): MenuItem | undefined {
     let el = ev.target as HTMLElement;
     while (el && el.role != "menuitem") {
       el = el.parentElement;
     }
     if (!el) {
       // console.log("no element with 'menuitem' role");
-      return null;
+      return;
     }
     return findMenuItemForElement(el);
   }
@@ -197,7 +197,7 @@
     ev.stopPropagation();
   }
 
-  function findCurrentlySelected(): MenuItem | null {
+  function findCurrentlySelected(): MenuItem | undefined {
     // find the most nested selected
     let found: MenuItem;
     let foundNest: number;
@@ -221,7 +221,7 @@
     return found;
   }
 
-  function findSibling(mi: MenuItem, dir: number): MenuItem | null {
+  function findSibling(mi: MenuItem, dir: number): MenuItem | undefined {
     let items = rootMenu;
     if (mi.parent) {
       items = mi.parent.children;

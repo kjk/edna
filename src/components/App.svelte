@@ -4,6 +4,7 @@
   import { foldCode, unfoldCode } from "@codemirror/language";
   import { closeSearchPanel, openSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
+  import type { EditorView } from "@codemirror/view";
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
   import { getActiveNoteBlock, getBlockN, getBlocksInfo } from "../editor/block/block";
@@ -29,6 +30,7 @@
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime, insertTime } from "../editor/date-time";
   import { EdnaEditor, setReadOnly } from "../editor/editor";
+  import type { SelectionChangeEvent } from "../editor/event";
   import {
     foldAllBlocks,
     foldBlock,
@@ -41,6 +43,7 @@
   import { toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, hasHandlePermission, openDirPicker, supportsFileSystem } from "../fileutil";
   import { parseUserFunctions, runBoopFunction } from "../functions";
+  import type { BoopFunction, BoopFunctionArg } from "../functions";
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
@@ -89,6 +92,7 @@
   } from "../notes";
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
+  import type { CapturingEval } from "../run";
   import { getSettings } from "../settings.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
@@ -107,6 +111,7 @@
   import AskAI from "./AskAI.svelte";
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";
+  import type { Item as BlockItem } from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
   import Editor from "./Editor.svelte";
@@ -122,6 +127,7 @@
     kMenuStatusNormal,
     kMenuStatusRemoved,
   } from "./Menu.svelte";
+  import type { MenuDef, MenuItemDef } from "./Menu.svelte";
   import ModalMessage, { clearModalMessage, modalMessageState, showModalMessageHTML } from "./ModalMessage.svelte";
   import NoteSelector from "./NoteSelector.svelte";
   import NoteSelectorWide from "./NoteSelectorWide.svelte";
@@ -133,13 +139,6 @@
   import StatusBar from "./StatusBar.svelte";
   import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
   import TopNav from "./TopNav.svelte";
-
-  import type { MenuItemDef } from "./Menu.svelte";
-  import type { BoopFunction, BoopFunctionArg } from "../functions";
-  import type { EditorView } from "@codemirror/view";
-  import type { SelectionChangeEvent } from "../editor/event";
-  import type { Item as BlockItem } from "./BlockSelector.svelte";
-  import type { CapturingEval } from "../run";
 
   const isMac = platform.isMac;
 
@@ -713,7 +712,11 @@
     return input;
   }
 
-  async function runBoopFunctionWithSelection(view: EditorView, fdef: BoopFunction, replace: boolean): Promise<boolean> {
+  async function runBoopFunctionWithSelection(
+    view: EditorView,
+    fdef: BoopFunction,
+    replace: boolean,
+  ): Promise<boolean> {
     // TOOD: selection can cross blocks so for now not implementing replace
     replace = false;
 
@@ -753,7 +756,11 @@
     }
   }
 
-  async function runBoopFunctionWithBlockContent(view: EditorView, fdef: BoopFunction, replace: boolean): Promise<boolean> {
+  async function runBoopFunctionWithBlockContent(
+    view: EditorView,
+    fdef: BoopFunction,
+    replace: boolean,
+  ): Promise<boolean> {
     const { state } = view;
     if (state.readOnly) return false;
     const block = getActiveNoteBlock(state);
@@ -933,7 +940,7 @@
   const kCmdAskAI = nmid();
   const kCmdTestErrorTracking = nmid();
 
-  function buildMenuDef() {
+  function buildMenuDef(): MenuDef {
     // let starAction = "Star";
     let starAction = "Add to favorites";
     let meta = getNoteMeta(noteName);
@@ -942,7 +949,7 @@
       starAction = "Remove from favorites";
     }
 
-    const menuNote = [
+    const menuNote: MenuItemDef[] = [
       ["Close tab", kCmdCloseCurrentTab],
       ["Rename", kCmdRenameCurrentNote],
       [starAction, kCmdNoteToggleStarred],
@@ -952,7 +959,7 @@
       ["Export to file", kCmdExportCurrentNote],
     ];
 
-    const menuBlock = [
+    const menuBlock: MenuItemDef[] = [
       ["Go To\tMod + B", kCmdGoToBlock],
       ["Add after current\tMod + Enter", kCmdNewBlockAfterCurrent],
       ["Add before current\tAlt + Enter", kCmdNewBlockBeforeCurrent],
@@ -970,19 +977,19 @@
       ["Delete", kCmdBlockDelete],
       ["Move to another note", kCmdMoveBlock],
       ...(isMac
-        ? [
+        ? ([
             ["Toggle block fold\tMod + Alt + .", kCmdToggleBlockFold],
             ["Fold block\tMod + Alt + [", kCmdFoldBlock],
             ["Unfold block\tMod + Alt + ]", kCmdUnfoldBlock],
-          ]
-        : [
+          ] as MenuItemDef[])
+        : ([
             ["Toggle block fold\tCtrl + Alt + .", kCmdToggleBlockFold],
             ["Fold block\tCtrl + Alt + [", kCmdFoldBlock],
             ["Unfold block\tCtrl + Alt + ]", kCmdUnfoldBlock],
-          ]),
+          ] as MenuItemDef[])),
     ];
 
-    const menuRun = [
+    const menuRun: MenuItemDef[] = [
       ["Smart Run\tMod + E", kCmdSmartRun],
       ["Run this block", kCmdRunBlock],
       ["Run this block with another block", kCmdRunBlockWithAnotherBlock],
@@ -999,7 +1006,7 @@
     if (dh) {
       currStorage = `Current store: directory ${dh.name}`;
     }
-    const menuStorage = [
+    const menuStorage: MenuItemDef[] = [
       [currStorage, kMenuIdJustText],
       ["Move notes from browser to directory", kCmdMoveNotesToDirectory],
       ["Switch to browser (local storage)", kCmdSwitchToLocalStorage],
@@ -1010,13 +1017,13 @@
       ["Help: storage", kCmdShowStorageHelp],
     ];
 
-    const menuEncrypt = [
+    const menuEncrypt: MenuItemDef[] = [
       ["Encrypt all notes", kCmdEncryptNotes],
       ["Decrypt all notes", kCmdDecryptNotes],
       ["Help: encryption", kCmdEncryptionHelp],
     ];
 
-    const menuHelp = [
+    const menuHelp: MenuItemDef[] = [
       ["Show help", kCmdShowHelp],
       ["Show help as note", kCmdShowHelpAsNote],
       ["Release notes", kCmdShowReleaseNotes],
@@ -1027,7 +1034,7 @@
       menuHelp.push(["Show Welcome Dev Note", kCmdShowWelcomeDevNote]);
     }
 
-    const contextMenu = [
+    const contextMenu: MenuDef = [
       ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
       ["Open note\tMod + K", kCmdOpenNote],
       ["New note", kCmdCreateNewNote],
@@ -1956,7 +1963,7 @@
     logNoteOp("noteDelete");
   }
 
-  function onCursorChange(e: SelectionChangeEvent) {
+  function onCursorChange(e: SelectionChangeEvent): void {
     line = e.cursorLine.line;
     column = e.cursorLine.col;
     selectionSize = e.selectionSize;

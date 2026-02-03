@@ -133,11 +133,12 @@ export function getNoteBlocksFromRangeSet(state: EditorState, ranges: any): Bloc
 }
 
 class NoteBlockStart extends WidgetType {
-  constructor(isFirst) {
+  isFirst: boolean;
+  constructor(isFirst: boolean) {
     super();
     this.isFirst = isFirst;
   }
-  eq(other) {
+  eq(other: NoteBlockStart) {
     return this.isFirst === other.isFirst;
   }
   toDOM() {
@@ -193,7 +194,7 @@ const noteBlockWidget = () => {
   return noteBlockStartField;
 };
 
-function atomicRanges(view) {
+function atomicRanges(view: EditorView) {
   let builder = new RangeSetBuilder();
   view.state.field(blockState).forEach((block) => {
     builder.add(block.delimiter.from, block.delimiter.to, {});
@@ -202,7 +203,8 @@ function atomicRanges(view) {
 }
 const atomicNoteBlock = ViewPlugin.fromClass(
   class {
-    constructor(view) {
+    atomicRanges: any;
+    constructor(view: EditorView) {
       this.atomicRanges = atomicRanges(view);
     }
 
@@ -214,8 +216,7 @@ const atomicNoteBlock = ViewPlugin.fromClass(
   },
   {
     provide: (plugin) =>
-      // @ts-ignore
-      EditorView.atomicRanges.of((view) => {
+      EditorView.atomicRanges.of((view: EditorView) => {
         return view.plugin(plugin)?.atomicRanges || [];
       }),
   },
