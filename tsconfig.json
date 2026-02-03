@@ -22,15 +22,19 @@
     "noUncheckedIndexedAccess": true,
 
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"],
+    },
+
+    // tsconfig.node.json
+    "composite": true,
+    "allowSyntheticDefaultImports": true,
   },
   "include": [
     "./src/**/*.d.ts",
     "./src/**/*.ts",
     "./src/**/*.js",
-    "./src/**/*.svelte"
+    "./src/**/*.svelte",
+    "vite.config.js",
+    "package.json",
   ],
-
-  "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -8,7 +8,7 @@ import {
 } from "@codemirror/language";
 import { RangeSet } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { FOLD_LABEL_LENGTH } from "@/src/common/constants.js";
+import { FOLD_LABEL_LENGTH } from "../common/constants.js";
 import {
   ADD_NEW_BLOCK,
   heynoteEvent,
