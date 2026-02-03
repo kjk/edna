@@ -7,13 +7,7 @@ import {
   LANGUAGE_CHANGE,
   MOVE_BLOCK,
 } from "../annotation";
-import {
-  blockState,
-  getActiveNoteBlock,
-  getFirstNoteBlock,
-  getLastNoteBlock,
-  getNoteBlockFromPos,
-} from "./block";
+import { blockState, getActiveNoteBlock, getFirstNoteBlock, getLastNoteBlock, getNoteBlockFromPos } from "./block";
 import { moveLineDown, moveLineUp } from "./move-lines";
 import { selectAll } from "./select-all";
 
@@ -54,9 +48,7 @@ export function addNewBlockBeforeCurrent({ state, dispatch }) {
           from: block.delimiter.from,
           insert: delimText,
         },
-        selection: EditorSelection.cursor(
-          block.delimiter.from + delimText.length,
-        ),
+        selection: EditorSelection.cursor(block.delimiter.from + delimText.length),
         annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
       },
       {
@@ -165,11 +157,7 @@ export function addNewBlockAfterLast({ state, dispatch }) {
 export function changeLanguageTo(state, dispatch, block, language, auto) {
   if (state.readOnly) return false;
   const delimRegex = /^\n∞∞∞[a-z]+?(-a)?\n/g;
-  if (
-    state.doc
-      .sliceString(block.delimiter.from, block.delimiter.to)
-      .match(delimRegex)
-  ) {
+  if (state.doc.sliceString(block.delimiter.from, block.delimiter.to).match(delimRegex)) {
     dispatch(
       state.update({
         changes: {
@@ -181,10 +169,7 @@ export function changeLanguageTo(state, dispatch, block, language, auto) {
       }),
     );
   } else {
-    throw new Error(
-      "Invalid delimiter: " +
-        state.doc.sliceString(block.delimiter.from, block.delimiter.to),
-    );
+    throw new Error("Invalid delimiter: " + state.doc.sliceString(block.delimiter.from, block.delimiter.to));
   }
 }
 
@@ -204,12 +189,7 @@ function setSel(state, selection) {
 function extendSel(state, dispatch, how) {
   let selection = updateSel(state.selection, (range) => {
     let head = how(range);
-    return EditorSelection.range(
-      range.anchor,
-      head.head,
-      head.goalColumn,
-      head.bidiLevel || undefined,
-    );
+    return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || undefined);
   });
   if (selection.eq(state.selection)) return false;
   dispatch(setSel(state, selection));
@@ -224,7 +204,7 @@ function moveSel(state, dispatch, how) {
 }
 
 function previousBlock(state, range) {
-  const blocks = state.facet(blockState);
+  const blocks = state.field(blockState);
   const block = getNoteBlockFromPos(state, range.head);
   if (range.head === block.content.from) {
     const index = blocks.indexOf(block);
@@ -236,7 +216,7 @@ function previousBlock(state, range) {
 }
 
 function nextBlock(state, range) {
-  const blocks = state.facet(blockState);
+  const blocks = state.field(blockState);
   const block = getNoteBlockFromPos(state, range.head);
   if (range.head === block.content.to) {
     const index = blocks.indexOf(block);
@@ -248,7 +228,7 @@ function nextBlock(state, range) {
 }
 
 function nextBlockNo(index, state, range) {
-  const blocks = state.facet(blockState);
+  const blocks = state.field(blockState);
   const block = blocks[index];
   if (range.head === block.content.to) {
     const previousBlockIndex = index < blocks.length - 1 ? index + 1 : index;
@@ -280,17 +260,14 @@ export function selectPreviousBlock({ state, dispatch }) {
 }
 
 function previousParagraph(state, range) {
-  const blocks = state.facet(blockState);
+  const blocks = state.field(blockState);
   let block = getNoteBlockFromPos(state, range.head);
   const blockIndex = blocks.indexOf(block);
 
   let seenContentLine = false;
   let pos;
   // if we're on the first row of a block, and it's not the first block, we start from the end of the previous block
-  if (
-    state.doc.lineAt(range.head).from === block.content.from &&
-    blockIndex > 0
-  ) {
+  if (state.doc.lineAt(range.head).from === block.content.from && blockIndex > 0) {
     block = blocks[blockIndex - 1];
     pos = state.doc.lineAt(block.content.to).from;
   } else {
@@ -313,17 +290,14 @@ function previousParagraph(state, range) {
 }
 
 function nextParagraph(state, range) {
-  const blocks = state.facet(blockState);
+  const blocks = state.field(blockState);
   let block = getNoteBlockFromPos(state, range.head);
   const blockIndex = blocks.indexOf(block);
 
   let seenContentLine = false;
   let pos;
   // if we're at the last line of a block, and it's not the last block, we start from the beginning of the next block
-  if (
-    state.doc.lineAt(range.head).to === block.content.to &&
-    blockIndex < blocks.length - 1
-  ) {
+  if (state.doc.lineAt(range.head).to === block.content.to && blockIndex < blocks.length - 1) {
     block = blocks[blockIndex + 1];
     pos = state.doc.lineAt(block.content.from).to;
   } else {
@@ -398,10 +372,7 @@ export function triggerCurrenciesLoaded({ state, dispatch }) {
   dispatch(
     state.update({
       changes: { from: 0, to: 0, insert: "" },
-      annotations: [
-        heynoteEvent.of(CURRENCIES_LOADED),
-        Transaction.addToHistory.of(false),
-      ],
+      annotations: [heynoteEvent.of(CURRENCIES_LOADED), Transaction.addToHistory.of(false)],
     }),
   );
 }
@@ -419,7 +390,7 @@ function moveCurrentBlock(state, dispatch, up) {
     return false;
   }
 
-  const blocks = state.facet(blockState);
+  const blocks = state.field(blockState);
   const currentBlock = getActiveNoteBlock(state);
   const blockIndex = blocks.indexOf(currentBlock);
   if ((up && blockIndex === 0) || (!up && blockIndex === blocks.length - 1)) {
@@ -429,37 +400,21 @@ function moveCurrentBlock(state, dispatch, up) {
   const dir = up ? -1 : 1;
   const neighborBlock = blocks[blockIndex + dir];
 
-  const currentBlockContent = state.sliceDoc(
-    currentBlock.delimiter.from,
-    currentBlock.content.to,
-  );
-  const neighborBlockContent = state.sliceDoc(
-    neighborBlock.delimiter.from,
-    neighborBlock.content.to,
-  );
-  const newContent = up
-    ? currentBlockContent + neighborBlockContent
-    : neighborBlockContent + currentBlockContent;
+  const currentBlockContent = state.sliceDoc(currentBlock.delimiter.from, currentBlock.content.to);
+  const neighborBlockContent = state.sliceDoc(neighborBlock.delimiter.from, neighborBlock.content.to);
+  const newContent = up ? currentBlockContent + neighborBlockContent : neighborBlockContent + currentBlockContent;
 
   const selectionRange = state.selection.asSingle().ranges[0];
   let newSelectionRange;
   if (up) {
     newSelectionRange = EditorSelection.range(
-      selectionRange.anchor -
-        currentBlock.delimiter.from +
-        neighborBlock.delimiter.from,
-      selectionRange.head -
-        currentBlock.delimiter.from +
-        neighborBlock.delimiter.from,
+      selectionRange.anchor - currentBlock.delimiter.from + neighborBlock.delimiter.from,
+      selectionRange.head - currentBlock.delimiter.from + neighborBlock.delimiter.from,
     );
   } else {
     newSelectionRange = EditorSelection.range(
-      selectionRange.anchor +
-        neighborBlock.content.to -
-        neighborBlock.delimiter.from,
-      selectionRange.head +
-        neighborBlock.content.to -
-        neighborBlock.delimiter.from,
+      selectionRange.anchor + neighborBlock.content.to - neighborBlock.delimiter.from,
+      selectionRange.head + neighborBlock.content.to - neighborBlock.delimiter.from,
     );
   }
 
@@ -487,7 +442,7 @@ export const deleteBlock =
   (editor) =>
   ({ state, dispatch }) => {
     const range = state.selection.asSingle().ranges[0];
-    const blocks = state.facet(blockState);
+    const blocks = state.field(blockState);
     let block;
     let nextBlock;
     for (let i = 0; i < blocks.length; i++) {
@@ -504,19 +459,14 @@ export const deleteBlock =
     let newSelection;
 
     if (blocks.length == 1) {
-      replace = getBlockDelimiter(
-        editor.defaultBlockToken,
-        editor.defaultBlockAutoDetect,
-      );
+      replace = getBlockDelimiter(editor.defaultBlockToken, editor.defaultBlockAutoDetect);
       newSelection = replace.length;
     } else if (!nextBlock) {
       // if it's the last block, the cursor should go at the en of the previous block
       newSelection = block.delimiter.from;
     } else {
       // if there is a next block, we want the cursor to be at the beginning of that block
-      newSelection =
-        block.delimiter.from +
-        (nextBlock.delimiter.to - nextBlock.delimiter.from);
+      newSelection = block.delimiter.from + (nextBlock.delimiter.to - nextBlock.delimiter.from);
     }
 
     dispatch(
@@ -537,14 +487,11 @@ export const deleteBlockSetCursorPreviousBlock =
   (editor) =>
   ({ state, dispatch }) => {
     const block = getActiveNoteBlock(state);
-    const blocks = state.facet(blockState);
+    const blocks = state.field(blockState);
     let replace = "";
     let newSelection = block.delimiter.from;
     if (blocks.length == 1) {
-      replace = getBlockDelimiter(
-        editor.defaultBlockToken,
-        editor.defaultBlockAutoDetect,
-      );
+      replace = getBlockDelimiter(editor.defaultBlockToken, editor.defaultBlockAutoDetect);
       newSelection = replace.length;
     }
     dispatch(

@@ -308,8 +308,7 @@ export class EdnaEditor {
   }
 
   getBlocks() {
-    // @ts-ignore
-    return this.view.state.facet(blockState);
+    return this.view.state.field(blockState);
   }
 
   getCursorPosition() {

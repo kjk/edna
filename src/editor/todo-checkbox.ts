@@ -1,11 +1,4 @@
-import {
-  Decoration,
-  DecorationSet,
-  EditorView,
-  ViewPlugin,
-  ViewUpdate,
-  WidgetType,
-} from "@codemirror/view";
+import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
 import { SET_FONT, transactionsHasAnnotation } from "./annotation";
 import { getNoteBlockFromPos } from "./block/block";
 import { isMonospaceFont } from "./theme/font-theme";
@@ -69,23 +62,12 @@ function checkboxes(view: EditorView) {
     let range = view.state.sliceDoc(from, to);
     let match;
     while ((match = checkboxRegex.exec(range))) {
-      if (
-        getNoteBlockFromPos(view.state, from + match.index)?.language?.name ===
-        "markdown"
-      ) {
+      if (getNoteBlockFromPos(view.state, from + match.index)?.language?.name === "markdown") {
         let deco = Decoration.replace({
-          widget: new CheckboxWidget(
-            match[2] === "x" || match[2] === "X",
-            view.state.facet(isMonospaceFont),
-          ),
+          widget: new CheckboxWidget(match[2] === "x" || match[2] === "X", view.state.facet(isMonospaceFont)),
           inclusive: false,
         });
-        widgets.push(
-          deco.range(
-            from + match.index + match[1].length,
-            from + match.index + match[0].length,
-          ),
-        );
+        widgets.push(deco.range(from + match.index + match[1].length, from + match.index + match[0].length));
       }
     }
   }
@@ -119,11 +101,7 @@ export const todoCheckboxPlugin = [
       }
 
       update(update: ViewUpdate) {
-        if (
-          update.docChanged ||
-          update.viewportChanged ||
-          transactionsHasAnnotation(update.transactions, SET_FONT)
-        ) {
+        if (update.docChanged || update.viewportChanged || transactionsHasAnnotation(update.transactions, SET_FONT)) {
           this.decorations = checkboxes(update.view);
         }
       }
@@ -139,10 +117,7 @@ export const todoCheckboxPlugin = [
       eventHandlers: {
         mousedown: (e, view) => {
           let target = e.target as HTMLElement;
-          if (
-            target.nodeName == "INPUT" &&
-            target.parentElement!.classList.contains("cm-taskmarker-toggle")
-          )
+          if (target.nodeName == "INPUT" && target.parentElement!.classList.contains("cm-taskmarker-toggle"))
             return toggleBoolean(view, view.posAtDOM(target));
         },
       },

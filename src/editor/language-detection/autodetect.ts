@@ -1,14 +1,12 @@
+import { redoDepth } from "@codemirror/commands";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { redoDepth } from "@codemirror/commands";
-import { getActiveNoteBlock, blockState } from "../block/block";
-import { levenshtein_distance } from "./levenshtein";
-import { kLanguages } from "../languages";
+import { blockState, getActiveNoteBlock } from "../block/block";
 import { changeLanguageTo } from "../block/commands";
+import { kLanguages } from "../languages";
+import { levenshtein_distance } from "./levenshtein";
 
-const GUESSLANG_TO_TOKEN = Object.fromEntries(
-  kLanguages.map((l) => [l.guesslang, l.token]),
-);
+const GUESSLANG_TO_TOKEN = Object.fromEntries(kLanguages.map((l) => [l.guesslang, l.token]));
 
 function requestIdleCallbackCompat(cb) {
   if (window.requestIdleCallback) {
@@ -41,12 +39,7 @@ export function languageDetection(getView) {
     const block = getActiveNoteBlock(state);
     const newLang = GUESSLANG_TO_TOKEN[event.data.guesslang.language];
     if (block.language.auto === true && block.language.name !== newLang) {
-      console.log(
-        "New auto detected language:",
-        newLang,
-        "Confidence:",
-        event.data.guesslang.confidence,
-      );
+      console.log("New auto detected language:", newLang, "Confidence:", event.data.guesslang.confidence);
       let content = state.doc.sliceString(block.content.from, block.content.to);
       const threshold = content.length * 0.1;
       if (levenshtein_distance(content, event.data.content) <= threshold) {
@@ -55,14 +48,10 @@ export function languageDetection(getView) {
           console.log("Changing language to", newLang);
           changeLanguageTo(state, view.dispatch, block, newLang, true);
         } else {
-          console.log(
-            "Not changing language because the user has undo:ed and has redo history",
-          );
+          console.log("Not changing language because the user has undo:ed and has redo history");
         }
       } else {
-        console.log(
-          "Content has changed significantly, not setting new language",
-        );
+        console.log("Content has changed significantly, not setting new language");
       }
     }
   };
@@ -78,14 +67,11 @@ export function languageDetection(getView) {
         idleCallbackId = null;
 
         const range = update.state.selection.asSingle().ranges[0];
-        const blocks = update.state.facet(blockState);
+        const blocks = update.state.field(blockState);
         let block = null,
           idx = null;
         for (let i = 0; i < blocks.length; i++) {
-          if (
-            blocks[i].content.from <= range.from &&
-            blocks[i].content.to >= range.from
-          ) {
+          if (blocks[i].content.from <= range.from && blocks[i].content.to >= range.from) {
             block = blocks[i];
             idx = i;
             break;
@@ -100,10 +86,7 @@ export function languageDetection(getView) {
           return;
         }
 
-        const content = update.state.doc.sliceString(
-          block.content.from,
-          block.content.to,
-        );
+        const content = update.state.doc.sliceString(block.content.from, block.content.to);
         if (content === "" && redoDepth(update.state) === 0) {
           // if content is cleared, set language to plaintext
           const view = getView();
@@ -117,10 +100,7 @@ export function languageDetection(getView) {
           return;
         }
         const threshold = content.length * 0.1;
-        if (
-          !previousBlockContent[idx] ||
-          levenshtein_distance(previousBlockContent[idx], content) >= threshold
-        ) {
+        if (!previousBlockContent[idx] || levenshtein_distance(previousBlockContent[idx], content) >= threshold) {
           // the content has changed significantly, so schedule a language detection
           //console.log("Scheduling language detection for block", idx, "with threshold", threshold)
           detectionWorker.postMessage({

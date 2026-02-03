@@ -11,8 +11,7 @@ function selectedLineBlocks(state) {
   for (let range of state.selection.ranges) {
     let startLine = state.doc.lineAt(range.from),
       endLine = state.doc.lineAt(range.to);
-    if (!range.empty && range.to == endLine.from)
-      endLine = state.doc.lineAt(range.to - 1);
+    if (!range.empty && range.to == endLine.from) endLine = state.doc.lineAt(range.to - 1);
     if (upto >= startLine.number) {
       let prev = blocks[blocks.length - 1];
       prev.to = endLine.to;
@@ -43,9 +42,7 @@ function moveLine(state, dispatch, forward) {
     // the syntax parser won't be able to parse (since a valid separator needs one line break on each side)
     let nextLineIsSeparator = nextLine.text.match(tokenRegEx);
     let blockSurroundedBySeparators =
-      previousLine !== null &&
-      previousLine.text.match(tokenRegEx) &&
-      nextLineIsSeparator;
+      previousLine !== null && previousLine.text.match(tokenRegEx) && nextLineIsSeparator;
     let size = nextLine.length + 1;
     if (forward) {
       if (blockSurroundedBySeparators) {
@@ -65,16 +62,10 @@ function moveLine(state, dispatch, forward) {
       }
       for (let r of block.ranges)
         ranges.push(
-          EditorSelection.range(
-            Math.min(state.doc.length, r.anchor + size),
-            Math.min(state.doc.length, r.head + size),
-          ),
+          EditorSelection.range(Math.min(state.doc.length, r.anchor + size), Math.min(state.doc.length, r.head + size)),
         );
     } else {
-      if (
-        blockSurroundedBySeparators ||
-        (previousLine === null && nextLineIsSeparator)
-      ) {
+      if (blockSurroundedBySeparators || (previousLine === null && nextLineIsSeparator)) {
         //size += 1
         changes.push(
           { from: nextLine.from, to: block.from },
@@ -83,15 +74,13 @@ function moveLine(state, dispatch, forward) {
             insert: state.lineBreak + nextLine.text + state.lineBreak,
           },
         );
-        for (let r of block.ranges)
-          ranges.push(EditorSelection.range(r.anchor - size, r.head - size));
+        for (let r of block.ranges) ranges.push(EditorSelection.range(r.anchor - size, r.head - size));
       } else {
         changes.push(
           { from: nextLine.from, to: block.from },
           { from: block.to, insert: state.lineBreak + nextLine.text },
         );
-        for (let r of block.ranges)
-          ranges.push(EditorSelection.range(r.anchor - size, r.head - size));
+        for (let r of block.ranges) ranges.push(EditorSelection.range(r.anchor - size, r.head - size));
       }
     }
   }
@@ -115,7 +104,7 @@ export const moveLineUp = ({ state, dispatch }) => {
   if (
     state.selection.ranges.some((range) => {
       let startLine = state.doc.lineAt(range.from);
-      return startLine.from <= state.facet(blockState)[0].content.from;
+      return startLine.from <= state.field(blockState)[0].content.from;
     })
   ) {
     return true;
@@ -127,5 +116,4 @@ export const moveLineUp = ({ state, dispatch }) => {
 /**
 Move the selected lines down one line.
 */
-export const moveLineDown = ({ state, dispatch }) =>
-  moveLine(state, dispatch, true);
+export const moveLineDown = ({ state, dispatch }) => moveLine(state, dispatch, true);

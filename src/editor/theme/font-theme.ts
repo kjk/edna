@@ -5,7 +5,7 @@ import { kDefaultFontFamily, kDefaultFontSize } from "../../settings.svelte";
 /**
  * Check if the given font family is monospace by drawing test characters on a canvas
  */
-function isMonospace(fontFamily) {
+function isMonospace(fontFamily: string) {
   const testCharacters = ["i", "W", "m", " "];
   const testSize = "72px";
 
@@ -25,7 +25,7 @@ export const isMonospaceFont = Facet.define({
 
 let hardcodedMonospace = ["hack", "Cascadia Code", "Consolas", "monospace"];
 
-export function getFontTheme(fontFamily, fontSize) {
+export function getFontTheme(fontFamily: string, fontSize: number) {
   fontSize = fontSize || kDefaultFontSize;
 
   // quote fontFamily name in case it has spaces in it
@@ -43,10 +43,6 @@ export function getFontTheme(fontFamily, fontSize) {
     }),
     // in order to avoid a short flicker when the program is loaded with the default font (Hack),
     // we hardcode Hack to be monospace
-    isMonospaceFont.of(
-      hardcodedMonospace.includes(computedFontFamily)
-        ? true
-        : isMonospace(computedFontFamily),
-    ),
+    isMonospaceFont.of(hardcodedMonospace.includes(computedFontFamily) ? true : isMonospace(computedFontFamily)),
   ];
 }
