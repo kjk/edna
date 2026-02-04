@@ -39,7 +39,7 @@ import {
 } from "./block/commands";
 import { transposeChars } from "./block/transpose-chars";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
-import type { EdnaEditor } from "./editor";
+import type { MultiBlockEditor } from "./editor";
 import { ednaKeymap, keymapFromSpec } from "./keymap";
 
 // if set to true, all keybindings for moving around is changed to their corresponding select commands
@@ -72,7 +72,7 @@ function emacsSelectAll(view: EditorView) {
   return selectAll(view);
 }
 
-function emacsMetaKeyCommand(key: string, editor: EdnaEditor, command: (view: EditorView) => boolean) {
+function emacsMetaKeyCommand(key: string, editor: MultiBlockEditor, command: (view: EditorView) => boolean) {
   const handler = (view: EditorView, event: KeyboardEvent) => {
     if ((editor.emacsMetaKey === "meta" && event.metaKey) || (editor.emacsMetaKey === "alt" && event.altKey)) {
       event.preventDefault();
@@ -87,7 +87,7 @@ function emacsMetaKeyCommand(key: string, editor: EdnaEditor, command: (view: Ed
   ];
 }
 
-export function emacsKeymap(editor: EdnaEditor) {
+export function emacsKeymap(editor: MultiBlockEditor) {
   return [
     ednaKeymap(editor),
     Prec.highest(

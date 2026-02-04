@@ -1,6 +1,6 @@
 import { EditorSelection, EditorState, SelectionRange } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import type { EdnaEditor } from "./editor";
+import type { MultiBlockEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
 import { kLanguages } from "./languages";
 
@@ -37,7 +37,7 @@ function copiedRange(state: EditorState): { text: string; ranges: SelectionRange
 /**
  * Set up event handlers for the browser's copy & cut events, that will replace block separators with newlines
  */
-export const heynoteCopyCut = (editor: EdnaEditor) => {
+export const heynoteCopyCut = (editor: MultiBlockEditor) => {
   let copy: (event: ClipboardEvent, view: EditorView) => void;
   let cut: (event: ClipboardEvent, view: EditorView) => void;
   copy = cut = (event: ClipboardEvent, view: EditorView) => {
@@ -80,7 +80,7 @@ export const heynoteCopyCut = (editor: EdnaEditor) => {
   });
 };
 
-const copyCut = (view: EditorView, cut: boolean, editor: EdnaEditor): boolean => {
+const copyCut = (view: EditorView, cut: boolean, editor: MultiBlockEditor): boolean => {
   let { text, ranges } = copiedRange(view.state);
   text = text.replaceAll(blockSeparatorRegex, "\n\n");
   navigator.clipboard.writeText(text);
@@ -134,11 +134,11 @@ function doPaste(view: EditorView, input: string) {
   });
 }
 
-export function copyCommand(editor: EdnaEditor) {
+export function copyCommand(editor: MultiBlockEditor) {
   return (view: EditorView) => copyCut(view, false, editor);
 }
 
-export function cutCommand(editor: EdnaEditor) {
+export function cutCommand(editor: MultiBlockEditor) {
   return (view: EditorView) => copyCut(view, true, editor);
 }
 

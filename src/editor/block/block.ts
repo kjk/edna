@@ -21,7 +21,7 @@ import {
   type DecorationSet,
 } from "@codemirror/view";
 import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation";
-import type { EdnaEditor } from "../editor";
+import type { MultiBlockEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
 import type { SimpleRange } from "../types";
 import { firstBlockDelimiterSize, getBlocksFromString, getBlocksFromSyntaxTree } from "./block-parsing";
@@ -402,7 +402,7 @@ function getSelectionSize(state: EditorState, sel: any): number {
   return count;
 }
 
-const emitCursorChange = (editor: EdnaEditor) =>
+const emitCursorChange = (editor: MultiBlockEditor) =>
   ViewPlugin.fromClass(
     class {
       update(update: ViewUpdate) {
@@ -432,7 +432,7 @@ const emitCursorChange = (editor: EdnaEditor) =>
     },
   );
 
-export const noteBlockExtension = (editor: EdnaEditor) => {
+export const noteBlockExtension = (editor: MultiBlockEditor) => {
   return [
     blockState,
     noteBlockWidget(),

@@ -1,7 +1,6 @@
 import { codeFolding, foldedRanges, foldEffect, foldGutter, foldState, unfoldEffect } from "@codemirror/language";
 import { RangeSet, StateEffect } from "@codemirror/state";
 import { BlockInfo, EditorView } from "@codemirror/view";
-import { FOLD_LABEL_LENGTH } from "./constants";
 import {
   ADD_NEW_BLOCK,
   heynoteEvent,
@@ -11,7 +10,8 @@ import {
   transactionsHasHistoryEvent,
 } from "./annotation";
 import { delimiterRegexWithoutNewline, getBlocks, getNoteBlocksFromRangeSet } from "./block/block";
-import type { EdnaEditor } from "./editor";
+import { FOLD_LABEL_LENGTH } from "./constants";
+import type { MultiBlockEditor } from "./editor";
 import type { SimpleRange } from "./types";
 
 // This extension fixes so that a folded region is automatically unfolded if any changes happen
@@ -141,7 +141,7 @@ export function foldGutterExtension() {
   ];
 }
 
-export const toggleBlockFold = (editor: EdnaEditor) => (view: EditorView) => {
+export const toggleBlockFold = (editor: MultiBlockEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = foldedRanges(state);
 
@@ -188,7 +188,7 @@ export const toggleBlockFold = (editor: EdnaEditor) => (view: EditorView) => {
   }
 };
 
-export const foldBlock = (editor: EdnaEditor) => (view: EditorView) => {
+export const foldBlock = (editor: MultiBlockEditor) => (view: EditorView) => {
   const state = view.state;
   const blockRanges: SimpleRange[] = [];
 
@@ -209,7 +209,7 @@ export const foldBlock = (editor: EdnaEditor) => (view: EditorView) => {
   }
 };
 
-export const unfoldBlock = (editor: EdnaEditor) => (view: EditorView) => {
+export const unfoldBlock = (editor: MultiBlockEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = foldedRanges(state);
   const blockFolds: SimpleRange[] = [];
@@ -230,7 +230,7 @@ export const unfoldBlock = (editor: EdnaEditor) => (view: EditorView) => {
   }
 };
 
-export const foldAllBlocks = (editor: EdnaEditor) => (view: EditorView) => {
+export const foldAllBlocks = (editor: MultiBlockEditor) => (view: EditorView) => {
   const state = view.state;
   const blockRanges = [];
 
@@ -251,7 +251,7 @@ export const foldAllBlocks = (editor: EdnaEditor) => (view: EditorView) => {
   }
 };
 
-export const unfoldAlBlocks = (editor: EdnaEditor) => (view: EditorView) => {
+export const unfoldAlBlocks = (editor: MultiBlockEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = state.field(foldState, false) || RangeSet.empty;
   const blockFolds: SimpleRange[] = [];
@@ -275,7 +275,7 @@ export const unfoldAlBlocks = (editor: EdnaEditor) => (view: EditorView) => {
 // unlike unfoldAll() from @codemirror/language, this will unfold all folded regions
 // not just those related to code folding
 // this is emergency command, if folding gets screwed up
-export const unfoldEverything = (editor: EdnaEditor) => (view: EditorView) => {
+export const unfoldEverything = (editor: MultiBlockEditor) => (view: EditorView) => {
   const state = view.state;
   const foldRanges = state.field(foldState, false);
   // console.log("unfoldEverything: foldRanges:", foldRanges);

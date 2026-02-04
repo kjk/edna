@@ -8,8 +8,15 @@ import {
   LANGUAGE_CHANGE,
   MOVE_BLOCK,
 } from "../annotation";
-import type { EdnaEditor } from "../editor";
-import { type Block, blockState, getActiveNoteBlock, getFirstNoteBlock, getLastNoteBlock, getNoteBlockFromPos } from "./block";
+import type { MultiBlockEditor } from "../editor";
+import {
+  blockState,
+  getActiveNoteBlock,
+  getFirstNoteBlock,
+  getLastNoteBlock,
+  getNoteBlockFromPos,
+  type Block,
+} from "./block";
 import { moveLineDown, moveLineUp } from "./move-lines";
 import { selectAll } from "./select-all";
 
@@ -160,7 +167,13 @@ export function addNewBlockAfterLast({ state, dispatch }: EditorView): boolean {
 }
 
 // note: using state, dispatch because note all callers have view
-export function changeLanguageTo(state: EditorState, dispatch: EditorView["dispatch"], block: Block, language: string, auto: boolean): void {
+export function changeLanguageTo(
+  state: EditorState,
+  dispatch: EditorView["dispatch"],
+  block: Block,
+  language: string,
+  auto: boolean,
+): void {
   if (state.readOnly) return;
   const delimRegex = /^\n∞∞∞[a-z]+?(-a)?\n/g;
   if (state.doc.sliceString(block.delimiter.from, block.delimiter.to).match(delimRegex)) {
@@ -193,7 +206,11 @@ function setSel(state: EditorState, selection: EditorSelection) {
   return state.update({ selection, scrollIntoView: true, userEvent: "select" });
 }
 
-function extendSel(state: EditorState, dispatch: EditorView["dispatch"], how: (range: SelectionRange) => SelectionRange): boolean {
+function extendSel(
+  state: EditorState,
+  dispatch: EditorView["dispatch"],
+  how: (range: SelectionRange) => SelectionRange,
+): boolean {
   let selection = updateSel(state.selection, (range) => {
     let head = how(range);
     return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || undefined);
@@ -203,7 +220,11 @@ function extendSel(state: EditorState, dispatch: EditorView["dispatch"], how: (r
   return true;
 }
 
-function moveSel(state: EditorState, dispatch: EditorView["dispatch"], how: (range: SelectionRange) => SelectionRange): boolean {
+function moveSel(
+  state: EditorState,
+  dispatch: EditorView["dispatch"],
+  how: (range: SelectionRange) => SelectionRange,
+): boolean {
   let selection = updateSel(state.selection, how);
   if (selection.eq(state.selection)) return false;
   dispatch(setSel(state, selection));
@@ -460,7 +481,7 @@ function moveCurrentBlock(state: EditorState, dispatch: EditorView["dispatch"], 
 }
 
 export const deleteBlock =
-  (editor: EdnaEditor) =>
+  (editor: MultiBlockEditor) =>
   ({ state, dispatch }: EditorView) => {
     const range = state.selection.asSingle().main;
     const blocks = state.field(blockState);
@@ -508,7 +529,7 @@ export const deleteBlock =
   };
 
 export const deleteBlockSetCursorPreviousBlock =
-  (editor: EdnaEditor) =>
+  (editor: MultiBlockEditor) =>
   ({ state, dispatch }: EditorView): boolean => {
     const block = getActiveNoteBlock(state);
     if (!block) return false;

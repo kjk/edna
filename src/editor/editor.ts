@@ -26,7 +26,7 @@ import type { SimpleRange } from "./types";
 // Keymap spec type for external keybindings
 export type KeymapSpec = Array<[string, () => void] | { key: string; run: () => void; shift?: () => void }>;
 
-function getKeymapExtensions(editor: EdnaEditor, keymap: string, extraKeymap?: KeymapSpec) {
+function getKeymapExtensions(editor: MultiBlockEditor, keymap: string, extraKeymap?: KeymapSpec) {
   const baseKeymap = keymap === "emacs" ? emacsKeymap(editor) : ednaKeymap(editor);
   if (extraKeymap && extraKeymap.length > 0) {
     return [baseKeymap, keymapFromSpec(extraKeymap)];
@@ -34,7 +34,7 @@ function getKeymapExtensions(editor: EdnaEditor, keymap: string, extraKeymap?: K
   return baseKeymap;
 }
 
-interface EdnaEditorConfig {
+interface MultiBlockEditorConfig {
   element: HTMLElement;
   save: (content: string) => Promise<void>;
   setIsDirty: (dirty: boolean) => void;
@@ -55,7 +55,7 @@ interface EdnaEditorConfig {
   fontSize?: number;
 }
 
-export class EdnaEditor {
+export class MultiBlockEditor {
   element: HTMLElement;
   themeCompartment: Compartment;
   keymapCompartment: Compartment;
@@ -94,7 +94,7 @@ export class EdnaEditor {
     defaultBlockAutoDetect,
     fontFamily,
     fontSize,
-  }: EdnaEditorConfig) {
+  }: MultiBlockEditorConfig) {
     this.element = element;
     this.saveCallback = save;
     this.setIsDirtyCallback = setIsDirty;

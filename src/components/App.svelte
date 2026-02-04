@@ -28,7 +28,7 @@
   import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime, insertTime } from "../editor/date-time";
-  import { EdnaEditor } from "../editor/editor";
+  import { MultiBlockEditor } from "../editor/editor";
   import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import {
@@ -1644,7 +1644,7 @@
     return editorRef;
   }
 
-  function getEditor(): EdnaEditor {
+  function getEditor(): MultiBlockEditor {
     return editorRef.getEditor();
   }
 
@@ -1675,7 +1675,7 @@
     insertAfterActiveBlock(view, text);
   }
 
-  export async function runBlockContent(editor: EdnaEditor): Promise<boolean> {
+  export async function runBlockContent(editor: MultiBlockEditor): Promise<boolean> {
     const view = editor.view;
     const { state } = view;
     if (isReadOnly(view)) {
@@ -1721,7 +1721,7 @@
     return true;
   }
 
-  export async function runBlockContentWithArg(editor: EdnaEditor, arg: string): Promise<boolean> {
+  export async function runBlockContentWithArg(editor: MultiBlockEditor, arg: string): Promise<boolean> {
     const view = editor.view;
     const { state } = view;
     if (isReadOnly(view)) {
@@ -1995,7 +1995,7 @@
     docSize = stringSizeInUtf8Bytes(c);
   }
 
-  function autoCreateDayInJournal(editor: EdnaEditor) {
+  function autoCreateDayInJournal(editor: MultiBlockEditor) {
     // create block for a current day if doesn't exist
     let s = blockHdrMarkdown + "# " + formatDateYYYYMMDDDay();
     let content = editor.getContent();

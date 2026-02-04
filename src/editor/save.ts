@@ -1,9 +1,9 @@
 import { ViewPlugin, ViewUpdate } from "@codemirror/view";
 import debounce from "debounce";
 import { SET_CONTENT, transactionsHasAnnotation } from "./annotation";
-import type { EdnaEditor } from "./editor";
+import type { MultiBlockEditor } from "./editor";
 
-export const autoSaveContent = (editor: EdnaEditor, interval: number) => {
+export const autoSaveContent = (editor: MultiBlockEditor, interval: number) => {
   const debouncedSave = debounce(() => {
     editor.save();
     editor.setIsDirtyCallback(false);

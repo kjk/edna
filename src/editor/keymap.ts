@@ -1,7 +1,6 @@
 import { indentLess, indentMore, redo } from "@codemirror/commands";
 import { foldCode, unfoldCode } from "@codemirror/language";
 import { keymap } from "@codemirror/view";
-import { isMac, isWindows } from "./cmutils";
 import {
   addNewBlockAfterCurrent,
   addNewBlockAfterLast,
@@ -24,11 +23,11 @@ import {
   selectPreviousBlock,
   selectPreviousParagraph,
 } from "./block/commands";
+import { isMac, isWindows } from "./cmutils";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
 import { insertDateAndTime } from "./date-time";
-import type { EdnaEditor } from "./editor";
+import type { MultiBlockEditor } from "./editor";
 import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
-
 
 export function keymapFromSpec(specs: any[]) {
   return keymap.of(
@@ -51,7 +50,7 @@ export function keymapFromSpec(specs: any[]) {
   );
 }
 
-export function ednaKeymap(editor: EdnaEditor) {
+export function ednaKeymap(editor: MultiBlockEditor) {
   let spec = [
     ["Mod-c", copyCommand(editor)],
     ["Mod-v", pasteCommand],

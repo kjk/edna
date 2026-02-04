@@ -4,7 +4,7 @@
   import { EditorView, type ViewUpdate } from "@codemirror/view";
   import { appState } from "../appstate.svelte";
   import { loadCurrencies } from "../currency";
-  import { EdnaEditor } from "../editor/editor";
+  import { MultiBlockEditor } from "../editor/editor";
   import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
@@ -47,7 +47,7 @@
   let settings = getSettings();
   let theme = settings.theme;
 
-  let editor: EdnaEditor;
+  let editor: MultiBlockEditor;
   let currentNoteName: string;
 
   let editorRef: HTMLElement;
@@ -155,7 +155,7 @@
       appState.isDirty = dirty;
     }
 
-    editor = new EdnaEditor({
+    editor = new MultiBlockEditor({
       element: editorRef,
       save: saveCurrentNote,
       setIsDirty: setIsDirty,
@@ -242,7 +242,7 @@
     return editor.view;
   }
 
-  export function getEditor(): EdnaEditor {
+  export function getEditor(): MultiBlockEditor {
     return editor;
   }
 

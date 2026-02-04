@@ -1,11 +1,7 @@
 import { EditorSelection } from "@codemirror/state";
-import type { EdnaEditor } from "./editor/editor";
-import {
-  getLanguage,
-  langGetPrettierInfo,
-  langSupportsFormat,
-} from "./editor/languages";
 import { getActiveNoteBlock } from "./editor/block/block";
+import type { MultiBlockEditor } from "./editor/editor";
+import { getLanguage, langGetPrettierInfo, langSupportsFormat } from "./editor/languages";
 
 async function formatGo(s: string): Promise<string | null> {
   // setProcessingMessage("Formatting code...");
@@ -31,7 +27,7 @@ async function formatGo(s: string): Promise<string | null> {
   return res.Body;
 }
 
-export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
+export async function formatBlockContent(editor: MultiBlockEditor): Promise<boolean> {
   const view = editor.view;
   const { state } = view;
   if (state.readOnly) return false;
@@ -80,9 +76,7 @@ export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
           to: block.content.to,
           insert: s,
         },
-        selection: EditorSelection.cursor(
-          block.content.from + Math.min(cursorOffset, s.length),
-        ),
+        selection: EditorSelection.cursor(block.content.from + Math.min(cursorOffset, s.length)),
       },
       {
         userEvent: "input",
@@ -122,8 +116,7 @@ export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
         }),
         cursorOffset: 0,
       };
-      formattedContent.cursorOffset =
-        cursorPos == block.content.from ? 0 : formattedContent.formatted.length;
+      formattedContent.cursorOffset = cursorPos == block.content.from ? 0 : formattedContent.formatted.length;
     } else {
       formattedContent = await prettier.formatWithCursor(content, {
         cursorOffset: cursorPos - block.content.from,
@@ -133,12 +126,9 @@ export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
       });
     }
   } catch (e: unknown) {
-    const hyphens =
-      "----------------------------------------------------------------------------";
+    const hyphens = "----------------------------------------------------------------------------";
     const message = e instanceof Error ? e.message : String(e);
-    console.log(
-      `Error when trying to format block:\n${hyphens}\n${message}\n${hyphens}`,
-    );
+    console.log(`Error when trying to format block:\n${hyphens}\n${message}\n${hyphens}`);
     return false;
   }
   // console.log("formattedContent.formatted:", formattedContent.formatted);
@@ -150,11 +140,7 @@ export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
         insert: formattedContent.formatted,
       },
       selection: EditorSelection.cursor(
-        block.content.from +
-          Math.min(
-            formattedContent.cursorOffset,
-            formattedContent.formatted.length,
-          ),
+        block.content.from + Math.min(formattedContent.cursorOffset, formattedContent.formatted.length),
       ),
     },
     {
