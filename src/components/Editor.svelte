@@ -128,9 +128,14 @@
       await saveNote(currentNoteName, content);
     }
 
+    function setIsDirty(dirty: boolean) {
+      appState.isDirty = dirty;
+    }
+
     editor = new EdnaEditor({
       element: editorRef,
       save: saveCurrentNote,
+      setIsDirty: setIsDirty,
       theme: theme,
       keymap: keymap,
       emacsMetaKey: emacsMetaKey,

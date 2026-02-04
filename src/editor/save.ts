@@ -1,13 +1,12 @@
 import { ViewPlugin, ViewUpdate } from "@codemirror/view";
 import debounce from "debounce";
-import { appState } from "../appstate.svelte";
 import { SET_CONTENT, transactionsHasAnnotation } from "./annotation";
 import type { EdnaEditor } from "./editor";
 
-export const autoSaveContent = (editor: EdnaEditor, interval: number) => {
+export const autoSaveContent = (editor: EdnaEditor, setIsDirty: (dirty: boolean) => void, interval: number) => {
   const debouncedSave = debounce(() => {
     editor.save();
-    appState.isDirty = false;
+    setIsDirty(false);
   }, interval);
 
   return ViewPlugin.fromClass(
@@ -20,7 +19,7 @@ export const autoSaveContent = (editor: EdnaEditor, interval: number) => {
         if (isInitial) {
           return;
         }
-        appState.isDirty = true;
+        setIsDirty(true);
         debouncedSave();
       }
     },

@@ -34,6 +34,7 @@ function getKeymapExtensions(editor: EdnaEditor, keymap: string) {
 interface EdnaEditorConfig {
   element: HTMLElement;
   save: (content: string) => Promise<void>;
+  setIsDirty: (dirty: boolean) => void;
   focus?: boolean;
   theme?: "light" | "dark";
   keymap?: "default" | "emacs";
@@ -63,6 +64,7 @@ export class EdnaEditor {
   emacsMetaKey: string;
   fontTheme: Compartment;
   saveCallback: (content: string) => Promise<void>;
+  setIsDirtyCallback: (dirty: boolean) => void;
   view: EditorView;
   diskContent: string = "";
   defaultBlockToken: string = "";
@@ -70,6 +72,7 @@ export class EdnaEditor {
   constructor({
     element,
     save,
+    setIsDirty,
     focus = true,
     theme = "light",
     keymap = "default",
@@ -86,6 +89,7 @@ export class EdnaEditor {
   }: EdnaEditorConfig) {
     this.element = element;
     this.saveCallback = save;
+    this.setIsDirtyCallback = setIsDirty;
     this.themeCompartment = new Compartment();
     this.keymapCompartment = new Compartment();
     this.lineNumberCompartmentPre = new Compartment();
@@ -149,7 +153,7 @@ export class EdnaEditor {
           };
         }),
 
-        autoSaveContent(this, 2000),
+        autoSaveContent(this, this.setIsDirtyCallback, 2000),
 
         todoCheckboxPlugin,
         // foldNotifications(this),
