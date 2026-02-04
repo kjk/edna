@@ -1,6 +1,6 @@
 <script lang="ts">
   import { appState } from "../appstate.svelte";
-  import { focusEditor, openNoteSelector } from "../globals";
+  import { focusEditor } from "../globals";
   import { getNoteMeta } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
   import { isSystemNoteName } from "../notes";
@@ -22,11 +22,12 @@
     class?: string;
     openNote: (name: string, newTab: boolean) => void;
     closeTab: (name: string) => void;
+    openNoteSelector: () => void;
     buildMenuDef: () => MenuDef;
     menuItemStatus?: (mi: MenuItemDef) => number;
     onmenucmd: (cmd: number) => void;
   }
-  let { class: klass = "", openNote, closeTab, buildMenuDef, menuItemStatus, onmenucmd }: Props = $props();
+  let { class: klass = "", openNote, closeTab, openNoteSelector, buildMenuDef, menuItemStatus, onmenucmd }: Props = $props();
 
   let altChar = getAltChar();
 

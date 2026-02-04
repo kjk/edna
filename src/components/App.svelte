@@ -247,7 +247,6 @@
   let gf = {
     openSettings: openSettings,
     openCreateNewNote: openCreateNewNote,
-    openNoteSelector: openNoteSelector,
     openCommandPalette: openCommandPalette,
     openContextMenu: openContextMenu,
     openFindInNotes: openFindInNotes,
@@ -2079,6 +2078,7 @@
       class="row-start-1 col-start-1 col-span-2"
       openNote={onOpenNote}
       {closeTab}
+      {openNoteSelector}
       {menuItemStatus}
       {onmenucmd}
       {buildMenuDef}
@@ -2103,7 +2103,7 @@
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav openNote={onOpenNote} {closeTab} {menuItemStatus} {onmenucmd} {buildMenuDef} />
+  <TopNav openNote={onOpenNote} {closeTab} {openNoteSelector} {menuItemStatus} {onmenucmd} {buildMenuDef} />
 {/if}
 <StatusBar
   {line}

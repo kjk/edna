@@ -3,7 +3,6 @@ import { formatDurationShort } from "./util";
 export interface GlobalFuncs {
   openSettings: () => void;
   openCreateNewNote: () => void;
-  openNoteSelector: () => void;
   openCommandPalette: () => void;
   openFindInNotes: () => void;
   openContextMenu: (ev: MouseEvent) => void;
@@ -32,10 +31,6 @@ let globalFunctions: GlobalFuncs;
 
 export function setGlobalFuncs(gf: GlobalFuncs) {
   globalFunctions = gf;
-}
-
-export function openNoteSelector() {
-  globalFunctions.openNoteSelector();
 }
 
 export function focusEditor() {
