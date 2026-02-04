@@ -3,10 +3,10 @@ import debounce from "debounce";
 import { SET_CONTENT, transactionsHasAnnotation } from "./annotation";
 import type { EdnaEditor } from "./editor";
 
-export const autoSaveContent = (editor: EdnaEditor, setIsDirty: (dirty: boolean) => void, interval: number) => {
+export const autoSaveContent = (editor: EdnaEditor, interval: number) => {
   const debouncedSave = debounce(() => {
     editor.save();
-    setIsDirty(false);
+    editor.setIsDirtyCallback(false);
   }, interval);
 
   return ViewPlugin.fromClass(
@@ -19,7 +19,7 @@ export const autoSaveContent = (editor: EdnaEditor, setIsDirty: (dirty: boolean)
         if (isInitial) {
           return;
         }
-        setIsDirty(true);
+        editor.setIsDirtyCallback(true);
         debouncedSave();
       }
     },

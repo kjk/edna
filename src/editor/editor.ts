@@ -153,7 +153,7 @@ export class EdnaEditor {
           };
         }),
 
-        autoSaveContent(this, this.setIsDirtyCallback, 2000),
+        autoSaveContent(this, 2000),
 
         todoCheckboxPlugin,
         // foldNotifications(this),
