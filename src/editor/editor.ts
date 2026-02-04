@@ -65,7 +65,6 @@ export class EdnaEditor {
   emacsMetaKey: string;
   fontTheme: Compartment;
   noteName: string;
-  contentLoaded: boolean;
   view: EditorView;
   diskContent: string = "";
   defaultBlockToken: string = "";
@@ -101,7 +100,6 @@ export class EdnaEditor {
     this.fontTheme = new Compartment();
     this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
     this.noteName = noteName;
-    this.contentLoaded = false;
 
     const makeTabState = (useTabs: boolean, tabSize: number) => {
       const indentChar = useTabs ? "\t" : " ".repeat(tabSize);
@@ -174,9 +172,6 @@ export class EdnaEditor {
   }
 
   async save() {
-    if (!this.contentLoaded) {
-      return;
-    }
     const content = this.getContent();
     if (content === this.diskContent) {
       return;
@@ -194,7 +189,6 @@ export class EdnaEditor {
     this.setReadOnly(true);
     this.diskContent = content;
     this.setContent(content);
-    this.contentLoaded = true;
     this.setReadOnly(false);
   }
 
