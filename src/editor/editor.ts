@@ -2,7 +2,6 @@ import { markdown, markdownKeymap } from "@codemirror/lang-markdown";
 import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, Prec, Transaction } from "@codemirror/state";
 import { keymap as cmKeymap, drawSelection, EditorView, lineNumbers } from "@codemirror/view";
-import { len } from "../util";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
 import { blockLineNumbers, blockState, noteBlockExtension } from "./block/block";
 import { triggerCurrenciesLoaded } from "./block/commands";
@@ -236,7 +235,7 @@ export class EdnaEditor {
   }
 
   setFoldedRanges(ranges: Array<{ from: number; to: number }>) {
-    if (len(ranges) === 0) {
+    if (ranges.length === 0) {
       return;
     }
     try {
