@@ -1,12 +1,11 @@
 import { EditorSelection } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
-import type { EdnaEditor } from "../editor";
+import type { EdnaEditor } from "./editor/editor";
 import {
   getLanguage,
   langGetPrettierInfo,
   langSupportsFormat,
-} from "../languages";
-import { getActiveNoteBlock } from "./block";
+} from "./editor/languages";
+import { getActiveNoteBlock } from "./editor/block/block";
 
 async function formatGo(s: string): Promise<string | null> {
   // setProcessingMessage("Formatting code...");
@@ -161,30 +160,6 @@ export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
     {
       userEvent: "input",
       scrollIntoView: true,
-    },
-  );
-  view.dispatch(tr);
-  return true;
-}
-
-export function insertAfterActiveBlock(view: EditorView, text: string): boolean {
-  const { state } = view;
-  if (state.readOnly) {
-    return false;
-  }
-  const block = getActiveNoteBlock(state);
-  if (!block) return false;
-  let tr = view.state.update(
-    {
-      changes: {
-        from: block.content.to,
-        insert: text,
-      },
-      selection: EditorSelection.cursor(block.content.to + text.length),
-    },
-    {
-      scrollIntoView: true,
-      userEvent: "input",
     },
   );
   view.dispatch(tr);

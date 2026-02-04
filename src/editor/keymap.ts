@@ -24,7 +24,6 @@ import {
   selectPreviousBlock,
   selectPreviousParagraph,
 } from "./block/commands";
-import { formatBlockContent } from "./block/format-code";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
 import { insertDateAndTime } from "./date-time";
 import type { EdnaEditor } from "./editor";
@@ -67,7 +66,6 @@ export function ednaKeymap(editor: EdnaEditor) {
     ["Mod-a", selectAll],
     ["Alt-ArrowUp", moveLineUp],
     ["Alt-ArrowDown", moveLineDown],
-    ["Alt-Shift-f", () => formatBlockContent(editor)],
     ["Mod-Alt-ArrowDown", newCursorBelow],
     ["Mod-Alt-ArrowUp", newCursorAbove],
     ["Alt-Mod-Shift-ArrowUp", moveCurrentBlockUp],

@@ -7,7 +7,7 @@
   import type { EditorView } from "@codemirror/view";
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
-  import { getActiveNoteBlock, getBlockN, getBlocksInfo } from "../editor/block/block";
+  import { getActiveNoteBlock, getBlockN, getBlocksInfo, insertAfterActiveBlock } from "../editor/block/block";
   import {
     addNewBlockAfterCurrent,
     addNewBlockAfterLast,
@@ -25,7 +25,7 @@
     moveLineUp,
     selectAll,
   } from "../editor/block/commands";
-  import { formatBlockContent, insertAfterActiveBlock } from "../editor/block/format-code";
+  import { formatBlockContent } from "../format-code";
   import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime, insertTime } from "../editor/date-time";
@@ -254,6 +254,7 @@
 
   // External keymap bindings that require App-level functions
   let extraKeymap: KeymapSpec = [
+    ["Alt-Shift-f", () => formatBlockContent(getEditor())],
     ["Mod-l", openLanguageSelector],
     ["Mod-e", smartRun],
     ["Alt-Shift-r", () => openFunctionSelector(false)],

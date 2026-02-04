@@ -1,5 +1,6 @@
 import { ensureSyntaxTree, syntaxTreeAvailable } from "@codemirror/language";
 import {
+  EditorSelection,
   EditorState,
   Range,
   RangeSet,
@@ -444,3 +445,27 @@ export const noteBlockExtension = (editor: EdnaEditor) => {
     emptyBlockSelected,
   ];
 };
+
+export function insertAfterActiveBlock(view: EditorView, text: string): boolean {
+  const { state } = view;
+  if (state.readOnly) {
+    return false;
+  }
+  const block = getActiveNoteBlock(state);
+  if (!block) return false;
+  let tr = view.state.update(
+    {
+      changes: {
+        from: block.content.to,
+        insert: text,
+      },
+      selection: EditorSelection.cursor(block.content.to + text.length),
+    },
+    {
+      scrollIntoView: true,
+      userEvent: "input",
+    },
+  );
+  view.dispatch(tr);
+  return true;
+}
