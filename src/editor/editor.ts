@@ -2,7 +2,6 @@ import { markdown, markdownKeymap } from "@codemirror/lang-markdown";
 import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, Prec, Transaction } from "@codemirror/state";
 import { keymap as cmKeymap, drawSelection, EditorView, lineNumbers } from "@codemirror/view";
-import { saveNote } from "../notes";
 import { findEditorByView } from "../state";
 import { len } from "../util";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
@@ -35,7 +34,7 @@ function getKeymapExtensions(editor: EdnaEditor, keymap: string) {
 
 interface EdnaEditorConfig {
   element: HTMLElement;
-  noteName: string;
+  save: (content: string) => Promise<void>;
   focus?: boolean;
   theme?: "light" | "dark";
   keymap?: "default" | "emacs";
@@ -64,14 +63,14 @@ export class EdnaEditor {
   deselectOnCopy: boolean;
   emacsMetaKey: string;
   fontTheme: Compartment;
-  noteName: string;
+  saveCallback: (content: string) => Promise<void>;
   view: EditorView;
   diskContent: string = "";
   defaultBlockToken: string = "";
   defaultBlockAutoDetect: boolean = false;
   constructor({
     element,
-    noteName,
+    save,
     focus = true,
     theme = "light",
     keymap = "default",
@@ -87,6 +86,7 @@ export class EdnaEditor {
     fontSize,
   }: EdnaEditorConfig) {
     this.element = element;
+    this.saveCallback = save;
     this.themeCompartment = new Compartment();
     this.keymapCompartment = new Compartment();
     this.lineNumberCompartmentPre = new Compartment();
@@ -99,7 +99,6 @@ export class EdnaEditor {
     this.emacsMetaKey = emacsMetaKey;
     this.fontTheme = new Compartment();
     this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
-    this.noteName = noteName;
 
     const makeTabState = (useTabs: boolean, tabSize: number) => {
       const indentChar = useTabs ? "\t" : " ".repeat(tabSize);
@@ -177,22 +176,15 @@ export class EdnaEditor {
       return;
     }
     this.diskContent = content;
-    await saveNote(this.noteName, content);
+    await this.saveCallback(content);
   }
 
   getContent() {
     return this.view.state.sliceDoc();
   }
 
-  loadContent(noteName: string, content: string) {
-    this.noteName = noteName;
-    this.setReadOnly(true);
-    this.diskContent = content;
-    this.setContent(content);
-    this.setReadOnly(false);
-  }
-
   setContent(content: string) {
+    this.diskContent = content;
     this.view.dispatch({
       changes: {
         from: 0,

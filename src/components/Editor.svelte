@@ -5,13 +5,12 @@
   import { appState } from "../appstate.svelte";
   import { loadCurrencies } from "../currency";
   import { EdnaEditor } from "../editor/editor";
+  import type { SelectionChangeEvent } from "../editor/event";
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
-  import { loadNote } from "../notes";
+  import { loadNote, saveNote } from "../notes";
   import { getSettings } from "../settings.svelte";
   import { rememberEditor } from "../state";
   import { objectEqualDeep, throwIf } from "../util";
-
-  import type { SelectionChangeEvent } from "../editor/event";
 
   interface Props {
     class?: string;
@@ -27,6 +26,7 @@
   let theme = settings.theme;
 
   let editor: EdnaEditor;
+  let currentNoteName: string;
 
   let editorRef: HTMLElement;
 
@@ -67,7 +67,7 @@
   }
 
   async function saveEditorState() {
-    let meta = getNoteMeta(editor.noteName, true);
+    let meta = getNoteMeta(currentNoteName, true);
     let didChange = false;
     let foldedRanges = editor.getFoldedRanges();
     if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
@@ -121,13 +121,17 @@
     let fontFamily = settings.fontFamily;
     let fontSize = settings.fontSize;
 
-    let noteName = settings.currentNoteName;
+    currentNoteName = settings.currentNoteName;
     let useTabs = settings.indentType == "tabs";
     let tabSize = settings.tabSize;
 
+    async function saveCurrentNote(content: string) {
+      await saveNote(currentNoteName, content);
+    }
+
     editor = new EdnaEditor({
       element: editorRef,
-      noteName: noteName,
+      save: saveCurrentNote,
       theme: theme,
       keymap: keymap,
       emacsMetaKey: emacsMetaKey,
@@ -144,12 +148,12 @@
     });
     rememberEditor(editor);
 
-    loadNote(noteName).then((content) => {
-      editor.loadContent(noteName, content || "");
+    loadNote(currentNoteName).then((content) => {
+      editor.setContent(content || "");
       // Use requestAnimationFrame to avoid race condition with scrollIntoView
       requestAnimationFrame(() => {
-        restoreEditorState(noteName);
-        didLoadNote(noteName, false);
+        restoreEditorState(currentNoteName);
+        didLoadNote(currentNoteName, false);
       });
     });
 
@@ -224,8 +228,9 @@
       await editor.save();
       await saveEditorState();
     }
+    currentNoteName = name;
     const content = (await loadNote(name)) || "";
-    editor.loadContent(name, content);
+    editor.setContent(content);
     // Use requestAnimationFrame to avoid race condition with scrollIntoView
     requestAnimationFrame(() => {
       restoreEditorState(name);
