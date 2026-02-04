@@ -2,7 +2,6 @@ import { markdown, markdownKeymap } from "@codemirror/lang-markdown";
 import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, Prec, Transaction } from "@codemirror/state";
 import { keymap as cmKeymap, drawSelection, EditorView, lineNumbers } from "@codemirror/view";
-import { findEditorByView } from "../state";
 import { len } from "../util";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
 import { blockLineNumbers, blockState, noteBlockExtension } from "./block/block";
@@ -327,21 +326,3 @@ export class EdnaEditor {
   }
 }
 
-/*// set initial data
-editor.update([
-    editor.state.update({
-        changes:{
-            from: 0,
-            to: editor.state.doc.length,
-            insert: initialData,
-        },
-        annotations: heynoteEvent.of(INITIAL_DATA),
-    })
-])*/
-
-export function setReadOnly(view: EditorView, ro: boolean) {
-  let editor = findEditorByView(view);
-  if (editor) {
-    editor.setReadOnly(ro);
-  }
-}

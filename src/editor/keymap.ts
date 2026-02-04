@@ -38,6 +38,7 @@ import {
 import { formatBlockContent } from "./block/format-code";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
 import { insertDateAndTime } from "./date-time";
+import type { EdnaEditor } from "./editor";
 import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
 
 const isMac = platform.isMac;
@@ -63,7 +64,7 @@ export function keymapFromSpec(specs: any[]) {
   );
 }
 
-export function ednaKeymap(editor: any) {
+export function ednaKeymap(editor: EdnaEditor) {
   let spec = [
     ["Mod-c", copyCommand(editor)],
     ["Mod-v", pasteCommand],

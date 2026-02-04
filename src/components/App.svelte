@@ -29,7 +29,7 @@
   import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime, insertTime } from "../editor/date-time";
-  import { EdnaEditor, setReadOnly } from "../editor/editor";
+  import { EdnaEditor } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import {
     foldAllBlocks,
@@ -94,6 +94,7 @@
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import type { CapturingEval } from "../run";
   import { getSettings } from "../settings.svelte";
+  import { findEditorByView } from "../state";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,
@@ -226,6 +227,13 @@
   $effect(() => {
     isMoving.disableMoveTracking = isShowingDialog;
   });
+
+  function setReadOnly(view: EditorView, ro: boolean) {
+    let editor = findEditorByView(view);
+    if (editor) {
+      editor.setReadOnly(ro);
+    }
+  }
 
   function openFindInNotes() {
     showingFindInNotes = true;
