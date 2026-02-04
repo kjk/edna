@@ -1,6 +1,6 @@
 import { selectAll as defaultSelectAll } from "@codemirror/commands";
-import { RangeSetBuilder, StateEffect, StateField } from "@codemirror/state";
-import { Decoration, ViewPlugin } from "@codemirror/view";
+import { RangeSet, RangeSetBuilder, RangeValue, StateEffect, StateField } from "@codemirror/state";
+import { Decoration, EditorView, ViewPlugin, ViewUpdate, type DecorationSet } from "@codemirror/view";
 import { getActiveNoteBlock } from "./block";
 
 /**
@@ -30,11 +30,12 @@ export const emptyBlockSelected = StateField.define({
   provide() {
     return ViewPlugin.fromClass(
       class {
-        constructor(view) {
-          this.decorations = emptyBlockSelectedDecorations(view);
+        decorations: DecorationSet;
+        constructor(view: EditorView) {
+          this.decorations = emptyBlockSelectedDecorations(view) as DecorationSet;
         }
-        update(update) {
-          this.decorations = emptyBlockSelectedDecorations(update.view);
+        update(update: ViewUpdate) {
+          this.decorations = emptyBlockSelectedDecorations(update.view) as DecorationSet;
         }
       },
       {
@@ -52,7 +53,7 @@ const setEmptyBlockSelected = StateEffect.define();
 const decoration = Decoration.line({
   attributes: { class: "heynote-empty-block-selected" },
 });
-function emptyBlockSelectedDecorations(view) {
+function emptyBlockSelectedDecorations(view: EditorView) {
   const selectionPos = view.state.field(emptyBlockSelected);
   const builder = new RangeSetBuilder();
   if (selectionPos) {
@@ -62,7 +63,7 @@ function emptyBlockSelectedDecorations(view) {
   return builder.finish();
 }
 
-export function selectAll({ state, dispatch }) {
+export function selectAll({ state, dispatch }: EditorView) {
   const range = state.selection.asSingle().ranges[0];
   const block = getActiveNoteBlock(state);
 

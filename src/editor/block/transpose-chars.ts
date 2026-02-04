@@ -1,10 +1,11 @@
 import { EditorSelection, findClusterBreak } from "@codemirror/state";
+import type { EditorView } from "@codemirror/view";
 import { getNoteBlockFromPos } from "./block";
 
 /**
 Flip the characters before and after the cursor(s).
 */
-export const transposeChars = ({ state, dispatch }) => {
+export const transposeChars = ({ state, dispatch }: EditorView) => {
   if (state.readOnly) return false;
   let changes = state.changeByRange((range) => {
     // prevent transposing characters if we're at the start or end of a block, since it'll break the block syntax
@@ -13,18 +14,11 @@ export const transposeChars = ({ state, dispatch }) => {
       return { range };
     }
 
-    if (!range.empty || range.from == 0 || range.from == state.doc.length)
-      return { range };
+    if (!range.empty || range.from == 0 || range.from == state.doc.length) return { range };
     let pos = range.from,
       line = state.doc.lineAt(pos);
-    let from =
-      pos == line.from
-        ? pos - 1
-        : findClusterBreak(line.text, pos - line.from, false) + line.from;
-    let to =
-      pos == line.to
-        ? pos + 1
-        : findClusterBreak(line.text, pos - line.from, true) + line.from;
+    let from = pos == line.from ? pos - 1 : findClusterBreak(line.text, pos - line.from, false) + line.from;
+    let to = pos == line.to ? pos + 1 : findClusterBreak(line.text, pos - line.from, true) + line.from;
     return {
       changes: {
         from,

@@ -1,17 +1,8 @@
 import { mount } from "svelte";
 import { closeBracketsKeymap } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import {
-  bracketMatching,
-  defaultHighlightStyle,
-  indentOnInput,
-  syntaxHighlighting,
-} from "@codemirror/language";
-import {
-  highlightSelectionMatches,
-  search,
-  searchKeymap,
-} from "@codemirror/search";
+import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from "@codemirror/language";
+import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { EditorState } from "@codemirror/state";
 import {
   crosshairCursor,
@@ -24,10 +15,12 @@ import {
   keymap,
   rectangularSelection,
   scrollPastEnd,
+  ViewUpdate,
+  type KeyBinding,
 } from "@codemirror/view";
 import Find from "../components/Find.svelte";
 
-function createFnddPanel(view) {
+function createFnddPanel(view: EditorView) {
   const dom = document.createElement("div");
   const args = {
     target: dom,
@@ -37,7 +30,7 @@ function createFnddPanel(view) {
   };
   // TODO: this leak, I don't see unmounting anywhere
   let comp = mount(Find, args);
-  const update = (update) => {
+  const update = (update: ViewUpdate) => {
     comp.update(update);
   };
   return {
@@ -93,7 +86,7 @@ function getDefaultKeymap() {
   // for "open command palette"
   let keymap = defaultKeymap;
   for (let i = 0; i < keymap.length; i++) {
-    const item = keymap[i];
+    const item = keymap[i] as KeyBinding;
     if (item.key === "Shift-Mod-k") {
       // @ts-ignore
       keymap.splice(i, 1);

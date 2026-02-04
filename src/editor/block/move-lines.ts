@@ -1,4 +1,5 @@
 import { EditorSelection } from "@codemirror/state";
+import type { EditorView } from "@codemirror/view";
 import { kLanguages } from "../languages";
 import { blockState } from "./block";
 
@@ -99,7 +100,7 @@ function moveLine(state, dispatch, forward) {
 /**
 Move the selected lines up one line.
 */
-export const moveLineUp = ({ state, dispatch }) => {
+export const moveLineUp = ({ state, dispatch }: EditorView) => {
   // prevent moving lines up before the first block separator
   if (
     state.selection.ranges.some((range) => {
@@ -116,4 +117,4 @@ export const moveLineUp = ({ state, dispatch }) => {
 /**
 Move the selected lines down one line.
 */
-export const moveLineDown = ({ state, dispatch }) => moveLine(state, dispatch, true);
+export const moveLineDown = ({ state, dispatch }: EditorView) => moveLine(state, dispatch, true);

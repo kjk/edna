@@ -1,6 +1,24 @@
 import { ensureSyntaxTree, syntaxTreeAvailable } from "@codemirror/language";
-import { EditorState, RangeSet, RangeSetBuilder, StateField } from "@codemirror/state";
-import { Decoration, EditorView, layer, lineNumbers, RectangleMarker, ViewPlugin, WidgetType } from "@codemirror/view";
+import {
+  EditorState,
+  Range,
+  RangeSet,
+  RangeSetBuilder,
+  SelectionRange,
+  StateField,
+  Transaction,
+} from "@codemirror/state";
+import {
+  Decoration,
+  EditorView,
+  layer,
+  lineNumbers,
+  RectangleMarker,
+  ViewPlugin,
+  ViewUpdate,
+  WidgetType,
+  type DecorationSet,
+} from "@codemirror/view";
 import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation";
 import type { EdnaEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
@@ -63,7 +81,7 @@ function findBlocNokWithPos(blocks: Block[], pos: number): number {
 
 export function getActiveNoteBlock(state: EditorState): Block | undefined {
   // find which block the cursor is in
-  const range = state.selection.asSingle().ranges[0];
+  const range = state.selection.asSingle().ranges[0] as SelectionRange;
   let blocks = state.field(blockState);
   return findBlockWithPos(blocks, range.head);
 }
@@ -153,8 +171,8 @@ class NoteBlockStart extends WidgetType {
   }
 }
 const noteBlockWidget = () => {
-  const decorate = (state) => {
-    const widgets = [];
+  const decorate = (state: EditorState) => {
+    const widgets: NoteBlockStart[] = [];
 
     state.field(blockState).forEach((block: Block) => {
       let delimiter = block.delimiter;
@@ -172,13 +190,12 @@ const noteBlockWidget = () => {
   };
 
   const noteBlockStartField = StateField.define({
-    create(state) {
+    create(state: EditorState) {
       return decorate(state);
     },
     update(widgets, transaction) {
       // if widgets are empty it likely means we didn't get a parsed syntax tree, and then we want to update
       // the decorations on all updates (and not just document changes)
-      // @ts-ignore
       if (transaction.docChanged || widgets.isEmpty) {
         return decorate(transaction.state);
       }
@@ -195,21 +212,22 @@ const noteBlockWidget = () => {
   return noteBlockStartField;
 };
 
-function atomicRanges(view: EditorView) {
+function atomicRanges(view: EditorView): DecorationSet {
   let builder = new RangeSetBuilder();
   view.state.field(blockState).forEach((block) => {
     builder.add(block.delimiter.from, block.delimiter.to, {});
   });
-  return builder.finish();
+  return builder.finish() as DecorationSet;
 }
+
 const atomicNoteBlock = ViewPlugin.fromClass(
   class {
-    atomicRanges: any;
+    atomicRanges: DecorationSet;
     constructor(view: EditorView) {
       this.atomicRanges = atomicRanges(view);
     }
 
-    update(update) {
+    update(update: ViewUpdate) {
       if (update.docChanged) {
         this.atomicRanges = atomicRanges(update.view);
       }
@@ -217,7 +235,7 @@ const atomicNoteBlock = ViewPlugin.fromClass(
   },
   {
     provide: (plugin) =>
-      EditorView.atomicRanges.of((view: EditorView) => {
+      EditorView.atomicRanges.of((view) => {
         return view.plugin(plugin)?.atomicRanges || [];
       }),
   },
@@ -226,8 +244,8 @@ const atomicNoteBlock = ViewPlugin.fromClass(
 const blockLayer = layer({
   above: false,
 
-  markers(view) {
-    const markers = [];
+  markers(view: EditorView) {
+    const markers: RectangleMarker[] = [];
     let idx = 0;
     //console.log("visible ranges:", view.visibleRanges[0].from, view.visibleRanges[0].to, view.visibleRanges.length)
     function rangesOverlaps(range1, range2) {
@@ -274,7 +292,7 @@ const blockLayer = layer({
     return markers;
   },
 
-  update(update, dom) {
+  update(update: ViewUpdate, dom) {
     return update.docChanged || update.viewportChanged;
   },
 
@@ -351,7 +369,7 @@ export function getBlockLineFromPos(state: EditorState, pos: number) {
 }
 
 export const blockLineNumbers = lineNumbers({
-  formatNumber(lineNo, state) {
+  formatNumber(lineNo: number, state: EditorState) {
     if (state.doc.lines >= lineNo) {
       const lineInfo = getBlockLineFromPos(state, state.doc.line(lineNo).from);
       if (lineInfo !== null) {
@@ -378,7 +396,7 @@ function getSelectionSize(state: EditorState, sel: any): number {
 const emitCursorChange = (editor: EdnaEditor) =>
   ViewPlugin.fromClass(
     class {
-      update(update) {
+      update(update: ViewUpdate) {
         // if the selection changed or the language changed (can happen without selection change),
         // emit a selection change event
         const langChange = update.transactions.some((tr) => tr.annotations.some((a) => a.value == LANGUAGE_CHANGE));

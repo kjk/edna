@@ -1,10 +1,7 @@
-import { ViewPlugin } from "@codemirror/view";
-import { Decoration } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { WidgetType } from "@codemirror/view";
-
+import { Decoration, EditorView, ViewPlugin, ViewUpdate, WidgetType, type DecorationSet } from "@codemirror/view";
+import { CURRENCIES_LOADED, transactionsHasAnnotation } from "../annotation";
 import { getNoteBlockFromPos } from "./block";
-import { transactionsHasAnnotation, CURRENCIES_LOADED } from "../annotation";
 
 class MathResult extends WidgetType {
   constructor(displayResult, copyResult) {
@@ -44,7 +41,7 @@ class MathResult extends WidgetType {
   }
 }
 
-function mathDeco(view) {
+function mathDeco(view: EditorView): DecorationSet {
   let mathParsers = new WeakMap();
   let builder = new RangeSetBuilder();
   for (let { from, to } of view.visibleRanges) {
@@ -95,7 +92,7 @@ function mathDeco(view) {
               }),
               math.format(result, {
                 notation: "fixed",
-              })
+              }),
             );
           }
           builder.add(
@@ -104,25 +101,25 @@ function mathDeco(view) {
             Decoration.widget({
               widget: resultWidget,
               side: 1,
-            })
+            }),
           );
         }
       }
       pos = line.to + 1;
     }
   }
-  return builder.finish();
+  return builder.finish() as DecorationSet;
 }
 
 export const mathBlock = ViewPlugin.fromClass(
   class {
-    decorations;
+    decorations: Decoration;
 
-    constructor(view) {
+    constructor(view: EditorView) {
       this.decorations = mathDeco(view);
     }
 
-    update(update) {
+    update(update: ViewUpdate) {
       // If the document changed, the viewport changed, or the transaction was annotated with the CURRENCIES_LOADED annotation,
       // update the decorations. The reason we need to check for CURRENCIES_LOADED annotations is because the currency rates are
       // updated asynchronously
@@ -137,5 +134,5 @@ export const mathBlock = ViewPlugin.fromClass(
   },
   {
     decorations: (v) => v.decorations,
-  }
+  },
 );

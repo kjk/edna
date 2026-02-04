@@ -1,5 +1,4 @@
-import { Decoration, MatchDecorator, ViewPlugin } from "@codemirror/view";
-
+import { Decoration, EditorView, MatchDecorator, ViewPlugin, ViewUpdate, type DecorationSet } from "@codemirror/view";
 import { platform } from "../util";
 
 const modChar = platform.isMac ? "⌘" : "Ctrl";
@@ -17,12 +16,12 @@ const linkMatcher = new MatchDecorator({
 
 export const links = ViewPlugin.fromClass(
   class {
-    links;
+    links: DecorationSet;
 
-    constructor(view) {
+    constructor(view: EditorView) {
       this.links = linkMatcher.createDeco(view);
     }
-    update(update) {
+    update(update: ViewUpdate) {
       this.links = linkMatcher.updateDeco(update, this.links);
     }
   },
@@ -31,10 +30,7 @@ export const links = ViewPlugin.fromClass(
     eventHandlers: {
       click: (e, view) => {
         let target = e.target as HTMLElement;
-        if (
-          target.closest(".heynote-link")?.classList.contains("heynote-link") &&
-          e[eventKeyModAttribute]
-        ) {
+        if (target.closest(".heynote-link")?.classList.contains("heynote-link") && e[eventKeyModAttribute]) {
           let linkEl = document.createElement("a");
           linkEl.href = target.textContent;
           linkEl.target = "_blank";
@@ -43,5 +39,5 @@ export const links = ViewPlugin.fromClass(
         }
       },
     },
-  }
+  },
 );

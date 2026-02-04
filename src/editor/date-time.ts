@@ -1,4 +1,6 @@
-export const insertDateAndTime = ({ state, dispatch }) => {
+import type { EditorView } from "@codemirror/view";
+
+export const insertDateAndTime = ({ state, dispatch }: EditorView) => {
   if (state.readOnly) {
     return false;
   }
@@ -17,7 +19,7 @@ export const insertDateAndTime = ({ state, dispatch }) => {
   return true;
 };
 
-export const insertTime = ({ state, dispatch }) => {
+export const insertTime = ({ state, dispatch }: EditorView) => {
   if (state.readOnly) {
     return false;
   }
