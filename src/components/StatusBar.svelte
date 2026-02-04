@@ -1,10 +1,5 @@
 <script lang="ts">
-  import {
-    getLanguage,
-    getLanguageNameFromToken,
-    langSupportsFormat,
-    langSupportsRun,
-  } from "../editor/languages";
+  import { getLanguage, getLanguageNameFromToken, langSupportsFormat, langSupportsRun } from "../editor/languages";
   import { fixUpShortcuts } from "../key-helper";
   import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
@@ -48,9 +43,7 @@
   let supportsFormat = $derived(langSupportsFormat(lang));
   let supportsRun = $derived(langSupportsRun(lang));
   // TODO: depend on platform
-  let formatBlockTitle = $derived(
-    fixUpShortcuts(`Format Block (Alt + Shift + F)`),
-  );
+  let formatBlockTitle = $derived(fixUpShortcuts(`Format Block (Alt + Shift + F)`));
   let runBlockTitle = $derived.by(() => {
     let s = "Smart Run";
     if (selectionSize > 0) {
@@ -64,9 +57,7 @@
     return s;
   });
   let formatSize = $derived(fmtSize(docSize));
-  let changeLanguageTitle = $derived(
-    fixUpShortcuts(`Change language for current block (Mod + L)`),
-  );
+  let changeLanguageTitle = $derived(fixUpShortcuts(`Change language for current block (Mod + L)`));
 </script>
 
 <div
@@ -86,39 +77,24 @@
   </div>
 
   <div class="text-gray-400">&bull;</div>
-  <button
-    onclick={toggleSpellCheck}
-    class="clickable"
-    title="Toggle spell check"
-  >
+  <button onclick={toggleSpellCheck} class="clickable" title="Toggle spell check">
     <span
       >Spell check is {#if isSpellChecking}on{:else}off{/if}</span
     >
   </button>
   <div class="text-gray-400">&bull;</div>
-  <button
-    onclick={openLanguageSelector}
-    class="clickable"
-    title={changeLanguageTitle}
-  >
+  <button onclick={openLanguageSelector} class="clickable" title={changeLanguageTitle}>
     {languageName}
     {#if languageAuto}
       <span class="auto">(auto)</span>
     {/if}
   </button>
   <div class="text-gray-400">&bull;</div>
-  <button onclick={smartRun} class="clickable" title={runBlockTitle}>
-    Smart Run
-  </button>
+  <button onclick={smartRun} class="clickable" title={runBlockTitle}> Smart Run </button>
 
   {#if supportsFormat}
     <div class="text-gray-400">&bull;</div>
-    <button
-      title={formatBlockTitle}
-      aria-label={formatBlockTitle}
-      onclick={formatCurrentBlock}
-      class="clickable-icon"
-    >
+    <button title={formatBlockTitle} aria-label={formatBlockTitle} onclick={formatCurrentBlock} class="clickable-icon">
       <svg
         width="1em"
         height="1em"

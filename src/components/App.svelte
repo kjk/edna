@@ -25,7 +25,6 @@
     moveLineUp,
     selectAll,
   } from "../editor/block/commands";
-  import { formatBlockContent } from "../format-code";
   import { transposeChars } from "../editor/block/transpose-chars";
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime, insertTime } from "../editor/date-time";
@@ -44,6 +43,7 @@
   import { setDefaultFontFamilyAndSize } from "../editor/theme/font-theme";
   import { toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, hasHandlePermission, openDirPicker, supportsFileSystem } from "../fileutil";
+  import { formatBlockContent } from "../format-code";
   import { parseUserFunctions, runBoopFunction } from "../functions";
   import type { BoopFunction, BoopFunctionArg } from "../functions";
   import { setGlobalFuncs } from "../globals";

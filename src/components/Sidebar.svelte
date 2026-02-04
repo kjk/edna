@@ -3,18 +3,10 @@
   import { appState } from "../appstate.svelte";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
   import { isSystemNoteName, sanitizeNoteName } from "../notes";
-  import {
-    findMatchingItems,
-    getAltChar,
-    hilightText,
-    isAltNumEvent,
-    len,
-    makeHilightRegExp,
-  } from "../util";
+  import { findMatchingItems, getAltChar, hilightText, isAltNumEvent, len, makeHilightRegExp } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfos } from "./NoteSelector.svelte";
-
   import type { NoteInfo } from "./NoteSelector.svelte";
 
   interface Props {
@@ -30,10 +22,7 @@
     return res;
   }
   let noteInfos = $derived(
-    localBuildNoteInfos(
-      appState.regularNotes,
-      appState.showingArchived ? appState.archivedNotes : [],
-    ),
+    localBuildNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []),
   );
 
   let filter = $state("");
@@ -45,10 +34,7 @@
     // actions like re-assigning quick access shortcut do
     // not modify appState.noteNames so we have to force
     // rebuilding of items
-    noteInfos = localBuildNoteInfos(
-      appState.regularNotes,
-      appState.showingArchived ? appState.archivedNotes : [],
-    );
+    noteInfos = localBuildNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []);
   }
 
   let sanitizedFilter = $derived.by(() => {
@@ -182,9 +168,7 @@
           ev.stopPropagation();
         }}
       >
-        {@render IconTablerStar(
-          noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
-        )}
+        {@render IconTablerStar(noteInfo.isStarred ? "var(--color-yellow-300)" : "none")}
       </button>
       <div class="ml-2 truncate {sysNoteCls(noteInfo) ? 'italic' : ''}">
         {@html hili}

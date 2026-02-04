@@ -70,11 +70,7 @@
     </div>
     <button onclick={() => onclose()} title="Close" class="kbd-btn">Esc</button>
   </div>
-  <input
-    bind:value={newName}
-    use:focus
-    class="py-1 px-2 bg-white mt-2 rounded-xs w-[80ch]"
-  />
+  <input bind:value={newName} use:focus class="py-1 px-2 bg-white mt-2 rounded-xs w-[80ch]" />
   <div class=" text-sm mt-2">
     {#if canRename}
       New name: <span class="font-bold">{sanitizedNewName}</span>
@@ -84,10 +80,6 @@
   </div>
   <div class="flex justify-end mt-2">
     <button onclick={onclose} class="mr-4 button-outline">Cancel</button>
-    <button
-      onclick={() => emitRename()}
-      disabled={!canRename}
-      class="button-outline">Rename</button
-    >
+    <button onclick={() => emitRename()} disabled={!canRename} class="button-outline">Rename</button>
   </div>
 </div>

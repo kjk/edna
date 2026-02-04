@@ -59,11 +59,7 @@
   class="selector z-20 absolute center-x-with-translate top-[4rem] flex flex-col max-w-full p-3"
 >
   <div class="text-lg font-semibold ml-1">Create new note</div>
-  <input
-    bind:value={newName}
-    use:focus
-    class="py-1 px-2 bg-white mt-2 rounded-xs w-[80ch]"
-  />
+  <input bind:value={newName} use:focus class="py-1 px-2 bg-white mt-2 rounded-xs w-[80ch]" />
   <div class=" text-sm mt-2">
     {#if canCreate}
       &nbsp;
@@ -72,11 +68,7 @@
     {/if}
   </div>
   <div class="flex justify-end mt-2">
-    <button
-      onclick={() => emitCreate()}
-      disabled={!canCreate}
-      class="button-outline">Create</button
-    >
+    <button onclick={() => emitCreate()} disabled={!canCreate} class="button-outline">Create</button>
     <button onclick={onclose} class="ml-2 button-outline">Cancel</button>
   </div>
 </div>

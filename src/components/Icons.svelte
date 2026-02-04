@@ -38,11 +38,7 @@ Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian
 https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-right
 -->
 {#snippet IconMdiArrowCollapseRight()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="currentColor"
       d="M12.08 4.08L20 12l-7.92 7.92l-1.41-1.42l5.5-5.5H2v-2h14.17l-5.5-5.5zM20 12v10h2V2h-2z"
@@ -56,11 +52,7 @@ Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian
 https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-left
 -->
 {#snippet IconMdiArrowCollapseLeft()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="currentColor"
       d="M11.92 19.92L4 12l7.92-7.92l1.41 1.42l-5.5 5.5H22v2H7.83l5.51 5.5zM4 12V2H2v20h2z"
@@ -108,12 +100,7 @@ https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-left
 {/snippet}
 
 {#snippet IconCommandPalette()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
     <path
       fill="currentColor"
       d="M3.045 18.894L9.94 12L3.045 5.106a.75.75 0 0 1 1.06-1.061l7.425 7.425a.75.75 0 0 1 0 1.06l-7.424 7.425a.75.75 0 0 1-1.061-1.06Zm8.205.606a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5z"
@@ -145,11 +132,7 @@ https://icones.js.org/collection/tabler?s=archive&icon=tabler:trash
 -->
 
 {#snippet IconTablerTrash()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -166,11 +149,7 @@ Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/b
 https://icones.js.org/collection/tabler?s=archive&icon=tabler:archive
 -->
 {#snippet IconTablerArchive()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -187,11 +166,7 @@ Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/b
 https://icones.js.org/collection/tabler?s=plus&icon=tabler:plus
 -->
 {#snippet IconTablerPlus()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -208,20 +183,11 @@ Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/b
 https://icones.js.org/collection/tabler?s=left&icon=tabler:layout-sidebar-left-expand
 -->
 {#snippet IconTablerLayoutSidebarLeftExpand()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-    ><g
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      ><path
-        d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16"
-      /><path d="m14 10l2 2l-2 2" /></g
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
+    ><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      ><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16" /><path
+        d="m14 10l2 2l-2 2"
+      /></g
     ></svg
   >
 {/snippet}
@@ -232,20 +198,11 @@ Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/b
 https://icones.js.org/collection/tabler?s=left&icon=tabler:layout-sidebar-left-collapse
 -->
 {#snippet IconTablerLayoutSidebarLeftCollapse()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-    ><g
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      ><path
-        d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16"
-      /><path d="m15 10l-2 2l2 2" /></g
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
+    ><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      ><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5-2v16" /><path
+        d="m15 10l-2 2l2 2"
+      /></g
     ></svg
   >
 {/snippet}
@@ -256,12 +213,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:star
 -->
 {#snippet IconTablerStar(fill = "none", klass = "")}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-    class={klass}
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class={klass}
     ><path
       {fill}
       stroke="currentColor"
@@ -280,11 +232,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:arrow-up
 -->
 {#snippet IconTablerArrowUp()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -304,11 +252,7 @@ https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:arrow-down
 -->
 
 {#snippet IconTablerArrowDown()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -328,11 +272,7 @@ https://icones.js.org/collection/tabler?s=case&icon=tabler:letter-case
 -->
 
 {#snippet IconTablerLetterCase()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -351,11 +291,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=select&icon=tabler:select-all
 -->
 {#snippet IconTablerSelectAll()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -372,11 +308,7 @@ Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide
 https://icones.js.org/collection/all?s=text-select&icon=lucide:text-select
 -->
 {#snippet IconLucideTextSelect()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -395,11 +327,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-down
 -->
 {#snippet IconTablerChevronDown()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -418,11 +346,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-up
 -->
 {#snippet IconTablerChevronUp()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -441,11 +365,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-right
 -->
 {#snippet IconTablerChevronRight()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -464,11 +384,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=select&icon=tabler:x
 -->
 {#snippet IconTablerX()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -488,11 +404,7 @@ https://icones.js.org/collection/tabler?s=replace&icon=tabler:replace
 -->
 
 {#snippet IconTablerReplace()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="none"
       stroke="currentColor"
@@ -511,11 +423,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=replace&icon=tabler:replace-filled
 -->
 {#snippet IconTablerReplaceFilled()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
     ><path
       fill="currentColor"
       d="M8 2H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2m12 12h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2M16.707 2.293a1 1 0 0 1 .083 1.32l-.083.094L15.414 5H19a3 3 0 0 1 2.995 2.824L22 8v3a1 1 0 0 1-1.993.117L20 11V8a1 1 0 0 0-.883-.993L19 7h-3.585l1.292 1.293a1 1 0 0 1-1.32 1.497l-.094-.083l-3-3a.98.98 0 0 1-.28-.872l.036-.146l.04-.104q.087-.191.245-.334l2.959-2.958a1 1 0 0 1 1.414 0M3 12a1 1 0 0 1 .993.883L4 13v3a1 1 0 0 0 .883.993L5 17h3.585l-1.292-1.293a1 1 0 0 1-.083-1.32l.083-.094a1 1 0 0 1 1.32-.083l.094.083l3 3a.98.98 0 0 1 .28.872l-.036.146l-.04.104a1 1 0 0 1-.245.334l-2.959 2.958a1 1 0 0 1-1.497-1.32l.083-.094L8.584 19H5a3 3 0 0 1-2.995-2.824L2 16v-3a1 1 0 0 1 1-1"
@@ -529,12 +437,7 @@ Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/m
 https://icones.js.org/collection/fluent?s=whole-word&icon=fluent:text-whole-word-16-regular
 -->
 {#snippet IconFluentWholeWord()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 16 16"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16">
     <path
       fill="currentColor"
       d="M10 2a.5.5 0 0 0-1 0v9.5a.5.5 0 0 0 1 0v-.1c.418.377.937.6 1.5.6c1.381 0 2.5-1.343 2.5-3s-1.119-3-2.5-3c-.563 0-1.082.223-1.5.6zm3 7c0 1.283-.835 2-1.5 2S10 10.283 10 9s.835-2 1.5-2s1.5.717 1.5 2M7 7.834l-.003-.137c-.054-1.212-.832-1.963-2.139-2.028l-.191-.007c-.753-.014-1.35.122-1.789.43a.499.499 0 1 0 .574.818c.264-.185.715-.275 1.356-.243c.82.041 1.184.406 1.191 1.144a5 5 0 0 0-1.893-.14C2.792 7.83 2 8.684 2 9.834c0 1.304.941 2.167 2.167 2.167c.565 0 1.174-.193 1.833-.57v.07l.005.068a.5.5 0 0 0 .495.432l.068-.005A.5.5 0 0 0 7 11.509zm-2.774.854a4 4 0 0 1 1.571.128v.001l.202.06v1.393l-.165.113c-.656.432-1.214.642-1.668.642c-.692 0-1.167-.436-1.167-1.167c0-.633.405-1.07 1.227-1.17M16 13.5V13a.5.5 0 1 0-1 0v.5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5V13a.5.5 0 1 0-1 0v.5A1.5 1.5 0 0 0 1.5 15h13a1.497 1.497 0 0 0 1.5-1.5"
@@ -549,12 +452,7 @@ https://icones.js.org/collection/all?s=regex&icon=tabler:regex
 -->
 
 {#snippet IconTablerRegex()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
     <path
       fill="none"
       stroke="currentColor"
@@ -572,12 +470,7 @@ Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide
 https://icones.js.org/collection/all?s=type&icon=lucide:type
 -->
 {#snippet IconLucideType()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
     <path
       fill="none"
       stroke="currentColor"
@@ -595,27 +488,11 @@ Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide
 https://icones.js.org/collection/all?s=replace-all&icon=lucide:replace-all
 -->
 {#snippet IconLucideReplaceAll()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-  >
-    <g
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
       ><path
         d="M14 14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2m0-18a2 2 0 0 1 2-2m0 8a2 2 0 0 1-2-2m6 6a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2m0-20a2 2 0 0 1 2 2m0 4a2 2 0 0 1-2 2M3 7l3 3l3-3"
-      /><path d="M6 10V5a3 3 0 0 1 3-3h1" /><rect
-        width="8"
-        height="8"
-        x="2"
-        y="14"
-        rx="2"
-      /></g
+      /><path d="M6 10V5a3 3 0 0 1 3-3h1" /><rect width="8" height="8" x="2" y="14" rx="2" /></g
     ></svg
   >
 {/snippet}
@@ -626,26 +503,11 @@ Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide
 https://icones.js.org/collection/all?s=replace-all&icon=lucide:replace
 -->
 {#snippet IconLucideReplace()}
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-    ><g
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      ><path
-        d="M14 4a2 2 0 0 1 2-2m0 8a2 2 0 0 1-2-2m6-6a2 2 0 0 1 2 2m0 4a2 2 0 0 1-2 2M3 7l3 3l3-3"
-      /><path d="M6 10V5a3 3 0 0 1 3-3h1" /><rect
-        width="8"
-        height="8"
-        x="2"
-        y="14"
-        rx="2"
-      /></g
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
+    ><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      ><path d="M14 4a2 2 0 0 1 2-2m0 8a2 2 0 0 1-2-2m6-6a2 2 0 0 1 2 2m0 4a2 2 0 0 1-2 2M3 7l3 3l3-3" /><path
+        d="M6 10V5a3 3 0 0 1 3-3h1"
+      /><rect width="8" height="8" x="2" y="14" rx="2" /></g
     ></svg
   >
 {/snippet}
@@ -661,8 +523,6 @@ from grok.com
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     stroke-width="2"
-    class="size-3"
-    ><path d="M6 9L12 15L18 9" stroke="currentColor" stroke-linecap="square"
-    ></path></svg
+    class="size-3"><path d="M6 9L12 15L18 9" stroke="currentColor" stroke-linecap="square"></path></svg
   >
 {/snippet}

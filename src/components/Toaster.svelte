@@ -66,8 +66,7 @@
 </script>
 
 <script lang="ts">
-  import { len } from "../util";
-  import { getScrollbarWidth } from "../util";
+  import { getScrollbarWidth, len } from "../util";
 
   let style = $state("");
   $effect(() => {

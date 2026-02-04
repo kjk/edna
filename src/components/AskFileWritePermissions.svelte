@@ -33,17 +33,10 @@
 >
   <div>We need permission to write to file <b>{fileName}</b> on disk.</div>
   <div class="flex flex-col mt-4 mb-8 text-sm">
-    <button
-      onclick={requestPermissions}
-      class="mt-4 px-4 py-1 border border-black hover:bg-gray-100"
-      >Allow Edna to write to a file <span class="font-bold">{fileName}</span
-      ></button
+    <button onclick={requestPermissions} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100"
+      >Allow Edna to write to a file <span class="font-bold">{fileName}</span></button
     >
-    <button
-      onclick={cancel}
-      class="mt-4 px-2 py-1 border border-black hover:bg-gray-100"
-      >Cancel</button
-    >
+    <button onclick={cancel} class="mt-4 px-2 py-1 border border-black hover:bg-gray-100">Cancel</button>
     <!-- <a
         class="mt-4 self-center link"
         target="_blank"

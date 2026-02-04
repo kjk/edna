@@ -11,6 +11,7 @@
     selectMatches,
     setSearchQuery,
   } from "@codemirror/search";
+  import type { EditorView } from "@codemirror/view";
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
@@ -27,7 +28,6 @@
     IconTablerRegex,
     IconTablerX,
   } from "./Icons.svelte";
-  import type { EditorView } from "@codemirror/view";
 
   interface Props {
     view: EditorView;

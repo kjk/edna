@@ -27,7 +27,15 @@
     menuItemStatus?: (mi: MenuItemDef) => number;
     onmenucmd: (cmd: number) => void;
   }
-  let { class: klass = "", openNote, closeTab, openNoteSelector, buildMenuDef, menuItemStatus, onmenucmd }: Props = $props();
+  let {
+    class: klass = "",
+    openNote,
+    closeTab,
+    openNoteSelector,
+    buildMenuDef,
+    menuItemStatus,
+    onmenucmd,
+  }: Props = $props();
 
   let altChar = getAltChar();
 

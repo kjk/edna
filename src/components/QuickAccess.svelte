@@ -7,6 +7,7 @@
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
+  import type { NoteInfo } from "./NoteSelector.svelte";
 
   interface Props {
     openNote: (name: string, newTab?: boolean) => void;
@@ -27,8 +28,6 @@
   let settings = getSettings();
 
   const kMaxHistory = 10;
-
-  import type { NoteInfo } from "./NoteSelector.svelte";
 
   function buildQuickAccessNotes(starred: string[], withShortcuts: string[], history: string[]): NoteInfo[] {
     let notes: string[] = [...starred, ...withShortcuts];
@@ -53,11 +52,7 @@
   }
 
   let quickAccessNotes = $derived(
-    buildQuickAccessNotes(
-      appState.starredNotes,
-      appState.withShortcuts,
-      appState.history,
-    ),
+    buildQuickAccessNotes(appState.starredNotes, appState.withShortcuts, appState.history),
   );
 
   function getNoteShortcut(note: NoteInfo): string {
@@ -131,9 +126,7 @@
           {"" + historyTrigger}
         </div>
       {:else if shortcut}
-        <div
-          class="px-1 whitespace-nowrap text-left grow text-gray-400 dark:text-gray-400 {cls}"
-        >
+        <div class="px-1 whitespace-nowrap text-left grow text-gray-400 dark:text-gray-400 {cls}">
           {shortcut}
         </div>
       {:else if noteInfo.isStarred && historyTrigger < 0}
@@ -146,25 +139,17 @@
             ev.stopPropagation();
           }}
         >
-          {@render IconTablerStar(
-            noteInfo.isStarred ? "var(--color-yellow-300)" : "none",
-          )}
+          {@render IconTablerStar(noteInfo.isStarred ? "var(--color-yellow-300)" : "none")}
         </button>
       {:else}
-        <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">
-          &nbsp;
-        </div>
+        <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">&nbsp;</div>
       {/if}
-      <div
-        class="px-1 ml-4 grow self-end text-right max-w-[32ch] truncate {cls}"
-      >
+      <div class="px-1 ml-4 grow self-end text-right max-w-[32ch] truncate {cls}">
         {noteInfo.name}
       </div>
     {/snippet}
   </ListBox>
-  <div
-    class="flex flex-col text-xs justify-between ml-2 mr-3 mt-2 text-gray-500"
-  >
+  <div class="flex flex-col text-xs justify-between ml-2 mr-3 mt-2 text-gray-500">
     <div class="flex justify-between">
       <div>
         {modChar} + H
@@ -175,10 +160,6 @@
       <div>{modChar} + click</div>
       <div>open in new tab</div>
     </div>
-    <a
-      target="_blank"
-      class="link self-center"
-      href="/help#quick-access-ui-for-starred%2C-recent-notes">learn more</a
-    >
+    <a target="_blank" class="link self-center" href="/help#quick-access-ui-for-starred%2C-recent-notes">learn more</a>
   </div>
 </form>

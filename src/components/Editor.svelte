@@ -5,14 +5,13 @@
   import { appState } from "../appstate.svelte";
   import { loadCurrencies } from "../currency";
   import { EdnaEditor } from "../editor/editor";
+  import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
   import { loadNote, saveNote } from "../notes";
   import { getSettings } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
   import Find from "./Find.svelte";
-
-  import type { KeymapSpec } from "../editor/editor";
 
   function createFindPanel(view: EditorView) {
     const dom = document.createElement("div");

@@ -1,12 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
   import { kLanguages } from "../editor/languages";
-  import {
-    findMatchingItems,
-    hilightText,
-    len,
-    makeHilightRegExp,
-  } from "../util";
+  import { findMatchingItems, hilightText, len, makeHilightRegExp } from "../util";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
@@ -56,17 +51,8 @@
   tabindex="-1"
   class="selector z-20 absolute center-x-with-translate top-[2rem] max-h-[94vh] flex flex-col p-2"
 >
-  <input
-    use:focus
-    type="text"
-    bind:value={filter}
-    class="py-1 px-2 bg-white w-full min-w-[400px] mb-2 rounded-xs"
-  />
-  <ListBox
-    bind:this={listboxRef}
-    items={itemsFiltered}
-    onclick={(item) => selectLanguage(item.token)}
-  >
+  <input use:focus type="text" bind:value={filter} class="py-1 px-2 bg-white w-full min-w-[400px] mb-2 rounded-xs" />
+  <ListBox bind:this={listboxRef} items={itemsFiltered} onclick={(item) => selectLanguage(item.token)}>
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
       <div>{@html hili}</div>

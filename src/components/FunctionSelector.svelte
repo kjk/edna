@@ -1,18 +1,11 @@
 <script lang="ts">
   import { focus } from "../actions";
+  import type { BoopFunction } from "../functions";
   import { getFunctionMeta, toggleFunctionStarred } from "../metadata";
   import { getBoopFunctions } from "../system-notes";
-  import {
-    findMatchingItems,
-    getAltChar,
-    hilightText,
-    len,
-    makeHilightRegExp,
-  } from "../util";
+  import { findMatchingItems, getAltChar, hilightText, len, makeHilightRegExp } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
-
-  import type { BoopFunction } from "../functions";
 
   interface Props {
     userFunctions: BoopFunction[];
@@ -144,11 +137,7 @@
       <div class="text-center mb-2 font-semibold grow">
         run function with {context}
       </div>
-      <a
-        href="https://edna.arslexis.io/help#running-code"
-        target="_blank"
-        class="link ml-2">help</a
-      >
+      <a href="https://edna.arslexis.io/help#running-code" target="_blank" class="link ml-2">help</a>
     </div>
     <div>
       <input
@@ -179,9 +168,7 @@
           ev.stopPropagation();
         }}
       >
-        {@render IconTablerStar(
-          item.isStarred ? "var(--color-yellow-300)" : "none",
-        )}
+        {@render IconTablerStar(item.isStarred ? "var(--color-yellow-300)" : "none")}
       </button>
       <div class="truncate ml-2">
         {@html hili}

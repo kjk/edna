@@ -2,11 +2,7 @@
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
-  import {
-    isSystemNoteName,
-    kScratchNoteName,
-    sanitizeNoteName,
-  } from "../notes";
+  import { isSystemNoteName, kScratchNoteName, sanitizeNoteName } from "../notes";
   import {
     findMatchingItems,
     getAltChar,
@@ -19,7 +15,6 @@
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox2 from "./ListBox2.svelte";
   import { buildNoteInfos } from "./NoteSelector.svelte";
-
   import type { NoteInfo } from "./NoteSelector.svelte";
 
   interface Props {
@@ -29,13 +24,7 @@
     switchToCommandPalette: () => void;
     switchToRegularNoteSelector: () => void;
   }
-  let {
-    openNote,
-    createNote,
-    deleteNote,
-    switchToCommandPalette,
-    switchToRegularNoteSelector,
-  }: Props = $props();
+  let { openNote, createNote, deleteNote, switchToCommandPalette, switchToRegularNoteSelector }: Props = $props();
 
   function localBuildNoteInfos(regular, archived) {
     let notes = [...regular];
@@ -44,10 +33,7 @@
     return res;
   }
   let noteInfos = $derived(
-    localBuildNoteInfos(
-      appState.regularNotes,
-      appState.showingArchived ? appState.archivedNotes : [],
-    ),
+    localBuildNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []),
   );
 
   let filter = $state("");
@@ -58,10 +44,7 @@
     // actions like re-assigning quick access shortcut do
     // not modify appState.noteNames so we have to force
     // rebuilding of items
-    noteInfos = localBuildNoteInfos(
-      appState.regularNotes,
-      appState.showingArchived ? appState.archivedNotes : [],
-    );
+    noteInfos = localBuildNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []);
   }
 
   let sanitizedFilter = $derived.by(() => {
@@ -251,15 +234,10 @@
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
       {#if item.isStarred}
-        {@render IconTablerStar(
-          "var(--color-yellow-300)",
-          "inline-block mt-[-3px]",
-        )}
+        {@render IconTablerStar("var(--color-yellow-300)", "inline-block mt-[-3px]")}
       {/if}
       {@html hili}
-      <span class="ml-0.5 mr-0.5 text-xs text-gray-400 whitespace-nowrap"
-        >{noteShortcut(item)}</span
-      >
+      <span class="ml-0.5 mr-0.5 text-xs text-gray-400 whitespace-nowrap">{noteShortcut(item)}</span>
     {/snippet}
   </ListBox2>
 

@@ -23,8 +23,7 @@
   $effect(() => {
     const now = new Date();
     formattedTime = formatTime(now);
-    const msUntilNextMinute =
-      (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
     // Initial timeout to sync with minute start
     const initialTimeoutId = setTimeout(() => {

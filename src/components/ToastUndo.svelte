@@ -11,10 +11,7 @@
   <div class="">
     {message}
   </div>
-  <button
-    onclick={undoAction}
-    class="border border-white px-2 py-1 hover:bg-white hover:text-blue-600"
-  >
+  <button onclick={undoAction} class="border border-white px-2 py-1 hover:bg-white hover:text-blue-600">
     {undoText || "Undo"}
   </button>
 </div>
