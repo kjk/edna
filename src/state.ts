@@ -69,22 +69,3 @@ console.log(
 );
 
 incCount("appOpenCount");
-
-let editors = [];
-
-export function rememberEditor(editor: any) {
-  editors = []; // TODO: for now we only have one editor
-  editors.push(editor);
-  // TODO: this is for tests
-  // @ts-ignore
-  window.ednaCurrentEditor = editor;
-}
-
-export function findEditorByView(view: any) {
-  for (let e of editors) {
-    if (e.view === view) {
-      return e;
-    }
-  }
-  return null;
-}

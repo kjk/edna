@@ -9,7 +9,6 @@
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
   import { loadNote, saveNote } from "../notes";
   import { getSettings } from "../settings.svelte";
-  import { rememberEditor } from "../state";
   import { objectEqualDeep, throwIf } from "../util";
 
   interface Props {
@@ -146,7 +145,6 @@
       defaultBlockToken: "text",
       defaultBlockAutoDetect: true,
     });
-    rememberEditor(editor);
 
     loadNote(currentNoteName).then((content) => {
       editor.setContent(content || "");
