@@ -96,7 +96,7 @@ export function ednaKeymap(editor: EdnaEditor) {
     ["Mod-Shift-o", openCommandPalette],
     ["Mod-h", openQuickAccess],
     ["Mod-Shift-f", openFindInNotes],
-    ["Alt-Shift-f", formatBlockContent],
+    ["Alt-Shift-f", () => formatBlockContent(editor)],
     ["Mod-Alt-ArrowDown", newCursorBelow],
     ["Mod-Alt-ArrowUp", newCursorAbove],
     ["Alt-Mod-Shift-ArrowUp", moveCurrentBlockUp],

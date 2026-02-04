@@ -1,6 +1,6 @@
 import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { findEditorByView } from "../../state";
+import type { EdnaEditor } from "../editor";
 import {
   getLanguage,
   langGetPrettierInfo,
@@ -32,7 +32,8 @@ async function formatGo(s: string): Promise<string | null> {
   return res.Body;
 }
 
-export async function formatBlockContent(view: EditorView): Promise<boolean> {
+export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
+  const view = editor.view;
   const { state } = view;
   if (state.readOnly) return false;
   const block = getActiveNoteBlock(state);
@@ -46,7 +47,6 @@ export async function formatBlockContent(view: EditorView): Promise<boolean> {
   const content = state.sliceDoc(block.content.from, block.content.to);
 
   // console.log("prettier supports:", getSupportInfo());
-  let editor = findEditorByView(view);
   if (language.token == "golang") {
     // formatGo() is async so we need to prevent changes to the state of the editor
     // we make it read-only

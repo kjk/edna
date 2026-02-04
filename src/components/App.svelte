@@ -1651,8 +1651,7 @@
   }
 
   function formatCurrentBlock() {
-    let view = getEditorView();
-    formatBlockContent(view);
+    formatBlockContent(getEditor());
     logNoteOp("noteFormatBlock");
   }
 
