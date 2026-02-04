@@ -1,8 +1,8 @@
 import { Decoration, EditorView, MatchDecorator, ViewPlugin, ViewUpdate, type DecorationSet } from "@codemirror/view";
-import { platform } from "../util";
+import { isMac } from "./cmutils";
 
-const modChar = platform.isMac ? "⌘" : "Ctrl";
-const eventKeyModAttribute = platform.isMac ? "metaKey" : "ctrlKey";
+const modChar = isMac() ? "⌘" : "Ctrl";
+const eventKeyModAttribute = isMac() ? "metaKey" : "ctrlKey";
 
 const linkMatcher = new MatchDecorator({
   regexp: /https?:\/\/[^\s\)]+/gi,

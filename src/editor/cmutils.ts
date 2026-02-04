@@ -4,6 +4,19 @@ import { foldState } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
+// Platform detection
+const nav = typeof window !== "undefined" ? window.navigator : null;
+// @ts-ignore
+const uaPlatform = nav?.userAgentData?.platform || nav?.platform || "Win";
+
+export function isMac(): boolean {
+  return uaPlatform.indexOf("Win") === -1 && uaPlatform.indexOf("Linux") === -1;
+}
+
+export function isWindows(): boolean {
+  return uaPlatform.indexOf("Win") !== -1;
+}
+
 export function isReadOnly(view: EditorView): boolean {
   return view.state.readOnly;
 }

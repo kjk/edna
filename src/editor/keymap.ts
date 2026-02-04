@@ -1,7 +1,7 @@
 import { indentLess, indentMore, redo } from "@codemirror/commands";
 import { foldCode, unfoldCode } from "@codemirror/language";
 import { keymap } from "@codemirror/view";
-import { platform } from "../util";
+import { isMac, isWindows } from "./cmutils";
 import {
   addNewBlockAfterCurrent,
   addNewBlockAfterLast,
@@ -30,7 +30,6 @@ import { insertDateAndTime } from "./date-time";
 import type { EdnaEditor } from "./editor";
 import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
 
-const isMac = platform.isMac;
 
 export function keymapFromSpec(specs: any[]) {
   return keymap.of(
@@ -93,7 +92,7 @@ export function ednaKeymap(editor: EdnaEditor) {
     },
 
     // fold blocks
-    ...(isMac
+    ...(isMac()
       ? [
           {
             key: "Mod-Shift-[",
@@ -143,7 +142,7 @@ export function ednaKeymap(editor: EdnaEditor) {
   // for some reason CodeMirror uses Ctrl + Y on Windows
   // and only binds Mod-Shift-z on Mac and Linux
   // Windows editors also use Ctrl-Shift-z
-  if (platform.isWindows) {
+  if (isWindows()) {
     spec.push(["Mod-Shift-z", redo]);
   }
 
