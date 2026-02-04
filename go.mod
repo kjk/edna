@@ -5,7 +5,7 @@ go 1.24.3
 require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/felixge/httpsnoop v1.0.4
-	github.com/kjk/common v0.0.0-20260110152255-a7018ca0be57
+	github.com/kjk/common v0.0.0-20260204150548-353351f0b9aa
 	github.com/melbahja/goph v1.4.0
 	github.com/pkg/sftp v1.13.10
 	github.com/toon-format/toon-go v0.0.0-20251202084852-7ca0e27c4e8c

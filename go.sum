@@ -9,6 +9,8 @@ github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/kjk/common v0.0.0-20260110152255-a7018ca0be57 h1:zs27opaLCKmtxa9ntBANmXHB/DZ08yiXTV6+EXecfTA=
 github.com/kjk/common v0.0.0-20260110152255-a7018ca0be57/go.mod h1:ZsGvwWU+ai3Mp65NrFAM4BnLWS9vwF6Z0/GGpitT/5w=
+github.com/kjk/common v0.0.0-20260204150548-353351f0b9aa h1:+rINkWzuhqYS8DayT9jqT2fAdTszMRgtTB27NiEVk2k=
+github.com/kjk/common v0.0.0-20260204150548-353351f0b9aa/go.mod h1:QuRdNMRMxZD7BOmD+sA/2FBNbEkcg8ZJnMFpq5oe0As=
 github.com/klauspost/compress v1.18.2 h1:iiPHWW0YrcFgpBYhsA6D1+fqHssJscY/Tm/y2Uqnapk=
 github.com/klauspost/compress v1.18.2/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/klauspost/compress v1.18.3 h1:9PJRvfbmTabkOX8moIpXPbMMbYN60bWImDDU7L+/6zw=

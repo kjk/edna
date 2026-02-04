@@ -11,10 +11,6 @@ func serveInternalError(w http.ResponseWriter, err error) {
 	io.WriteString(w, err.Error())
 }
 
-func tempRedirect(w http.ResponseWriter, r *http.Request, newURL string) {
-	http.Redirect(w, r, newURL, http.StatusTemporaryRedirect)
-}
-
 func serveJSONData(w http.ResponseWriter, data []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)

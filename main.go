@@ -8,6 +8,9 @@ import (
 var (
 	//go:embed dist/*
 	distFS embed.FS
+
+	// set when building for deploying
+	GitCommitHash string
 )
 
 func main() {

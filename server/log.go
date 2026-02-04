@@ -149,10 +149,6 @@ func closeLogging() {
 	closeWriteLog(&eventsLog)
 }
 
-var (
-	verbose bool
-)
-
 func logf(s string, args ...any) {
 	if len(args) > 0 {
 		s = fmt.Sprintf(s, args...)
@@ -183,42 +179,12 @@ func getCallstack(skip int) string {
 	return strings.Join(frames, "\n")
 }
 
-func verbosef(format string, args ...any) {
-	if !verbose {
-		return
-	}
-	logf(format, args...)
-}
-
 func logErrorf(s string, args ...any) {
 	if len(args) > 0 {
 		s = fmt.Sprintf(s, args...)
 	}
 	cs := getCallstack(1)
 	fmt.Printf("%s\n%s\n", s, cs)
-}
-
-// if err != nil, log and return true
-// logIfErrf(err) => logs err.Error()
-// logIfErrf(err, "error is: %v", err) => logs message formatted
-func logIfErrf(err error, a ...any) bool {
-	if err == nil {
-		return false
-	}
-	if len(a) == 0 {
-		logErrorf(err.Error())
-		return true
-	}
-	s, ok := a[0].(string)
-	if !ok {
-		// shouldn't happen but just in case
-		s = fmt.Sprintf("%s", a[0])
-	}
-	if len(a) > 1 {
-		s = fmt.Sprintf(s, a[1:]...)
-	}
-	logErrorf(s)
-	return true
 }
 
 func logEvent(name string, vals []any) {
@@ -288,16 +254,6 @@ func logEventFromRequest(r *http.Request, name string, vals []any, timeStart tim
 		vals = append(vals, "durmicro", toMicroseconds(dur))
 	}
 
-	logEvent(name, vals)
-}
-
-func logErrorEventFromRequest(r *http.Request, name string, vals []any, err error, timeStart time.Time) {
-	vals = appendRequestValues(vals, r)
-	vals = append(vals, "error", err.Error())
-	if !timeStart.IsZero() {
-		dur := time.Since(timeStart)
-		vals = append(vals, "durmicro", toMicroseconds(dur))
-	}
 	logEvent(name, vals)
 }
 

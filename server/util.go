@@ -6,46 +6,24 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
-	"os/signal"
-	"path/filepath"
-	"syscall"
 
 	"github.com/kjk/common/u"
 )
 
 var (
-	f          = fmt.Sprintf
 	e          = fmt.Errorf
 	must       = u.Must
 	panicIf    = u.PanicIf
-	panicIfErr = u.PanicIfErr
 	isWinOrMac = u.IsWinOrMac
-	formatSize = u.FormatSize
 )
 
 func ctx() context.Context {
 	return context.Background()
 }
 
-func push[S ~[]E, E any](s *S, els ...E) {
-	*s = append(*s, els...)
-}
-
-func copyFilesRecurMust(srcDir, dstDir string) {
-	logf("copyFilesRecurMust('%s', '%s')\n", srcDir, dstDir)
-	srcDirLen := len(srcDir)
-	nCopied := 0
-	onFile := func(path string, de fs.DirEntry) (bool, error) {
-		dstPath := filepath.Join(dstDir, path[srcDirLen:])
-		err := u.CopyFile(dstPath, path)
-		panicIfErr(err)
-		//logf("copied '%s' to '%s'\n", path, dstPath)
-		nCopied++
-		return false, nil
-	}
-	u.IterDir(srcDir, onFile)
-	logf("copied %d files\n", nCopied)
-}
+// func push[S ~[]E, E any](s *S, els ...E) {
+// 	*s = append(*s, els...)
+// }
 
 func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {
 	cmd := exec.Command(exe, args...)
@@ -62,13 +40,6 @@ func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {
 	}, nil
 }
 
-func waitForSigIntOrKill() {
-	// Ctrl-C sends SIGINT
-	sctx, stop := signal.NotifyContext(ctx(), os.Interrupt /*SIGINT*/, os.Kill /* SIGKILL */, syscall.SIGTERM)
-	defer stop()
-	<-sctx.Done()
-}
-
 func printFS(fsys fs.FS) {
 	logf("printFS('%v')\n", fsys)
 	dfs := fsys.(fs.ReadDirFS)
@@ -80,30 +51,6 @@ func printFS(fsys fs.FS) {
 	})
 	logf("%d files\n", nFiles)
 	panicIf(nFiles == 0)
-}
-
-func updateGoDeps(noProxy bool) {
-	{
-		cmd := exec.Command("go", "get", "-u", ".")
-		cmd.Dir = "."
-		if noProxy {
-			cmd.Env = append(os.Environ(), "GOPROXY=direct")
-		}
-		logf("running: %s in dir '%s'\n", cmd.String(), cmd.Dir)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		panicIf(err != nil, "go get failed with '%s'", err)
-	}
-	{
-		cmd := exec.Command("go", "mod", "tidy")
-		cmd.Dir = "."
-		logf("running: %s in dir '%s'\n", cmd.String(), cmd.Dir)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		panicIf(err != nil, "go get failed with '%s'", err)
-	}
 }
 
 func runLoggedInDir(dir string, exe string, args ...string) error {

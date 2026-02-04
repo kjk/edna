@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"embed"
-	_ "embed"
 	"fmt"
 	"io"
 	"io/fs"
@@ -11,7 +10,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path"
 	"path/filepath"
@@ -28,8 +26,6 @@ import (
 
 var (
 	DistFS embed.FS
-	//go:embed secrets.env
-	secretsEnv []byte
 )
 
 var (
@@ -226,7 +222,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		IdleTimeout:  120 * time.Second,
 		Handler:      http.HandlerFunc(handlerWithMetrics),
 	}
-	httpAddr := fmt.Sprintf(":%d", httpPort)
+	httpAddr := fmt.Sprintf(":%d", deployConfig.HTTPPort)
 	if isWinOrMac() {
 		httpAddr = "localhost" + httpAddr
 	}
@@ -298,7 +294,7 @@ func openBrowserForServerMust(httpSrv *http.Server) {
 	u.OpenBrowser("http://" + httpSrv.Addr)
 }
 
-func mkFsysEmbedded() fs.FS {
+func mkFsysEmbedded() fs.ReadDirFS {
 	printFS(DistFS)
 	logf("mkFsysEmbedded: serving from embedded FS\n")
 	return DistFS
@@ -331,17 +327,10 @@ func runServerDev() {
 	// must be same as vite.config.js
 
 	logf("runServerDev\n")
-	if hasBun() {
-		runLoggedInDir(".", "bun", "install")
-		closeDev, err := startLoggedInDir(".", "bun", "run", "dev")
-		must(err)
-		defer closeDev()
-	} else {
-		runLoggedInDir(".", "npm")
-		closeDev, err := startLoggedInDir(".", "npm", "dev")
-		must(err)
-		defer closeDev()
-	}
+	runLoggedInDir(".", "bun", "install")
+	closeDev, err := startLoggedInDir(".", "bun", "run", "dev")
+	must(err)
+	defer closeDev()
 
 	proxyURL, err := url.Parse(proxyURLStr)
 	must(err)
@@ -362,8 +351,9 @@ func runServerDev() {
 func runServerProd() {
 	testingProd := isWinOrMac()
 
-	fsys := mkFsysEmbedded()
-	checkHasEmbeddedFilesMust()
+	var fsys fs.ReadDirFS = mkFsysEmbedded()
+	// u.CountFilesInFS(fsys)
+	// checkHasEmbeddedFilesMust()
 
 	serveOpts := mkServeFileOptions(fsys)
 	httpSrv := makeHTTPServer(serveOpts, nil)
@@ -373,32 +363,4 @@ func runServerProd() {
 		openBrowserForServerMust(httpSrv)
 	}
 	waitFn()
-}
-
-func testRunServerProd() {
-	if !isWinOrMac() {
-		logf("testRunServerProd: not running on Windows or Mac, skipping\n")
-		return
-	}
-	logf("testRunServerProd\n")
-
-	exeName := buildForProd(false)
-	exeSize := u.FormatSize(u.FileSize(exeName))
-	logf("created:\n%s %s\n", exeName, exeSize)
-
-	cmd := exec.Command("./"+exeName, "-run-prod")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Start()
-	must(err)
-
-	u.WaitForSigIntOrKill()
-	if cmd.ProcessState != nil && cmd.ProcessState.Exited() {
-		logf("testRunServerProd: cmd already exited\n")
-	} else {
-		logf("testRunServerProd: killing cmd\n")
-		err = cmd.Process.Kill()
-		must(err)
-	}
-	logf("testRunServerProd: cmd killed\n")
 }
