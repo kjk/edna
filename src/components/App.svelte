@@ -30,6 +30,7 @@
   import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime, insertTime } from "../editor/date-time";
   import { EdnaEditor } from "../editor/editor";
+  import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import {
     foldAllBlocks,
@@ -258,6 +259,26 @@
     requestFileWritePermission: requestFileWritePermission,
   };
   setGlobalFuncs(gf);
+
+  // External keymap bindings that require App-level functions
+  let extraKeymap: KeymapSpec = [
+    ["Mod-l", openLanguageSelector],
+    ["Mod-e", smartRun],
+    ["Alt-Shift-r", () => openFunctionSelector(false)],
+    ["Mod-b", () => openBlockSelector()],
+    ["Mod-k", openNoteSelector],
+    ["Mod-o", openNoteSelector],
+    ["Mod-p", openNoteSelector],
+    ["Mod-Shift-p", openCommandPalette],
+    ["Mod-Shift-k", openCommandPalette],
+    ["Mod-Shift-o", openCommandPalette],
+    ["Mod-h", openQuickAccess],
+    ["Mod-Shift-f", openFindInNotes],
+  ];
+  // Alt-n for create scratch note only on non-Mac (Option-n is used for accented characters on Mac)
+  if (!isMac) {
+    extraKeymap.push(["Alt-n", createScratchNote]);
+  }
 
   $effect(() => {
     getEditorComp().setSpellChecking(isSpellChecking);
@@ -2071,6 +2092,7 @@
     class="row-start-2 col-start-2"
     cursorChange={onCursorChange}
     debugSyntaxTree={false}
+    {extraKeymap}
     {didLoadNote}
     {docDidChange}
     bind:this={editorRef}

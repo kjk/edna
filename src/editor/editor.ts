@@ -11,7 +11,7 @@ import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs";
 import { createDynamicCloseBracketsExtension } from "./extensions";
 import { foldGutterExtension, unfoldEverything } from "./fold-gutter";
-import { ednaKeymap } from "./keymap";
+import { ednaKeymap, keymapFromSpec } from "./keymap";
 import { heynoteLang } from "./lang-heynote/heynote";
 import { languageDetection } from "./language-detection/autodetect";
 import { links } from "./links";
@@ -23,18 +23,22 @@ import { getFontTheme } from "./theme/font-theme";
 import { heynoteLight } from "./theme/light";
 import { todoCheckboxPlugin } from "./todo-checkbox";
 
-function getKeymapExtensions(editor: EdnaEditor, keymap: string) {
-  if (keymap === "emacs") {
-    return emacsKeymap(editor);
-  } else {
-    return ednaKeymap(editor);
+// Keymap spec type for external keybindings
+export type KeymapSpec = Array<[string, () => void] | { key: string; run: () => void; shift?: () => void }>;
+
+function getKeymapExtensions(editor: EdnaEditor, keymap: string, extraKeymap?: KeymapSpec) {
+  const baseKeymap = keymap === "emacs" ? emacsKeymap(editor) : ednaKeymap(editor);
+  if (extraKeymap && extraKeymap.length > 0) {
+    return [baseKeymap, keymapFromSpec(extraKeymap)];
   }
+  return baseKeymap;
 }
 
 interface EdnaEditorConfig {
   element: HTMLElement;
   save: (content: string) => Promise<void>;
   setIsDirty: (dirty: boolean) => void;
+  extraKeymap?: KeymapSpec;
   focus?: boolean;
   theme?: "light" | "dark";
   keymap?: "default" | "emacs";
@@ -65,6 +69,7 @@ export class EdnaEditor {
   fontTheme: Compartment;
   saveCallback: (content: string) => Promise<void>;
   setIsDirtyCallback: (dirty: boolean) => void;
+  extraKeymapSpec: KeymapSpec;
   view: EditorView;
   diskContent: string = "";
   defaultBlockToken: string = "";
@@ -73,6 +78,7 @@ export class EdnaEditor {
     element,
     save,
     setIsDirty,
+    extraKeymap,
     focus = true,
     theme = "light",
     keymap = "default",
@@ -101,6 +107,7 @@ export class EdnaEditor {
     this.deselectOnCopy = keymap === "emacs";
     this.emacsMetaKey = emacsMetaKey;
     this.fontTheme = new Compartment();
+    this.extraKeymapSpec = extraKeymap || [];
     this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
 
     const makeTabState = (useTabs: boolean, tabSize: number) => {
@@ -120,7 +127,7 @@ export class EdnaEditor {
       doc: "",
       extensions: [
         updateListenerExtension,
-        this.keymapCompartment.of(getKeymapExtensions(this, keymap)),
+        this.keymapCompartment.of(getKeymapExtensions(this, keymap, this.extraKeymapSpec)),
         heynoteCopyCut(this),
 
         //minimalSetup,
@@ -289,7 +296,7 @@ export class EdnaEditor {
     this.deselectOnCopy = keymap === "emacs";
     this.emacsMetaKey = emacsMetaKey;
     this.view.dispatch({
-      effects: this.keymapCompartment.reconfigure(getKeymapExtensions(this, keymap)),
+      effects: this.keymapCompartment.reconfigure(getKeymapExtensions(this, keymap, this.extraKeymapSpec)),
     });
   }
 

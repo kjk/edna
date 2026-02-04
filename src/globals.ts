@@ -35,52 +35,12 @@ export function setGlobalFuncs(gf: GlobalFuncs) {
   globalFunctions = gf;
 }
 
-export function openSettings() {
-  globalFunctions.openSettings();
-}
-
 export function openLanguageSelector() {
   globalFunctions.openLanguageSelector();
 }
 
-export function openCreateNewNote() {
-  globalFunctions.openCreateNewNote();
-}
-
 export function openNoteSelector() {
   globalFunctions.openNoteSelector();
-}
-
-export function openCommandPalette() {
-  globalFunctions.openCommandPalette();
-}
-
-export function openContextMenu(ev: MouseEvent) {
-  globalFunctions.openContextMenu(ev);
-}
-
-export function openQuickAccess() {
-  globalFunctions.openQuickAccess();
-}
-
-export function createScratchNote() {
-  globalFunctions.createScratchNote();
-}
-
-export function openBlockSelector() {
-  globalFunctions.openBlockSelector();
-}
-
-export function openFunctionSelector(onSelection = false) {
-  globalFunctions.openFunctionSelector(onSelection);
-}
-
-export function openFindInNotes() {
-  globalFunctions.openFindInNotes();
-}
-
-export function smartRun() {
-  globalFunctions.smartRun();
 }
 
 export function focusEditor() {

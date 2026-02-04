@@ -11,14 +11,17 @@
   import { getSettings } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
 
+  import type { KeymapSpec } from "../editor/editor";
+
   interface Props {
     class?: string;
     debugSyntaxTree: boolean;
+    extraKeymap?: KeymapSpec;
     cursorChange: (e: SelectionChangeEvent) => void;
     docDidChange: () => void;
     didLoadNote: (name: string, noPushHistory: boolean) => void;
   }
-  let { class: klass = "", debugSyntaxTree, cursorChange, docDidChange, didLoadNote }: Props = $props();
+  let { class: klass = "", debugSyntaxTree, extraKeymap, cursorChange, docDidChange, didLoadNote }: Props = $props();
 
   let syntaxTreeDebugContent = $state(null);
   let settings = getSettings();
@@ -136,6 +139,7 @@
       element: editorRef,
       save: saveCurrentNote,
       setIsDirty: setIsDirty,
+      extraKeymap: extraKeymap,
       theme: theme,
       keymap: keymap,
       emacsMetaKey: emacsMetaKey,

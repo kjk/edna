@@ -1,17 +1,6 @@
 import { indentLess, indentMore, redo } from "@codemirror/commands";
 import { foldCode, unfoldCode } from "@codemirror/language";
 import { keymap } from "@codemirror/view";
-import {
-  createScratchNote,
-  openBlockSelector,
-  openCommandPalette,
-  openFindInNotes,
-  openFunctionSelector,
-  openLanguageSelector,
-  openNoteSelector,
-  openQuickAccess,
-  smartRun,
-} from "../globals";
 import { platform } from "../util";
 import {
   addNewBlockAfterCurrent,
@@ -79,23 +68,6 @@ export function ednaKeymap(editor: EdnaEditor) {
     ["Mod-a", selectAll],
     ["Alt-ArrowUp", moveLineUp],
     ["Alt-ArrowDown", moveLineDown],
-    ["Mod-l", openLanguageSelector],
-    ["Mod-e", smartRun],
-    [
-      "Alt-Shift-r",
-      () => {
-        openFunctionSelector(false);
-      },
-    ],
-    ["Mod-b", openBlockSelector],
-    ["Mod-k", openNoteSelector],
-    ["Mod-o", openNoteSelector],
-    ["Mod-p", openNoteSelector],
-    ["Mod-Shift-p", openCommandPalette],
-    ["Mod-Shift-k", openCommandPalette],
-    ["Mod-Shift-o", openCommandPalette],
-    ["Mod-h", openQuickAccess],
-    ["Mod-Shift-f", openFindInNotes],
     ["Alt-Shift-f", () => formatBlockContent(editor)],
     ["Mod-Alt-ArrowDown", newCursorBelow],
     ["Mod-Alt-ArrowUp", newCursorAbove],
@@ -173,11 +145,6 @@ export function ednaKeymap(editor: EdnaEditor) {
   // Windows editors also use Ctrl-Shift-z
   if (platform.isWindows) {
     spec.push(["Mod-Shift-z", redo]);
-  }
-  if (!platform.isMac) {
-    // I don't have a good Mac keybinding for this. Option-n is used to enter
-    // accented characters.
-    spec.push(["Alt-n", createScratchNote]);
   }
 
   return keymapFromSpec(spec);
