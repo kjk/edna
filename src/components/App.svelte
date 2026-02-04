@@ -94,7 +94,6 @@
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import type { CapturingEval } from "../run";
   import { getSettings } from "../settings.svelte";
-  import { findEditorByView } from "../state";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,
@@ -227,13 +226,6 @@
   $effect(() => {
     isMoving.disableMoveTracking = isShowingDialog;
   });
-
-  function setReadOnly(view: EditorView, ro: boolean) {
-    let editor = findEditorByView(view);
-    if (editor) {
-      editor.setReadOnly(ro);
-    }
-  }
 
   function openFindInNotes() {
     showingFindInNotes = true;
@@ -1669,7 +1661,8 @@
     insertAfterActiveBlock(view, text);
   }
 
-  export async function runBlockContent(view: EditorView): Promise<boolean> {
+  export async function runBlockContent(editor: EdnaEditor): Promise<boolean> {
+    const view = editor.view;
     const { state } = view;
     if (isReadOnly(view)) {
       return false;
@@ -1684,7 +1677,7 @@
     const content = state.sliceDoc(block.content.from, block.content.to);
 
     showModalMessageHTML("running code", 300);
-    setReadOnly(view, true);
+    editor.setReadOnly(true);
     let output = "";
     let token = lang.token;
     let res: CapturingEval = null;
@@ -1695,7 +1688,7 @@
     } else {
       output = `Error: invalid block lang ${lang.token}`;
     }
-    setReadOnly(view, false);
+    editor.setReadOnly(false);
     clearModalMessage();
 
     output = evalResultToString(res);
@@ -1714,7 +1707,8 @@
     return true;
   }
 
-  export async function runBlockContentWithArg(view: EditorView, arg: string): Promise<boolean> {
+  export async function runBlockContentWithArg(editor: EdnaEditor, arg: string): Promise<boolean> {
+    const view = editor.view;
     const { state } = view;
     if (isReadOnly(view)) {
       return false;
@@ -1730,7 +1724,7 @@
     const content = state.sliceDoc(from, to);
 
     showModalMessageHTML("running code", 300);
-    setReadOnly(view, true);
+    editor.setReadOnly(true);
 
     let res: CapturingEval = null;
     let token = lang.token;
@@ -1744,7 +1738,7 @@
         exception: `Error: unspported language '${token}'`,
       };
     }
-    setReadOnly(view, false);
+    editor.setReadOnly(false);
     clearModalMessage();
 
     let output = evalResultToString(res);
@@ -1764,9 +1758,9 @@
   }
 
   function runCurrentBlock() {
-    let view = getEditorView();
-    runBlockContent(view);
-    view.focus();
+    let editor = getEditor();
+    runBlockContent(editor);
+    editor.focus();
     logNoteOp("runBlock");
   }
 
@@ -1776,12 +1770,12 @@
     console.log(argBlockItem);
     closeDialogs();
     let n = argBlockItem.key;
-    let view = getEditorView();
-    let state = view.state;
+    let editor = getEditor();
+    let state = editor.view.state;
     let blockArg = getBlockN(state, n);
     let arg = state.sliceDoc(blockArg.content.from, blockArg.content.to);
-    runBlockContentWithArg(view, arg);
-    view.focus();
+    runBlockContentWithArg(editor, arg);
+    editor.focus();
     logNoteOp("runBlockWithBlock");
   }
 
@@ -1801,13 +1795,13 @@
   }
 
   async function runCurrentBlockWithClipboard() {
-    let view = getEditorView();
-    if (!currentBlockSupportsRun(view.state)) {
+    let editor = getEditor();
+    if (!currentBlockSupportsRun(editor.view.state)) {
       return;
     }
     let arg = await getClipboardText();
-    runBlockContentWithArg(view, arg);
-    view.focus();
+    runBlockContentWithArg(editor, arg);
+    editor.focus();
     logNoteOp("runBlockWithClipboard");
   }
 
