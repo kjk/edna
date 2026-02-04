@@ -41,6 +41,7 @@
     unfoldEverything,
   } from "../editor/fold-gutter";
   import { extForLang, getLanguage, langSupportsFormat, langSupportsRun } from "../editor/languages";
+  import { setDefaultFontFamilyAndSize } from "../editor/theme/font-theme";
   import { toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, hasHandlePermission, openDirPicker, supportsFileSystem } from "../fileutil";
   import { parseUserFunctions, runBoopFunction } from "../functions";
@@ -94,7 +95,7 @@
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import type { CapturingEval } from "../run";
-  import { getSettings } from "../settings.svelte";
+  import { getSettings, kDefaultFontFamily, kDefaultFontSize } from "../settings.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,
@@ -142,6 +143,9 @@
   import TopNav from "./TopNav.svelte";
 
   const isMac = platform.isMac;
+
+  // Initialize default font settings for the editor module
+  setDefaultFontFamilyAndSize(kDefaultFontFamily, kDefaultFontSize);
 
   let settings = getSettings();
 

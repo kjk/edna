@@ -1,6 +1,14 @@
 import { Facet } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { kDefaultFontFamily, kDefaultFontSize } from "../../settings.svelte";
+
+// Default font settings, initialized by App.svelte via setDefaultFontFamilyAndSize()
+let defaultFontFamily = "monospace";
+let defaultFontSize = 14;
+
+export function setDefaultFontFamilyAndSize(fontFamily: string, fontSize: number) {
+  defaultFontFamily = fontFamily;
+  defaultFontSize = fontSize;
+}
 
 /**
  * Check if the given font family is monospace by drawing test characters on a canvas
@@ -26,13 +34,13 @@ export const isMonospaceFont = Facet.define({
 let hardcodedMonospace = ["hack", "Cascadia Code", "Consolas", "monospace"];
 
 export function getFontTheme(fontFamily: string, fontSize: number) {
-  fontSize = fontSize || kDefaultFontSize;
+  fontSize = fontSize || defaultFontSize;
 
   // quote fontFamily name in case it has spaces in it
   // provide monospace fallback if the font doesn't exist (e.g. Linux)
   // fontFamily = `'${fontFamily}', monospace`;
   // console.log("getFontTheme:", fontFamily);
-  const computedFontFamily = fontFamily || kDefaultFontFamily;
+  const computedFontFamily = fontFamily || defaultFontFamily;
 
   return [
     EditorView.theme({
