@@ -315,7 +315,7 @@ export class EdnaEditor {
     return this.view.state.selection.main.head;
   }
 
-  setCursorPosition(position) {
+  setCursorPosition(position: number) {
     this.view.dispatch({
       selection: { anchor: position, head: position },
       scrollIntoView: true,
