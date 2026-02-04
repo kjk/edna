@@ -1,7 +1,7 @@
 import { codeFolding, foldedRanges, foldEffect, foldGutter, foldState, unfoldEffect } from "@codemirror/language";
 import { RangeSet } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { FOLD_LABEL_LENGTH } from "../common/constants";
+import { FOLD_LABEL_LENGTH } from "./constants";
 import {
   ADD_NEW_BLOCK,
   heynoteEvent,
