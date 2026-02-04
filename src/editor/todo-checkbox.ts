@@ -111,7 +111,7 @@ export const todoCheckboxPlugin = [
       decorations: (v) => v.decorations,
 
       provide: (plugin) =>
-        EditorView.atomicRanges.of((view) => {
+        EditorView.atomicRanges.of((view: EditorView) => {
           return view.plugin(plugin)?.decorations || Decoration.none;
         }),
 

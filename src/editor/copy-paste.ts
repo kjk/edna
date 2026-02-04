@@ -1,14 +1,11 @@
-import { EditorState, EditorSelection } from "@codemirror/state";
+import { EditorSelection, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-
-import { kLanguages } from "./languages";
+import type { EdnaEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
+import { kLanguages } from "./languages";
 
 const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
-const blockSeparatorRegex = new RegExp(
-  `\\n∞∞∞(${languageTokensMatcher})(-a)?\\n`,
-  "g",
-);
+const blockSeparatorRegex = new RegExp(`\\n∞∞∞(${languageTokensMatcher})(-a)?\\n`, "g");
 
 function copiedRange(state: EditorState) {
   let content = [],
@@ -135,12 +132,12 @@ function doPaste(view: EditorView, input: string) {
   });
 }
 
-export function copyCommand(editor: any) {
-  return (view) => copyCut(view, false, editor);
+export function copyCommand(editor: EdnaEditor) {
+  return (view: EditorView) => copyCut(view, false, editor);
 }
 
-export function cutCommand(editor: any) {
-  return (view) => copyCut(view, true, editor);
+export function cutCommand(editor: EdnaEditor) {
+  return (view: EditorView) => copyCut(view, true, editor);
 }
 
 export async function pasteCommand(view: EditorView) {

@@ -1,4 +1,5 @@
 import { EditorSelection } from "@codemirror/state";
+import type { EditorView } from "@codemirror/view";
 import { getActiveNoteBlock } from "./block";
 
 function updateSel(sel, by) {
@@ -11,8 +12,7 @@ function selectedLineBlocks(state) {
   for (let range of state.selection.ranges) {
     let startLine = state.doc.lineAt(range.from),
       endLine = state.doc.lineAt(range.to);
-    if (!range.empty && range.to == endLine.from)
-      endLine = state.doc.lineAt(range.to - 1);
+    if (!range.empty && range.to == endLine.from) endLine = state.doc.lineAt(range.to - 1);
     if (upto >= startLine.number) {
       let prev = blocks[blocks.length - 1];
       prev.to = endLine.to;
@@ -25,7 +25,7 @@ function selectedLineBlocks(state) {
   return blocks;
 }
 
-export const deleteLine = (view) => {
+export const deleteLine = (view: EditorView) => {
   if (view.state.readOnly) return false;
 
   // console.log("deleteLine: started");
@@ -44,9 +44,7 @@ export const deleteLine = (view) => {
     }),
   );
 
-  const selection = updateSel(state.selection, (range) =>
-    view.moveVertically(range, true),
-  ).map(changes);
+  const selection = updateSel(state.selection, (range) => view.moveVertically(range, true)).map(changes);
   view.dispatch({
     changes,
     selection,

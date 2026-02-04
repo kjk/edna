@@ -2,6 +2,7 @@ import { ensureSyntaxTree, syntaxTreeAvailable } from "@codemirror/language";
 import { EditorState, RangeSet, RangeSetBuilder, StateField } from "@codemirror/state";
 import { Decoration, EditorView, layer, lineNumbers, RectangleMarker, ViewPlugin, WidgetType } from "@codemirror/view";
 import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation";
+import type { EdnaEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
 import { firstBlockDelimiterSize, getBlocksFromString, getBlocksFromSyntaxTree } from "./block-parsing";
 import { mathBlock } from "./math";
@@ -374,7 +375,7 @@ function getSelectionSize(state: EditorState, sel: any): number {
   return count;
 }
 
-const emitCursorChange = (editor) =>
+const emitCursorChange = (editor: EdnaEditor) =>
   ViewPlugin.fromClass(
     class {
       update(update) {
@@ -404,7 +405,7 @@ const emitCursorChange = (editor) =>
     },
   );
 
-export const noteBlockExtension = (editor) => {
+export const noteBlockExtension = (editor: EdnaEditor) => {
   return [
     blockState,
     noteBlockWidget(),

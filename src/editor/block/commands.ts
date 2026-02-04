@@ -1,4 +1,5 @@
-import { EditorSelection, Transaction } from "@codemirror/state";
+import { EditorSelection, EditorState, Transaction } from "@codemirror/state";
+import type { EditorView } from "@codemirror/view";
 import {
   ADD_NEW_BLOCK,
   CURRENCIES_LOADED,
@@ -7,6 +8,7 @@ import {
   LANGUAGE_CHANGE,
   MOVE_BLOCK,
 } from "../annotation";
+import type { EdnaEditor } from "../editor";
 import { blockState, getActiveNoteBlock, getFirstNoteBlock, getLastNoteBlock, getNoteBlockFromPos } from "./block";
 import { moveLineDown, moveLineUp } from "./move-lines";
 import { selectAll } from "./select-all";
@@ -17,7 +19,7 @@ export function getBlockDelimiter(defaultToken: string, autoDetect: boolean): st
   return `\n∞∞∞${autoDetect ? defaultToken + "-a" : defaultToken}\n`;
 }
 
-export function insertNewBlockAtCursor({ state, dispatch }) {
+export function insertNewBlockAtCursor({ state, dispatch }: EditorView) {
   if (state.readOnly) return false;
 
   const currentBlock = getActiveNoteBlock(state);
@@ -35,7 +37,7 @@ export function insertNewBlockAtCursor({ state, dispatch }) {
   return true;
 }
 
-export function addNewBlockBeforeCurrent({ state, dispatch }) {
+export function addNewBlockBeforeCurrent({ state, dispatch }: EditorView) {
   if (state.readOnly) return false;
 
   const block = getActiveNoteBlock(state);
@@ -65,7 +67,7 @@ function isEmptyLineAtPosition(doc, pos) {
   return line.text === "";
 }
 
-export function addNewBlockAfterCurrent({ state, dispatch }) {
+export function addNewBlockAfterCurrent({ state, dispatch }: EditorView) {
   if (state.readOnly) return false;
 
   const block = getActiveNoteBlock(state);
@@ -105,7 +107,7 @@ export function addNewBlockAfterCurrent({ state, dispatch }) {
   return true;
 }
 
-export function addNewBlockBeforeFirst({ state, dispatch }) {
+export function addNewBlockBeforeFirst({ state, dispatch }: EditorView) {
   if (state.readOnly) return false;
 
   const block = getFirstNoteBlock(state);
@@ -130,7 +132,7 @@ export function addNewBlockBeforeFirst({ state, dispatch }) {
   return true;
 }
 
-export function addNewBlockAfterLast({ state, dispatch }) {
+export function addNewBlockAfterLast({ state, dispatch }: EditorView) {
   if (state.readOnly) return false;
   const block = getLastNoteBlock(state);
   const delimText = "\n∞∞∞text-a\n";
@@ -154,7 +156,7 @@ export function addNewBlockAfterLast({ state, dispatch }) {
 }
 
 // note: using state, dispatch because note all callers have view
-export function changeLanguageTo(state, dispatch, block, language, auto) {
+export function changeLanguageTo(state: EditorState, dispatch, block, language, auto) {
   if (state.readOnly) return false;
   const delimRegex = /^\n∞∞∞[a-z]+?(-a)?\n/g;
   if (state.doc.sliceString(block.delimiter.from, block.delimiter.to).match(delimRegex)) {
@@ -173,7 +175,7 @@ export function changeLanguageTo(state, dispatch, block, language, auto) {
   }
 }
 
-export function changeCurrentBlockLanguage(view, language, auto) {
+export function changeCurrentBlockLanguage(view: EditorView, language, auto) {
   const block = getActiveNoteBlock(view.state);
   changeLanguageTo(view.state, view.dispatch, block, language, auto);
 }
@@ -182,11 +184,11 @@ function updateSel(sel, by) {
   return EditorSelection.create(sel.ranges.map(by), sel.mainIndex);
 }
 
-function setSel(state, selection) {
+function setSel(state: EditorState, selection) {
   return state.update({ selection, scrollIntoView: true, userEvent: "select" });
 }
 
-function extendSel(state, dispatch, how) {
+function extendSel(state: EditorState, dispatch, how) {
   let selection = updateSel(state.selection, (range) => {
     let head = how(range);
     return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || undefined);
@@ -196,14 +198,14 @@ function extendSel(state, dispatch, how) {
   return true;
 }
 
-function moveSel(state, dispatch, how) {
+function moveSel(state: EditorState, dispatch, how) {
   let selection = updateSel(state.selection, how);
   if (selection.eq(state.selection)) return false;
   dispatch(setSel(state, selection));
   return true;
 }
 
-function previousBlock(state, range) {
+function previousBlock(state: EditorState, range) {
   const blocks = state.field(blockState);
   const block = getNoteBlockFromPos(state, range.head);
   if (range.head === block.content.from) {
@@ -215,7 +217,7 @@ function previousBlock(state, range) {
   }
 }
 
-function nextBlock(state, range) {
+function nextBlock(state: EditorState, range) {
   const blocks = state.field(blockState);
   const block = getNoteBlockFromPos(state, range.head);
   if (range.head === block.content.to) {
@@ -227,7 +229,7 @@ function nextBlock(state, range) {
   }
 }
 
-function nextBlockNo(index, state, range) {
+function nextBlockNo(index, state: EditorState, range) {
   const blocks = state.field(blockState);
   const block = blocks[index];
   if (range.head === block.content.to) {
@@ -238,28 +240,28 @@ function nextBlockNo(index, state, range) {
   }
 }
 
-export function gotoBlock(view, n) {
+export function gotoBlock(view: EditorView, n: number) {
   let { state, dispatch } = view;
   return moveSel(state, dispatch, (range) => nextBlockNo(n, state, range));
 }
 
-export function gotoNextBlock({ state, dispatch }) {
+export function gotoNextBlock({ state, dispatch }: EditorView) {
   return moveSel(state, dispatch, (range) => nextBlock(state, range));
 }
 
-export function selectNextBlock({ state, dispatch }) {
+export function selectNextBlock({ state, dispatch }: EditorView) {
   return extendSel(state, dispatch, (range) => nextBlock(state, range));
 }
 
-export function gotoPreviousBlock({ state, dispatch }) {
+export function gotoPreviousBlock({ state, dispatch }: EditorView) {
   return moveSel(state, dispatch, (range) => previousBlock(state, range));
 }
 
-export function selectPreviousBlock({ state, dispatch }) {
+export function selectPreviousBlock({ state, dispatch }: EditorView) {
   return extendSel(state, dispatch, (range) => previousBlock(state, range));
 }
 
-function previousParagraph(state, range) {
+function previousParagraph(state: EditorState, range) {
   const blocks = state.field(blockState);
   let block = getNoteBlockFromPos(state, range.head);
   const blockIndex = blocks.indexOf(block);
@@ -289,7 +291,7 @@ function previousParagraph(state, range) {
   return EditorSelection.cursor(block.content.from);
 }
 
-function nextParagraph(state, range) {
+function nextParagraph(state: EditorState, range) {
   const blocks = state.field(blockState);
   let block = getNoteBlockFromPos(state, range.head);
   const blockIndex = blocks.indexOf(block);
@@ -319,23 +321,23 @@ function nextParagraph(state, range) {
   return EditorSelection.cursor(block.content.to);
 }
 
-export function gotoNextParagraph({ state, dispatch }) {
+export function gotoNextParagraph({ state, dispatch }: EditorView) {
   return moveSel(state, dispatch, (range) => nextParagraph(state, range));
 }
 
-export function selectNextParagraph({ state, dispatch }) {
+export function selectNextParagraph({ state, dispatch }: EditorView) {
   return extendSel(state, dispatch, (range) => nextParagraph(state, range));
 }
 
-export function gotoPreviousParagraph({ state, dispatch }) {
+export function gotoPreviousParagraph({ state, dispatch }: EditorView) {
   return moveSel(state, dispatch, (range) => previousParagraph(state, range));
 }
 
-export function selectPreviousParagraph({ state, dispatch }) {
+export function selectPreviousParagraph({ state, dispatch }: EditorView) {
   return extendSel(state, dispatch, (range) => previousParagraph(state, range));
 }
 
-function newCursor(view, below) {
+function newCursor(view: EditorView, below: boolean) {
   const sel = view.state.selection;
   const ranges = sel.ranges;
 
@@ -358,15 +360,15 @@ function newCursor(view, below) {
   view.dispatch({ selection: newSelection });
 }
 
-export function newCursorBelow(view) {
+export function newCursorBelow(view: EditorView) {
   newCursor(view, true);
 }
 
-export function newCursorAbove(view) {
+export function newCursorAbove(view: EditorView) {
   newCursor(view, false);
 }
 
-export function triggerCurrenciesLoaded({ state, dispatch }) {
+export function triggerCurrenciesLoaded({ state, dispatch }: EditorView) {
   // Trigger empty change transaction that is annotated with CURRENCIES_LOADED
   // This will make Math blocks re-render so that currency conversions are applied
   dispatch(
@@ -377,15 +379,15 @@ export function triggerCurrenciesLoaded({ state, dispatch }) {
   );
 }
 
-export function moveCurrentBlockUp({ state, dispatch }) {
+export function moveCurrentBlockUp({ state, dispatch }: EditorView) {
   return moveCurrentBlock(state, dispatch, true);
 }
 
-export function moveCurrentBlockDown({ state, dispatch }) {
+export function moveCurrentBlockDown({ state, dispatch }: EditorView) {
   return moveCurrentBlock(state, dispatch, false);
 }
 
-function moveCurrentBlock(state, dispatch, up) {
+function moveCurrentBlock(state: EditorState, dispatch, up) {
   if (state.readOnly) {
     return false;
   }
@@ -439,8 +441,8 @@ function moveCurrentBlock(state, dispatch, up) {
 }
 
 export const deleteBlock =
-  (editor) =>
-  ({ state, dispatch }) => {
+  (editor: EdnaEditor) =>
+  ({ state, dispatch }: EditorView) => {
     const range = state.selection.asSingle().ranges[0];
     const blocks = state.field(blockState);
     let block;
@@ -484,8 +486,8 @@ export const deleteBlock =
   };
 
 export const deleteBlockSetCursorPreviousBlock =
-  (editor) =>
-  ({ state, dispatch }) => {
+  (editor: EdnaEditor) =>
+  ({ state, dispatch }: EditorView) => {
     const block = getActiveNoteBlock(state);
     const blocks = state.field(blockState);
     let replace = "";

@@ -52,7 +52,7 @@ export function setEmacsMarkMode(value: boolean) {
  * Return a command that will conditionally execute either the default command or the mark mode command
  */
 function emacsMoveCommand(defaultCmd: (view: EditorView) => boolean, markModeCmd: (view: EditorView) => boolean) {
-  return (view) => (emacsMarkMode ? markModeCmd(view) : defaultCmd(view));
+  return (view: EditorView) => (emacsMarkMode ? markModeCmd(view) : defaultCmd(view));
 }
 
 /**
@@ -73,10 +73,7 @@ function emacsSelectAll(view: EditorView) {
 
 function emacsMetaKeyCommand(key: string, editor: any, command: (view: EditorView) => boolean) {
   const handler = (view, event) => {
-    if (
-      (editor.emacsMetaKey === "meta" && event.metaKey) ||
-      (editor.emacsMetaKey === "alt" && event.altKey)
-    ) {
+    if ((editor.emacsMetaKey === "meta" && event.metaKey) || (editor.emacsMetaKey === "alt" && event.altKey)) {
       event.preventDefault();
       return command(view);
     } else {
@@ -160,7 +157,7 @@ export function emacsKeymap(editor: any) {
       keymapFromSpec([
         [
           "Ctrl-Space",
-          (view) => {
+          (view: EditorView) => {
             emacsMarkMode = !emacsMarkMode;
           },
         ],

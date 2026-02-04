@@ -11,6 +11,7 @@ import {
   transactionsHasHistoryEvent,
 } from "./annotation";
 import { delimiterRegexWithoutNewline, getBlocks, getNoteBlocksFromRangeSet } from "./block/block";
+import type { EdnaEditor } from "./editor";
 
 // This extension fixes so that a folded region is automatically unfolded if any changes happen
 // on either the start line or the end line of the folded region (even if the change is not within the folded region)
@@ -139,7 +140,7 @@ export function foldGutterExtension() {
   ];
 }
 
-export const toggleBlockFold = (editor) => (view: EditorView) => {
+export const toggleBlockFold = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = foldedRanges(state);
 
@@ -186,7 +187,7 @@ export const toggleBlockFold = (editor) => (view: EditorView) => {
   }
 };
 
-export const foldBlock = (editor) => (view) => {
+export const foldBlock = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const blockRanges = [];
 
@@ -207,7 +208,7 @@ export const foldBlock = (editor) => (view) => {
   }
 };
 
-export const unfoldBlock = (editor) => (view) => {
+export const unfoldBlock = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = foldedRanges(state);
   const blockFolds = [];
@@ -228,7 +229,7 @@ export const unfoldBlock = (editor) => (view) => {
   }
 };
 
-export const foldAllBlocks = (editor) => (view) => {
+export const foldAllBlocks = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const blockRanges = [];
 
@@ -249,7 +250,7 @@ export const foldAllBlocks = (editor) => (view) => {
   }
 };
 
-export const unfoldAlBlocks = (editor) => (view) => {
+export const unfoldAlBlocks = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = state.field(foldState, false) || RangeSet.empty;
   const blockFolds = [];
@@ -273,7 +274,7 @@ export const unfoldAlBlocks = (editor) => (view) => {
 // unlike unfoldAll() from @codemirror/language, this will unfold all folded regions
 // not just those related to code folding
 // this is emergency command, if folding gets screwed up
-export const unfoldEverything = (editor) => (view) => {
+export const unfoldEverything = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const foldRanges = state.field(foldState, false);
   // console.log("unfoldEverything: foldRanges:", foldRanges);

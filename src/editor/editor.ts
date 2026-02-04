@@ -149,7 +149,7 @@ export class EdnaEditor {
         drawSelection({ cursorBlinkRate: 1000 }),
 
         // add CSS class depending on dark/light theme
-        EditorView.editorAttributes.of((view) => {
+        EditorView.editorAttributes.of((view: EditorView) => {
           return {
             class: view.state.facet(EditorView.darkTheme) ? "dark-theme" : "light-theme",
           };
