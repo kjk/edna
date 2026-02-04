@@ -439,10 +439,10 @@
   }
 
   let fileWritePermissionsFileHandle: FileSystemFileHandle | undefined = $state();
-  let askFileWritePermissionsClose: (ok: boolean) => void | undefined = $state();
+  let askFileWritePermissionsClose: (ok: boolean) => void = $state();
 
   async function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
-    if (hasHandlePermission(fh, true)) {
+    if (await hasHandlePermission(fh, true)) {
       console.log("requestFileWritePermission: already have write permissions to", fh);
       return true;
     }
