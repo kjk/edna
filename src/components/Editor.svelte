@@ -5,6 +5,7 @@
   import { appState } from "../appstate.svelte";
   import { loadCurrencies } from "../currency";
   import { EdnaEditor } from "../editor/editor";
+  import { loadNote } from "../notes";
   import { getSettings } from "../settings.svelte";
   import { rememberEditor } from "../state";
   import { throwIf } from "../util";
@@ -114,10 +115,12 @@
       defaultBlockToken: "text",
       defaultBlockAutoDetect: true,
     });
-    editor.loadNotePromise.then(() => {
+    rememberEditor(editor);
+
+    loadNote(noteName).then(async (content) => {
+      await editor.loadContent(noteName, content || "");
       didLoadNote(noteName, false);
     });
-    rememberEditor(editor);
 
     loadCurrencies();
     setInterval(loadCurrencies, 1000 * 3600 * 4);
@@ -187,14 +190,10 @@
   export async function openNote(name: string, skipSave = false, noPushHistory = false) {
     console.log("openNote:", name);
     if (!skipSave) {
-      // TODO: this is async so let's hope it works
       await editor.save();
     }
-    editor.loadNote(name);
-    //    editor.setTheme(theme);
-    // TODO: move this logic to App.onDocChanged
-    // a bit magic: sometimes we open at the beginning, sometimes at the end
-    // TODO: remember selection in memory so that we can restore during a session
+    const content = (await loadNote(name)) || "";
+    await editor.loadContent(name, content);
     didLoadNote(name, noPushHistory);
   }
 </script>

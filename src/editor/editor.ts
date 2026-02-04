@@ -3,7 +3,7 @@ import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, Prec, Transaction } from "@codemirror/state";
 import { keymap as cmKeymap, drawSelection, EditorView, lineNumbers } from "@codemirror/view";
 import { getNoteMeta, saveNotesMetadata } from "../metadata";
-import { loadNote, saveNote } from "../notes";
+import { saveNote } from "../notes";
 import { findEditorByView } from "../state";
 import { len, objectEqualDeep } from "../util";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
@@ -68,7 +68,6 @@ export class EdnaEditor {
   noteName: string;
   contentLoaded: boolean;
   view: EditorView;
-  loadNotePromise: Promise<void>;
   diskContent: string = "";
   defaultBlockToken: string = "";
   defaultBlockAutoDetect: boolean = false;
@@ -170,10 +169,6 @@ export class EdnaEditor {
       parent: element,
     });
 
-    // this is async so runs in background
-    this.loadNotePromise = this.loadNote(this.noteName);
-
-    // TODO: move into loadNote?
     if (focus) {
       this.view.focus();
     }
@@ -198,12 +193,9 @@ export class EdnaEditor {
     return this.view.state.sliceDoc();
   }
 
-  async loadNote(noteName: string) {
-    //console.log("loadNote:", noteName)
+  async loadContent(noteName: string, content: string) {
     this.noteName = noteName;
     this.setReadOnly(true);
-    // TODO: show a message
-    const content = (await loadNote(noteName)) || "";
     this.diskContent = content;
     await this.setContent(content);
     this.contentLoaded = true;
