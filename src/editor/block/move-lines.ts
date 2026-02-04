@@ -1,16 +1,11 @@
 import { EditorSelection, EditorState, SelectionRange, type ChangeSpec } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { kLanguages } from "../languages";
+import type { LineBlock } from "../types";
 import { blockState } from "./block";
 
 const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
 const tokenRegEx = new RegExp(`^∞∞∞(${languageTokensMatcher})(-a)?$`, "g");
-
-interface LineBlock {
-  from: number;
-  to: number;
-  ranges: SelectionRange[];
-}
 
 function selectedLineBlocks(state: EditorState): LineBlock[] {
   let blocks: LineBlock[] = [],

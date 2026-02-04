@@ -1,15 +1,10 @@
 import { EditorSelection, EditorState, SelectionRange } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
+import type { LineBlock } from "../types";
 import { getActiveNoteBlock } from "./block";
 
 function updateSel(sel: EditorSelection, by: (range: SelectionRange) => SelectionRange): EditorSelection {
   return EditorSelection.create(sel.ranges.map(by), sel.mainIndex);
-}
-
-interface LineBlock {
-  from: number;
-  to: number;
-  ranges: SelectionRange[];
 }
 
 function selectedLineBlocks(state: EditorState): LineBlock[] {
