@@ -1,7 +1,10 @@
 import type { SelectionRange } from "@codemirror/state";
 
-export interface LineBlock {
+export interface SimpleRange {
   from: number;
   to: number;
+}
+
+export interface LineBlock extends SimpleRange {
   ranges: SelectionRange[];
 }

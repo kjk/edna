@@ -3,6 +3,7 @@
 import { foldState } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import type { SimpleRange } from "./types";
 
 // Platform detection
 const nav = typeof window !== "undefined" ? window.navigator : null;
@@ -21,7 +22,7 @@ export function isReadOnly(view: EditorView): boolean {
   return view.state.readOnly;
 }
 
-export function getCurrentSelection(state: EditorState): { from: number; to: number; selectedText: string } {
+export function getCurrentSelection(state: EditorState): SimpleRange & { selectedText: string } {
   const { from, to } = state.selection.main;
   const selectedText = state.doc.sliceString(from, to);
   return { from, to, selectedText };
@@ -53,8 +54,8 @@ export function focusEditorView(view: EditorView) {
   }, 100);
 }
 
-export function getFoldedRanges(view: EditorView): { from: number; to: number }[] {
-  const foldedRanges: { from: number; to: number }[] = [];
+export function getFoldedRanges(view: EditorView): SimpleRange[] {
+  const foldedRanges: SimpleRange[] = [];
   let state = view.state;
   state.field(foldState, false)?.between(0, state.doc.length, (from: number, to: number) => {
     foldedRanges.push({ from, to });

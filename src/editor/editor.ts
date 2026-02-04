@@ -21,6 +21,7 @@ import { heynoteDark } from "./theme/dark";
 import { getFontTheme } from "./theme/font-theme";
 import { heynoteLight } from "./theme/light";
 import { todoCheckboxPlugin } from "./todo-checkbox";
+import type { SimpleRange } from "./types";
 
 // Keymap spec type for external keybindings
 export type KeymapSpec = Array<[string, () => void] | { key: string; run: () => void; shift?: () => void }>;
@@ -236,7 +237,7 @@ export class EdnaEditor {
     return getFoldedRanges(this.view);
   }
 
-  setFoldedRanges(ranges: Array<{ from: number; to: number }>) {
+  setFoldedRanges(ranges: SimpleRange[]) {
     if (ranges.length === 0) {
       return;
     }

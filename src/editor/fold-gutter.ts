@@ -12,6 +12,7 @@ import {
 } from "./annotation";
 import { delimiterRegexWithoutNewline, getBlocks, getNoteBlocksFromRangeSet } from "./block/block";
 import type { EdnaEditor } from "./editor";
+import type { SimpleRange } from "./types";
 
 // This extension fixes so that a folded region is automatically unfolded if any changes happen
 // on either the start line or the end line of the folded region (even if the change is not within the folded region)
@@ -49,7 +50,7 @@ const autoUnfoldOnEdit = () => {
     //    return
     //}
 
-    const unfoldRanges: { from: number; to: number }[] = [];
+    const unfoldRanges: SimpleRange[] = [];
 
     update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
       foldRanges.between(0, state.doc.length, (from, to) => {
@@ -144,15 +145,15 @@ export const toggleBlockFold = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = foldedRanges(state);
 
-  const foldEffects: StateEffect<{ from: number; to: number }>[] = [];
-  const unfoldEffects: StateEffect<{ from: number; to: number }>[] = [];
+  const foldEffects: StateEffect<SimpleRange>[] = [];
+  const unfoldEffects: StateEffect<SimpleRange>[] = [];
   let numFolded = 0,
     numUnfolded = 0;
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
     const firstLine = state.doc.lineAt(block.content.from);
     let blockIsFolded = false;
-    const blockFolds: { from: number; to: number }[] = [];
+    const blockFolds: SimpleRange[] = [];
     folds.between(block.content.from, block.content.to, (from, to) => {
       if (from <= firstLine.to && to === block.content.to) {
         blockIsFolded = true;
@@ -189,7 +190,7 @@ export const toggleBlockFold = (editor: EdnaEditor) => (view: EditorView) => {
 
 export const foldBlock = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
-  const blockRanges: { from: number; to: number }[] = [];
+  const blockRanges: SimpleRange[] = [];
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
     const line = state.doc.lineAt(block.content.from);
@@ -211,7 +212,7 @@ export const foldBlock = (editor: EdnaEditor) => (view: EditorView) => {
 export const unfoldBlock = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = foldedRanges(state);
-  const blockFolds: { from: number; to: number }[] = [];
+  const blockFolds: SimpleRange[] = [];
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
     const firstLine = state.doc.lineAt(block.content.from);
@@ -253,7 +254,7 @@ export const foldAllBlocks = (editor: EdnaEditor) => (view: EditorView) => {
 export const unfoldAlBlocks = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = state.field(foldState, false) || RangeSet.empty;
-  const blockFolds: { from: number; to: number }[] = [];
+  const blockFolds: SimpleRange[] = [];
 
   for (const block of getBlocks(state)) {
     const firstLine = state.doc.lineAt(block.content.from);
@@ -282,7 +283,7 @@ export const unfoldEverything = (editor: EdnaEditor) => (view: EditorView) => {
     // console.log("unfoldEverything: no foldRanges found");
     return;
   }
-  let effects: StateEffect<{ from: number; to: number }>[] = [];
+  let effects: StateEffect<SimpleRange>[] = [];
   foldRanges.between(0, state.doc.length, (from: number, to: number) => {
     let effect = unfoldEffect.of({ from, to });
     effects.push(effect);

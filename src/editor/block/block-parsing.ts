@@ -2,12 +2,13 @@ import { syntaxTree } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { IterMode } from "@lezer/common";
 import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms";
+import type { SimpleRange } from "../types";
 
 export interface NoteBlock {
   language: { name: string; auto: boolean };
-  content: { from: number; to: number };
-  delimiter: { from: number; to: number };
-  range: { from: number; to: number };
+  content: SimpleRange;
+  delimiter: SimpleRange;
+  range: SimpleRange;
 }
 
 // tracks the size of the first delimiter

@@ -22,6 +22,7 @@ import {
 import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation";
 import type { EdnaEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
+import type { SimpleRange } from "../types";
 import { firstBlockDelimiterSize, getBlocksFromString, getBlocksFromSyntaxTree } from "./block-parsing";
 import { mathBlock } from "./math";
 import { emptyBlockSelected } from "./select-all";
@@ -87,9 +88,9 @@ export function getActiveNoteBlock(state: EditorState): Block | undefined {
 }
 
 export interface Block {
-  range: { from: number; to: number };
-  content: { from: number; to: number };
-  delimiter: { from: number; to: number };
+  range: SimpleRange;
+  content: SimpleRange;
+  delimiter: SimpleRange;
   language: {
     name: string;
     auto: boolean;
@@ -248,7 +249,7 @@ const blockLayer = layer({
     const markers: RectangleMarker[] = [];
     let idx = 0;
     //console.log("visible ranges:", view.visibleRanges[0].from, view.visibleRanges[0].to, view.visibleRanges.length)
-    function rangesOverlaps(range1: { from: number; to: number }, range2: { from: number; to: number }): boolean {
+    function rangesOverlaps(range1: SimpleRange, range2: SimpleRange): boolean {
       return range1.from <= range2.to && range2.from <= range1.to;
     }
     const blocks = view.state.field(blockState);
