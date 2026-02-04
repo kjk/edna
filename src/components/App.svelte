@@ -245,20 +245,10 @@
   }
 
   let gf = {
-    openSettings: openSettings,
-    openCreateNewNote: openCreateNewNote,
-    openCommandPalette: openCommandPalette,
-    openContextMenu: openContextMenu,
-    openFindInNotes: openFindInNotes,
-    openQuickAccess: openQuickAccess,
-    createScratchNote: createScratchNote,
-    openBlockSelector: openBlockSelector,
-    openFunctionSelector: openFunctionSelector,
-    updateAfterNoteStateChange: updateAfterNoteStateChange,
-    smartRun: smartRun,
     focusEditor: focusEditor,
     getPassword: getPassword,
     requestFileWritePermission: requestFileWritePermission,
+    updateAfterNoteStateChange: updateAfterNoteStateChange,
   };
   setGlobalFuncs(gf);
 
@@ -448,8 +438,8 @@
     });
   }
 
-  let fileWritePermissionsFileHandle: FileSystemFileHandle = $state(null);
-  let askFileWritePermissionsClose: (ok: boolean) => void = $state(null);
+  let fileWritePermissionsFileHandle: FileSystemFileHandle | undefined = $state();
+  let askFileWritePermissionsClose: (ok: boolean) => void | undefined = $state();
 
   async function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
     if (hasHandlePermission(fh, true)) {

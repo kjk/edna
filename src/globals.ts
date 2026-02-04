@@ -1,16 +1,6 @@
 import { formatDurationShort } from "./util";
 
 export interface GlobalFuncs {
-  openSettings: () => void;
-  openCreateNewNote: () => void;
-  openCommandPalette: () => void;
-  openFindInNotes: () => void;
-  openContextMenu: (ev: MouseEvent) => void;
-  openQuickAccess: () => void;
-  createScratchNote: () => void;
-  openBlockSelector: () => void;
-  openFunctionSelector: (onSelection: boolean) => void;
-  smartRun: () => void;
   focusEditor: () => void;
   getPassword: (msg: string) => Promise<string>;
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>;
