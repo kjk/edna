@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { mount, onMount } from "svelte";
   import { syntaxTree } from "@codemirror/language";
-  import { EditorView } from "@codemirror/view";
+  import { EditorView, type ViewUpdate } from "@codemirror/view";
   import { appState } from "../appstate.svelte";
   import { loadCurrencies } from "../currency";
   import { EdnaEditor } from "../editor/editor";
@@ -10,8 +10,29 @@
   import { loadNote, saveNote } from "../notes";
   import { getSettings } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
+  import Find from "./Find.svelte";
 
   import type { KeymapSpec } from "../editor/editor";
+
+  function createFindPanel(view: EditorView) {
+    const dom = document.createElement("div");
+    const args = {
+      target: dom,
+      props: {
+        view,
+      },
+    };
+    // TODO: this leaks, I don't see unmounting anywhere
+    let comp = mount(Find, args);
+    const update = (update: ViewUpdate) => {
+      comp.update(update);
+    };
+    return {
+      dom,
+      top: true,
+      update,
+    };
+  }
 
   interface Props {
     class?: string;
@@ -139,6 +160,7 @@
       element: editorRef,
       save: saveCurrentNote,
       setIsDirty: setIsDirty,
+      createFindPanel: createFindPanel,
       extraKeymap: extraKeymap,
       theme: theme,
       keymap: keymap,

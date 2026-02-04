@@ -15,7 +15,7 @@ import { heynoteLang } from "./lang-heynote/heynote";
 import { languageDetection } from "./language-detection/autodetect";
 import { links } from "./links";
 import { autoSaveContent } from "./save";
-import { customSetup } from "./setup";
+import { customSetup, type CreateFindPanelFn } from "./setup";
 import { heynoteBase } from "./theme/base";
 import { heynoteDark } from "./theme/dark";
 import { getFontTheme } from "./theme/font-theme";
@@ -37,6 +37,7 @@ interface EdnaEditorConfig {
   element: HTMLElement;
   save: (content: string) => Promise<void>;
   setIsDirty: (dirty: boolean) => void;
+  createFindPanel: CreateFindPanelFn;
   extraKeymap?: KeymapSpec;
   focus?: boolean;
   theme?: "light" | "dark";
@@ -77,6 +78,7 @@ export class EdnaEditor {
     element,
     save,
     setIsDirty,
+    createFindPanel,
     extraKeymap,
     focus = true,
     theme = "light",
@@ -131,7 +133,7 @@ export class EdnaEditor {
 
         //minimalSetup,
         this.lineNumberCompartment.of(showLineNumberGutter ? [lineNumbers(), blockLineNumbers] : []),
-        customSetup,
+        customSetup(createFindPanel),
         this.foldGutterCompartment.of(showFoldGutter ? [foldGutterExtension()] : []),
 
         this.closeBracketsCompartment.of(bracketClosing ? createDynamicCloseBracketsExtension() : []),

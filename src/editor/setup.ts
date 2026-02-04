@@ -1,4 +1,3 @@
-import { mount } from "svelte";
 import { closeBracketsKeymap } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from "@codemirror/language";
@@ -15,30 +14,11 @@ import {
   keymap,
   rectangularSelection,
   scrollPastEnd,
-  ViewUpdate,
   type KeyBinding,
+  type Panel,
 } from "@codemirror/view";
-import Find from "../components/Find.svelte";
 
-function createFnddPanel(view: EditorView) {
-  const dom = document.createElement("div");
-  const args = {
-    target: dom,
-    props: {
-      view,
-    },
-  };
-  // TODO: this leak, I don't see unmounting anywhere
-  let comp = mount(Find, args);
-  const update = (update: ViewUpdate) => {
-    comp.update(update);
-  };
-  return {
-    dom,
-    top: true,
-    update,
-  };
-}
+export type CreateFindPanelFn = (view: EditorView) => Panel;
 
 // (The superfluous function calls around the list of extensions work
 // around current limitations in tree-shaking software.)
@@ -96,41 +76,43 @@ function getDefaultKeymap() {
   return keymap;
 }
 
-const customSetup = /*@__PURE__*/ (() => [
-  //lineNumbers(),
-  highlightActiveLineGutter(),
-  highlightSpecialChars(),
-  history(),
-  //foldGutter(),
-  drawSelection(),
-  dropCursor(),
-  EditorState.allowMultipleSelections.of(true),
-  EditorView.clickAddsSelectionRange.of((e) => e.altKey),
-  indentOnInput(),
-  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-  bracketMatching(),
-  //closeBrackets(),
-  //autocompletion(),
-  rectangularSelection(),
-  crosshairCursor(),
-  highlightActiveLine(),
-  highlightSelectionMatches(),
-  search({
-    createPanel: createFnddPanel,
-  }),
-  EditorView.lineWrapping,
-  scrollPastEnd(),
-  // @ts-ignore
-  keymap.of([
-    ...closeBracketsKeymap,
-    ...getDefaultKeymap(),
-    ...searchKeymap,
-    ...historyKeymap,
-    // ...foldKeymap,
-    //...completionKeymap,
-    //...lintKeymap
-  ]),
-])();
+function customSetup(createFindPanel: CreateFindPanelFn) {
+  return [
+    //lineNumbers(),
+    highlightActiveLineGutter(),
+    highlightSpecialChars(),
+    history(),
+    //foldGutter(),
+    drawSelection(),
+    dropCursor(),
+    EditorState.allowMultipleSelections.of(true),
+    EditorView.clickAddsSelectionRange.of((e) => e.altKey),
+    indentOnInput(),
+    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+    bracketMatching(),
+    //closeBrackets(),
+    //autocompletion(),
+    rectangularSelection(),
+    crosshairCursor(),
+    highlightActiveLine(),
+    highlightSelectionMatches(),
+    search({
+      createPanel: createFindPanel,
+    }),
+    EditorView.lineWrapping,
+    scrollPastEnd(),
+    // @ts-ignore
+    keymap.of([
+      ...closeBracketsKeymap,
+      ...getDefaultKeymap(),
+      ...searchKeymap,
+      ...historyKeymap,
+      // ...foldKeymap,
+      //...completionKeymap,
+      //...lintKeymap
+    ]),
+  ];
+};
 /**
 A minimal set of extensions to create a functional editor. Only
 includes [the default keymap](https://codemirror.net/6/docs/ref/#commands.defaultKeymap), [undo
