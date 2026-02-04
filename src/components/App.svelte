@@ -246,7 +246,6 @@
 
   let gf = {
     openSettings: openSettings,
-    openLanguageSelector: openLanguageSelector,
     openCreateNewNote: openCreateNewNote,
     openNoteSelector: openNoteSelector,
     openCommandPalette: openCommandPalette,
@@ -2114,6 +2113,7 @@
   {language}
   {languageAuto}
   {isSpellChecking}
+  {openLanguageSelector}
   {formatCurrentBlock}
   {smartRun}
   {toggleSpellCheck}

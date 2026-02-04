@@ -2,7 +2,6 @@ import { formatDurationShort } from "./util";
 
 export interface GlobalFuncs {
   openSettings: () => void;
-  openLanguageSelector: () => void;
   openCreateNewNote: () => void;
   openNoteSelector: () => void;
   openCommandPalette: () => void;
@@ -33,10 +32,6 @@ let globalFunctions: GlobalFuncs;
 
 export function setGlobalFuncs(gf: GlobalFuncs) {
   globalFunctions = gf;
-}
-
-export function openLanguageSelector() {
-  globalFunctions.openLanguageSelector();
 }
 
 export function openNoteSelector() {

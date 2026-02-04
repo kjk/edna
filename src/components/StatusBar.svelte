@@ -5,7 +5,6 @@
     langSupportsFormat,
     langSupportsRun,
   } from "../editor/languages";
-  import { openLanguageSelector } from "../globals";
   import { fixUpShortcuts } from "../key-helper";
   import { fmtSize, getScrollbarWidth } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
@@ -18,6 +17,7 @@
     language?: string;
     languageAuto?: boolean;
     isSpellChecking?: boolean;
+    openLanguageSelector: () => void;
     toggleSpellCheck: (ev: Event) => void;
     smartRun: (ev: Event) => void;
     formatCurrentBlock: (ev: Event) => void;
@@ -30,6 +30,7 @@
     language = "",
     languageAuto = false,
     isSpellChecking = false,
+    openLanguageSelector,
     toggleSpellCheck,
     smartRun,
     formatCurrentBlock,
