@@ -144,7 +144,7 @@
     return res;
   }
 
-  let listboxRef;
+  let listboxRef: HTMLElement;
   $effect(() => {
     let opts = getOverlayScrollbarOptions();
     OverlayScrollbars(listboxRef, opts);

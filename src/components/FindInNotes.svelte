@@ -18,19 +18,19 @@
   let replaceTerm = $state("");
 
   let currSearchTerm = "";
-  let selectedItem;
+  let selectedItem: { note: string; pos?: number } | null;
 
   let searchInputRef: HTMLInputElement;
 
-  let replaceInputRef: HTMLInputElement = $state(undefined);
+  let replaceInputRef: HTMLInputElement | undefined = $state(undefined);
 
   let results: { key: number; note: string; line?: string; pos?: number }[] = $state([]);
   let noteBeingSearched = $state("");
 
   // svelte-ignore non_reactive_update
-  let hiliRegExp;
+  let hiliRegExp: RegExp | null;
   // svelte-ignore non_reactive_update
-  let listboxRef;
+  let listboxRef: ListBox;
 
   const kMaxSearchResults = 64;
   let uniqueId = 0;
@@ -60,16 +60,17 @@
     let parts = splitStringPreservingQuotes(searchTerm);
     let nParts = len(parts);
     while (len(notesToSearch) > 0) {
-      noteBeingSearched = notesToSearch[0];
+      noteBeingSearched = notesToSearch[0]!;
       notesToSearch.splice(0, 1);
       let s = await loadNote(noteBeingSearched);
+      if (!s) continue;
       if (!matchCase) {
         s = s.toLowerCase();
       }
       let startIdx = 0;
-      let line;
+      let line: string;
       while (true) {
-        let toFind = parts[0];
+        let toFind = parts[0]!;
         let idx = s.indexOf(toFind, startIdx);
         if (idx < 0) {
           break;
@@ -93,7 +94,7 @@
         // must match all parts
         function matchesAll() {
           for (let i = 1; i < nParts; i++) {
-            toFind = parts[i];
+            let toFind = parts[i]!;
             let idx = line.indexOf(toFind);
             if (idx < 0) {
               return false;
@@ -171,18 +172,18 @@
     changeNo++; // make Enter redo the search
     focusInput();
   }
-  function btnPressedCls(isPressed) {
+  function btnPressedCls(isPressed: boolean) {
     return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";
   }
   let matchCaseCls = $derived(btnPressedCls(appState.searchNotesMatchCase));
   let matchWholeWordCls = $derived(btnPressedCls(appState.searchNotesMatchWholeWord));
 
-  function openItem(item) {
+  function openItem(item: { note: string; pos?: number }) {
     // console.log("openItem:", $state.snapshot(item));
     openNote(item.note, item.pos);
   }
 
-  function selectionChanged(item, idx) {
+  function selectionChanged(item: { note: string; pos?: number } | null, idx: number) {
     // console.log("selectionChanged:", $state.snapshot(item), idx);
     selectedItem = item;
   }

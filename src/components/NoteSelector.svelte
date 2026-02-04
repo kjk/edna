@@ -6,7 +6,7 @@
     isStarred: boolean;
     isArchived: boolean;
     altShortcut?: number; // if present, 1 to 9 for Alt-1 to Alt-9
-    ref: HTMLElement;
+    ref: HTMLElement | null;
   }
 
   /**
@@ -59,8 +59,8 @@
     let isStarred = false;
     let m = getNoteMeta(name, false);
     if (m) {
-      isStarred = m.isStarred;
-      isArchived = m.isArchived;
+      isStarred = !!m.isStarred;
+      isArchived = !!m.isArchived;
     }
     let item: NoteInfo = {
       key: lastKey,
@@ -82,7 +82,7 @@
     // console.log("buildItems, notes", noteInfos)
     let res: NoteInfo[] = Array(len(noteNames));
     for (let i = 0; i < len(noteNames); i++) {
-      let name = noteNames[i];
+      let name = noteNames[i]!;
       let item = buildNoteInfo(name);
       res[i] = item;
     }
@@ -135,7 +135,7 @@
     forMoveBlock = false,
   }: Props = $props();
 
-  function localBuildNoteInfos(regular, archived) {
+  function localBuildNoteInfos(regular: string[], archived: string[]) {
     let notes = [...regular];
     notes.push(...archived);
     let res = buildNoteInfos(notes);
@@ -176,7 +176,7 @@
     return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
-  let selectedNote: NoteInfo = $state(null);
+  let selectedNote: NoteInfo | null = $state(null);
   let selectedName = $state("");
   let canOpenSelected = $state(false);
   let canCreate = $state(false);
@@ -196,7 +196,7 @@
     return `${n} of ${nItems} notes`;
   });
 
-  function recalcAvailableActions(item, name) {
+  function recalcAvailableActions(item: NoteInfo | null, name: string) {
     canOpenSelected = !!selectedNote;
     canCreateWithEnter = !(len(name) == 0) && !canOpenSelected;
     canCreate = len(name) > 0;
@@ -218,9 +218,9 @@
     showDelete = canOpenSelected;
   }
 
-  function selectionChanged(item: NoteInfo, idx: number) {
+  function selectionChanged(item: NoteInfo | null, idx: number) {
     selectedNote = item;
-    selectedName = item ? selectedNote.name : "";
+    selectedName = item ? item.name : "";
     recalcAvailableActions(item, sanitizedFilter);
   }
 
@@ -275,7 +275,7 @@
       return;
     }
 
-    listboxRef.onkeydown(ev, filter === "");
+    listboxRef?.onkeydown(ev, filter === "");
   }
 
   function emitOpenNote(noteInfo: NoteInfo, newTab: boolean) {
@@ -306,17 +306,17 @@
     appState.noteSelectorInfoCollapsed = !appState.noteSelectorInfoCollapsed;
   }
 
-  let inputRef;
-  let listboxRef;
+  let inputRef: HTMLInputElement;
+  let listboxRef: ListBox;
 
   function toggleShowArchived() {
     appState.showingArchived = !appState.showingArchived;
   }
-  function showHideTxt(isShowing) {
+  function showHideTxt(isShowing: boolean) {
     return isShowing ? "hide" : "show";
   }
 
-  function noteCls(noteInfo) {
+  function noteCls(noteInfo: NoteInfo) {
     let name = noteInfo.name;
     let m = getNoteMeta(name);
     let isArchived = m && m.isArchived;

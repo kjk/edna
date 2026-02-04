@@ -27,7 +27,7 @@
     let s = mi[0];
     let parts = splitMax(s, "\t", 2);
     if (len(parts) > 1) {
-      return extractShortcut(parts[1]);
+      return extractShortcut(parts[1]!);
     }
     return "";
   }

@@ -75,7 +75,7 @@
   let err = $state("");
   let forceShowingApiKey = $state(false);
   let aiModel = $derived(findModelByID(settings.aiModelID));
-  let aiModelName = $derived(aiModel[kModelNameIdx]);
+  let aiModelName = $derived(aiModel[kModelNameIdx] as string);
   let apiProvider = $derived(apiProviderForAiModel(aiModel));
   let apiProviderOpenAI = $derived(apiProvider == kApiProviderOpenAI);
   let apiProviderXAI = $derived(apiProvider == kApiProviderXAi);
@@ -86,7 +86,7 @@
 
   const maxTokens = 10000;
 
-  function apiProviderForAiModel(aiModel) {
+  function apiProviderForAiModel(aiModel: any) {
     let provider = aiModel[kModelProviderIdx];
     switch (provider) {
       case kProviderOpenAI:
@@ -208,11 +208,11 @@
     let modelID = settings.aiModelID;
     if (apiProvider == kApiProviderOpenRouter) {
       let providerIdx = aiModel[kModelProviderIdx];
-      let prefix = providersInfo[providerIdx][0];
+      let prefix = providersInfo[providerIdx]![0];
       modelID = prefix + "/" + modelID;
     }
 
-    const requestBody = {
+    const requestBody: Record<string, unknown> = {
       model: modelID,
       messages: [{ role: "user", content: prompt }],
       stream: true,
@@ -247,7 +247,7 @@
       throw e;
     }
 
-    const reader = response.body.getReader();
+    const reader = response.body!.getReader();
     const decoder = new TextDecoder();
 
     while (true) {
@@ -296,7 +296,7 @@
       // console.log("token:", token);
       // console.log("token.attrs:", token.attrs);
       let aidx = token.attrIndex("href");
-      let uri = token.attrs[aidx][1];
+      let uri = token.attrs![aidx]![1];
       if (uri.startsWith("#")) {
         // console.log("skipping uri: ", uri);
         return defaultRender(tokens, idx, options, env, self);
@@ -305,7 +305,7 @@
       if (aidx < 0) {
         token.attrPush(["target", "_blank"]); // add new attribute
       } else {
-        token.attrs[aidx][1] = "_blank"; // replace existing attribute
+        token.attrs![aidx]![1] = "_blank"; // replace existing attribute
       }
       // console.log("added to uri: ", uri);
       // pass token to default renderer.
@@ -316,7 +316,7 @@
   function mdToHTML(md: string): string {
     let mdIt = markdownIt({
       linkify: true,
-      highlight: function (str, lang) {
+      highlight: function (str: string, lang: string) {
         try {
           if (lang && hljs && hljs.getLanguage(lang)) {
             return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;

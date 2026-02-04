@@ -92,7 +92,7 @@
     selectionChanged(item, selectedIdx);
   }
 
-  export function onkeydown(ev: KeyboardEvent, allowLeftRight: boolean = false): boolean {
+  export function onkeydown(ev: KeyboardEvent, allowLeftRight: boolean = false): boolean | undefined {
     let key = ev.key;
     let isUp = key === "ArrowUp" || (key === "ArrowLeft" && allowLeftRight);
     if (isUp && selectedIdx <= 0) {
@@ -140,11 +140,13 @@
     select(selectedIdx + 1);
   }
 
-  let listboxRef;
+  let listboxRef: HTMLElement;
   $effect(() => {
     $effect(() => {
       let opts = getOverlayScrollbarOptions();
-      OverlayScrollbars(listboxRef, opts);
+      if (listboxRef) {
+        OverlayScrollbars(listboxRef, opts);
+      }
     });
   });
 

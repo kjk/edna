@@ -38,7 +38,7 @@
   let hidePassword = $state(true);
 
   let inputRef: HTMLElement;
-  function onchange(ev) {
+  function onchange(ev: Event) {
     inputRef.focus();
   }
 </script>

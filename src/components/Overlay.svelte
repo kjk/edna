@@ -9,7 +9,7 @@
     children: Snippet;
     blur?: boolean;
   }
-  let { onclose = null, noCloseOnEsc = false, blur = false, children }: Props = $props();
+  let { onclose = undefined, noCloseOnEsc = false, blur = false, children }: Props = $props();
 
   // if noCloseOnEsc is false, we must have onclose
   // svelte-ignore state_referenced_locally
@@ -25,7 +25,7 @@
     onclose();
   }
 
-  function onkeydown(ev) {
+  function onkeydown(ev: KeyboardEvent) {
     // console.log("onkeydown:", ev);
     if (!onclose || noCloseOnEsc) {
       return;

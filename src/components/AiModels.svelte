@@ -30,10 +30,10 @@
   let models = $derived(buildModels(modelsShort, sanitizedFilter, forceUpdate));
 
   function buildModels(items: any[], filter: string, ignore: any): any[] {
-    function modelNameFn(model) {
+    function modelNameFn(model: any) {
       let name = model[kModelNameIdx];
       let providerIdx = model[kModelProviderIdx];
-      let providerInfo = providersInfo[providerIdx];
+      let providerInfo = providersInfo[providerIdx]!;
       let providerName = providerInfo[1];
       return (providerName + " " + name).toLowerCase();
     }
@@ -70,7 +70,7 @@
     listboxComp.onkeydown(ev, true);
   }
 
-  async function toggleStarred(model) {
+  async function toggleStarred(model: any) {
     let modelID = model[kModelIDIdx];
     if (appState.settings.starredModels.includes(modelID)) {
       arrayRemove(appState.settings.starredModels, modelID);
@@ -82,7 +82,7 @@
     forceUpdate++;
   }
 
-  function itemKey(item) {
+  function itemKey(item: any) {
     return item[kModelIDIdx];
   }
 
@@ -126,7 +126,7 @@
       {@const modelID = model[kModelIDIdx]}
       {@const name = model[kModelNameIdx]}
       {@const providerID = model[kModelProviderIdx]}
-      {@const providerName = providersInfo[providerID][1]}
+      {@const providerName = providersInfo[providerID]![1]}
       {@const pricePrompt = humanPrice(model[kModelPricePromptIdx])}
       {@const priceCompletion = humanPrice(model[kModelPriceCompletionIdx])}
       {@const isStarred = appState.settings.starredModels.includes(modelID)}

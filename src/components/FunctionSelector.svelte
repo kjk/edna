@@ -27,7 +27,7 @@
     name: string;
     nameLC: string;
     isStarred: boolean;
-    ref: HTMLElement;
+    ref: HTMLElement | null;
   }
 
   let altChar = getAltChar();
@@ -86,7 +86,7 @@
 
   let itemsFiltered: Item[] = $derived(findMatchingItems(items, filter, "nameLC"));
 
-  let selectedItem: Item = $state(null);
+  let selectedItem: Item | null = $state(null);
 
   function emitRunFunction(item: Item, replace: boolean) {
     console.log("emitRunFunction:", item);
@@ -111,7 +111,7 @@
       }
       return;
     }
-    listboxRef.onkeydown(ev, filter === "");
+    listboxRef?.onkeydown(ev, filter === "");
   }
 
   let itemsCountMsg = $derived.by(() => {
@@ -129,8 +129,8 @@
     inputRef.focus();
   }
 
-  let listboxRef;
-  let inputRef;
+  let listboxRef: ListBox;
+  let inputRef: HTMLInputElement;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->

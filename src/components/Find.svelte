@@ -40,7 +40,7 @@
 
   let searchInputREf: HTMLInputElement;
 
-  let replaceInputRef: HTMLInputElement = $state(undefined);
+  let replaceInputRef: HTMLInputElement | undefined = $state(undefined);
 
   // svelte-ignore state_referenced_locally
   let query = getSearchQuery(view.state);
@@ -61,8 +61,8 @@
       return null;
     }
     return {
-      from: matchBuffer[idx],
-      to: matchBuffer[idx + 1],
+      from: matchBuffer[idx]!,
+      to: matchBuffer[idx + 1]!,
     };
   }
   function matchBufferReset() {
@@ -102,16 +102,16 @@
   /**
    * Compare equality of this query with the another one.
    */
-  function _compare(other) {
+  function _compare(other: SearchQuery) {
     let res = untrack(() => query.eq(other) && query.literal == other.literal);
     return res;
   }
 
-  function _setQuery(q, internal) {
+  function _setQuery(q: SearchQuery, internal: boolean) {
     console.log("_setQuery:", q);
   }
 
-  export function update(update) {
+  export function update(update: any) {
     // console.log("find update", update);
     // let resetCounter = false;
     // // Search any effect that brings query update.
@@ -147,8 +147,9 @@
   }
 
   function updateCurrentMatchCount() {
-    let lastSelection = view.state.selection.ranges.at(-1),
-      index = counter.current, // 1-based
+    let lastSelection = view.state.selection.ranges.at(-1);
+    if (!lastSelection) return;
+    let index = counter.current, // 1-based
       prevIndex = index,
       max = counter.total;
 
@@ -218,7 +219,7 @@
   function toggleShowReplace() {
     showReplace = !showReplace;
     if (showReplace) {
-      tick().then(() => replaceInputRef.focus());
+      tick().then(() => replaceInputRef?.focus());
     } else {
       tick().then(() => searchInputREf.focus());
     }
@@ -264,7 +265,7 @@
     appState.searchRegex = !appState.searchRegex;
     console.log("matchRegex", appState.searchRegex);
   }
-  function btnPressedCls(isPressed) {
+  function btnPressedCls(isPressed: boolean) {
     return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";
   }
   let matchCaseCls = $derived(btnPressedCls(appState.searchMatchCase));

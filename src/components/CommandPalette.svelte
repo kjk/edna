@@ -52,9 +52,9 @@
       let id = cmd[1] as number;
       let parts = splitMax(s, "\t", 2);
       let name = parts[0] as string;
-      let shortcut = null;
+      let shortcut = "";
       if (len(parts) > 1) {
-        shortcut = extractShortcut(parts[1]);
+        shortcut = extractShortcut(parts[1]!);
       }
       // console.log(`i: ${i}, name: ${name} id: ${id}`);
       let item: Item = {

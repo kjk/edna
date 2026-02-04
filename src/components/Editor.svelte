@@ -44,7 +44,7 @@
   }
   let { class: klass = "", debugSyntaxTree, extraKeymap, cursorChange, docDidChange, didLoadNote }: Props = $props();
 
-  let syntaxTreeDebugContent = $state(null);
+  let syntaxTreeDebugContent: string | null = $state(null);
   let settings = getSettings();
   let theme = settings.theme;
 
@@ -70,8 +70,8 @@
     editor?.setKeymap(keymap, emacsMetaKey);
     let bracketClosing = settings.bracketClosing;
     editor?.setBracketClosing(bracketClosing);
-    let fontFamily = settings.fontFamily;
-    let fontSize = settings.fontSize;
+    let fontFamily = settings.fontFamily!;
+    let fontSize = settings.fontSize!;
     editor?.setFont(fontFamily, fontSize);
     let tabSize = settings.tabSize;
     let useTabs = settings.indentType == "tabs";
@@ -90,7 +90,7 @@
   }
 
   async function saveEditorState() {
-    let meta = getNoteMeta(currentNoteName, true);
+    let meta = getNoteMeta(currentNoteName, true)!;
     let didChange = false;
     let foldedRanges = editor.getFoldedRanges();
     if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
@@ -127,8 +127,8 @@
     window.document.addEventListener("currenciesLoaded", didLoadCurrencies);
     // forward events dispatched from editor.js
 
-    function onSelChange(ev: SelectionChangeEvent) {
-      cursorChange(ev);
+    function onSelChange(ev: Event) {
+      cursorChange(ev as SelectionChangeEvent);
     }
     editorRef.addEventListener("selectionChange", onSelChange);
     editorRef.addEventListener("docChanged", (e) => {
@@ -141,8 +141,8 @@
     let emacsMetaKey = settings.emacsMetaKey;
     let showFoldGutter = settings.showFoldGutter;
     let bracketClosing = settings.bracketClosing;
-    let fontFamily = settings.fontFamily;
-    let fontSize = settings.fontSize;
+    let fontFamily = settings.fontFamily!;
+    let fontSize = settings.fontSize!;
 
     currentNoteName = settings.currentNoteName;
     let useTabs = settings.indentType == "tabs";
@@ -162,9 +162,9 @@
       setIsDirty: setIsDirty,
       createFindPanel: createFindPanel,
       extraKeymap: extraKeymap,
-      theme: theme,
-      keymap: keymap,
-      emacsMetaKey: emacsMetaKey,
+      theme: theme as "dark" | "light",
+      keymap: keymap as "default" | "emacs",
+      emacsMetaKey: emacsMetaKey as "meta" | "alt" | "ctrl",
       showLineNumberGutter: showLineNumberGutter,
       showFoldGutter: showFoldGutter,
       bracketClosing: bracketClosing,
@@ -192,10 +192,10 @@
     // if debugSyntaxTree prop is set, display syntax tree for debugging
     if (debugSyntaxTree) {
       setInterval(() => {
-        function render(tree) {
+        function render(tree: any) {
           let lists = "";
           tree.iterate({
-            enter(type) {
+            enter(type: any) {
               lists += `<ul><li>${type.name} (${type.from},${type.to})`;
             },
             leave() {
@@ -216,7 +216,7 @@
     return editor.getBlocks();
   }
 
-  export function setSpellChecking(value) {
+  export function setSpellChecking(value: boolean) {
     // console.log("setSpellChecking:", value)
     let ce = document.querySelector('[contenteditable="true"]');
     if (!ce) {

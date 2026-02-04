@@ -22,7 +22,7 @@
   // svelte-ignore non_reactive_update
   let initialSelection = 0;
 
-  let listboxRef;
+  let listboxRef: ListBox;
 
   let settings = getSettings();
 

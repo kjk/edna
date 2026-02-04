@@ -45,13 +45,13 @@
   }
   const items = buildItems();
   let itemsFiltered = $derived(findMatchingItems(items, filter, "nameLC"));
-  let listboxRef;
+  let listboxRef: ListBox;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
   onkeydown={(ev) => {
-    listboxRef.onkeydown(ev, filter === "");
+    listboxRef?.onkeydown(ev, filter === "");
   }}
   tabindex="-1"
   class="selector z-20 absolute center-x-with-translate top-[2rem] max-h-[94vh] flex flex-col p-2"

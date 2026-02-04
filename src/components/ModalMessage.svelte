@@ -1,6 +1,6 @@
 <script module lang="ts">
   let modalMessageHTML = $state("");
-  let timerID: ReturnType<typeof setTimeout>;
+  let timerID: ReturnType<typeof setTimeout> | null = null;
 
   class ModalMessageState {
     isShowing = $state(false);
@@ -9,7 +9,7 @@
   export let modalMessageState = new ModalMessageState();
 
   export function showModalMessageHTML(msgHTML: string, delay: number) {
-    clearTimeout(timerID);
+    if (timerID) clearTimeout(timerID);
     timerID = null;
     if (delay <= 0) {
       modalMessageHTML = msgHTML;
@@ -24,7 +24,7 @@
 
   export function clearModalMessage() {
     modalMessageHTML = "";
-    clearTimeout(timerID);
+    if (timerID) clearTimeout(timerID);
     timerID = null;
     modalMessageState.isShowing = false;
   }
