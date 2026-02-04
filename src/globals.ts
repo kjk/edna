@@ -2,7 +2,7 @@ import { formatDurationShort } from "./util";
 
 export interface GlobalFuncs {
   focusEditor: () => void;
-  getPassword: (msg: string) => Promise<string>;
+  getPasswordFromUser: (msg: string) => Promise<string>;
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>;
   updateAfterNoteStateChange: () => void;
 }
@@ -32,7 +32,7 @@ export function updateAfterNoteStateChange() {
 }
 
 export async function getPasswordFromUser(msg: string): Promise<string> {
-  let pwd = await globalFunctions.getPassword(msg);
+  let pwd = await globalFunctions.getPasswordFromUser(msg);
   console.log("got password:", pwd);
   return pwd;
 }

@@ -42,8 +42,8 @@
     "./src/**/*.ts",
     "./src/**/*.js",
     "./src/**/*.svelte",
-    "vite.config.js",
+    // "vite.config.js",
     "package.json",
   ],
-  "exclude": ["./src/public/*", "./src/system-notes.ts"],
+  "exclude": ["./src/public/*", "./src/system-notes.ts", "./src/notes/*"],
 }
