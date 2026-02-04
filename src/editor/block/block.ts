@@ -103,7 +103,7 @@ export interface BlocksInfo {
 
 export function getBlocksInfo(state: EditorState): BlocksInfo {
   // find which block the cursor is in
-  const range = state.selection.asSingle().ranges[0];
+  const range = state.selection.asSingle().main;
   let blocks = state.field(blockState);
   let active = findBlocNokWithPos(blocks, range.head);
   if (active < 0) {
@@ -172,7 +172,7 @@ class NoteBlockStart extends WidgetType {
 }
 const noteBlockWidget = () => {
   const decorate = (state: EditorState) => {
-    const widgets: NoteBlockStart[] = [];
+    const widgets: Range<Decoration>[] = [];
 
     state.field(blockState).forEach((block: Block) => {
       let delimiter = block.delimiter;
@@ -196,7 +196,7 @@ const noteBlockWidget = () => {
     update(widgets, transaction) {
       // if widgets are empty it likely means we didn't get a parsed syntax tree, and then we want to update
       // the decorations on all updates (and not just document changes)
-      if (transaction.docChanged || widgets.isEmpty) {
+      if (transaction.docChanged || widgets.size === 0) {
         return decorate(transaction.state);
       }
 
@@ -213,11 +213,11 @@ const noteBlockWidget = () => {
 };
 
 function atomicRanges(view: EditorView): DecorationSet {
-  let builder = new RangeSetBuilder();
+  let builder = new RangeSetBuilder<Decoration>();
   view.state.field(blockState).forEach((block) => {
-    builder.add(block.delimiter.from, block.delimiter.to, {});
+    builder.add(block.delimiter.from, block.delimiter.to, Decoration.mark({}));
   });
-  return builder.finish() as DecorationSet;
+  return builder.finish();
 }
 
 const atomicNoteBlock = ViewPlugin.fromClass(
@@ -236,7 +236,7 @@ const atomicNoteBlock = ViewPlugin.fromClass(
   {
     provide: (plugin) =>
       EditorView.atomicRanges.of((view) => {
-        return view.plugin(plugin)?.atomicRanges || [];
+        return view.plugin(plugin)?.atomicRanges || Decoration.none;
       }),
   },
 );
@@ -248,7 +248,7 @@ const blockLayer = layer({
     const markers: RectangleMarker[] = [];
     let idx = 0;
     //console.log("visible ranges:", view.visibleRanges[0].from, view.visibleRanges[0].to, view.visibleRanges.length)
-    function rangesOverlaps(range1, range2) {
+    function rangesOverlaps(range1: { from: number; to: number }, range2: { from: number; to: number }): boolean {
       return range1.from <= range2.to && range2.from <= range1.to;
     }
     const blocks = view.state.field(blockState);
@@ -258,15 +258,24 @@ const blockLayer = layer({
         idx++;
         return;
       }
-      const fromCoords = view.coordsAtPos(Math.max(block.content.from, view.visibleRanges[0].from));
+      const firstVisibleRange = view.visibleRanges[0];
+      const lastVisibleRange = view.visibleRanges[view.visibleRanges.length - 1];
+      if (!firstVisibleRange || !lastVisibleRange) {
+        idx++;
+        return;
+      }
+      const fromCoords = view.coordsAtPos(Math.max(block.content.from, firstVisibleRange.from));
       if (!fromCoords) {
         // this often fires during refresh in vite
         return;
       }
       const fromCoordsTop = fromCoords.top;
-      let toCoordsBottom = view.coordsAtPos(
-        Math.min(block.content.to, view.visibleRanges[view.visibleRanges.length - 1].to),
-      ).bottom;
+      const toCoords = view.coordsAtPos(Math.min(block.content.to, lastVisibleRange.to));
+      if (!toCoords) {
+        idx++;
+        return;
+      }
+      let toCoordsBottom = toCoords.bottom;
       if (idx === blocks.length - 1) {
         // Calculate how much extra height we need to add to the last block
         let extraHeight =
@@ -323,29 +332,27 @@ const preventFirstBlockFromBeingDeleted = EditorState.changeFilter.of((tr) => {
   if (protect.length > 0) {
     return protect;
   }
+  return true;
 });
 
 /**
  * Transaction filter to prevent the selection from being before the first block
  */
 const preventSelectionBeforeFirstBlock = EditorState.transactionFilter.of((tr) => {
-  if (
-    !firstBlockDelimiterSize ||
-    // @ts-ignore
-    tr.annotations.some((a) => a.type === heynoteEvent)
-  ) {
+  if (!firstBlockDelimiterSize || tr.annotation(heynoteEvent)) {
     return tr;
   }
+  const delimSize = firstBlockDelimiterSize;
   tr?.selection?.ranges.forEach((range) => {
     // change the selection to after the first block if the transaction sets the selection before the first block
-    if (range && range.from < firstBlockDelimiterSize) {
+    if (range && range.from < delimSize) {
       // @ts-ignore
-      range.from = firstBlockDelimiterSize;
+      range.from = delimSize;
       //console.log("changing the from selection to", markerSize)
     }
-    if (range && range.to < firstBlockDelimiterSize) {
+    if (range && range.to < delimSize) {
       // @ts-ignore
-      range.to = firstBlockDelimiterSize;
+      range.to = delimSize;
       //console.log("changing the from selection to", markerSize)
     }
   });
@@ -399,7 +406,7 @@ const emitCursorChange = (editor: EdnaEditor) =>
       update(update: ViewUpdate) {
         // if the selection changed or the language changed (can happen without selection change),
         // emit a selection change event
-        const langChange = update.transactions.some((tr) => tr.annotations.some((a) => a.value == LANGUAGE_CHANGE));
+        const langChange = update.transactions.some((tr) => tr.annotation(heynoteEvent) === LANGUAGE_CHANGE);
         if (update.selectionSet || langChange) {
           const cursorLine = getBlockLineFromPos(update.state, update.state.selection.main.head);
 

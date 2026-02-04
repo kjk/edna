@@ -37,13 +37,14 @@ export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
   const { state } = view;
   if (state.readOnly) return false;
   const block = getActiveNoteBlock(state);
+  if (!block) return false;
   console.log("formatBlockContent:", block);
   const language = getLanguage(block.language.name);
-  if (!langSupportsFormat(language)) {
+  if (!language || !langSupportsFormat(language)) {
     return false;
   }
 
-  const cursorPos = state.selection.asSingle().ranges[0].head;
+  const cursorPos = state.selection.asSingle().main.head;
   const content = state.sliceDoc(block.content.from, block.content.to);
 
   // console.log("prettier supports:", getSupportInfo());
@@ -107,7 +108,9 @@ export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
 
   let prettier = await import("prettier/standalone");
   console.log("prettier:", prettier);
-  const { parser, plugins } = await langGetPrettierInfo(language);
+  const prettierInfo = await langGetPrettierInfo(language);
+  if (!prettierInfo) return false;
+  const { parser, plugins } = prettierInfo;
 
   let formattedContent;
   try {
@@ -130,11 +133,12 @@ export async function formatBlockContent(editor: EdnaEditor): Promise<boolean> {
         tabWidth: state.tabSize,
       });
     }
-  } catch (e) {
+  } catch (e: unknown) {
     const hyphens =
       "----------------------------------------------------------------------------";
+    const message = e instanceof Error ? e.message : String(e);
     console.log(
-      `Error when trying to format block:\n${hyphens}\n${e.message}\n${hyphens}`,
+      `Error when trying to format block:\n${hyphens}\n${message}\n${hyphens}`,
     );
     return false;
   }
@@ -169,6 +173,7 @@ export function insertAfterActiveBlock(view: EditorView, text: string): boolean 
     return false;
   }
   const block = getActiveNoteBlock(state);
+  if (!block) return false;
   let tr = view.state.update(
     {
       changes: {
@@ -183,4 +188,5 @@ export function insertAfterActiveBlock(view: EditorView, text: string): boolean 
     },
   );
   view.dispatch(tr);
+  return true;
 }

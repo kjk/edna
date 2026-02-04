@@ -11,8 +11,9 @@ export function configureNesting() {
   return parseMixed((node, input) => {
     let id = node.type.id;
     if (id == NoteContent) {
-      let noteLang = node.node.parent.firstChild.getChildren(NoteLanguage)[0];
-      let langName = input.read(noteLang?.from, noteLang?.to);
+      let noteLang = node.node.parent?.firstChild?.getChildren(NoteLanguage)[0];
+      if (!noteLang) return null;
+      let langName = input.read(noteLang.from, noteLang.to);
 
       // if the NoteContent is empty, we don't want to return a parser, since that seems to cause an
       // error for StreamLanguage parsers when the buffer size is large (e.g >300 kb)

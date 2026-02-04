@@ -1,4 +1,4 @@
-import { EditorSelection } from "@codemirror/state";
+import { EditorSelection, EditorState, SelectionRange, type ChangeSpec } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { kLanguages } from "../languages";
 import { blockState } from "./block";
@@ -6,15 +6,21 @@ import { blockState } from "./block";
 const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
 const tokenRegEx = new RegExp(`^∞∞∞(${languageTokensMatcher})(-a)?$`, "g");
 
-function selectedLineBlocks(state) {
-  let blocks = [],
+interface LineBlock {
+  from: number;
+  to: number;
+  ranges: SelectionRange[];
+}
+
+function selectedLineBlocks(state: EditorState): LineBlock[] {
+  let blocks: LineBlock[] = [],
     upto = -1;
   for (let range of state.selection.ranges) {
     let startLine = state.doc.lineAt(range.from),
       endLine = state.doc.lineAt(range.to);
     if (!range.empty && range.to == endLine.from) endLine = state.doc.lineAt(range.to - 1);
-    if (upto >= startLine.number) {
-      let prev = blocks[blocks.length - 1];
+    if (upto >= startLine.number && blocks.length > 0) {
+      let prev = blocks[blocks.length - 1]!;
       prev.to = endLine.to;
       prev.ranges.push(range);
     } else {
@@ -25,10 +31,10 @@ function selectedLineBlocks(state) {
   return blocks;
 }
 
-function moveLine(state, dispatch, forward) {
+function moveLine(state: EditorState, dispatch: EditorView["dispatch"], forward: boolean): boolean {
   if (state.readOnly) return false;
-  let changes = [],
-    ranges = [];
+  let changes: ChangeSpec[] = [],
+    ranges: SelectionRange[] = [];
   for (let block of selectedLineBlocks(state)) {
     if (forward ? block.to == state.doc.length : block.from == 0) continue;
     let nextLine = state.doc.lineAt(forward ? block.to + 1 : block.from - 1);
@@ -102,10 +108,13 @@ Move the selected lines up one line.
 */
 export const moveLineUp = ({ state, dispatch }: EditorView) => {
   // prevent moving lines up before the first block separator
+  const blocks = state.field(blockState);
+  const firstBlock = blocks[0];
+  if (!firstBlock) return false;
   if (
     state.selection.ranges.some((range) => {
       let startLine = state.doc.lineAt(range.from);
-      return startLine.from <= state.field(blockState)[0].content.from;
+      return startLine.from <= firstBlock.content.from;
     })
   ) {
     return true;

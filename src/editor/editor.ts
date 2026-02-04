@@ -106,10 +106,10 @@ export class EdnaEditor {
     this.closeBracketsCompartment = new Compartment();
     this.tabsCompartment = new Compartment();
     this.deselectOnCopy = keymap === "emacs";
-    this.emacsMetaKey = emacsMetaKey;
+    this.emacsMetaKey = emacsMetaKey || "alt";
     this.fontTheme = new Compartment();
     this.extraKeymapSpec = extraKeymap || [];
-    this.setDefaultBlockLanguage(defaultBlockToken, defaultBlockAutoDetect);
+    this.setDefaultBlockLanguage(defaultBlockToken || "text", defaultBlockAutoDetect);
 
     const makeTabState = (useTabs: boolean, tabSize: number) => {
       const indentChar = useTabs ? "\t" : " ".repeat(tabSize);
@@ -142,7 +142,7 @@ export class EdnaEditor {
 
         this.themeCompartment.of(theme === "dark" ? heynoteDark : heynoteLight),
         heynoteBase,
-        this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
+        this.fontTheme.of(getFontTheme(fontFamily || "", fontSize || 14)),
         makeTabState(useTabs, tabSize),
         EditorView.scrollMargins.of((f) => {
           return { top: 80, bottom: 80 };

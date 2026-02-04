@@ -61,14 +61,14 @@ function checkboxes(view: EditorView) {
 
   for (let { from, to } of view.visibleRanges) {
     let range = view.state.sliceDoc(from, to);
-    let match: RegExpExecArray;
-    while ((match = checkboxRegex.exec(range))) {
+    let match: RegExpExecArray | null;
+    while ((match = checkboxRegex.exec(range)) !== null) {
       if (getNoteBlockFromPos(view.state, from + match.index)?.language?.name === "markdown") {
         let deco = Decoration.replace({
           widget: new CheckboxWidget(match[2] === "x" || match[2] === "X", view.state.facet(isMonospaceFont)),
           inclusive: false,
         });
-        widgets.push(deco.range(from + match.index + match[1].length, from + match.index + match[0].length));
+        widgets.push(deco.range(from + match.index + match[1]!.length, from + match.index + match[0].length));
       }
     }
   }

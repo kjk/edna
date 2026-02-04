@@ -1,5 +1,5 @@
 import { selectAll as defaultSelectAll } from "@codemirror/commands";
-import { RangeSet, RangeSetBuilder, RangeValue, StateEffect, StateField } from "@codemirror/state";
+import { RangeSetBuilder, StateEffect, StateField, Transaction } from "@codemirror/state";
 import { Decoration, EditorView, ViewPlugin, ViewUpdate, type DecorationSet } from "@codemirror/view";
 import { getActiveNoteBlock } from "./block";
 
@@ -10,11 +10,11 @@ import { getActiveNoteBlock } from "./block";
  * and add a manual line decoration to visually indicate that the empty block is selected.
  */
 
-export const emptyBlockSelected = StateField.define({
+export const emptyBlockSelected = StateField.define<number | null>({
   create: () => {
     return null;
   },
-  update(value, tr) {
+  update(value: number | null, tr: Transaction): number | null {
     if (tr.selection) {
       // if selection changes, reset the state
       return null;
@@ -26,6 +26,7 @@ export const emptyBlockSelected = StateField.define({
         }
       }
     }
+    return value;
   },
   provide() {
     return ViewPlugin.fromClass(
@@ -48,14 +49,14 @@ export const emptyBlockSelected = StateField.define({
 /**
  * Effect that can be dispatched to set the empty block selected state
  */
-const setEmptyBlockSelected = StateEffect.define();
+const setEmptyBlockSelected = StateEffect.define<number>();
 
 const decoration = Decoration.line({
   attributes: { class: "heynote-empty-block-selected" },
 });
-function emptyBlockSelectedDecorations(view: EditorView) {
+function emptyBlockSelectedDecorations(view: EditorView): DecorationSet {
   const selectionPos = view.state.field(emptyBlockSelected);
-  const builder = new RangeSetBuilder();
+  const builder = new RangeSetBuilder<Decoration>();
   if (selectionPos) {
     const line = view.state.doc.lineAt(selectionPos);
     builder.add(line.from, line.from, decoration);
@@ -63,9 +64,10 @@ function emptyBlockSelectedDecorations(view: EditorView) {
   return builder.finish();
 }
 
-export function selectAll({ state, dispatch }: EditorView) {
-  const range = state.selection.asSingle().ranges[0];
+export function selectAll({ state, dispatch }: EditorView): boolean {
+  const range = state.selection.asSingle().main;
   const block = getActiveNoteBlock(state);
+  if (!block) return false;
 
   // handle empty blocks separately
   if (block.content.from === block.content.to) {

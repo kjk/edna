@@ -45,5 +45,5 @@
     // "vite.config.js",
     "package.json",
   ],
-  "exclude": ["./src/public/*", "./src/system-notes.ts", "./src/notes/*"],
+  "exclude": ["./src/public/*", "./src/notes/*"],
 }

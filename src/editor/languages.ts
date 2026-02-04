@@ -255,8 +255,8 @@ export function extForLang(lang: string): string {
   return "txt";
 }
 
-function buildTokenToLanguage() {
-  let res = {};
+function buildTokenToLanguage(): Record<string, Language> {
+  let res: Record<string, Language> = {};
   for (let l of kLanguages) {
     res[l.token] = l;
   }

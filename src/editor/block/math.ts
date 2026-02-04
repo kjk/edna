@@ -3,14 +3,19 @@ import { Decoration, EditorView, ViewPlugin, ViewUpdate, WidgetType, type Decora
 import { CURRENCIES_LOADED, transactionsHasAnnotation } from "../annotation";
 import { getNoteBlockFromPos } from "./block";
 
+declare const math: { format: (result: unknown, options?: object) => string };
+
 class MathResult extends WidgetType {
-  constructor(displayResult, copyResult) {
+  displayResult: string;
+  copyResult: string;
+
+  constructor(displayResult: string, copyResult: string) {
     super();
     this.displayResult = displayResult;
     this.copyResult = copyResult;
   }
 
-  eq(other) {
+  eq(other: MathResult): boolean {
     return other.displayResult == this.displayResult;
   }
 
@@ -41,9 +46,14 @@ class MathResult extends WidgetType {
   }
 }
 
+interface MathParser {
+  parser: { evaluate: (s: string) => unknown; get: (s: string) => unknown; set: (s: string, v: unknown) => void };
+  prev: unknown;
+}
+
 function mathDeco(view: EditorView): DecorationSet {
-  let mathParsers = new WeakMap();
-  let builder = new RangeSetBuilder();
+  let mathParsers = new WeakMap<object, MathParser>();
+  let builder = new RangeSetBuilder<Decoration>();
   for (let { from, to } of view.visibleRanges) {
     for (let pos = from; pos <= to; ) {
       let line = view.state.doc.lineAt(pos);
@@ -51,9 +61,11 @@ function mathDeco(view: EditorView): DecorationSet {
 
       if (block && block.language.name == "math") {
         // get math.js parser and cache it for this block
-        let { parser, prev } = mathParsers.get(block) || {};
+        let cached = mathParsers.get(block);
+        let parser = cached?.parser;
+        let prev = cached?.prev;
         if (!parser) {
-          parser = window.math.parser();
+          parser = (window as unknown as { math: { parser: () => MathParser["parser"] } }).math.parser();
           mathParsers.set(block, { parser, prev });
         }
 
@@ -113,7 +125,7 @@ function mathDeco(view: EditorView): DecorationSet {
 
 export const mathBlock = ViewPlugin.fromClass(
   class {
-    decorations: Decoration;
+    decorations: DecorationSet;
 
     constructor(view: EditorView) {
       this.decorations = mathDeco(view);

@@ -1,6 +1,6 @@
 import { codeFolding, foldedRanges, foldEffect, foldGutter, foldState, unfoldEffect } from "@codemirror/language";
-import { RangeSet } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { RangeSet, StateEffect } from "@codemirror/state";
+import { BlockInfo, EditorView } from "@codemirror/view";
 import { FOLD_LABEL_LENGTH } from "./constants";
 import {
   ADD_NEW_BLOCK,
@@ -49,7 +49,7 @@ const autoUnfoldOnEdit = () => {
     //    return
     //}
 
-    const unfoldRanges = [];
+    const unfoldRanges: { from: number; to: number }[] = [];
 
     update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
       foldRanges.between(0, state.doc.length, (from, to) => {
@@ -97,9 +97,9 @@ export function foldGutterExtension() {
   return [
     foldGutter({
       domEventHandlers: {
-        click(view: EditorView, line, event) {
+        click(view: EditorView, line: BlockInfo, event: Event) {
           // editor should not loose focus when clicking on the fold gutter
-          view.docView.dom.focus();
+          view.contentDOM.focus();
           return false;
         },
       },
@@ -144,15 +144,15 @@ export const toggleBlockFold = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = foldedRanges(state);
 
-  const foldEffects = [];
-  const unfoldEffects = [];
+  const foldEffects: StateEffect<{ from: number; to: number }>[] = [];
+  const unfoldEffects: StateEffect<{ from: number; to: number }>[] = [];
   let numFolded = 0,
     numUnfolded = 0;
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
     const firstLine = state.doc.lineAt(block.content.from);
     let blockIsFolded = false;
-    const blockFolds = [];
+    const blockFolds: { from: number; to: number }[] = [];
     folds.between(block.content.from, block.content.to, (from, to) => {
       if (from <= firstLine.to && to === block.content.to) {
         blockIsFolded = true;
@@ -189,7 +189,7 @@ export const toggleBlockFold = (editor: EdnaEditor) => (view: EditorView) => {
 
 export const foldBlock = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
-  const blockRanges = [];
+  const blockRanges: { from: number; to: number }[] = [];
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
     const line = state.doc.lineAt(block.content.from);
@@ -211,7 +211,7 @@ export const foldBlock = (editor: EdnaEditor) => (view: EditorView) => {
 export const unfoldBlock = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = foldedRanges(state);
-  const blockFolds = [];
+  const blockFolds: { from: number; to: number }[] = [];
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
     const firstLine = state.doc.lineAt(block.content.from);
@@ -253,11 +253,11 @@ export const foldAllBlocks = (editor: EdnaEditor) => (view: EditorView) => {
 export const unfoldAlBlocks = (editor: EdnaEditor) => (view: EditorView) => {
   const state = view.state;
   const folds = state.field(foldState, false) || RangeSet.empty;
-  const blockFolds = [];
+  const blockFolds: { from: number; to: number }[] = [];
 
   for (const block of getBlocks(state)) {
     const firstLine = state.doc.lineAt(block.content.from);
-    folds.between(block.content.from, block.content.to, (from, to) => {
+    folds.between(block.content.from, block.content.to, (from: number, to: number) => {
       if (from <= firstLine.to && to === block.content.to) {
         blockFolds.push({ from, to });
       }
@@ -282,8 +282,8 @@ export const unfoldEverything = (editor: EdnaEditor) => (view: EditorView) => {
     // console.log("unfoldEverything: no foldRanges found");
     return;
   }
-  let effects = [];
-  foldRanges.between(0, state.doc.length, (from, to) => {
+  let effects: StateEffect<{ from: number; to: number }>[] = [];
+  foldRanges.between(0, state.doc.length, (from: number, to: number) => {
     let effect = unfoldEffect.of({ from, to });
     effects.push(effect);
   });

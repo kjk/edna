@@ -6,17 +6,19 @@ import { changeLanguageTo } from "../block/commands";
 import { kLanguages } from "../languages";
 import { levenshtein_distance } from "./levenshtein";
 
-const GUESSLANG_TO_TOKEN = Object.fromEntries(kLanguages.map((l) => [l.guesslang, l.token]));
+const GUESSLANG_TO_TOKEN: Record<string, string> = Object.fromEntries(
+  kLanguages.filter((l) => l.guesslang).map((l) => [l.guesslang, l.token]),
+);
 
-function requestIdleCallbackCompat(cb) {
+function requestIdleCallbackCompat(cb: IdleRequestCallback): number {
   if (window.requestIdleCallback) {
     return window.requestIdleCallback(cb);
   } else {
-    return setTimeout(cb, 0);
+    return setTimeout(cb, 0) as unknown as number;
   }
 }
 
-function cancelIdleCallbackCompat(id) {
+function cancelIdleCallbackCompat(id: number): void {
   if (window.cancelIdleCallback) {
     window.cancelIdleCallback(id);
   } else {
@@ -24,9 +26,9 @@ function cancelIdleCallbackCompat(id) {
   }
 }
 
-export function languageDetection(getView) {
-  const previousBlockContent = {};
-  let idleCallbackId = null;
+export function languageDetection(getView: () => EditorView) {
+  const previousBlockContent: Record<number, string> = {};
+  let idleCallbackId: number | null = null;
 
   const detectionWorker = new Worker("langdetect-worker.js?worker");
   detectionWorker.onmessage = (event) => {
@@ -37,8 +39,9 @@ export function languageDetection(getView) {
     const view = getView();
     const state = view.state;
     const block = getActiveNoteBlock(state);
+    if (!block) return;
     const newLang = GUESSLANG_TO_TOKEN[event.data.guesslang.language];
-    if (block.language.auto === true && block.language.name !== newLang) {
+    if (newLang && block.language.auto === true && block.language.name !== newLang) {
       console.log("New auto detected language:", newLang, "Confidence:", event.data.guesslang.confidence);
       let content = state.doc.sliceString(block.content.from, block.content.to);
       const threshold = content.length * 0.1;
@@ -66,18 +69,19 @@ export function languageDetection(getView) {
       idleCallbackId = requestIdleCallbackCompat(() => {
         idleCallbackId = null;
 
-        const range = update.state.selection.asSingle().ranges[0];
+        const range = update.state.selection.asSingle().main;
         const blocks = update.state.field(blockState);
-        let block = null,
-          idx = null;
+        let block: (typeof blocks)[number] | null = null;
+        let idx: number | null = null;
         for (let i = 0; i < blocks.length; i++) {
-          if (blocks[i].content.from <= range.from && blocks[i].content.to >= range.from) {
-            block = blocks[i];
+          const b = blocks[i]!;
+          if (b.content.from <= range.from && b.content.to >= range.from) {
+            block = b;
             idx = i;
             break;
           }
         }
-        if (block === null) {
+        if (block === null || idx === null) {
           return;
         } else if (block.language.auto === false) {
           // if language is not auto, set it's previousBlockContent to null so that we'll trigger a language detection
@@ -90,9 +94,9 @@ export function languageDetection(getView) {
         if (content === "" && redoDepth(update.state) === 0) {
           // if content is cleared, set language to plaintext
           const view = getView();
-          const block = getActiveNoteBlock(view.state);
-          if (block.language.name !== "text") {
-            changeLanguageTo(view.state, view.dispatch, block, "text", true);
+          const activeBlock = getActiveNoteBlock(view.state);
+          if (activeBlock && activeBlock.language.name !== "text") {
+            changeLanguageTo(view.state, view.dispatch, activeBlock, "text", true);
           }
           delete previousBlockContent[idx];
         }
@@ -100,7 +104,8 @@ export function languageDetection(getView) {
           return;
         }
         const threshold = content.length * 0.1;
-        if (!previousBlockContent[idx] || levenshtein_distance(previousBlockContent[idx], content) >= threshold) {
+        const prevContent = previousBlockContent[idx];
+        if (!prevContent || levenshtein_distance(prevContent, content) >= threshold) {
           // the content has changed significantly, so schedule a language detection
           //console.log("Scheduling language detection for block", idx, "with threshold", threshold)
           detectionWorker.postMessage({

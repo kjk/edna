@@ -1,4 +1,4 @@
-import { EditorSelection, EditorState } from "@codemirror/state";
+import { EditorSelection, EditorState, SelectionRange } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import type { EdnaEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
@@ -7,9 +7,9 @@ import { kLanguages } from "./languages";
 const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
 const blockSeparatorRegex = new RegExp(`\\n∞∞∞(${languageTokensMatcher})(-a)?\\n`, "g");
 
-function copiedRange(state: EditorState) {
-  let content = [],
-    ranges = [];
+function copiedRange(state: EditorState): { text: string; ranges: SelectionRange[] } {
+  let content: string[] = [],
+    ranges: SelectionRange[] = [];
   for (let range of state.selection.ranges) {
     if (!range.empty) {
       content.push(state.sliceDoc(range.from, range.to));
@@ -18,7 +18,7 @@ function copiedRange(state: EditorState) {
   }
   if (ranges.length == 0) {
     // if all ranges are empty, we want to copy each whole (unique) line for each selection
-    const copiedLines = [];
+    const copiedLines: number[] = [];
     for (let range of state.selection.ranges) {
       if (range.empty) {
         const line = state.doc.lineAt(range.head);
@@ -37,9 +37,10 @@ function copiedRange(state: EditorState) {
 /**
  * Set up event handlers for the browser's copy & cut events, that will replace block separators with newlines
  */
-export const heynoteCopyCut = (editor: any) => {
-  let copy, cut;
-  copy = cut = (event, view) => {
+export const heynoteCopyCut = (editor: EdnaEditor) => {
+  let copy: (event: ClipboardEvent, view: EditorView) => void;
+  let cut: (event: ClipboardEvent, view: EditorView) => void;
+  copy = cut = (event: ClipboardEvent, view: EditorView) => {
     let { text, ranges } = copiedRange(view.state);
     text = text.replaceAll(blockSeparatorRegex, "\n\n");
     let data = event.clipboardData;
@@ -79,7 +80,7 @@ export const heynoteCopyCut = (editor: any) => {
   });
 };
 
-const copyCut = (view: EditorView, cut: boolean, editor: any) => {
+const copyCut = (view: EditorView, cut: boolean, editor: EdnaEditor): boolean => {
   let { text, ranges } = copiedRange(view.state);
   text = text.replaceAll(blockSeparatorRegex, "\n\n");
   navigator.clipboard.writeText(text);
@@ -107,6 +108,7 @@ const copyCut = (view: EditorView, cut: boolean, editor: any) => {
       }),
     );
   }
+  return true;
 };
 
 function doPaste(view: EditorView, input: string) {

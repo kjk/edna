@@ -13,12 +13,13 @@ export function setDefaultFontFamilyAndSize(fontFamily: string, fontSize: number
 /**
  * Check if the given font family is monospace by drawing test characters on a canvas
  */
-function isMonospace(fontFamily: string) {
+function isMonospace(fontFamily: string): boolean {
   const testCharacters = ["i", "W", "m", " "];
   const testSize = "72px";
 
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
+  if (!context) return true;
   context.font = `${testSize} ${fontFamily}`;
 
   const widths = testCharacters.map((char) => context.measureText(char).width);
@@ -27,8 +28,8 @@ function isMonospace(fontFamily: string) {
   return res;
 }
 
-export const isMonospaceFont = Facet.define({
-  combine: (values) => (values.length ? values[0] : true),
+export const isMonospaceFont = Facet.define<boolean, boolean>({
+  combine: (values: readonly boolean[]) => (values.length > 0 ? values[0]! : true),
 });
 
 let hardcodedMonospace = ["hack", "Cascadia Code", "Consolas", "monospace"];

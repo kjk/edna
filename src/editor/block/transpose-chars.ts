@@ -10,7 +10,7 @@ export const transposeChars = ({ state, dispatch }: EditorView) => {
   let changes = state.changeByRange((range) => {
     // prevent transposing characters if we're at the start or end of a block, since it'll break the block syntax
     const block = getNoteBlockFromPos(state, range.from);
-    if (range.from === block.content.from || range.from === block.content.to) {
+    if (!block || range.from === block.content.from || range.from === block.content.to) {
       return { range };
     }
 

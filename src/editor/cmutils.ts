@@ -53,10 +53,10 @@ export function focusEditorView(view: EditorView) {
   }, 100);
 }
 
-export function getFoldedRanges(view: EditorView) {
-  const foldedRanges = [];
+export function getFoldedRanges(view: EditorView): { from: number; to: number }[] {
+  const foldedRanges: { from: number; to: number }[] = [];
   let state = view.state;
-  state.field(foldState, false)?.between(0, state.doc.length, (from, to) => {
+  state.field(foldState, false)?.between(0, state.doc.length, (from: number, to: number) => {
     foldedRanges.push({ from, to });
   });
   return foldedRanges;

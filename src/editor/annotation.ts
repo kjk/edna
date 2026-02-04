@@ -1,6 +1,6 @@
-import { Annotation } from "@codemirror/state";
+import { Annotation, Transaction } from "@codemirror/state";
 
-export const heynoteEvent = Annotation.define();
+export const heynoteEvent = Annotation.define<string>();
 export const LANGUAGE_CHANGE = "heynote-change";
 export const CURRENCIES_LOADED = "heynote-currencies-loaded";
 export const SET_CONTENT = "heynote-set-content";
@@ -12,14 +12,14 @@ export const APPEND_BLOCK = "heynote-append-block";
 export const SET_FONT = "heynote-set-font";
 
 // This function checks if any of the transactions has the given Heynote annotation
-export function transactionsHasAnnotation(transactions, annotation) {
+export function transactionsHasAnnotation(transactions: readonly Transaction[], annotation: string): boolean {
   return transactions.some((tr) => tr.annotation(heynoteEvent) === annotation);
 }
 
-export function transactionsHasAnnotationsAny(transactions, annotations) {
-  return transactions.some((tr) => annotations.includes(tr.annotation(heynoteEvent)));
+export function transactionsHasAnnotationsAny(transactions: readonly Transaction[], annotations: string[]): boolean {
+  return transactions.some((tr) => annotations.includes(tr.annotation(heynoteEvent) ?? ""));
 }
 
-export function transactionsHasHistoryEvent(transactions) {
+export function transactionsHasHistoryEvent(transactions: readonly Transaction[]): boolean {
   return transactions.some((tr) => tr.isUserEvent("undo") || tr.isUserEvent("redo"));
 }

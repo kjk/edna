@@ -1,4 +1,4 @@
-import { EditorSelection, EditorState, Transaction } from "@codemirror/state";
+import { EditorSelection, EditorState, SelectionRange, Transaction } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import {
   ADD_NEW_BLOCK,
@@ -9,7 +9,7 @@ import {
   MOVE_BLOCK,
 } from "../annotation";
 import type { EdnaEditor } from "../editor";
-import { blockState, getActiveNoteBlock, getFirstNoteBlock, getLastNoteBlock, getNoteBlockFromPos } from "./block";
+import { type Block, blockState, getActiveNoteBlock, getFirstNoteBlock, getLastNoteBlock, getNoteBlockFromPos } from "./block";
 import { moveLineDown, moveLineUp } from "./move-lines";
 import { selectAll } from "./select-all";
 
@@ -37,10 +37,11 @@ export function insertNewBlockAtCursor({ state, dispatch }: EditorView) {
   return true;
 }
 
-export function addNewBlockBeforeCurrent({ state, dispatch }: EditorView) {
+export function addNewBlockBeforeCurrent({ state, dispatch }: EditorView): boolean {
   if (state.readOnly) return false;
 
   const block = getActiveNoteBlock(state);
+  if (!block) return false;
   const delimText = "\n∞∞∞text-a\n";
 
   dispatch(
@@ -62,15 +63,16 @@ export function addNewBlockBeforeCurrent({ state, dispatch }: EditorView) {
   return true;
 }
 
-function isEmptyLineAtPosition(doc, pos) {
+function isEmptyLineAtPosition(doc: { lineAt: (pos: number) => { text: string } }, pos: number): boolean {
   const line = doc.lineAt(pos);
   return line.text === "";
 }
 
-export function addNewBlockAfterCurrent({ state, dispatch }: EditorView) {
+export function addNewBlockAfterCurrent({ state, dispatch }: EditorView): boolean {
   if (state.readOnly) return false;
 
   const block = getActiveNoteBlock(state);
+  if (!block) return false;
   let delimText = "\n∞∞∞text-a\n";
 
   // if current block is not completely empty and cursor is at last
@@ -107,10 +109,11 @@ export function addNewBlockAfterCurrent({ state, dispatch }: EditorView) {
   return true;
 }
 
-export function addNewBlockBeforeFirst({ state, dispatch }: EditorView) {
+export function addNewBlockBeforeFirst({ state, dispatch }: EditorView): boolean {
   if (state.readOnly) return false;
 
   const block = getFirstNoteBlock(state);
+  if (!block) return false;
   const delimText = "\n∞∞∞text-a\n";
 
   dispatch(
@@ -132,9 +135,10 @@ export function addNewBlockBeforeFirst({ state, dispatch }: EditorView) {
   return true;
 }
 
-export function addNewBlockAfterLast({ state, dispatch }: EditorView) {
+export function addNewBlockAfterLast({ state, dispatch }: EditorView): boolean {
   if (state.readOnly) return false;
   const block = getLastNoteBlock(state);
+  if (!block) return false;
   const delimText = "\n∞∞∞text-a\n";
 
   dispatch(
@@ -156,8 +160,8 @@ export function addNewBlockAfterLast({ state, dispatch }: EditorView) {
 }
 
 // note: using state, dispatch because note all callers have view
-export function changeLanguageTo(state: EditorState, dispatch, block, language, auto) {
-  if (state.readOnly) return false;
+export function changeLanguageTo(state: EditorState, dispatch: EditorView["dispatch"], block: Block, language: string, auto: boolean): void {
+  if (state.readOnly) return;
   const delimRegex = /^\n∞∞∞[a-z]+?(-a)?\n/g;
   if (state.doc.sliceString(block.delimiter.from, block.delimiter.to).match(delimRegex)) {
     dispatch(
@@ -175,20 +179,21 @@ export function changeLanguageTo(state: EditorState, dispatch, block, language, 
   }
 }
 
-export function changeCurrentBlockLanguage(view: EditorView, language, auto) {
+export function changeCurrentBlockLanguage(view: EditorView, language: string, auto: boolean): void {
   const block = getActiveNoteBlock(view.state);
+  if (!block) return;
   changeLanguageTo(view.state, view.dispatch, block, language, auto);
 }
 
-function updateSel(sel, by) {
+function updateSel(sel: EditorSelection, by: (range: SelectionRange) => SelectionRange): EditorSelection {
   return EditorSelection.create(sel.ranges.map(by), sel.mainIndex);
 }
 
-function setSel(state: EditorState, selection) {
+function setSel(state: EditorState, selection: EditorSelection) {
   return state.update({ selection, scrollIntoView: true, userEvent: "select" });
 }
 
-function extendSel(state: EditorState, dispatch, how) {
+function extendSel(state: EditorState, dispatch: EditorView["dispatch"], how: (range: SelectionRange) => SelectionRange): boolean {
   let selection = updateSel(state.selection, (range) => {
     let head = how(range);
     return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || undefined);
@@ -198,43 +203,54 @@ function extendSel(state: EditorState, dispatch, how) {
   return true;
 }
 
-function moveSel(state: EditorState, dispatch, how) {
+function moveSel(state: EditorState, dispatch: EditorView["dispatch"], how: (range: SelectionRange) => SelectionRange): boolean {
   let selection = updateSel(state.selection, how);
   if (selection.eq(state.selection)) return false;
   dispatch(setSel(state, selection));
   return true;
 }
 
-function previousBlock(state: EditorState, range) {
+function previousBlock(state: EditorState, range: SelectionRange): SelectionRange {
   const blocks = state.field(blockState);
+  if (blocks.length === 0) return range;
   const block = getNoteBlockFromPos(state, range.head);
+  if (!block) return range;
   if (range.head === block.content.from) {
     const index = blocks.indexOf(block);
     const previousBlockIndex = index > 0 ? index - 1 : 0;
-    return EditorSelection.cursor(blocks[previousBlockIndex].content.from);
+    const targetBlock = blocks[previousBlockIndex];
+    if (!targetBlock) return range;
+    return EditorSelection.cursor(targetBlock.content.from);
   } else {
     return EditorSelection.cursor(block.content.from);
   }
 }
 
-function nextBlock(state: EditorState, range) {
+function nextBlock(state: EditorState, range: SelectionRange): SelectionRange {
   const blocks = state.field(blockState);
+  if (blocks.length === 0) return range;
   const block = getNoteBlockFromPos(state, range.head);
+  if (!block) return range;
   if (range.head === block.content.to) {
     const index = blocks.indexOf(block);
-    const previousBlockIndex = index < blocks.length - 1 ? index + 1 : index;
-    return EditorSelection.cursor(blocks[previousBlockIndex].content.to);
+    const nextBlockIndex = index < blocks.length - 1 ? index + 1 : index;
+    const targetBlock = blocks[nextBlockIndex];
+    if (!targetBlock) return range;
+    return EditorSelection.cursor(targetBlock.content.to);
   } else {
     return EditorSelection.cursor(block.content.to);
   }
 }
 
-function nextBlockNo(index, state: EditorState, range) {
+function nextBlockNo(index: number, state: EditorState, range: SelectionRange): SelectionRange {
   const blocks = state.field(blockState);
   const block = blocks[index];
+  if (!block) return range;
   if (range.head === block.content.to) {
-    const previousBlockIndex = index < blocks.length - 1 ? index + 1 : index;
-    return EditorSelection.cursor(blocks[previousBlockIndex].content.to);
+    const nextBlockIndex = index < blocks.length - 1 ? index + 1 : index;
+    const targetBlock = blocks[nextBlockIndex];
+    if (!targetBlock) return range;
+    return EditorSelection.cursor(targetBlock.content.to);
   } else {
     return EditorSelection.cursor(block.content.to);
   }
@@ -261,16 +277,20 @@ export function selectPreviousBlock({ state, dispatch }: EditorView) {
   return extendSel(state, dispatch, (range) => previousBlock(state, range));
 }
 
-function previousParagraph(state: EditorState, range) {
+function previousParagraph(state: EditorState, range: SelectionRange): SelectionRange {
   const blocks = state.field(blockState);
   let block = getNoteBlockFromPos(state, range.head);
+  if (!block) return range;
   const blockIndex = blocks.indexOf(block);
 
   let seenContentLine = false;
   let pos;
   // if we're on the first row of a block, and it's not the first block, we start from the end of the previous block
   if (state.doc.lineAt(range.head).from === block.content.from && blockIndex > 0) {
-    block = blocks[blockIndex - 1];
+    const prevBlock = blocks[blockIndex - 1];
+    if (prevBlock) {
+      block = prevBlock;
+    }
     pos = state.doc.lineAt(block.content.to).from;
   } else {
     pos = state.doc.lineAt(range.head).from;
@@ -291,16 +311,20 @@ function previousParagraph(state: EditorState, range) {
   return EditorSelection.cursor(block.content.from);
 }
 
-function nextParagraph(state: EditorState, range) {
+function nextParagraph(state: EditorState, range: SelectionRange): SelectionRange {
   const blocks = state.field(blockState);
   let block = getNoteBlockFromPos(state, range.head);
+  if (!block) return range;
   const blockIndex = blocks.indexOf(block);
 
   let seenContentLine = false;
   let pos;
   // if we're at the last line of a block, and it's not the last block, we start from the beginning of the next block
   if (state.doc.lineAt(range.head).to === block.content.to && blockIndex < blocks.length - 1) {
-    block = blocks[blockIndex + 1];
+    const nextBlockEl = blocks[blockIndex + 1];
+    if (nextBlockEl) {
+      block = nextBlockEl;
+    }
     pos = state.doc.lineAt(block.content.from).to;
   } else {
     pos = state.doc.lineAt(range.head).to;
@@ -337,21 +361,14 @@ export function selectPreviousParagraph({ state, dispatch }: EditorView) {
   return extendSel(state, dispatch, (range) => previousParagraph(state, range));
 }
 
-function newCursor(view: EditorView, below: boolean) {
+function newCursor(view: EditorView, below: boolean): void {
   const sel = view.state.selection;
   const ranges = sel.ranges;
 
-  const newRanges = [...ranges];
-  for (let i = 0; i < ranges.length; i++) {
-    let range = ranges[i];
+  const newRanges: SelectionRange[] = [...ranges];
+  for (const range of ranges) {
     let newRange = view.moveVertically(range, below);
-    let exists = false;
-    for (let j = 0; j < ranges.length; j++) {
-      if (newRange.eq(ranges[j])) {
-        exists = true;
-        break;
-      }
-    }
+    let exists = ranges.some((r) => newRange.eq(r));
     if (!exists) {
       newRanges.push(newRange);
     }
@@ -387,13 +404,14 @@ export function moveCurrentBlockDown({ state, dispatch }: EditorView) {
   return moveCurrentBlock(state, dispatch, false);
 }
 
-function moveCurrentBlock(state: EditorState, dispatch, up) {
+function moveCurrentBlock(state: EditorState, dispatch: EditorView["dispatch"], up: boolean): boolean {
   if (state.readOnly) {
     return false;
   }
 
   const blocks = state.field(blockState);
   const currentBlock = getActiveNoteBlock(state);
+  if (!currentBlock) return false;
   const blockIndex = blocks.indexOf(currentBlock);
   if ((up && blockIndex === 0) || (!up && blockIndex === blocks.length - 1)) {
     return false;
@@ -401,12 +419,13 @@ function moveCurrentBlock(state: EditorState, dispatch, up) {
 
   const dir = up ? -1 : 1;
   const neighborBlock = blocks[blockIndex + dir];
+  if (!neighborBlock) return false;
 
   const currentBlockContent = state.sliceDoc(currentBlock.delimiter.from, currentBlock.content.to);
   const neighborBlockContent = state.sliceDoc(neighborBlock.delimiter.from, neighborBlock.content.to);
   const newContent = up ? currentBlockContent + neighborBlockContent : neighborBlockContent + currentBlockContent;
 
-  const selectionRange = state.selection.asSingle().ranges[0];
+  const selectionRange = state.selection.asSingle().main;
   let newSelectionRange;
   if (up) {
     newSelectionRange = EditorSelection.range(
@@ -443,13 +462,14 @@ function moveCurrentBlock(state: EditorState, dispatch, up) {
 export const deleteBlock =
   (editor: EdnaEditor) =>
   ({ state, dispatch }: EditorView) => {
-    const range = state.selection.asSingle().ranges[0];
+    const range = state.selection.asSingle().main;
     const blocks = state.field(blockState);
-    let block;
-    let nextBlock;
+    let block: Block | undefined;
+    let nextBlock: Block | undefined;
     for (let i = 0; i < blocks.length; i++) {
-      block = blocks[i];
-      if (block.range.from <= range.head && block.range.to >= range.head) {
+      const currentBlock = blocks[i];
+      if (currentBlock && currentBlock.range.from <= range.head && currentBlock.range.to >= range.head) {
+        block = currentBlock;
         if (i < blocks.length - 1) {
           nextBlock = blocks[i + 1];
         }
@@ -457,8 +477,10 @@ export const deleteBlock =
       }
     }
 
+    if (!block) return false;
+
     let replace = "";
-    let newSelection;
+    let newSelection: number;
 
     if (blocks.length == 1) {
       replace = getBlockDelimiter(editor.defaultBlockToken, editor.defaultBlockAutoDetect);
@@ -487,8 +509,9 @@ export const deleteBlock =
 
 export const deleteBlockSetCursorPreviousBlock =
   (editor: EdnaEditor) =>
-  ({ state, dispatch }: EditorView) => {
+  ({ state, dispatch }: EditorView): boolean => {
     const block = getActiveNoteBlock(state);
+    if (!block) return false;
     const blocks = state.field(blockState);
     let replace = "";
     let newSelection = block.delimiter.from;

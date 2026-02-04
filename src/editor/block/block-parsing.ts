@@ -1,9 +1,17 @@
 import { syntaxTree } from "@codemirror/language";
+import { EditorState } from "@codemirror/state";
 import { IterMode } from "@lezer/common";
 import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms";
 
+export interface NoteBlock {
+  language: { name: string; auto: boolean };
+  content: { from: number; to: number };
+  delimiter: { from: number; to: number };
+  range: { from: number; to: number };
+}
+
 // tracks the size of the first delimiter
-export let firstBlockDelimiterSize;
+export let firstBlockDelimiterSize: number | undefined;
 
 function startTimer() {
   const timeStart = performance.now();
@@ -16,10 +24,10 @@ function startTimer() {
  * Return a list of blocks in the document from the syntax tree.
  * syntaxTreeAvailable() should have been called before this function to ensure the syntax tree is available.
  */
-export function getBlocksFromSyntaxTree(state) {
+export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
   //const timer = startTimer()
-  const blocks = [];
-  const tree = syntaxTree(state, state.doc.length);
+  const blocks: NoteBlock[] = [];
+  const tree = syntaxTree(state);
   if (tree) {
     tree.iterate({
       enter: (type) => {
@@ -27,9 +35,11 @@ export function getBlocksFromSyntaxTree(state) {
           return true;
         } else if (type.type.id === NoteDelimiter) {
           const langNode = type.node.getChild("NoteLanguage");
+          if (!langNode) return false;
           const language = state.doc.sliceString(langNode.from, langNode.to);
           const isAuto = !!type.node.getChild("Auto");
           const contentNode = type.node.nextSibling;
+          if (!contentNode) return false;
           blocks.push({
             language: {
               name: language,
@@ -63,9 +73,9 @@ export function getBlocksFromSyntaxTree(state) {
 /**
  * Parse blocks from document's string contents using String.indexOf()
  */
-export function getBlocksFromString(state) {
+export function getBlocksFromString(state: EditorState): NoteBlock[] {
   //const timer = startTimer()
-  const blocks = [];
+  const blocks: NoteBlock[] = [];
   const doc = state.doc;
   if (doc.length === 0) {
     return [];
