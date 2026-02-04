@@ -5,10 +5,11 @@
   import { appState } from "../appstate.svelte";
   import { loadCurrencies } from "../currency";
   import { EdnaEditor } from "../editor/editor";
+  import { getNoteMeta, saveNotesMetadata } from "../metadata";
   import { loadNote } from "../notes";
   import { getSettings } from "../settings.svelte";
   import { rememberEditor } from "../state";
-  import { throwIf } from "../util";
+  import { objectEqualDeep, throwIf } from "../util";
 
   import type { SelectionChangeEvent } from "../editor/event";
 
@@ -57,6 +58,32 @@
   function didLoadCurrencies() {
     editor?.didLoadCurrencies();
   }
+
+  function restoreEditorState(noteName: string) {
+    let noteMeta = getNoteMeta(noteName, false);
+    let defaultPos = noteName.startsWith("scratch") ? editor.view.state.doc.length : 0;
+    editor.setSelection(noteMeta?.selection, defaultPos);
+    editor.setFoldedRanges(noteMeta?.foldedRanges || []);
+  }
+
+  async function saveEditorState() {
+    let meta = getNoteMeta(editor.noteName, true);
+    let didChange = false;
+    let foldedRanges = editor.getFoldedRanges();
+    if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
+      didChange = true;
+      meta.foldedRanges = foldedRanges;
+    }
+    let selection = editor.getSelectionJSON();
+    if (!objectEqualDeep(meta.selection, selection)) {
+      didChange = true;
+      meta.selection = selection;
+    }
+    if (didChange) {
+      await saveNotesMetadata();
+    }
+  }
+
   onMount(didMount);
 
   function didMount() {
@@ -67,10 +94,10 @@
       isCtrlS = isCtrlS || (e.metaKey && e.key === "s");
       if (isCtrlS) {
         e.preventDefault();
-        // TODO: track isDirty state here?
         if (appState.isDirty) {
           editor.save();
         }
+        saveEditorState();
       }
     });
 
@@ -117,9 +144,13 @@
     });
     rememberEditor(editor);
 
-    loadNote(noteName).then(async (content) => {
-      await editor.loadContent(noteName, content || "");
-      didLoadNote(noteName, false);
+    loadNote(noteName).then((content) => {
+      editor.loadContent(noteName, content || "");
+      // Use requestAnimationFrame to avoid race condition with scrollIntoView
+      requestAnimationFrame(() => {
+        restoreEditorState(noteName);
+        didLoadNote(noteName, false);
+      });
     });
 
     loadCurrencies();
@@ -191,10 +222,15 @@
     console.log("openNote:", name);
     if (!skipSave) {
       await editor.save();
+      await saveEditorState();
     }
     const content = (await loadNote(name)) || "";
-    await editor.loadContent(name, content);
-    didLoadNote(name, noPushHistory);
+    editor.loadContent(name, content);
+    // Use requestAnimationFrame to avoid race condition with scrollIntoView
+    requestAnimationFrame(() => {
+      restoreEditorState(name);
+      didLoadNote(name, noPushHistory);
+    });
   }
 </script>
 
