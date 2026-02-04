@@ -8,7 +8,7 @@ export function focus(node: HTMLElement, delay = 50) {
   }, delay);
 }
 
-export function hasFocusedChild(element) {
+export function hasFocusedChild(element: HTMLElement): boolean {
   // Get the currently focused element
   const activeElement = document.activeElement;
   // console.log("activeElement:", activeElement);
@@ -28,7 +28,7 @@ export function smartfocus(node: HTMLElement) {
 }
 
 // return {x, y} position that ensures that rect is visible inside window
-export function ensureRectVisibleInWindow(rect) {
+export function ensureRectVisibleInWindow(rect: DOMRect): { x: number; y: number } {
   let x = rect.x;
   const winDx = window.innerWidth;
   const rEndX = x + rect.width;
@@ -104,7 +104,7 @@ export function trapFocusEvent(node: HTMLElement, ev: KeyboardEvent) {
 }
 
 export function trapfocus(node: HTMLElement) {
-  function handleKeydown(ev) {
+  function handleKeydown(ev: KeyboardEvent) {
     if (ev.key === "Tab") {
       trapFocusEvent(node, ev);
     }
@@ -118,9 +118,9 @@ export function trapfocus(node: HTMLElement) {
   };
 }
 
-export function clickOutside(node, callback) {
-  let handleClick = (event) => {
-    if (!node.contains(event.target) && !event.defaultPrevented) {
+export function clickOutside(node: HTMLElement, callback: () => void) {
+  let handleClick = (event: MouseEvent) => {
+    if (!node.contains(event.target as Node) && !event.defaultPrevented) {
       callback();
       event.stopPropagation();
       event.preventDefault();

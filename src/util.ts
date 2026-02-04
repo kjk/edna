@@ -197,10 +197,10 @@ export function addNoteToBrowserHistory(noteName: string) {
   console.log("window.history.pushState:", noteName);
 }
 
-let sleepSetTimeout_ctrl;
+let sleepSetTimeout_ctrl: ReturnType<typeof setTimeout> | undefined;
 
 export function sleep(ms: number): Promise<void> {
-  clearInterval(sleepSetTimeout_ctrl);
+  if (sleepSetTimeout_ctrl) clearInterval(sleepSetTimeout_ctrl);
   return new Promise(
     (resolve) => (sleepSetTimeout_ctrl = setTimeout(resolve, ms)),
   );
@@ -393,9 +393,9 @@ export function isWholeWord(s: string, startIdx: number, endIdx: number): boolea
     return false;
   }
   // Check if the start boundary is the beginning of the string or a non-word character
-  const startOk = startIdx === 0 || /\W/.test(s[startIdx - 1]);
+  const startOk = startIdx === 0 || /\W/.test(s[startIdx - 1]!);
   // Check if the end boundary is the end of the string or a non-word character
-  const endOk = endIdx === s.length || /\W/.test(s[endIdx]);
+  const endOk = endIdx === s.length || /\W/.test(s[endIdx]!);
 
   return startOk && endOk;
 }
@@ -435,8 +435,8 @@ export function hilightText(s: string, regexp: RegExp): string {
   return s.replace(regexp, '<span class="hili">$1</span>');
 }
 
-export function copyObj(src: any, keys: string[]): any {
-  let res = {};
+export function copyObj(src: Record<string, unknown>, keys: string[]): Record<string, unknown> {
+  let res: Record<string, unknown> = {};
   for (let k of keys) {
     res[k] = src[k];
   }

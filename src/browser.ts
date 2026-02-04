@@ -27,16 +27,16 @@ export default {
     ? // @ts-ignore
       doc.documentMode || 6
     : ie_11up
-    ? +ie_11up[1]
+    ? +ie_11up[1]!
     : ie_edge
-    ? +ie_edge[1]
+    ? +ie_edge[1]!
     : 0,
   gecko,
   gecko_version: gecko
     ? +(/Firefox\/(\d+)/.exec(nav.userAgent) || [0, 0])[1]
     : 0,
   chrome: !!chrome,
-  chrome_version: chrome ? +chrome[1] : 0,
+  chrome_version: chrome ? +chrome[1]! : 0,
   ios,
   android: /Android\b/.test(nav.userAgent),
   webkit,

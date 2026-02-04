@@ -163,11 +163,11 @@ function addTargetBlank(md: markdownIt) {
     // check if it's an external link here. You can do so based on tokens[idx].href
 
     // Add target="_blank" to links except the internal #foo links
-    let token = tokens[idx];
+    let token = tokens[idx]!;
     // console.log("token:", token);
     // console.log("token.attrs:", token.attrs);
     let aidx = token.attrIndex("href");
-    let uri = token.attrs[aidx][1];
+    let uri = token.attrs![aidx]![1];
     if (uri.startsWith("#")) {
       // console.log("skipping uri: ", uri);
       return defaultRender(tokens, idx, options, env, self);
@@ -176,7 +176,7 @@ function addTargetBlank(md: markdownIt) {
     if (aidx < 0) {
       token.attrPush(["target", "_blank"]); // add new attribute
     } else {
-      token.attrs[aidx][1] = "_blank"; // replace existing attribute
+      token.attrs![aidx]![1] = "_blank"; // replace existing attribute
     }
     // console.log("added to uri: ", uri);
     // pass token to default renderer.

@@ -22,7 +22,7 @@ import { isDev } from "./util";
 
 // window.onunhandledrejection = console.warn;
 
-let appSvelte;
+let appSvelte: ReturnType<typeof mount> | undefined;
 
 function setupPosthog() {
   if (isDev()) {
@@ -65,11 +65,10 @@ export async function boot() {
     let ok = await hasHandlePermission(dh, true);
     if (!ok) {
       console.log("no permission to write files in directory", dh.name);
-      setStorageFS(null);
-      const args = {
-        target: document.getElementById("app"),
-      };
-      appSvelte = mount(AskFSPermissions, args);
+      setStorageFS(undefined);
+      const target = document.getElementById("app");
+      if (!target) return;
+      appSvelte = mount(AskFSPermissions, { target });
       return;
     }
   } else {
@@ -130,7 +129,7 @@ export async function boot() {
   // remove non-existing notes from tabs
   let nTabs = settings.tabs.length;
   for (let i = nTabs - 1; i >= 0; i--) {
-    let noteName = settings.tabs[i];
+    let noteName = settings.tabs[i]!;
     if (!isValidNote(noteName)) {
       console.warn(`removing tab ${noteName} becase no note of that name`);
       settings.tabs.splice(i, 1);
@@ -141,10 +140,9 @@ export async function boot() {
   if (appSvelte) {
     unmount(appSvelte);
   }
-  const args = {
-    target: document.getElementById("app"),
-  };
-  appSvelte = mount(App, args);
+  const target = document.getElementById("app");
+  if (!target) return;
+  appSvelte = mount(App, { target });
   // app.use(Toast, {
   //   // transition: "Vue-Toastification__bounce",
   //   transition: "none",
@@ -160,11 +158,11 @@ boot().then(() => {
   });
 });
 
-if (isDev) {
+if (isDev()) {
   // @ts-ignore
   window.resetApp = function () {
     console.log("unmounting app");
-    unmount(appSvelte);
+    if (appSvelte) unmount(appSvelte);
     console.log("clearing localStorage");
     localStorage.clear();
     console.log("reloading");

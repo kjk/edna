@@ -45,6 +45,25 @@ const dirEntriesIdx = 4;
 const metaIdx = 5;
 
 export class FsEntry extends Array {
+  constructor(
+    handle?: FileSystemHandle,
+    parentHandle?: FileSystemDirectoryHandle | null,
+    size?: number,
+    path?: string,
+    dirEntries?: FsEntry[],
+    meta?: any,
+  ) {
+    super();
+    if (handle !== undefined) {
+      this[handleIdx] = handle;
+      this[parentHandleIdx] = parentHandle;
+      this[sizeIdx] = size;
+      this[pathIdx] = path;
+      this[dirEntriesIdx] = dirEntries;
+      this[metaIdx] = meta;
+    }
+  }
+
   get name(): string {
     return this[handleIdx].name;
   }
@@ -148,7 +167,7 @@ export async function readDirRecur(
       entries.push(e);
     }
   }
-  let res = new FsEntry(dirHandle, null, dir);
+  let res = new FsEntry(dirHandle, null, 0, dir, [], null);
   res.dirEntries = entries;
   return res;
 }
@@ -168,7 +187,7 @@ export async function readDir(
     let e = await FsEntry.fromHandle(handle, dirHandle, path);
     entries.push(e);
   }
-  let res = new FsEntry(dirHandle, null, dir);
+  let res = new FsEntry(dirHandle, null, 0, dir, [], null);
   res.dirEntries = entries;
   return res;
 }
@@ -181,7 +200,7 @@ export async function readDirRecurFiles(dirHandle: FileSystemDirectoryHandle, di
     const path = dir == "" ? entry.name : `${dir}/${entry.name}`;
     if (entry.kind === "file") {
       files.push(
-        entry.getFile().then((file) => {
+        entry.getFile().then((file: File & { directoryHandle?: FileSystemDirectoryHandle; handle?: FileSystemFileHandle }) => {
           file.directoryHandle = dirHandle;
           file.handle = entry;
           return Object.defineProperty(file, "webkitRelativePath", {
@@ -313,7 +332,7 @@ async function readBlobAsUint8Array(blob: Blob): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = function (ev) {
-      const arrayBuffer = ev.target.result as ArrayBuffer;
+      const arrayBuffer = ev.target!.result as ArrayBuffer;
       const uint8Array = new Uint8Array(arrayBuffer);
       resolve(uint8Array);
     };
@@ -325,5 +344,5 @@ async function readBlobAsUint8Array(blob: Blob): Promise<Uint8Array> {
 }
 
 export function blobFromUint8Array(ua: Uint8Array): Blob {
-  return new Blob([ua]);
+  return new Blob([ua as BlobPart]);
 }

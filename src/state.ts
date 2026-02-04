@@ -37,7 +37,7 @@ export function updateStats(fn: (stats: Stats) => void) {
 }
 
 function incCount(key: keyof Stats): number {
-  let n;
+  let n = 0;
   updateStats((stats) => {
     n = (stats[key] || 0) + 1;
     stats[key] = n;

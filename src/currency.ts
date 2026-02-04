@@ -1,4 +1,15 @@
-let currencyData = null;
+declare const math: {
+  createUnit: (name: string, definition: object, options?: object) => void;
+  unit: (value: number, unit: string) => unknown;
+};
+
+interface CurrencyData {
+  base: string;
+  base_code: string;
+  rates: Record<string, number>;
+}
+
+let currencyData: CurrencyData | null = null;
 async function getCurrencyData() {
   if (currencyData !== null) {
     return currencyData;
@@ -13,6 +24,7 @@ async function getCurrencyData() {
 let currenciesLoaded = false;
 export async function loadCurrencies() {
   const data = await getCurrencyData();
+  if (!data) return;
   data.base = data.base_code; // our api returns base_code, the code expects base
   if (!currenciesLoaded) {
     math.createUnit(data.base, {
@@ -29,7 +41,7 @@ export async function loadCurrencies() {
       math.createUnit(
         currency,
         {
-          definition: math.unit(1 / data.rates[currency], data.base),
+          definition: math.unit(1 / data.rates[currency]!, data.base),
           aliases: currency === "CUP" ? [] : [currency.toLowerCase()], // Lowercase CUP clashes with the measurement unit cup
         },
         { override: currenciesLoaded },

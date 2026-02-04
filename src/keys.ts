@@ -83,9 +83,9 @@ export function serializeShortuct(s: Shortcut): string {
 export function parseShortcut(s: string): Shortcut | null {
   let parts = s.split("\t");
   if (len(parts) > 1) {
-    s = parts[0];
+    s = parts[0]!;
     if (browser.mac) {
-      s = parts[1];
+      s = parts[1]!;
     }
   }
 
@@ -116,7 +116,7 @@ export function parseShortcut(s: string): Shortcut | null {
   s2 = s2.replaceAll("-", "+").replaceAll(" ", "");
   parts = s2.split("+");
   while (len(parts) > 1) {
-    let mod = parts.shift();
+    let mod = parts.shift()!;
     if (/^(cmd|meta|m)$/i.test(mod)) res.metaKey = true;
     else if (/^a(lt)?$/i.test(mod)) res.altKey = true;
     else if (/^(c|ctrl|control)$/i.test(mod)) res.ctrlKey = true;
@@ -129,7 +129,7 @@ export function parseShortcut(s: string): Shortcut | null {
       return null;
     }
   }
-  const key = parts[0];
+  const key = parts[0]!;
   const keyL = key.toLowerCase();
   const keyU = keyL.toUpperCase();
   if (len(key) === 1) {
@@ -190,7 +190,7 @@ export function parseShortcut(s: string): Shortcut | null {
   return res;
 }
 
-export function extractShortcut(txt) {
+export function extractShortcut(txt: string): string {
   const s = parseShortcut(txt);
   if (s === null) {
     return txt;

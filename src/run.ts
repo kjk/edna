@@ -44,8 +44,8 @@ export async function runGo(code: string): Promise<CapturingEval> {
       method: "POST",
       body: code,
     });
-  } catch (e) {
-    res.exception = e.message;
+  } catch (e: unknown) {
+    res.exception = e instanceof Error ? e.message : String(e);
     return res;
   }
 
@@ -81,7 +81,7 @@ export async function runGo(code: string): Promise<CapturingEval> {
 
 async function evalWithConsoleCapture(code: string): Promise<CapturingEval> {
   const consoleLogs: string[] = [];
-  function logFn(...args) {
+  function logFn(...args: unknown[]) {
     let all = "";
     for (let arg of args) {
       let s = JSON.stringify(arg);
@@ -101,10 +101,10 @@ async function evalWithConsoleCapture(code: string): Promise<CapturingEval> {
   let exception = null;
   try {
     // hack: obfuscate the use of eval() to disable rollup warning
-    let eval2 = [eval][0];
+    let eval2 = [eval][0]!;
     output = await eval2(code);
-  } catch (e) {
-    exception = e.message;
+  } catch (e: unknown) {
+    exception = e instanceof Error ? e.message : String(e);
   } finally {
     console.log = originalConsole.log;
     console.debug = originalConsole.debug;

@@ -25,20 +25,20 @@ export interface Metadata {
   functions: FunctionMetadata[];
 }
 
-let metadata: Metadata = null;
+let metadata: Metadata | null = null;
 
-export function getMetadata(): Metadata {
+export function getMetadata(): Metadata | null {
   return metadata;
 }
 
 export function getNotesMetadata(): NoteMetadata[] {
-  metadata.notes = metadata.notes || [];
-  return metadata.notes;
+  metadata!.notes = metadata!.notes || [];
+  return metadata!.notes;
 }
 
 function getFunctionsMetadata(): FunctionMetadata[] {
-  metadata.functions = metadata.functions || [];
-  return metadata.functions;
+  metadata!.functions = metadata!.functions || [];
+  return metadata!.functions;
 }
 
 export async function loadNotesMetadata(): Promise<Metadata> {
@@ -59,10 +59,10 @@ export async function loadNotesMetadata(): Promise<Metadata> {
   s = s || "[]";
   metadata = JSON.parse(s);
   console.log("loadNotesMetadata: finished", metadata);
-  return metadata;
+  return metadata!;
 }
 
-export async function saveNotesMetadata(m: Metadata = metadata) {
+export async function saveNotesMetadata(m: Metadata = metadata!) {
   let s = JSON.stringify(m, null, 2);
   let dh = getStorageFS();
   if (dh) {
@@ -104,7 +104,7 @@ export async function removeNoteFromMetadata(name: string) {
       newNotes.push(m);
     }
   }
-  metadata.notes = newNotes;
+  metadata!.notes = newNotes;
   await saveNotesMetadata();
 }
 
@@ -137,32 +137,32 @@ export async function reassignNoteShortcut(name: string, altShortcut: string) {
     }
   }
 
-  let meta = getNoteMeta(name, true);
+  let meta = getNoteMeta(name, true)!;
   meta.altShortcut = altShortcut;
   await saveNotesMetadata();
   updateAfterNoteStateChange();
 }
 
 export async function archiveNote(name: string) {
-  let m = getNoteMeta(name, true);
+  let m = getNoteMeta(name, true)!;
   m.isArchived = true;
   await saveNotesMetadata();
   updateAfterNoteStateChange();
 }
 
 export async function unArchiveNote(name: string) {
-  let m = getNoteMeta(name, true);
+  let m = getNoteMeta(name, true)!;
   m.isArchived = false;
   await saveNotesMetadata();
   updateAfterNoteStateChange();
 }
 
 export async function toggleNoteStarred(name: string): Promise<boolean> {
-  let meta = getNoteMeta(name, true);
+  let meta = getNoteMeta(name, true)!;
   meta.isStarred = !meta.isStarred;
   await saveNotesMetadata();
   updateAfterNoteStateChange();
-  return meta.isStarred;
+  return !!meta.isStarred;
 }
 
 export function isNoteArchived(name: string): boolean {
@@ -192,10 +192,10 @@ export function getFunctionMeta(name: string, createIfNotExists = false): Functi
 }
 
 export async function toggleFunctionStarred(name: string): Promise<boolean> {
-  let m = getFunctionMeta(name, true);
+  let m = getFunctionMeta(name, true)!;
   m.isStarred = !m.isStarred;
   await saveNotesMetadata();
-  return m.isStarred;
+  return !!m.isStarred;
 }
 
 export function printMetaInfo() {
