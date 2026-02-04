@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kjk/common/deploy"
+	"github.com/kjk/common/log"
 	"github.com/kjk/common/u"
 )
 
@@ -66,12 +67,12 @@ func getDataDirMust() string {
 	return dataDirCached
 }
 
-// func getLogsDirMust() string {
-// 	res := filepath.Join(getDataDirMust(), "logs")
-// 	err := os.MkdirAll(res, 0755)
-// 	must(err)
-// 	return res
-// }
+func getLogsDirMust() string {
+	res := filepath.Join(getDataDirMust(), "logs")
+	err := os.MkdirAll(res, 0755)
+	must(err)
+	return res
+}
 
 var (
 	// assets being served on-demand by vite
@@ -137,17 +138,21 @@ func Main() {
 		return
 	}
 
+	logConfig := log.Config{
+		Dir: getLogsDirMust(),
+	}
+
 	if flgRunDev {
-		setupLogging()
-		defer closeLogging()
+		log.Init(&logConfig)
+		defer log.Close()
 
 		runServerDev()
 		return
 	}
 
 	if flgRunProd {
-		setupLogging()
-		defer closeLogging()
+		log.Init(&logConfig)
+		defer log.Close()
 
 		runServerProd()
 		return

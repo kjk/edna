@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/kjk/common/log"
 	"github.com/kjk/common/u"
 )
 
@@ -15,6 +16,8 @@ var (
 	must       = u.Must
 	panicIf    = u.PanicIf
 	isWinOrMac = u.IsWinOrMac
+	logf       = log.Logf
+	logErrorf  = log.Errorf
 )
 
 func ctx() context.Context {

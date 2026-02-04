@@ -21,6 +21,7 @@ import (
 
 	"github.com/felixge/httpsnoop"
 	hutil "github.com/kjk/common/httputil"
+	"github.com/kjk/common/log"
 	"github.com/kjk/common/u"
 )
 
@@ -151,7 +152,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			return
 		}
 		if strings.HasPrefix(uri, "/event") {
-			handleEvent(w, r)
+			log.HandleEvent(w, r)
 			return
 		}
 		if uri == "/help" {
@@ -212,7 +213,7 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 				http.Error(w, errStr, http.StatusInternalServerError)
 				return
 			}
-			logHTTPRequest(r, m.Code, m.Written, m.Duration)
+			log.HTTPRequest(r, m.Code, m.Written, m.Duration)
 		}()
 	})
 
