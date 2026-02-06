@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from "../appstate.svelte";
+  import { isTabHome, kTabHome } from "../constants";
   import { focusEditor } from "../globals";
   import { getNoteMeta } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
@@ -12,6 +13,7 @@
     IconMdiArrowCollapseLeft,
     IconMdiArrowCollapseRight,
     IconMenu,
+    IconTablerHome,
     IconTablerPlus,
     IconTablerX,
   } from "./Icons.svelte";
@@ -189,34 +191,45 @@
 
   {#key settings.tabs}
     <div class="flex items-center overflow-hidden">
-      {#each settings.tabs as noteName}
-        {@const isSelected = noteName == settings.currentNoteName}
+      {#each settings.tabs as tab}
+        {@const isHome = isTabHome(tab)}
+        {@const isSelected = tab == settings.currentTab}
         {@const cls = isSelected
           ? "bg-white hover:bg-white! dark:bg-gray-800 dark:hover:bg-gray-800!"
           : "bg-gray-200 dark:bg-gray-500! hover:bg-gray-100 cursor-pointer"}
-        {@const noteNameCls = noteCls(noteName)}
-        <button
-          class="truncate justify-between items-center whitespace-nowrap flex-1 ml-2 flex dark:bg-gray-700 clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 group {cls}"
-          onclick={() => openNote(noteName, false)}
-          title={getNameWithShortcut(noteName)}
-        >
-          <div class="max-w-32 truncate {noteNameCls}">
-            {noteName}
-          </div>
-          {#if len(settings.tabs) > 1}
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
-              onclick={(ev) => {
-                ev.stopPropagation();
-                closeTab(noteName);
-              }}
-              class="hover:bg-red-300 hover:text-red-600 invisible group-hover:visible flex"
-            >
-              {@render IconTablerX()}
+        {@const tabNameCls = isHome ? "" : noteCls(tab)}
+        {#if isHome}
+          <button
+            class="ml-2 flex items-center self-stretch px-3 cursor-pointer text-gray-500 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-500 hover:bg-gray-100 {cls}"
+            onclick={() => (settings.currentTab = kTabHome)}
+            title="Home"
+          >
+            {@render IconTablerHome()}
+          </button>
+        {:else}
+          <button
+            class="truncate justify-between items-center whitespace-nowrap flex-1 ml-2 flex dark:bg-gray-700 clickable-icon text-gray-500 dark:text-gray-300 dark:hover:bg-gray-500 group {cls}"
+            onclick={() => openNote(tab, false)}
+            title={getNameWithShortcut(tab)}
+          >
+            <div class="max-w-32 truncate {tabNameCls}">
+              {tab}
             </div>
-          {/if}
-        </button>
+            {#if len(settings.tabs) > 1}
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <div
+                onclick={(ev) => {
+                  ev.stopPropagation();
+                  closeTab(tab);
+                }}
+                class="hover:bg-red-300 hover:text-red-600 invisible group-hover:visible flex"
+              >
+                {@render IconTablerX()}
+              </div>
+            {/if}
+          </button>
+        {/if}
       {/each}
     </div>
   {/key}

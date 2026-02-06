@@ -29,6 +29,7 @@
     IconTablerTrash,
     IconTablerArchive,
     IconGrokIconDown,
+    IconTablerHome,
   };
 </script>
 
@@ -509,6 +510,23 @@ https://icones.js.org/collection/all?s=replace-all&icon=lucide:replace
         d="M6 10V5a3 3 0 0 1 3-3h1"
       /><rect width="8" height="8" x="2" y="14" rx="2" /></g
     ></svg
+  >
+{/snippet}
+
+<!--
+Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
+https://icones.js.org/collection/tabler?icon=tabler:home
+-->
+{#snippet IconTablerHome()}
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
+    ><path
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M5 12H3l9-9l9 9h-2M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7m-9 9v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"
+    /></svg
   >
 {/snippet}
 

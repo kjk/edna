@@ -20,3 +20,12 @@ export const kSettingsPath = "settings.json";
 
 export const kEdnaFileExt = ".edna.txt";
 export const kEdnaEncrFileExt = ".encr.edna.txt";
+
+export const kTabHome = "__home:";
+export function isTabHome(tab: string): boolean {
+  return tab === kTabHome;
+}
+export function noteNameFromTab(tab: string): string | undefined {
+  if (isTabHome(tab)) return undefined;
+  return tab;
+}

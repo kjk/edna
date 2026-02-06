@@ -1,3 +1,4 @@
+import { noteNameFromTab } from "./constants";
 import { getNoteMeta } from "./metadata";
 import { defaultSettings, type Settings } from "./settings.svelte";
 
@@ -45,6 +46,8 @@ class AppState {
 
   history: string[] = $state([]); // names of opened notes
   settings: Settings = $state(defaultSettings); // user settings
+
+  currentNoteName: string | undefined = $derived(noteNameFromTab(this.settings.currentTab));
 
   forceNewTab = false;
 }

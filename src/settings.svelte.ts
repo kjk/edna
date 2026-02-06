@@ -1,11 +1,11 @@
 import { appState } from "./appstate.svelte";
-import { kScratchNoteName, kSettingsPath } from "./constants";
+import { kScratchNoteName, kSettingsPath, kTabHome } from "./constants";
 import { kModelIDIdx, modelsShort } from "./models-short";
 import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf } from "./util";
 
 const settingsKeys = [
   "bracketClosing",
-  "currentNoteName",
+  "currentTab",
   "tabs",
   "emacsMetaKey",
   "fontFamily",
@@ -28,7 +28,7 @@ const settingsKeys = [
 
 export interface Settings {
   bracketClosing: boolean;
-  currentNoteName: string;
+  currentTab: string;
   tabs: string[];
   emacsMetaKey: string;
   fontFamily?: string;
@@ -51,7 +51,7 @@ export interface Settings {
 
 export const defaultSettings: Settings = {
   bracketClosing: true,
-  currentNoteName: kScratchNoteName,
+  currentTab: kTabHome,
   tabs: [],
   emacsMetaKey: "alt",
   fontFamily: undefined,
@@ -83,6 +83,10 @@ export function createSettings(raw?: any): Settings {
       if (key in raw) {
         (s as any)[key] = raw[key];
       }
+    }
+    // backward compat: migrate currentNoteName -> currentTab
+    if (raw.currentNoteName && !raw.currentTab) {
+      s.currentTab = raw.currentNoteName;
     }
   }
   return s;
@@ -237,8 +241,13 @@ export function getSettings(): Settings {
   settings.starredModels = removeUnknownAiModels(settings.starredModels || []);
 
   // console.log("getSettings: settings:", app
-  if (!settings.currentNoteName) {
-    settings.currentNoteName = kScratchNoteName;
+  // backward compat: migrate currentNoteName -> currentTab
+  if ((settings as any).currentNoteName && !settings.currentTab) {
+    settings.currentTab = (settings as any).currentNoteName;
+    delete (settings as any).currentNoteName;
+  }
+  if (!settings.currentTab) {
+    settings.currentTab = kTabHome;
   }
   lastSettingsRaw = $state.snapshot(settings);
 
@@ -264,7 +273,7 @@ function updateWebsiteTheme() {
 }
 
 function saveSettings(newSettings: Settings): boolean {
-  throwIf(!newSettings.currentNoteName);
+  throwIf(!newSettings.currentTab);
   newSettings.tabSize = validateTabSize(newSettings.tabSize);
   let settingsRaw = $state.snapshot(newSettings);
   let changed: string[] = [];

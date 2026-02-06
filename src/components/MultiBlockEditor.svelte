@@ -141,7 +141,7 @@
     let fontFamily = settings.fontFamily!;
     let fontSize = settings.fontSize!;
 
-    currentNoteName = settings.currentNoteName;
+    currentNoteName = appState.currentNoteName!;
     let useTabs = settings.indentType == "tabs";
     let tabSize = settings.tabSize;
 

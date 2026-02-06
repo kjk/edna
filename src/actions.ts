@@ -1,8 +1,8 @@
 export function focus(node: HTMLElement, delay = 50) {
-  // note: not sure why I need this but e.g. if I have CodeMirror,
-  // the codemirror element regains focus if I set my focus
-  // immediately on mount. Delay of 100 seems to fix it (50 was too low)
-  // is it just with codemirror or more general?
+  // Focus immediately, then re-focus after a delay to fight CodeMirror
+  // stealing focus back. The immediate focus works when there's no
+  // CodeMirror (e.g. Home tab), the delayed one is needed when there is.
+  node.focus();
   setTimeout(() => {
     node.focus();
   }, delay);

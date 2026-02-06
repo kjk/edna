@@ -5,6 +5,7 @@ import { appState } from "./appstate.svelte";
 import { clearModalMessage, showModalMessageHTML } from "./components/ModalMessage.svelte";
 import {
   blockHdrMarkdown,
+  isTabHome,
   kBuiltInFunctionsNoteName,
   kDailyJournalNoteName,
   kEdnaEncrFileExt,
@@ -856,11 +857,11 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle) 
   let noteNames = await loadNoteNames();
   openedNotes = []; // can't guarantee names will be unique
 
-  // migrate settings, update currentNoteName
+  // migrate settings, update currentTab
   let settings = getSettings();
-  let name = settings.currentNoteName;
-  if (!noteNames.includes(name)) {
-    settings.currentNoteName = kScratchNoteName;
+  let tab = settings.currentTab;
+  if (tab && !isTabHome(tab) && !noteNames.includes(tab)) {
+    settings.currentTab = kScratchNoteName;
   }
   return noteNames;
 }

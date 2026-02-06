@@ -4,7 +4,7 @@ import "highlight.js/styles/github.css";
 import { mount, unmount } from "svelte";
 import App from "./components/App.svelte";
 import AskFSPermissions from "./components/AskFSPermissions.svelte";
-import { kScratchNoteName } from "./constants";
+import { isTabHome, kScratchNoteName, kTabHome } from "./constants";
 import { hasHandlePermission } from "./fileutil";
 import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import {
@@ -58,14 +58,14 @@ export async function boot() {
   let settings = getSettings();
   // console.log("settings:", settings);
 
-  // pick the note to open at startup:
+  // pick the tab to open at startup:
   // - #${name} from the url
-  // - settings.currentNoteName if it exists
-  // - fallback to scratch note
-  let toOpenAtStartup = kScratchNoteName; // default if nothing else matches
+  // - settings.currentTab if it's valid
+  // - fallback to home tab
+  let toOpenAtStartup: string = kTabHome; // default if nothing else matches
   let nameFromURLHash = window.location.hash.slice(1);
   nameFromURLHash = decodeURIComponent(nameFromURLHash);
-  let nameFromSettings = settings.currentNoteName;
+  let tabFromSettings = settings.currentTab;
 
   // re-do because could have created default notes
   if (nCreated > 0) {
@@ -79,29 +79,38 @@ export async function boot() {
     return noteNames.includes(name) || isSystemNoteName(name);
   }
 
-  // need to do this twice to make sure hashName takes precedence over settings.currentNoteName
-  if (isValidNote(nameFromSettings)) {
-    toOpenAtStartup = nameFromSettings;
-    console.log("will open note from settings.currentNoteName:", nameFromSettings);
+  function isValidTab(tab: string): boolean {
+    if (isTabHome(tab)) return true;
+    return isValidNote(tab);
+  }
+
+  // need to do this twice to make sure hashName takes precedence over settings.currentTab
+  if (isValidTab(tabFromSettings)) {
+    toOpenAtStartup = tabFromSettings;
+    console.log("will open tab from settings.currentTab:", tabFromSettings);
   }
   if (isValidNote(nameFromURLHash)) {
     toOpenAtStartup = nameFromURLHash;
     console.log("will open note from url #hash:", nameFromURLHash);
   }
-  if (!isValidNote(nameFromSettings)) {
-    toOpenAtStartup = kScratchNoteName;
+
+  // will open this tab in App.svelte on mounted()
+  settings.currentTab = toOpenAtStartup;
+  // ensure home tab is always present and first
+  if (!settings.tabs.includes(kTabHome)) {
+    settings.tabs.unshift(kTabHome);
+  }
+  if (!isTabHome(toOpenAtStartup)) {
+    settingsAddTab(settings, toOpenAtStartup);
   }
 
-  // will open this note in Editor.vue on mounted()
-  settings.currentNoteName = toOpenAtStartup;
-  settingsAddTab(settings, toOpenAtStartup);
-
-  // remove non-existing notes from tabs
+  // remove non-existing notes from tabs (skip home tab)
   let nTabs = settings.tabs.length;
   for (let i = nTabs - 1; i >= 0; i--) {
-    let noteName = settings.tabs[i]!;
-    if (!isValidNote(noteName)) {
-      console.warn(`removing tab ${noteName} becase no note of that name`);
+    let tab = settings.tabs[i]!;
+    if (isTabHome(tab)) continue;
+    if (!isValidNote(tab)) {
+      console.warn(`removing tab ${tab} because no note of that name`);
       settings.tabs.splice(i, 1);
     }
   }

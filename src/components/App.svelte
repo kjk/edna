@@ -8,6 +8,7 @@
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
   import {
     blockHdrMarkdown,
+    isTabHome,
     kBuiltInFunctionsNoteName,
     kDailyJournalNoteName,
     kEdnaFileExt,
@@ -15,6 +16,7 @@
     kMyFunctionsNoteName,
     kReleaseNotesSystemNoteName,
     kScratchNoteName,
+    kTabHome,
     kWelcomeDevSystemNoteName,
     kWelcomeSystemNoteName,
   } from "../constants";
@@ -129,6 +131,7 @@
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
   import FindInNotes from "./FindInNotes.svelte";
+  import HomePage from "./HomePage.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
   import Menu, {
@@ -164,7 +167,7 @@
   let language = $state("text");
   let languageAuto = $state(true);
   let line = $state(1);
-  let noteName = $derived(settings.currentNoteName);
+  let noteName = $derived(appState.currentNoteName);
   let selectionSize = $state(0);
 
   let showingBlockSelector = $state(false);
@@ -206,7 +209,9 @@
 
     appState.forceNewTab = false;
 
-    getEditorComp().focus();
+    if (editorRef) {
+      getEditorComp().focus();
+    }
   }
 
   let isSpellChecking = $state(false);
@@ -269,10 +274,13 @@
   }
 
   $effect(() => {
-    getEditorComp().setSpellChecking(isSpellChecking);
+    if (editorRef) {
+      getEditorComp().setSpellChecking(isSpellChecking);
+    }
   });
 
   function focusEditor() {
+    if (!editorRef) return;
     getEditor().focus();
   }
 
@@ -319,16 +327,18 @@
   });
 
   function onKeyDown(ev: KeyboardEvent) {
-    // we bind Mod-h in CocdeMirror which only works if CodeMirror has
+    let mod = isMac ? ev.metaKey : ev.ctrlKey;
+
+    // we bind Mod-h in CodeMirror which only works if CodeMirror has
     // focus. We have to prevent it here to disable the default
     // behavior of hiding a window
     if (ev.key == "h") {
-      if (ev.ctrlKey || ev.metaKey) {
+      if (mod) {
         if (isShowingDialog) {
           ev.preventDefault();
           if (appState.showingQuickAccess) {
             appState.showingQuickAccess = false;
-            getEditor().focus();
+            focusEditor();
           }
         }
         return;
@@ -350,20 +360,34 @@
       return;
     }
 
-    // if (ev.key === "F2") {
-    //   console.log("F2");
-    //   let undoAction = () => {
-    //     console.log("undoAction")
-    //   }
-    //   toast({
-    //     component: ToastUndo,
-    //     props: {
-    //       message: "F2 pressed",
-    //       undoText: "Undo delete",
-    //       undoAction: undoAction,
-    //     },
-    //   }, toastOptions)
-    // }
+    // When there's no editor (e.g. Home tab), handle shortcuts that are
+    // normally bound through CodeMirror's extraKeymap
+    if (!editorRef && !isShowingDialog) {
+      if (mod && ev.shiftKey && (ev.key === "K" || ev.key === "k" || ev.key === "P" || ev.key === "p" || ev.key === "O" || ev.key === "o")) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        openCommandPalette();
+        return;
+      }
+      if (mod && !ev.shiftKey && (ev.key === "k" || ev.key === "o" || ev.key === "p")) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        openNoteSelector();
+        return;
+      }
+      if (mod && !ev.shiftKey && ev.key === "h") {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        openQuickAccess();
+        return;
+      }
+      if (mod && ev.shiftKey && (ev.key === "F" || ev.key === "f")) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        openFindInNotes();
+        return;
+      }
+    }
 
     // TODO: can I do this better? The same keydown event that sets the Alt-N shortcut
     // in NoteSelector also seems to propagate here and immediately opens the note.
@@ -403,7 +427,8 @@
     // TODO: await getEditor().saveCurrentNote() ?
     await switchToStoringNotesOnDisk(dh);
     let settings = getSettings();
-    await openNote(settings.currentNoteName, true);
+    let noteToOpen = appState.currentNoteName || kScratchNoteName;
+    await openNote(noteToOpen, true);
   }
 
   async function pickAnotherDirectory2() {
@@ -546,7 +571,7 @@
     let bi = getBlocksInfo(editor.view.state);
     let block = getActiveNoteBlock(editor.view.state)!;
     let ext = extForLang(block.language);
-    let name = toFileName(settings.currentNoteName) + `-${bi.active}.` + ext;
+    let name = toFileName(noteName!) + `-${bi.active}.` + ext;
     let from = block.contentFrom,
       to = block.to;
     let s = editor.view.state.sliceDoc(from, to);
@@ -557,7 +582,7 @@
 
   async function exportCurrentNote() {
     let settings = getSettings();
-    let fileName = toFileName(settings.currentNoteName) + kEdnaFileExt;
+    let fileName = toFileName(noteName!) + kEdnaFileExt;
     let editor = getEditor();
     let s = editor.getContent();
     console.log("exportCurrentNote:", fileName);
@@ -957,10 +982,49 @@
   const kCmdAskAI = nmid();
   const kCmdTestErrorTracking = nmid();
 
-  function buildMenuDef(): MenuDef {
+  function buildStorageMenu(): MenuItemDef[] {
+    let dh = getStorageFS();
+    let currStorage = "Current store: browser (local storage)";
+    if (dh) {
+      currStorage = `Current store: directory ${dh.name}`;
+    }
+    return [
+      [currStorage, kMenuIdJustText],
+      ["Move notes from browser to directory", kCmdMoveNotesToDirectory],
+      ["Switch to browser (local storage)", kCmdSwitchToLocalStorage],
+      ["Switch to notes in a directory", kCmdSwitchToNotesInDir],
+      kMenuSeparator,
+      ["Export all notes to .zip file", kCmdExportNotes],
+      kMenuSeparator,
+      ["Help: storage", kCmdShowStorageHelp],
+    ];
+  }
+
+  function buildEncryptMenu(): MenuItemDef[] {
+    return [
+      ["Encrypt all notes", kCmdEncryptNotes],
+      ["Decrypt all notes", kCmdDecryptNotes],
+      ["Help: encryption", kCmdEncryptionHelp],
+    ];
+  }
+
+  function buildHelpMenu(): MenuItemDef[] {
+    const menuHelp: MenuItemDef[] = [
+      ["Show help", kCmdShowHelp],
+      ["Show help as note", kCmdShowHelpAsNote],
+      ["Release notes", kCmdShowReleaseNotes],
+      ["Show Welcome Note", kCmdShowWelcomeNote],
+    ];
+    if (isDev()) {
+      menuHelp.push(["Show Welcome Dev Note", kCmdShowWelcomeDevNote]);
+    }
+    return menuHelp;
+  }
+
+  function buildMenuDefForEditor(): MenuDef {
     // let starAction = "Star";
     let starAction = "Add to favorites";
-    let meta = getNoteMeta(noteName);
+    let meta = noteName ? getNoteMeta(noteName) : undefined;
     if (meta && meta.isStarred) {
       //starAction = "Un-star";
       starAction = "Remove from favorites";
@@ -1019,38 +1083,6 @@
     ];
 
     let dh = getStorageFS();
-    let currStorage = "Current store: browser (local storage)";
-    if (dh) {
-      currStorage = `Current store: directory ${dh.name}`;
-    }
-    const menuStorage: MenuItemDef[] = [
-      [currStorage, kMenuIdJustText],
-      ["Move notes from browser to directory", kCmdMoveNotesToDirectory],
-      ["Switch to browser (local storage)", kCmdSwitchToLocalStorage],
-      ["Switch to notes in a directory", kCmdSwitchToNotesInDir],
-      kMenuSeparator,
-      ["Export all notes to .zip file", kCmdExportNotes],
-      kMenuSeparator,
-      ["Help: storage", kCmdShowStorageHelp],
-    ];
-
-    const menuEncrypt: MenuItemDef[] = [
-      ["Encrypt all notes", kCmdEncryptNotes],
-      ["Decrypt all notes", kCmdDecryptNotes],
-      ["Help: encryption", kCmdEncryptionHelp],
-    ];
-
-    const menuHelp: MenuItemDef[] = [
-      ["Show help", kCmdShowHelp],
-      ["Show help as note", kCmdShowHelpAsNote],
-      ["Release notes", kCmdShowReleaseNotes],
-      ["Show Welcome Note", kCmdShowWelcomeNote],
-    ];
-
-    if (isDev()) {
-      menuHelp.push(["Show Welcome Dev Note", kCmdShowWelcomeDevNote]);
-    }
-
     const contextMenu: MenuDef = [
       ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
       ["Open note\tMod + K", kCmdOpenNote],
@@ -1060,19 +1092,45 @@
       ["This note", menuNote],
       ["Block", menuBlock],
       ["Run code", menuRun],
-      ["Notes storage", menuStorage],
+      ["Notes storage", buildStorageMenu()],
     ];
     if (dh) {
       // encryption only for files stored on disk
-      contextMenu.push(["Encryption", menuEncrypt]);
+      contextMenu.push(["Encryption", buildEncryptMenu()]);
     }
     contextMenu.push(
       ["Settings", kCmdSettings],
-      ["Help", menuHelp],
+      ["Help", buildHelpMenu()],
       ["Tip: Ctrl + click for browser's context menu", kMenuIdJustText],
     );
 
     return contextMenu;
+  }
+
+  function buildMenuDefHomePage(): MenuDef {
+    let dh = getStorageFS();
+    const menu: MenuDef = [
+      ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
+      ["Open note\tMod + K", kCmdOpenNote],
+      ["New note", kCmdCreateNewNote],
+      ["Notes storage", buildStorageMenu()],
+    ];
+    if (dh) {
+      menu.push(["Encryption", buildEncryptMenu()]);
+    }
+    menu.push(
+      ["Settings", kCmdSettings],
+      ["Help", buildHelpMenu()],
+      ["Tip: Ctrl + click for browser's context menu", kMenuIdJustText],
+    );
+    return menu;
+  }
+
+  function buildMenuDef(): MenuDef {
+    if (isTabHome(settings.currentTab)) {
+      return buildMenuDefHomePage();
+    }
+    return buildMenuDefForEditor();
   }
 
   const commandNameOverrides = [
@@ -1144,7 +1202,7 @@
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
     }
-    let noteName = settings.currentNoteName;
+    let noteName = appState.currentNoteName || "";
     // console.log("menuItemStatus:", mi);
     // console.log("s:", s, "mid:", mid);
     // note: this is called for each menu item so should be fast
@@ -1153,8 +1211,8 @@
     // console.log("dh:", dh);
     let hasFS = supportsFileSystem();
     let view = getEditorView();
-    let readOnly = isReadOnly(view);
-    let hasSel = hasSelection();
+    let readOnly = view ? isReadOnly(view) : true;
+    let hasSel = view ? hasSelection() : false;
 
     let removeIfReadOnly = [
       kCmdFormatBlock,
@@ -1284,8 +1342,20 @@
   async function onmenucmd(cmdId: number) {
     // console.log("cmd:", cmdId);
     appState.showingContextMenu = false;
-    let view = getEditorView();
-    let ednaEditor = getEditor();
+    // lazy — only call when a branch actually needs the editor
+    let view: EditorView;
+    let ednaEditor: MultiBlockEditor;
+    function requireView(): EditorView {
+      if (!view) view = getEditorView();
+      return view;
+    }
+    function requireEditor(): MultiBlockEditor {
+      if (!ednaEditor) ednaEditor = getEditor();
+      return ednaEditor;
+    }
+    function focusView() {
+      requireView().focus();
+    }
 
     if (cmdId === kCmdCommandPalette) {
       openCommandPalette();
@@ -1298,118 +1368,117 @@
       // TODO: open search panel
     } else if (cmdId === kCmdCreateNewNote) {
       openCreateNewNote();
-      view.focus();
     } else if (cmdId === kCmdCloseCurrentTab) {
       closeCurrentTab();
-      view.focus();
+      focusEditor();
     } else if (cmdId === kCmdRenameCurrentNote) {
       appState.showingRenameNote = true;
     } else if (cmdId == kCmdPermanentlyDeleteNote) {
-      deleteNotePermanently(settings.currentNoteName, true);
-      view.focus();
+      deleteNotePermanently(noteName!, true);
+      focusView();
     } else if (cmdId === kCmdArchiveCurrentNote) {
-      archiveNote(settings.currentNoteName);
-      view.focus();
+      archiveNote(noteName!);
+      focusView();
     } else if (cmdId === kCmdUnArchiveCurrentNote) {
-      unArchiveNote(settings.currentNoteName);
-      view.focus();
+      unArchiveNote(noteName!);
+      focusView();
     } else if (cmdId === kCmdCreateScratchNote) {
       await createScratchNote();
-      view.focus();
+      focusView();
     } else if (cmdId === kCmdNewBlockAfterCurrent) {
-      addNewBlockAfterCurrent(view);
-      view.focus();
+      addNewBlockAfterCurrent(requireView());
+      focusView();
     } else if (cmdId === kCmdNewBlockBeforeCurrent) {
-      addNewBlockBeforeCurrent(view);
-      view.focus();
+      addNewBlockBeforeCurrent(requireView());
+      focusView();
     } else if (cmdId === kCmdNewBlockAtEnd) {
-      addNewBlockAfterLast(view);
-      view.focus();
+      addNewBlockAfterLast(requireView());
+      focusView();
     } else if (cmdId === kCmdNewBlockAtStart) {
-      addNewBlockBeforeFirst(view);
-      view.focus();
+      addNewBlockBeforeFirst(requireView());
+      focusView();
     } else if (cmdId === kCmdSplitBlockAtCursor) {
-      insertNewBlockAtCursor(view);
-      view.focus();
+      insertNewBlockAtCursor(requireView());
+      focusView();
     } else if (cmdId === kCmdGoToBlock) {
       openBlockSelector();
     } else if (cmdId === kCmdGoToNextBlock) {
-      gotoNextBlock(view);
-      view.focus();
+      gotoNextBlock(requireView());
+      focusView();
     } else if (cmdId === kCmdTransposeChars) {
-      transposeChars(view);
-      view.focus();
+      transposeChars(requireView());
+      focusView();
     } else if (cmdId === kCmdToggleComment) {
-      toggleComment(view);
-      view.focus();
+      toggleComment(requireView());
+      focusView();
     } else if (cmdId === kCmdToggleLineComment) {
-      toggleLineComment(view);
-      view.focus();
+      toggleLineComment(requireView());
+      focusView();
     } else if (cmdId === kCmdToggleBlockComment) {
-      toggleBlockComment(view);
-      view.focus();
+      toggleBlockComment(requireView());
+      focusView();
     } else if (cmdId === kCmdInsertDateAndTime) {
-      insertDateAndTime(view);
-      view.focus();
+      insertDateAndTime(requireView());
+      focusView();
     } else if (cmdId === kCmdInsertTime) {
-      insertTime(view);
-      view.focus();
+      insertTime(requireView());
+      focusView();
     } else if (cmdId === kCmdGoToPreviousBlock) {
-      gotoPreviousBlock(view);
-      view.focus();
+      gotoPreviousBlock(requireView());
+      focusView();
     } else if (cmdId === kCmdMoveBlockUp) {
-      moveCurrentBlockUp(view);
-      view.focus();
+      moveCurrentBlockUp(requireView());
+      focusView();
     } else if (cmdId === kCmdMoveBlockDown) {
-      moveCurrentBlockDown(view);
-      view.focus();
+      moveCurrentBlockDown(requireView());
+      focusView();
     } else if (cmdId === kCmdChangeBlockLanguage) {
       openLanguageSelector();
     } else if (cmdId === kCmdBlockSelectAll) {
-      selectAll(view);
-      view.focus();
+      selectAll(requireView());
+      focusView();
     } else if (cmdId === kCmdFormatBlock) {
       formatCurrentBlock();
-      view.focus();
+      focusView();
     } else if (cmdId === kCmdMoveBlock) {
       moveCurrentBlock();
     } else if (cmdId === kCmdFoldCode) {
-      foldCode(view);
-      view.focus();
+      foldCode(requireView());
+      focusView();
     } else if (cmdId === kCmdUnfoldColde) {
-      unfoldCode(view);
-      view.focus();
+      unfoldCode(requireView());
+      focusView();
     } else if (cmdId === kCmdFoldBlock) {
-      foldBlock(ednaEditor)(view);
-      view.focus();
+      foldBlock(requireEditor())(requireView());
+      focusView();
     } else if (cmdId === kCmdUnfoldBlock) {
-      unfoldBlock(ednaEditor)(view);
-      view.focus();
+      unfoldBlock(requireEditor())(requireView());
+      focusView();
     } else if (cmdId === kCmdMoveLineUp || cmdId === kCmdMoveSelectionUp) {
-      moveLineUp(view);
-      view.focus();
+      moveLineUp(requireView());
+      focusView();
     } else if (cmdId === kCmdMoveLineDown || cmdId === kCmdMoveSelectionDown) {
-      moveLineDown(view);
-      view.focus();
+      moveLineDown(requireView());
+      focusView();
     } else if (cmdId === kCmdFoldAllBlocks) {
-      foldAllBlocks(ednaEditor)(view);
-      view.focus();
+      foldAllBlocks(requireEditor())(requireView());
+      focusView();
     } else if (cmdId === kCmdUnfoldAllBlocks) {
-      unfoldAlBlocks(ednaEditor)(view);
-      view.focus();
+      unfoldAlBlocks(requireEditor())(requireView());
+      focusView();
     } else if (cmdId === kCmdUnfoldEverything) {
-      unfoldEverything(ednaEditor)(view);
-      view.focus();
+      unfoldEverything(requireEditor())(requireView());
+      focusView();
     } else if (cmdId === kCmdToggleBlockFold) {
-      toggleBlockFold(ednaEditor)(view);
-      view.focus();
+      toggleBlockFold(requireEditor())(requireView());
+      focusView();
     } else if (cmdId === kCmdExportCurrentBlock) {
       await exportCurrentBlock();
-      view.focus();
+      focusView();
     } else if (cmdId === kCmdBlockDelete) {
-      view.focus();
+      focusView();
       tick().then(() => {
-        deleteBlock(ednaEditor)(view);
+        deleteBlock(requireEditor())(requireView());
       });
     } else if (cmdId === kCmdOpenNoteFromDisk) {
       openNoteFromDisk();
@@ -1417,13 +1486,12 @@
       openAskAI();
     } else if (cmdId === kCmdToggleSpellChecking) {
       toggleSpellCheck();
-      view.focus();
+      focusView();
     } else if (cmdId === kCmdToggleSpellChecking2) {
       toggleSpellCheck();
-      view.focus();
+      focusView();
     } else if (cmdId === kCmdShowHelp) {
       showHTMLHelp();
-      view.focus();
     } else if (cmdId === kCmdShowHelpAsNote) {
       openNote(kHelpSystemNoteName);
     } else if (cmdId === kCmdShowReleaseNotes) {
@@ -1477,7 +1545,7 @@
     } else if (cmdId === kCmdToggleSidebar) {
       settings.showSidebar = !settings.showSidebar;
       if (!settings.showSidebar) {
-        view.focus();
+        focusEditor();
       }
     } else if (cmdId === kCmdFind || cmdId == kCmdSearch) {
       openFindPanel();
@@ -1539,7 +1607,7 @@
     }
     if (id === kCmdNoteToggleStarred) {
       let starAction = "Add current note to favorites";
-      let meta = getNoteMeta(noteName);
+      let meta = noteName ? getNoteMeta(noteName) : undefined;
       if (meta && meta.isStarred) {
         //starAction = "Un-star";
         starAction = "Remove current note from favorites";
@@ -1599,25 +1667,33 @@
     commandsDef.push([name, kCmdToggleSpellChecking]);
   }
 
-  function closeTab(noteName: string) {
-    if (noteName != settings.currentNoteName) {
-      settingsRemoveTab(settings, noteName);
+  async function closeTab(tab: string) {
+    if (tab != settings.currentTab) {
+      settingsRemoveTab(settings, tab);
       return;
     }
-    let idx = settings.tabs.indexOf(noteName);
-    settingsRemoveTab(settings, noteName);
+    // save current editor state before switching away
+    if (editorRef) {
+      await getEditor().save();
+    }
+    let idx = settings.tabs.indexOf(tab);
+    settingsRemoveTab(settings, tab);
     if (idx >= len(settings.tabs)) {
       idx = len(settings.tabs) - 1;
     }
     let toOpen = settings.tabs[idx];
-    openNote(toOpen, false);
+    if (isTabHome(toOpen)) {
+      settings.currentTab = kTabHome;
+    } else {
+      openNote(toOpen, false);
+    }
   }
 
   function closeCurrentTab() {
     if (len(settings.tabs) < 2) {
       return;
     }
-    closeTab(settings.currentNoteName);
+    closeTab(settings.currentTab);
   }
 
   function openAskAI() {
@@ -1666,7 +1742,7 @@
   }
 
   function toggleCurrentNoteStar() {
-    toggleNoteStarred(noteName);
+    toggleNoteStarred(noteName!);
     getEditor().focus();
   }
 
@@ -1866,11 +1942,11 @@
   }
 
   async function onRename(newName: string) {
-    let noteName = settings.currentNoteName;
+    let currentNote = appState.currentNoteName!;
     closeDialogs();
     let editor = getEditor();
     let s = editor.getContent() || "";
-    await renameNote(noteName, newName, s);
+    await renameNote(currentNote, newName, s);
     await openNote(newName, true);
     // console.log("onRename: newName:", newName);
   }
@@ -1884,7 +1960,7 @@
     let forceNewTab = appState.forceNewTab;
 
     closeDialogs();
-    if (name == settings.currentNoteName) {
+    if (name == settings.currentTab) {
       return;
     }
     if (forceNewTab) {
@@ -1895,10 +1971,14 @@
       if (newTab || settings.tabs.includes(name)) {
         return;
       }
+      // don't replace the Home tab
+      if (isTabHome(settings.currentTab)) {
+        return;
+      }
       // replace current tab with new note
-      let idx = settings.tabs.indexOf(settings.currentNoteName);
+      let idx = settings.tabs.indexOf(settings.currentTab);
       if (idx >= 0) {
-        // openNote() will change settings.currentNoteName to
+        // openNote() will change settings.currentTab to name
         settings.tabs[idx] = name;
       }
     }
@@ -1908,6 +1988,13 @@
 
   async function openNote(name: string, skipSave = false, noPushHistory = false) {
     console.log("App.openNote:", name);
+    if (!editorRef) {
+      // Editor not mounted (e.g. coming from Home tab).
+      // Setting currentTab mounts the Editor, whose onMount loads the note.
+      settings.currentTab = name;
+      settingsAddTab(settings, name);
+      return;
+    }
     let msg = `Loading <span class="font-bold">${name}</span>...`;
     showModalMessageHTML(msg, 300);
     let editor = getEditorComp();
@@ -1975,7 +2062,7 @@
     }
     // if deleting current note, first switch to scratch note
     // TODO: maybe switch to the most recently opened
-    if (name === settings.currentNoteName || len(settings.tabs) == 0) {
+    if (name === settings.currentTab || len(settings.tabs) == 0) {
       await openNote(kScratchNoteName);
     }
 
@@ -2040,7 +2127,7 @@
       addNoteToBrowserHistory(name);
       addNoteToHistory(name);
     }
-    settings.currentNoteName = name;
+    settings.currentTab = name;
     if (name == kDailyJournalNoteName) {
       // doesn't work without delay
       setTimeout(() => autoCreateDayInJournal(editor), 100);
@@ -2088,32 +2175,38 @@
   {:else}
     <div class="row-start-2 col-start-1"></div>
   {/if}
-  <Editor
-    class="row-start-2 col-start-2"
-    cursorChange={onCursorChange}
-    {extraKeymap}
-    {didLoadNote}
-    {docDidChange}
-    bind:this={editorRef}
-  />
+  {#if isTabHome(settings.currentTab)}
+    <HomePage class="row-start-2 col-start-2" />
+  {:else}
+    <Editor
+      class="row-start-2 col-start-2"
+      cursorChange={onCursorChange}
+      {extraKeymap}
+      {didLoadNote}
+      {docDidChange}
+      bind:this={editorRef}
+    />
+  {/if}
 </div>
 
 {#if !settings.alwaysShowTopNav}
   <TopNav openNote={onOpenNote} {closeTab} {openNoteSelector} {menuItemStatus} {onmenucmd} {buildMenuDef} />
 {/if}
-<StatusBar
-  {line}
-  {column}
-  {docSize}
-  {selectionSize}
-  {language}
-  {languageAuto}
-  {isSpellChecking}
-  {openLanguageSelector}
-  {formatCurrentBlock}
-  {smartRun}
-  {toggleSpellCheck}
-/>
+{#if !isTabHome(settings.currentTab)}
+  <StatusBar
+    {line}
+    {column}
+    {docSize}
+    {selectionSize}
+    {language}
+    {languageAuto}
+    {isSpellChecking}
+    {openLanguageSelector}
+    {formatCurrentBlock}
+    {smartRun}
+    {toggleSpellCheck}
+  />
+{/if}
 
 {#if appState.showingQuickAccess}
   <Overlay onclose={closeDialogs} blur={true}>
@@ -2188,7 +2281,7 @@
 
 {#if appState.showingRenameNote}
   <Overlay onclose={closeDialogs} blur={true}>
-    <RenameNote onclose={closeDialogs} rename={onRename} oldName={noteName} />
+    <RenameNote onclose={closeDialogs} rename={onRename} oldName={noteName!} />
   </Overlay>
 {/if}
 
