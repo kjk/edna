@@ -169,7 +169,6 @@
 
   let showingContextMenu = $state(false);
   let showingLanguageSelector = $state(false);
-  let showingNoteSelector = $state(false);
   let showingCommandPalette = $state(false);
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
@@ -184,7 +183,7 @@
     return (
       showingContextMenu ||
       showingLanguageSelector ||
-      showingNoteSelector ||
+      appState.showingNoteSelector ||
       appState.showingBlockMoveSelector ||
       showingCommandPalette ||
       appState.showingCreateNewNote ||
@@ -203,7 +202,7 @@
   function closeDialogs() {
     showingContextMenu = false;
     showingLanguageSelector = false;
-    showingNoteSelector = false;
+    appState.showingNoteSelector = false;
     appState.showingBlockMoveSelector = false;
     showingCommandPalette = false;
     appState.showingCreateNewNote = false;
@@ -378,7 +377,7 @@
 
     // TODO: can I do this better? The same keydown event that sets the Alt-N shortcut
     // in NoteSelector also seems to propagate here and immediately opens the note.
-    if (!showingNoteSelector) {
+    if (!appState.showingNoteSelector) {
       let altN = isAltNumEvent(ev);
       // console.log("onKeyDown: ev:", ev, "altN:", altN);
       if (altN) {
@@ -678,18 +677,18 @@
   }
 
   function switchToCommandPalette() {
-    showingNoteSelector = false;
+    appState.showingNoteSelector = false;
     openCommandPalette();
   }
 
   function openNoteSelector() {
-    showingNoteSelector = true;
+    appState.showingNoteSelector = true;
   }
 
   function reOpenNoteSelector() {
-    showingNoteSelector = false;
+    appState.showingNoteSelector = false;
     tick().then(() => {
-      showingNoteSelector = true;
+      appState.showingNoteSelector = true;
     });
   }
 
@@ -2164,7 +2163,7 @@
   </Overlay>
 {/if}
 
-{#if showingNoteSelector}
+{#if appState.showingNoteSelector}
   {#if settings.useWideSelectors}
     <Overlay onclose={closeDialogs} blur={true}>
       <NoteSelectorWide
