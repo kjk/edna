@@ -251,27 +251,3 @@
 <div class="overflow-hidden {klass}">
   <div class="editor" bind:this={editorRef}></div>
 </div>
-
-<style lang="postcss">
-  :global(.debug-syntax-tree) {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    width: 50%;
-    background-color: rgba(240, 240, 240, 0.85);
-    color: #000;
-    font-size: 12px;
-    font-family: monospace;
-    padding: 10px;
-    overflow: auto;
-  }
-
-  :global(.debug-syntax-tree ul) {
-    padding-left: 20px;
-  }
-
-  :global(.debug-syntax-tree > ul) {
-    padding-left: 0;
-  }
-</style>
