@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { focus } from "../actions";
   import { getSessionDur } from "../globals";
   import { getGitHash, getSettings, getVersion, kDefaultFontFamily, kDefaultFontSize } from "../settings.svelte";
@@ -43,12 +44,8 @@
   let gitURL = "https://github.com/kjk/edna/commit/" + gitHash;
 
   let fontSizes = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-  $effect(() => {
+  onMount(() => {
     updateLocalFonts();
-    window.addEventListener("keydown", onkeydown);
-    return () => {
-      window.removeEventListener("keydown", onkeydown);
-    };
   });
 
   async function updateLocalFonts() {
@@ -59,7 +56,7 @@
     }
     let a = [defFont];
     let fonts = await qlf();
-    let seen = []; // queryLocalFonts() returns duplicates
+    let seen: string[] = []; // queryLocalFonts() returns duplicates
     for (let f of fonts) {
       let fam: string = f.family;
       if (fam === kDefaultFontFamily) {
@@ -77,7 +74,7 @@
 </script>
 
 <div
-  class="selector absolute overflow-auto center-x-with-translate top-[2rem] z-20 flex flex-col w-[68ch] max-w-full px-4 py-4 select-none"
+  class="selector absolute overflow-auto center-x-with-translate top-8 z-20 flex flex-col w-[68ch] max-w-full px-4 py-4 select-none"
 >
   <div>
     <h2>Input settings</h2>
