@@ -168,7 +168,6 @@
   let selectionSize = $state(0);
 
   let showingContextMenu = $state(false);
-  let showingLanguageSelector = $state(false);
   let showingCommandPalette = $state(false);
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
@@ -182,7 +181,7 @@
   let isShowingDialog = $derived.by(() => {
     return (
       showingContextMenu ||
-      showingLanguageSelector ||
+      appState.showingLanguageSelector ||
       appState.showingNoteSelector ||
       appState.showingBlockMoveSelector ||
       showingCommandPalette ||
@@ -201,7 +200,7 @@
 
   function closeDialogs() {
     showingContextMenu = false;
-    showingLanguageSelector = false;
+    appState.showingLanguageSelector = false;
     appState.showingNoteSelector = false;
     appState.showingBlockMoveSelector = false;
     showingCommandPalette = false;
@@ -862,11 +861,11 @@
   }
 
   function openLanguageSelector() {
-    showingLanguageSelector = true;
+    appState.showingLanguageSelector = true;
   }
 
   function onSelectLanguage(lang: string) {
-    showingLanguageSelector = false;
+    appState.showingLanguageSelector = false;
     let view = getEditorView();
     let auto = false;
     if (lang === "auto") {
@@ -2187,7 +2186,7 @@
   {/if}
 {/if}
 
-{#if showingLanguageSelector}
+{#if appState.showingLanguageSelector}
   <Overlay onclose={closeDialogs} blur={true}>
     <LanguageSelector selectLanguage={onSelectLanguage} />
   </Overlay>

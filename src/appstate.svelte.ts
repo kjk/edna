@@ -29,6 +29,7 @@ class AppState {
   showingFunctionSelector = $state(false);
   showingBlockMoveSelector = $state(false);
   showingNoteSelector = $state(false);
+  showingLanguageSelector = $state(false);
   showingArchived = $state(false); // show archived notes in note selector
 
   searchIncludeArchived = $state(false);
