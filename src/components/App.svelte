@@ -168,7 +168,6 @@
   let selectionSize = $state(0);
 
   let showingBlockSelector = $state(false);
-  let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
   let showingAskFileWritePermissions = $state(false);
   let showingAskAI = $state(false);
@@ -187,7 +186,7 @@
       appState.showingQuickAccess ||
       showingBlockSelector ||
       appState.showingFindInNotes ||
-      showingDecryptPassword ||
+      appState.showingDecryptPassword ||
       appState.showingEncryptPassword ||
       showingAskFileWritePermissions
     );
@@ -426,17 +425,17 @@
   let onDecryptPassword: (pwd: string) => void = $state(noOpStr);
 
   async function getPasswordFromUser(msg: string = ""): Promise<string> {
-    showingDecryptPassword = true;
+    appState.showingDecryptPassword = true;
     showingDecryptMessage = msg;
     clearModalMessage();
     return new Promise((resolve, reject) => {
       onDecryptPassword = (pwd: string) => {
         resolve(pwd);
-        showingDecryptPassword = false;
+        appState.showingDecryptPassword = false;
       };
       closeDecryptPassword = () => {
         resolve("");
-        showingDecryptPassword = false;
+        appState.showingDecryptPassword = false;
       };
     });
   }
@@ -2227,7 +2226,7 @@
   </Overlay>
 {/if}
 
-{#if showingDecryptPassword}
+{#if appState.showingDecryptPassword}
   <Overlay onclose={closeDecryptPassword} blur={true}>
     <EnterDecryptPassword msg={showingDecryptMessage} onpassword={onDecryptPassword}></EnterDecryptPassword>
   </Overlay>
