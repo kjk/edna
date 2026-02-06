@@ -172,7 +172,6 @@
   let showingNoteSelector = $state(false);
   let showingBlockMoveSelector = $state(false);
   let showingCommandPalette = $state(false);
-  let showingCreateNewNote = $state(false);
   let showingFunctionSelector = $state(false);
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
@@ -190,7 +189,7 @@
       showingNoteSelector ||
       showingBlockMoveSelector ||
       showingCommandPalette ||
-      showingCreateNewNote ||
+      appState.showingCreateNewNote ||
       showingFunctionSelector ||
       showingSettings ||
       showingRenameNote ||
@@ -209,7 +208,7 @@
     showingNoteSelector = false;
     showingBlockMoveSelector = false;
     showingCommandPalette = false;
-    showingCreateNewNote = false;
+    appState.showingCreateNewNote = false;
     showingFunctionSelector = false;
     showingSettings = false;
     showingRenameNote = false;
@@ -665,7 +664,7 @@
   }
 
   function openCreateNewNote() {
-    showingCreateNewNote = true;
+    appState.showingCreateNewNote = true;
   }
 
   function selectBlock(block: NoteBlock) {
@@ -2136,7 +2135,7 @@
   </Overlay>
 {/if}
 
-{#if showingCreateNewNote}
+{#if appState.showingCreateNewNote}
   <Overlay onclose={closeDialogs} blur={true}>
     <CreateNewNote createNewNote={onCreateNote} onclose={closeDialogs}></CreateNewNote>
   </Overlay>
