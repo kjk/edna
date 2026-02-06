@@ -8,6 +8,7 @@
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
   import { getActiveNoteBlock, getBlockN, getBlocksInfo, insertAfterActiveBlock } from "../editor/block/block";
+  import type { NoteBlock } from "../editor/block/block-parsing";
   import {
     addNewBlockAfterCurrent,
     addNewBlockAfterLast,
@@ -104,6 +105,7 @@
     isAltNumEvent,
     isDev,
     len,
+    noOp,
     platform,
     stringSizeInUtf8Bytes,
     throwIf,
@@ -218,7 +220,7 @@
 
   let functionContext = $state("");
   let runFunctionOnSelection = false;
-  let userFunctions = $state([]); // note: $state() not needed
+  let userFunctions: BoopFunction[] = $state([]); // note: $state() not needed
   let contextMenuPos = $state({ x: 0, y: 0 });
 
   let askAIStartText = $state("");
@@ -420,8 +422,11 @@
     await preLoadAllNotes();
   }
 
-  let closeDecryptPassword = $state();
-  let onDecryptPassword = $state();
+  function noOpStr(s: string): void {
+    // do nothing
+  }
+  let closeDecryptPassword: () => void = $state(noOp);
+  let onDecryptPassword: (pwd: string) => void = $state(noOpStr);
 
   async function getPasswordFromUser(msg: string = ""): Promise<string> {
     showingDecryptPassword = true;
@@ -439,8 +444,11 @@
     });
   }
 
+  function noOpBool(v: boolean): void {
+    // do nothing
+  }
   let fileWritePermissionsFileHandle: FileSystemFileHandle | undefined = $state();
-  let askFileWritePermissionsClose: (ok: boolean) => void = $state();
+  let askFileWritePermissionsClose: (ok: boolean) => void = $state(noOpBool);
 
   async function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
     if (await hasHandlePermission(fh, true)) {
@@ -470,7 +478,7 @@
     view.focus();
   }
 
-  function onEncryptPassword(pwd) {
+  function onEncryptPassword(pwd: string) {
     console.log("got encryption password:", pwd);
     closeEncryptPassword();
     encryptAllNotes(pwd);
@@ -544,7 +552,7 @@
     let settings = getSettings();
     let editor = getEditor();
     let bi = getBlocksInfo(editor.view.state);
-    let block = getActiveNoteBlock(editor.view.state);
+    let block = getActiveNoteBlock(editor.view.state)!;
     let ext = extForLang(block.language);
     let name = toFileName(settings.currentNoteName) + `-${bi.active}.` + ext;
     let { from, to } = block.content;
@@ -652,11 +660,10 @@
     showingCreateNewNote = true;
   }
 
-  function selectBlock(blockItem: BlockItem) {
+  function selectBlock(block: NoteBlock) {
     // console.log("selectBlock", $state.snapshot(blockItem));
-    let n = blockItem.key;
     let view = getEditorView();
-    gotoBlock(view, n);
+    gotoBlock(view, block.index);
     closeDialogs();
   }
 
@@ -779,7 +786,7 @@
   ): Promise<boolean> {
     const { state } = view;
     if (state.readOnly) return false;
-    const block = getActiveNoteBlock(state);
+    const block = getActiveNoteBlock(state)!;
     console.log("editorRunBlockFunction:", block);
     const cursorPos = state.selection.asSingle().ranges[0].head;
     const content = state.sliceDoc(block.content.from, block.content.to);
@@ -1148,7 +1155,7 @@
     // console.log("menuItemStatus:", mi);
     // console.log("s:", s, "mid:", mid);
     // note: this is called for each menu item so should be fast
-    let lang = getLanguage(language);
+    let lang = getLanguage(language)!;
     let dh = getStorageFS();
     // console.log("dh:", dh);
     let hasFS = supportsFileSystem();
@@ -1497,7 +1504,7 @@
     await openNote(kMyFunctionsNoteName);
   }
 
-  let contextMenuDef: MenuDef | undefined = $state();
+  let contextMenuDef: MenuDef = $state([]);
 
   async function oncontextmenu(ev: MouseEvent) {
     console.log("oncontextmenu");
@@ -1515,7 +1522,7 @@
     await openContextMenu(ev);
   }
 
-  async function openContextMenu(ev: MouseEvent, pos: { x: number; y: number } = null) {
+  async function openContextMenu(ev: MouseEvent, pos?: { x: number; y: number }) {
     ev.preventDefault();
     ev.stopPropagation();
     ev.stopImmediatePropagation();
@@ -1546,7 +1553,7 @@
       }
       return starAction;
     }
-    return name;
+    return name || "";
   }
 
   function buildCommandsDef(): MenuItemDef[] {
@@ -1650,7 +1657,10 @@
 
   function getEditorView(): EditorView {
     if (!editorRef) {
-      return null;
+      // TODO: change result type to EditorView | undefined but it'll
+      // require fixing a lot of callers
+      // @ts-ignore
+      return;
     }
     let view = editorRef.getEditorView();
     return view;
@@ -1682,7 +1692,7 @@
       return false;
     }
     const block = getActiveNoteBlock(state)!;
-    const lang = getLanguage(block.language);
+    const lang = getLanguage(block.language)!;
     // console.log("runBlockContent: lang:", lang);
     if (!langSupportsRun(lang)) {
       return false;
@@ -1694,7 +1704,7 @@
     editor.setReadOnly(true);
     let output = "";
     let token = lang.token;
-    let res: CapturingEval = null;
+    let res: CapturingEval | undefined;
     if (token === "golang") {
       res = await runGo(content);
     } else if (token === "javascript") {
@@ -1704,6 +1714,7 @@
     }
     editor.setReadOnly(false);
     clearModalMessage();
+    if (!res) return false;
 
     output = evalResultToString(res);
     if (!output) {
@@ -1778,12 +1789,12 @@
     logNoteOp("runBlock");
   }
 
-  let fnSelectBlock: Function | undefined = $state();
+  let fnSelectBlock: (block: NoteBlock) => void = $state(selectBlock);
 
-  function runBlockWithAnotherBlock(argBlockItem: BlockItem) {
-    console.log(argBlockItem);
+  function runBlockWithAnotherBlock(block: NoteBlock) {
+    console.log(block);
     closeDialogs();
-    let n = argBlockItem.key;
+    let n = block.index;
     let editor = getEditor();
     let state = editor.view.state;
     let blockArg = getBlockN(state, n);
@@ -1794,7 +1805,7 @@
   }
 
   function currentBlockSupportsRun(state: EditorState): boolean {
-    const block = getActiveNoteBlock(state);
+    const block = getActiveNoteBlock(state)!;
     const lang = getLanguage(block.language);
     // console.log("runBlockContent: lang:", lang);
     return langSupportsRun(lang);
@@ -1936,7 +1947,7 @@
     showingBlockMoveSelector = false;
     // name can be new or existing note
     let state = getEditorView().state;
-    let block = getActiveNoteBlock(state);
+    let block = getActiveNoteBlock(state)!;
     let delim = state.sliceDoc(block.delimiter.from, block.delimiter.to);
     let content = state.sliceDoc(block.content.from, block.content.to);
     await appendToNote(name, delim + content);
@@ -2122,7 +2133,7 @@
   </Overlay>
 {/if}
 
-{#if showingBlockSelector}
+{#if showingBlockSelector && fnSelectBlock}
   <Overlay onclose={closeDialogs} blur={true}>
     <BlockSelector blocks={blockItems} selectBlock={fnSelectBlock} initialSelection={initialBlockSelection}
     ></BlockSelector>
@@ -2226,7 +2237,7 @@
 
 {#if showingAskFileWritePermissions}
   <Overlay noCloseOnEsc={true} blur={true}>
-    <AskFileWritePermissions fileHandle={fileWritePermissionsFileHandle} close={askFileWritePermissionsClose}
+    <AskFileWritePermissions fileHandle={fileWritePermissionsFileHandle!} close={askFileWritePermissionsClose}
     ></AskFileWritePermissions>
   </Overlay>
 {/if}

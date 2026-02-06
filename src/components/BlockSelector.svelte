@@ -1,20 +1,20 @@
 <script module lang="ts">
   export interface Item {
-    block: any;
+    block: NoteBlock;
     text: string;
-    key: number;
   }
 </script>
 
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
   import { focus } from "../actions";
+  import type { NoteBlock } from "../editor/block/block-parsing";
   import { findMatchingItems, getKeyEventNumber, hilightText, len, makeHilightRegExp } from "../util";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
     blocks: Item[];
-    selectBlock: (block: Item) => void;
+    selectBlock: (block: NoteBlock) => void;
     initialSelection?: number;
   }
   let { blocks, selectBlock, initialSelection = 0 }: Props = $props();
@@ -39,7 +39,7 @@
       let bi = {
         item: block,
         textLC: block.text.toLowerCase(),
-        key: block.key,
+        key: block.block.index,
       };
       res.push(bi);
     }
@@ -59,7 +59,7 @@
       if (idx >= 0 && idx <= lastIdx) {
         ev.preventDefault();
         let item = blocks[idx];
-        selectBlock(item);
+        selectBlock(item.block);
         return;
       }
     }
@@ -74,12 +74,12 @@
 <form
   {onkeydown}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] max-h-[94vh] flex flex-col p-2 max-w-[80vw] w-[40em]"
+  class="selector z-20 absolute center-x-with-translate top-8 max-h-[94vh] flex flex-col p-2 max-w-[80vw] w-[40em]"
 >
   <div>
-    <input use:focus type="text" bind:value={filter} class="py-1 px-2 bg-white w-full min-w-[400px] mb-2 rounded-xs" />
+    <input use:focus type="text" bind:value={filter} class="py-1 px-2 bg-white w-full min-w-100 mb-2 rounded-xs" />
 
-    <div class="absolute right-[1rem] top-[0.75rem] italic text-gray-400">
+    <div class="absolute right-4 top-3 italic text-gray-400">
       {blockCountMsg}
     </div>
   </div>

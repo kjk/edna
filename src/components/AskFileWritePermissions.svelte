@@ -29,7 +29,7 @@
 </script>
 
 <div
-  class="z-20 absolute center-x-with-translate top-[4rem] px-8 py-4 flex flex-col items-center shadow-xl2 bg-white text-base w-[90vw]"
+  class="z-20 absolute center-x-with-translate top-16 px-8 py-4 flex flex-col items-center shadow-xl2 bg-white text-base w-[90vw]"
 >
   <div>We need permission to write to file <b>{fileName}</b> on disk.</div>
   <div class="flex flex-col mt-4 mb-8 text-sm">
