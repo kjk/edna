@@ -14,7 +14,8 @@
     "build": "vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.json --noEmit",
     "gen": "bun ./src/gen.ts",
-    "test:vitest": "vitest"
+    "test:node": "vitest",
+    "test:browser": "vitest --config vitest.browser.config.js"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
@@ -26,8 +27,11 @@
     "@toon-format/toon": "^2.1.0",
     "@types/bun": "^1.3.8",
     "@types/node": "^24.10.10",
+    "@vitest/browser": "^4.0.18",
+    "@vitest/browser-playwright": "^4.0.18",
     "markdown-it": "^14.1.0",
     "markdown-it-anchor": "^9.2.0",
+    "playwright": "^1.58.1",
     "prettier-plugin-svelte": "^3.4.1",
     "svelte": "^5.49.1",
     "svelte-check": "^4.3.4",

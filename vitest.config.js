@@ -11,6 +11,6 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
-    exclude: ["tests/**/*.spec.ts"],
+    exclude: ["tests/**/*.spec.ts", "tests/browser/**"],
   },
 });

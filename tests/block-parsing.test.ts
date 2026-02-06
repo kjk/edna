@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeAll } from "vitest";
 import { decode } from "@toon-format/toon";
 import { getBlocksFromString } from "../src/editor/block/block-parsing";
 import type { NoteBlock } from "../src/editor/block/block-parsing";
@@ -10,13 +10,13 @@ interface GoldenTestData {
   blocks: NoteBlock[];
 }
 
-describe("Block parsing tests", () => {
+describe("Block parsing tests (Node.js)", () => {
   // Load golden test data
   const goldenDataRaw = readFileSync("tests/parse-test-golden.toon", "utf-8");
   const goldenData = decode(goldenDataRaw) as GoldenTestData[];
 
   describe("note-scratch-dev.edna.txt", () => {
-    const testData = goldenData[0];
+    const testData = goldenData[0]!;
     if (!testData) throw new Error("Test data not found");
 
     // Parse once and reuse for all tests
@@ -66,7 +66,7 @@ describe("Block parsing tests", () => {
   });
 
   describe("note-scratch.edna.txt", () => {
-    const testData = goldenData[1];
+    const testData = goldenData[1]!;
     if (!testData) throw new Error("Test data not found");
 
     // Parse once and reuse for all tests
