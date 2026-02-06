@@ -169,7 +169,6 @@
 
   let showingBlockSelector = $state(false);
   let showingDecryptMessage = $state("");
-  let showingAskFileWritePermissions = $state(false);
   let showingAskAI = $state(false);
 
   let isShowingDialog = $derived.by(() => {
@@ -188,7 +187,7 @@
       appState.showingFindInNotes ||
       appState.showingDecryptPassword ||
       appState.showingEncryptPassword ||
-      showingAskFileWritePermissions
+      appState.showingAskFileWritePermissions
     );
   });
 
@@ -452,12 +451,12 @@
       return true;
     }
     fileWritePermissionsFileHandle = fh;
-    showingAskFileWritePermissions = true;
+    appState.showingAskFileWritePermissions = true;
     clearModalMessage();
     return new Promise((resolve, reject) => {
       askFileWritePermissionsClose = (ok) => {
         console.log("requestFileWritePermission: ok", ok);
-        showingAskFileWritePermissions = false;
+        appState.showingAskFileWritePermissions = false;
         resolve(ok);
       };
     });
@@ -2232,7 +2231,7 @@
   </Overlay>
 {/if}
 
-{#if showingAskFileWritePermissions}
+{#if appState.showingAskFileWritePermissions}
   <Overlay noCloseOnEsc={true} blur={true}>
     <AskFileWritePermissions fileHandle={fileWritePermissionsFileHandle!} close={askFileWritePermissionsClose}
     ></AskFileWritePermissions>
