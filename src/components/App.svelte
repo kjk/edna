@@ -169,8 +169,6 @@
 
   let showingBlockSelector = $state(false);
   let showingDecryptMessage = $state("");
-  let showingAskAI = $state(false);
-
   let isShowingDialog = $derived.by(() => {
     return (
       appState.showingContextMenu ||
@@ -204,7 +202,7 @@
     appState.showingQuickAccess = false;
     showingBlockSelector = false;
     appState.showingFindInNotes = false;
-    showingAskAI = false;
+    appState.showingAskAI = false;
 
     appState.forceNewTab = false;
 
@@ -1629,7 +1627,7 @@
       to = b.to;
     let { selectedText } = getCurrentSelection(view.state);
     askAIStartText = selectedText ? selectedText : view.state.sliceDoc(from, to);
-    showingAskAI = true;
+    appState.showingAskAI = true;
   }
 
   function openCommandPalette() {
@@ -2238,7 +2236,7 @@
   </Overlay>
 {/if}
 
-{#if showingAskAI}
+{#if appState.showingAskAI}
   <Overlay blur={true} onclose={closeDialogs}>
     <AskAI close={closeDialogs} startText={askAIStartText} insertResponse={insertAskAIResponse}></AskAI>
   </Overlay>
