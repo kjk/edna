@@ -1,17 +1,27 @@
-import { len, platformName } from "./util.js";
-
-import dailyJournalRaw from "./notes/note-daily-journal.edna.txt?raw";
-import { fixUpNoteContent } from "./notes.js";
-import helpRaw from "./notes/note-help.edna.txt?raw";
-import inboxRaw from "./notes/note-inbox.edna.txt?raw";
-import scratchDevRaw from "./notes/note-scratch-dev.edna.txt?raw";
-import scratchRaw from "./notes/note-scratch.edna.txt?raw";
-import { fixUpShortcuts, keyHelpStr } from "./key-helper.js";
-import releaseNotesRaw from "./notes/note-release-notes.edna.txt?raw";
-import builtInFunctionsRaw from "./notes/note-built-in-functions.js?raw";
-import myFunctionsRaw from "./notes/note-custom-functions.edna.txt?raw";
-
+// this logically belongs in functions.js but I use bun test
+// to test to test functions.js and it doesn't handle
+// importing ?raw
+import type { BoopFunction } from "./functions";
 import { parseBuiltInFunctions } from "./functions.js";
+import { fixUpShortcuts, keyHelpStr } from "./key-helper.js";
+import { fixUpNoteContent } from "./notes.js";
+// @ts-ignore
+import builtInFunctionsRaw from "./notes/note-built-in-functions.js?raw";
+// @ts-ignore
+import myFunctionsRaw from "./notes/note-custom-functions.edna.txt?raw";
+// @ts-ignore
+import dailyJournalRaw from "./notes/note-daily-journal.edna.txt?raw";
+// @ts-ignore
+import helpRaw from "./notes/note-help.edna.txt?raw";
+// @ts-ignore
+import inboxRaw from "./notes/note-inbox.edna.txt?raw";
+// @ts-ignore
+import releaseNotesRaw from "./notes/note-release-notes.edna.txt?raw";
+// @ts-ignore
+import scratchDevRaw from "./notes/note-scratch-dev.edna.txt?raw";
+// @ts-ignore
+import scratchRaw from "./notes/note-scratch.edna.txt?raw";
+import { len, platformName } from "./util.js";
 
 export function getHelp(platform = platformName): string {
   let keyHelp = keyHelpStr(platform);
@@ -89,10 +99,6 @@ export function getMyFunctionsNote(): string {
   return fixUpNote(myFunctionsRaw);
 }
 
-// this logically belongs in functions.js but I use bun test
-// to test to test functions.js and it doesn't handle
-// importing ?raw
-import type { BoopFunction } from "./functions";
 export let boopFunctions: BoopFunction[] = [];
 
 export function getBoopFunctions() {

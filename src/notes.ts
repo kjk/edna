@@ -1,6 +1,7 @@
 import { tick } from "svelte";
 import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
 import { appState } from "./appstate.svelte";
+// @ts-ignore
 import { clearModalMessage, showModalMessageHTML } from "./components/ModalMessage.svelte";
 import { KV } from "./dbutil";
 import { fromFileName, isValidFileName, toFileName } from "./filenamify";
