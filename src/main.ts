@@ -16,7 +16,7 @@ import {
   preLoadAllNotes,
   setStorageFS,
 } from "./notes";
-import { getSettings } from "./settings.svelte";
+import { getSettings, settingsAddTab } from "./settings.svelte";
 import { isDev } from "./util";
 
 // window.onunhandledrejection = console.warn;
@@ -93,7 +93,7 @@ export async function boot() {
 
   // will open this note in Editor.vue on mounted()
   settings.currentNoteName = toOpenAtStartup;
-  settings.addTab(toOpenAtStartup);
+  settingsAddTab(settings, toOpenAtStartup);
 
   // remove non-existing notes from tabs
   let nTabs = settings.tabs.length;

@@ -1,6 +1,6 @@
 import { getNoteMeta } from "./metadata";
 
-import type { Settings } from "./settings.svelte";
+import { defaultSettings, type Settings } from "./settings.svelte";
 
 class AppState {
   /* regular, arhived, deleted notes */
@@ -30,7 +30,7 @@ class AppState {
   searchIncludeArchived = $state(false);
 
   history: string[] = $state([]); // names of opened notes
-  settings: Settings = $state(undefined); // user settings
+  settings: Settings = $state(defaultSettings); // user settings
 
   forceNewTab = false;
 }

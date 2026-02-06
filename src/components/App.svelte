@@ -96,7 +96,7 @@
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import type { CapturingEval } from "../run";
-  import { getSettings, kDefaultFontFamily, kDefaultFontSize } from "../settings.svelte";
+  import { getSettings, kDefaultFontFamily, kDefaultFontSize, settingsAddTab, settingsRemoveTab } from "../settings.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,
@@ -1609,11 +1609,11 @@
 
   function closeTab(noteName: string) {
     if (noteName != settings.currentNoteName) {
-      settings.removeTab(noteName);
+      settingsRemoveTab(settings, noteName);
       return;
     }
     let idx = settings.tabs.indexOf(noteName);
-    settings.removeTab(noteName);
+    settingsRemoveTab(settings, noteName);
     if (idx >= len(settings.tabs)) {
       idx = len(settings.tabs) - 1;
     }
@@ -2055,7 +2055,7 @@
       // console.log("journal, so going to next block");
       // editor.gotoNextBlock();
     }
-    settings.addTab(name);
+    settingsAddTab(settings, name);
     updateDocSize();
   }
 

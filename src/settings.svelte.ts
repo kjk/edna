@@ -1,7 +1,7 @@
 import { appState } from "./appstate.svelte";
 import { kModelIDIdx, modelsShort } from "./models-short";
 import { kScratchNoteName } from "./notes";
-import { arrayRemove, copyObj, len, objectEqualDeep, platform, pushIfNotExists, throwIf } from "./util";
+import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf } from "./util";
 
 const settingsKeys = [
   "bracketClosing",
@@ -26,47 +26,74 @@ const settingsKeys = [
   "starredModels",
 ];
 
-export class Settings {
-  bracketClosing = $state(true);
-  currentNoteName = $state(kScratchNoteName);
-  tabs: string[] = $state([]);
-  emacsMetaKey = $state("alt");
-  fontFamily?: string = $state();
-  fontSize?: number = $state();
-  keymap = $state("default");
-  showFoldGutter = $state(true);
-  showLineNumberGutter = $state(true);
-  useWideSelectors = $state(false);
-  alwaysShowTopNav = $state(true);
-  showSidebar = $state(false);
-  tabSize = $state(2);
-  indentType = $state("spaces"); // "tabs" or "spaces"
-  theme = $state("system"); // "system", "light", "dark"
-  openAIKey = $state("");
-  xAIKey = $state("");
-  openRouterKey = $state("");
-  aiModelID = $state("chatgpt-4o-latest");
-  starredModels = $state(["grok-3", "chatgpt-4o-latest"]);
+export interface Settings {
+  bracketClosing: boolean;
+  currentNoteName: string;
+  tabs: string[];
+  emacsMetaKey: string;
+  fontFamily?: string;
+  fontSize?: number;
+  keymap: string;
+  showFoldGutter: boolean;
+  showLineNumberGutter: boolean;
+  useWideSelectors: boolean;
+  alwaysShowTopNav: boolean;
+  showSidebar: boolean;
+  tabSize: number;
+  indentType: string;
+  theme: string;
+  openAIKey: string;
+  xAIKey: string;
+  openRouterKey: string;
+  aiModelID: string;
+  starredModels: string[];
+}
 
-  constructor(settings: any) {
-    if (!settings) {
-      return;
-    }
+export const defaultSettings: Settings = {
+  bracketClosing: true,
+  currentNoteName: kScratchNoteName,
+  tabs: [],
+  emacsMetaKey: "alt",
+  fontFamily: undefined,
+  fontSize: undefined,
+  keymap: "default",
+  showFoldGutter: true,
+  showLineNumberGutter: true,
+  useWideSelectors: false,
+  alwaysShowTopNav: true,
+  showSidebar: false,
+  tabSize: 2,
+  indentType: "spaces",
+  theme: "system",
+  openAIKey: "",
+  xAIKey: "",
+  openRouterKey: "",
+  aiModelID: "chatgpt-4o-latest",
+  starredModels: ["grok-3", "chatgpt-4o-latest"],
+};
+
+export function createSettings(raw?: any): Settings {
+  let s: Settings = {
+    ...defaultSettings,
+    tabs: [...defaultSettings.tabs],
+    starredModels: [...defaultSettings.starredModels],
+  };
+  if (raw) {
     for (let key of settingsKeys) {
-      if (key in settings) {
-        this[key] = settings[key];
+      if (key in raw) {
+        (s as any)[key] = raw[key];
       }
     }
   }
-  addTab(noteName: string) {
-    pushIfNotExists(this.tabs, noteName);
-  }
-  removeTab(noteName: string) {
-    arrayRemove(this.tabs, noteName);
-  }
-  toJSON() {
-    return copyObj(this, settingsKeys);
-  }
+  return s;
+}
+
+export function settingsAddTab(settings: Settings, noteName: string) {
+  pushIfNotExists(settings.tabs, noteName);
+}
+
+export function settingsRemoveTab(settings: Settings, noteName: string) {
+  arrayRemove(settings.tabs, noteName);
 }
 
 // TODO: should be "Consolas" instead of "Cascadia Code"?
@@ -180,9 +207,10 @@ function removeUnknownAiModels(modelIDs: string[]): string[] {
 }
 
 let lastSettingsRaw: any;
+let settingsLoaded = false;
 
 export function getSettings(): Settings {
-  if (appState.settings) {
+  if (settingsLoaded) {
     // console.log("getSettings: already loaded");
     // logSettings(appState.settings);
     let m = appState.settings.aiModelID;
@@ -195,7 +223,7 @@ export function getSettings(): Settings {
   let d = localStorage.getItem(kSettingsPath) || "{}";
   // console.log("getSettings: loaded from localStorage:", d);
   let settingsRaw = d === null ? {} : JSON.parse(d);
-  let settings = new Settings(settingsRaw);
+  let settings = createSettings(settingsRaw);
   settings.tabSize = validateTabSize(settings.tabSize || 2);
   let m = settings.aiModelID;
   if (!findModelByID(m)) {
@@ -211,9 +239,10 @@ export function getSettings(): Settings {
   if (!settings.currentNoteName) {
     settings.currentNoteName = kScratchNoteName;
   }
-  lastSettingsRaw = $state.snapshot(settings.toJSON());
+  lastSettingsRaw = $state.snapshot(settings);
 
   appState.settings = settings;
+  settingsLoaded = true;
   return appState.settings;
 }
 
@@ -236,7 +265,7 @@ function updateWebsiteTheme() {
 function saveSettings(newSettings: Settings): boolean {
   throwIf(!newSettings.currentNoteName);
   newSettings.tabSize = validateTabSize(newSettings.tabSize);
-  let settingsRaw = $state.snapshot(newSettings.toJSON());
+  let settingsRaw = $state.snapshot(newSettings);
   let changed = [];
   for (let key of settingsKeys) {
     let valLast = lastSettingsRaw[key];
