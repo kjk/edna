@@ -188,7 +188,7 @@
       showingBlockSelector ||
       appState.showingFindInNotes ||
       showingDecryptPassword ||
-      showingEncryptPassword ||
+      appState.showingEncryptPassword ||
       showingAskFileWritePermissions
     );
   });
@@ -464,13 +464,12 @@
     });
   }
 
-  let showingEncryptPassword = $state(false);
   function openEncryptPassword() {
-    showingEncryptPassword = true;
+    appState.showingEncryptPassword = true;
   }
 
   function closeEncryptPassword() {
-    showingEncryptPassword = false;
+    appState.showingEncryptPassword = false;
     let view = getEditorView();
     view.focus();
   }
@@ -2222,7 +2221,7 @@
   </Overlay>
 {/if}
 
-{#if showingEncryptPassword}
+{#if appState.showingEncryptPassword}
   <Overlay onclose={closeEncryptPassword} blur={true}>
     <EnterEncryptPassword onclose={closeEncryptPassword} onpassword={onEncryptPassword}></EnterEncryptPassword>
   </Overlay>

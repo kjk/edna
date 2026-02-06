@@ -35,6 +35,7 @@ class AppState {
   showingRenameNote = $state(false);
   showingSettings = $state(false);
   showingCommandPalette = $state(false);
+  showingEncryptPassword = $state(false);
   showingArchived = $state(false); // show archived notes in note selector
 
   searchIncludeArchived = $state(false);
