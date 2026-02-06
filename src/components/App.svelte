@@ -168,7 +168,6 @@
   let selectionSize = $state(0);
 
   let showingCommandPalette = $state(false);
-  let showingSettings = $state(false);
   let showingBlockSelector = $state(false);
   let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
@@ -184,7 +183,7 @@
       showingCommandPalette ||
       appState.showingCreateNewNote ||
       appState.showingFunctionSelector ||
-      showingSettings ||
+      appState.showingSettings ||
       appState.showingRenameNote ||
       appState.showingQuickAccess ||
       showingBlockSelector ||
@@ -203,7 +202,7 @@
     showingCommandPalette = false;
     appState.showingCreateNewNote = false;
     appState.showingFunctionSelector = false;
-    showingSettings = false;
+    appState.showingSettings = false;
     appState.showingRenameNote = false;
     appState.showingQuickAccess = false;
     showingBlockSelector = false;
@@ -573,7 +572,7 @@
   }
 
   function openSettings() {
-    showingSettings = true;
+    appState.showingSettings = true;
   }
 
   async function createScratchNote() {
@@ -2199,7 +2198,7 @@
   </Overlay>
 {/if}
 
-{#if showingSettings}
+{#if appState.showingSettings}
   <Overlay onclose={closeDialogs} blur={true}>
     <Settings></Settings>
   </Overlay>
