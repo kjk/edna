@@ -70,7 +70,6 @@
     "idb": "^8.0.3",
     "kiss-crypto": "^0.3.4",
     "overlayscrollbars": "^2.14.0",
-    "posthog-js": "^1.338.1",
     "prettier": "^3.8.1"
   }
 }
