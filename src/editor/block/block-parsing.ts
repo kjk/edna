@@ -15,13 +15,6 @@ export interface NoteBlock {
 // tracks the size of the first delimiter
 export let firstBlockDelimiterSize: number | undefined;
 
-function startTimer() {
-  const timeStart = performance.now();
-  return function () {
-    return Math.round(performance.now() - timeStart);
-  };
-}
-
 /**
  * Return a list of blocks in the document from the syntax tree.
  * syntaxTreeAvailable() should have been called before this function to ensure the syntax tree is available.

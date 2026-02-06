@@ -1,10 +1,9 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { MultiBlockEditor } from "../../src/editor/editor";
+import { createEditor, cleanup, type TestEditor } from "./utils";
 import { deleteBlock } from "../../src/editor/block/commands";
 
 describe("Delete block (browser tests)", () => {
-  let editor: MultiBlockEditor;
-  let container: HTMLDivElement;
+  let te: TestEditor;
 
   // \n∞∞∞text\nBlock A\n∞∞∞markdown\nBlock B\n∞∞∞text\nBlock C
   // Positions: delimiter0(0-8) content0(9-15) delimiter1(16-28) content1(29-35) delimiter2(36-44) content2(45-51)
@@ -14,33 +13,18 @@ describe("Delete block (browser tests)", () => {
     "\n\u221E\u221E\u221Etext\nBlock C";
 
   beforeEach(async () => {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-
-    editor = new MultiBlockEditor({
-      element: container,
-      save: async () => {},
-      setIsDirty: () => {},
-      createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: true,
-      useTabs: false,
-      tabSize: 4,
-    });
-
-    editor.setContent(threeBlockContent);
-    editor.view.focus();
+    te = createEditor(threeBlockContent);
 
     await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(editor.getBlocks().length).toBe(3);
+    expect(te.editor.getBlocks().length).toBe(3);
   });
 
   afterEach(() => {
-    if (container) {
-      container.remove();
-    }
+    cleanup(te);
   });
 
   it("delete first block", async () => {
+    const { editor } = te;
     editor.setCursorPosition(10); // in "Block A"
     deleteBlock(editor)(editor.view);
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -51,6 +35,7 @@ describe("Delete block (browser tests)", () => {
   });
 
   it("delete middle block", async () => {
+    const { editor } = te;
     editor.setCursorPosition(32); // in "Block B"
     deleteBlock(editor)(editor.view);
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -61,6 +46,7 @@ describe("Delete block (browser tests)", () => {
   });
 
   it("delete last block", async () => {
+    const { editor } = te;
     editor.setCursorPosition(52); // end of "Block C"
     deleteBlock(editor)(editor.view);
     await new Promise((resolve) => setTimeout(resolve, 50));

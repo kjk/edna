@@ -1,12 +1,10 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
-import { MultiBlockEditor } from "../../src/editor/editor";
+import { createEditor, cleanup, type TestEditor } from "./utils";
 import { foldBlock, unfoldBlock, toggleBlockFold } from "../../src/editor/fold-gutter";
-import { selectAll } from "../../src/editor/block/commands";
 
 describe("Block folding (browser tests)", () => {
-  let editor: MultiBlockEditor;
-  let container: HTMLDivElement;
+  let te: TestEditor;
   const isMac = /Mac/.test(navigator.platform);
 
   const fourBlockContent = [
@@ -28,34 +26,8 @@ describe("Block folding (browser tests)", () => {
     "\n",
   ].join("");
 
-  function createEditor(content: string) {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-
-    editor = new MultiBlockEditor({
-      element: container,
-      save: async () => {},
-      setIsDirty: () => {},
-      createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: true,
-      useTabs: false,
-      tabSize: 4,
-    });
-
-    editor.setContent(content);
-    editor.view.focus();
-  }
-
-  function getBlockContent(blockIndex: number): string {
-    const blocks = editor.getBlocks();
-    const content = editor.getContent();
-    expect(blocks.length).toBeGreaterThan(blockIndex);
-    const block = blocks[blockIndex];
-    return content.slice(block.contentFrom, block.to);
-  }
-
   function foldPlaceholderCount(): number {
-    return container.querySelectorAll(".cm-foldPlaceholder").length;
+    return te.container.querySelectorAll(".cm-foldPlaceholder").length;
   }
 
   /** Select all content in the buffer (two Mod+A presses) */
@@ -68,16 +40,17 @@ describe("Block folding (browser tests)", () => {
   }
 
   beforeEach(async () => {
-    createEditor(fourBlockContent);
+    te = createEditor(fourBlockContent);
     await new Promise((resolve) => setTimeout(resolve, 100));
-    await expect.poll(() => editor.getBlocks().length).toBe(4);
+    await expect.poll(() => te.editor.getBlocks().length).toBe(4);
   });
 
   afterEach(() => {
-    if (container) container.remove();
+    cleanup(te);
   });
 
   it("fold gutter doesn't lose editor focus when clicked", async () => {
+    const { editor, container } = te;
     editor.setCursorPosition(20);
     await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -96,6 +69,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("line number gutter doesn't lose editor focus when clicked", async () => {
+    const { editor, container } = te;
     editor.setCursorPosition(20);
     await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -112,6 +86,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("block can be folded", async () => {
+    const { editor } = te;
     editor.setCursorPosition(20);
 
     expect(foldPlaceholderCount()).toBe(0);
@@ -124,6 +99,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("multiple blocks can be folded and unfolded when selection overlaps multiple blocks", async () => {
+    const { editor } = te;
     // Select all content
     await selectEntireBuffer();
 
@@ -145,6 +121,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("toggleBlockFold works on single block", async () => {
+    const { editor } = te;
     editor.setCursorPosition(20);
 
     expect(foldPlaceholderCount()).toBe(0);
@@ -163,6 +140,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("toggleBlockFold works on multiple blocks", async () => {
+    const { editor } = te;
     await selectEntireBuffer();
 
     expect(foldPlaceholderCount()).toBe(0);
@@ -180,6 +158,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("toggleBlockFold with mixed folded/unfolded state", async () => {
+    const { editor } = te;
     // Fold Block A first
     editor.setCursorPosition(20);
     foldBlock(editor)(editor.view);
@@ -205,6 +184,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("toggleBlockFold with mixed state with many single line blocks", async () => {
+    const { editor } = te;
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nhej" +
         "\n\u221E\u221E\u221Etext\nBlock A\nLine 2 of Block A\nLine 3 of Block A" +
@@ -230,6 +210,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("typing at the beginning of a folded block unfolds it", async () => {
+    const { editor, container } = te;
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3",
     );
@@ -258,6 +239,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("typing at the end of a folded block unfolds it", async () => {
+    const { editor } = te;
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3",
     );
@@ -283,6 +265,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("typing in empty block does not unfold previous folded block", async () => {
+    const { editor } = te;
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3" +
         "\n\u221E\u221E\u221Etext\n",
@@ -311,6 +294,7 @@ describe("Block folding (browser tests)", () => {
   // Note: In Edna, pressing backspace in the empty block after fold unfolds the block
   // (unlike Heynote where it's preserved). This is due to autoUnfoldOnEdit behavior.
   it.skip("folded block does not unfold when new block created after it and backspace pressed immediately", async () => {
+    const { editor } = te;
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3\n",
     );
@@ -342,6 +326,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("folded block does not unfold when new block created before it and delete pressed immediately", async () => {
+    const { editor } = te;
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock B line 1\nBlock B line 2\nBlock B line 3\n",
     );
@@ -377,6 +362,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("markdown block with trailing empty lines can be fully folded", async () => {
+    const { editor, container } = te;
     editor.setContent(
       "\n\u221E\u221E\u221Emarkdown\n# Markdown Header\nThis is some markdown content\n- List item 1\n- List item 2\n\nAnother paragraph here\n\n\n\n",
     );

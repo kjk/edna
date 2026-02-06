@@ -1,39 +1,10 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
-import { MultiBlockEditor } from "../../src/editor/editor";
+import { createEditor, cleanup, getBlockContent, type TestEditor } from "./utils";
 
 describe("Block creation (browser tests)", () => {
-  let editor: MultiBlockEditor;
-  let container: HTMLDivElement;
+  let te: TestEditor;
   const isMac = /Mac/.test(navigator.platform);
-
-  function createEditor(initialContent: string): MultiBlockEditor {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-
-    editor = new MultiBlockEditor({
-      element: container,
-      save: async () => {},
-      setIsDirty: () => {},
-      createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: true,
-      useTabs: false,
-      tabSize: 4,
-    });
-
-    editor.setContent(initialContent);
-    editor.view.focus();
-
-    return editor;
-  }
-
-  function getBlockContent(blockIndex: number): string {
-    const blocks = editor.getBlocks();
-    const content = editor.getContent();
-    expect(blocks.length).toBeGreaterThan(blockIndex);
-    const block = blocks[blockIndex];
-    return content.slice(block.contentFrom, block.to);
-  }
 
   /** Convert key notation like "Alt+Enter" or "Mod+Shift+Enter" to vitest keyboard syntax */
   function keyToKeyboard(key: string): string {
@@ -54,6 +25,7 @@ describe("Block creation (browser tests)", () => {
   }
 
   async function runTest(key: string, expectedBlocks: string[]) {
+    const { editor, container } = te;
     await userEvent.keyboard(keyToKeyboard(key));
     await new Promise((resolve) => setTimeout(resolve, 100));
     await userEvent.keyboard("Block D");
@@ -61,7 +33,7 @@ describe("Block creation (browser tests)", () => {
     expect(editor.getBlocks().length).toBe(4);
 
     for (let i = 0; i < expectedBlocks.length; i++) {
-      expect(getBlockContent(i)).toBe(`Block ${expectedBlocks[i]}`);
+      expect(getBlockContent(editor, i)).toBe(`Block ${expectedBlocks[i]}`);
     }
 
     // check that only one block delimiter widget has the class first
@@ -73,7 +45,8 @@ describe("Block creation (browser tests)", () => {
   const threeBlockContent = `\n\u221E\u221E\u221Etext\nBlock A\n\u221E\u221E\u221Etext\nBlock B\n\u221E\u221E\u221Etext\nBlock C`;
 
   beforeEach(async () => {
-    createEditor(threeBlockContent);
+    te = createEditor(threeBlockContent);
+    const { editor, container } = te;
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -91,9 +64,7 @@ describe("Block creation (browser tests)", () => {
   });
 
   afterEach(() => {
-    if (container) {
-      container.remove();
-    }
+    cleanup(te);
   });
 
   /* from A */
@@ -141,6 +112,7 @@ describe("Block creation (browser tests)", () => {
   });
 
   it("create block before Markdown block", async () => {
+    const { editor } = te;
     // Reset with markdown content
     editor.setContent("\n\u221E\u221E\u221Emarkdown\n# Markdown!\n");
     const blocks = editor.getBlocks();
@@ -160,6 +132,7 @@ describe("Block creation (browser tests)", () => {
   });
 
   it("create block before first Markdown block", async () => {
+    const { editor } = te;
     editor.setContent("\n\u221E\u221E\u221Emarkdown\n# Markdown!\n\u221E\u221E\u221Etext\n");
     const blocks = editor.getBlocks();
     // Position cursor in the second block (text)

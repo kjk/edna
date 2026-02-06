@@ -1,11 +1,10 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
-import { MultiBlockEditor } from "../../src/editor/editor";
+import { createEditor, cleanup, getBlockContent, type TestEditor } from "./utils";
 import { deleteLine } from "../../src/editor/block/delete-line";
 
 describe("Delete line (browser tests)", () => {
-  let editor: MultiBlockEditor;
-  let container: HTMLDivElement;
+  let te: TestEditor;
 
   // Note: Mod+Shift+K is removed from Edna's keymap (used for command palette in full app),
   // so we call deleteLine() directly instead of using the keyboard shortcut.
@@ -15,40 +14,19 @@ describe("Delete line (browser tests)", () => {
     "\n\u221E\u221E\u221Etext\nBlock B" +
     "\n\u221E\u221E\u221Etext\nBlock C";
 
-  function getBlockContent(blockIndex: number): string {
-    const blocks = editor.getBlocks();
-    const content = editor.getContent();
-    expect(blocks.length).toBeGreaterThan(blockIndex);
-    const block = blocks[blockIndex];
-    return content.slice(block.contentFrom, block.to);
-  }
-
   beforeEach(async () => {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-
-    editor = new MultiBlockEditor({
-      element: container,
-      save: async () => {},
-      setIsDirty: () => {},
-      createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: true,
-      useTabs: false,
-      tabSize: 4,
-    });
-
-    editor.setContent(threeBlockContent);
-    editor.view.focus();
+    te = createEditor(threeBlockContent);
 
     await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(editor.getBlocks().length).toBe(3);
+    expect(te.editor.getBlocks().length).toBe(3);
   });
 
   afterEach(() => {
-    if (container) container.remove();
+    cleanup(te);
   });
 
   it("delete line on single line in Block A", async () => {
+    const { editor } = te;
     // Position cursor at first line of Block A
     const blocks = editor.getBlocks();
     editor.setCursorPosition(blocks[0].contentFrom);
@@ -58,10 +36,11 @@ describe("Delete line (browser tests)", () => {
       deleteLine(editor.view);
     }
 
-    expect(getBlockContent(0)).toBe("\ntext content 4");
+    expect(getBlockContent(editor, 0)).toBe("\ntext content 4");
   });
 
   it("delete line on selection in Block B", async () => {
+    const { editor } = te;
     // Position cursor in Block B
     const blocks = editor.getBlocks();
     editor.setCursorPosition(blocks[1].contentFrom);
@@ -74,6 +53,6 @@ describe("Delete line (browser tests)", () => {
     // Delete selected lines
     deleteLine(editor.view);
 
-    expect(getBlockContent(1)).toBe("");
+    expect(getBlockContent(editor, 1)).toBe("");
   });
 });

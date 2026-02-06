@@ -1,43 +1,17 @@
 import { describe, expect, it, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
-import { MultiBlockEditor } from "../../src/editor/editor";
+import { createEditor, cleanup, getBlockContent, type TestEditor } from "./utils";
 
 describe("Markdown (browser tests)", () => {
-  let editor: MultiBlockEditor;
-  let container: HTMLDivElement;
-
-  function createEditor(content: string) {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-
-    editor = new MultiBlockEditor({
-      element: container,
-      save: async () => {},
-      setIsDirty: () => {},
-      createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: true,
-      useTabs: false,
-      tabSize: 4,
-    });
-
-    editor.setContent(content);
-    editor.view.focus();
-  }
-
-  function getBlockContent(blockIndex: number): string {
-    const blocks = editor.getBlocks();
-    const content = editor.getContent();
-    expect(blocks.length).toBeGreaterThan(blockIndex);
-    const block = blocks[blockIndex];
-    return content.slice(block.contentFrom, block.to);
-  }
+  let te: TestEditor;
 
   afterEach(() => {
-    if (container) container.remove();
+    cleanup(te);
   });
 
   it("checkbox toggle", async () => {
-    createEditor("\n\u221E\u221E\u221Emarkdown\n- [ ] todo\n");
+    te = createEditor("\n\u221E\u221E\u221Emarkdown\n- [ ] todo\n");
+    const { editor, container } = te;
 
     // Wait for checkbox to be rendered by the decorator plugin
     await expect
@@ -62,22 +36,23 @@ describe("Markdown (browser tests)", () => {
 
     // Check → [x]
     toggleCheckbox();
-    await expect.poll(() => getBlockContent(0)).toBe("- [x] todo\n");
+    await expect.poll(() => getBlockContent(editor, 0)).toBe("- [x] todo\n");
 
     // Uncheck → [ ]
     toggleCheckbox();
-    await expect.poll(() => getBlockContent(0)).toBe("- [ ] todo\n");
+    await expect.poll(() => getBlockContent(editor, 0)).toBe("- [ ] todo\n");
   });
 
   it("todo list continue on enter", async () => {
     const content = "\n\u221E\u221E\u221Emarkdown\n- [ ] todo";
-    createEditor(content);
+    te = createEditor(content);
+    const { editor } = te;
 
     editor.setCursorPosition(editor.getContent().length);
     editor.view.focus();
 
     await userEvent.keyboard("{Enter}");
-    expect(getBlockContent(0)).toBe("- [ ] todo\n- [ ] ");
+    expect(getBlockContent(editor, 0)).toBe("- [ ] todo\n- [ ] ");
   });
 
   // Note: "test markdown mode" is skipped because it checks Edna's status bar UI

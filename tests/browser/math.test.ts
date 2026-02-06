@@ -1,11 +1,10 @@
 import { describe, expect, it, beforeAll, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
-import { MultiBlockEditor } from "../../src/editor/editor";
+import { createEditor, cleanup, getBlockContent, type TestEditor } from "./utils";
 import { foldBlock } from "../../src/editor/fold-gutter";
 
 describe("Math mode (browser tests)", () => {
-  let editor: MultiBlockEditor;
-  let container: HTMLDivElement;
+  let te: TestEditor;
 
   beforeAll(async () => {
     // Load math.js library needed for math block evaluation
@@ -22,54 +21,28 @@ describe("Math mode (browser tests)", () => {
     });
   });
 
-  function createEditor(content: string) {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-
-    editor = new MultiBlockEditor({
-      element: container,
-      save: async () => {},
-      setIsDirty: () => {},
-      createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: true,
-      useTabs: false,
-      tabSize: 4,
-    });
-
-    editor.setContent(content);
-    editor.view.focus();
-  }
-
-  function getBlockContent(blockIndex: number): string {
-    const blocks = editor.getBlocks();
-    const content = editor.getContent();
-    expect(blocks.length).toBeGreaterThan(blockIndex);
-    const block = blocks[blockIndex];
-    return content.slice(block.contentFrom, block.to);
-  }
-
   function getMathResults(): string[] {
-    return Array.from(container.querySelectorAll(".heynote-math-result .inner")).map(
+    return Array.from(te.container.querySelectorAll(".heynote-math-result .inner")).map(
       (el) => el.textContent || "",
     );
   }
 
   afterEach(() => {
-    if (container) container.remove();
+    cleanup(te);
   });
 
   it("test math mode", async () => {
-    createEditor("\n\u221E\u221E\u221Emath\n42*30+77\n");
+    te = createEditor("\n\u221E\u221E\u221Emath\n42*30+77\n");
     await expect.poll(() => getMathResults()).toContain("1337");
   });
 
   it("test math string result has no quotes", async () => {
-    createEditor("\n\u221E\u221E\u221Emath\nformat(1/3, 3) \n");
+    te = createEditor("\n\u221E\u221E\u221Emath\nformat(1/3, 3) \n");
     await expect.poll(() => getMathResults()).toContain("0.333");
   });
 
   it("custom format function", async () => {
-    createEditor(
+    te = createEditor(
       '\n\u221E\u221E\u221Emath\n_format = format\nformat(x) = _format(x, {notation:"exponential"})\n42\n',
     );
     await expect.poll(() => {
@@ -79,7 +52,7 @@ describe("Math mode (browser tests)", () => {
   });
 
   it("previous result in prev variable", async () => {
-    createEditor("\n\u221E\u221E\u221Emath\n128\nprev * 2 # 256\n");
+    te = createEditor("\n\u221E\u221E\u221Emath\n128\nprev * 2 # 256\n");
     await expect.poll(() => {
       const results = getMathResults();
       return results[results.length - 1];
@@ -87,7 +60,7 @@ describe("Math mode (browser tests)", () => {
   });
 
   it("previous result in prev variable rows with invalid values", async () => {
-    createEditor(
+    te = createEditor(
       "\n\u221E\u221E\u221Emath\n1336\n23 /\n# comment\ntest\nprev+1#comment\nprev\n",
     );
     await expect.poll(() => {
@@ -97,7 +70,8 @@ describe("Math mode (browser tests)", () => {
   });
 
   it("select all in math block replaces content", async () => {
-    createEditor("\n\u221E\u221E\u221Emath\n1\n2");
+    te = createEditor("\n\u221E\u221E\u221Emath\n1\n2");
+    const { editor } = te;
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // First Mod+A selects current block content
@@ -108,7 +82,7 @@ describe("Math mode (browser tests)", () => {
     // Type to replace selected content
     await userEvent.keyboard("3");
 
-    await expect.poll(() => getBlockContent(0)).toBe("3");
+    await expect.poll(() => getBlockContent(editor, 0)).toBe("3");
   });
 
   // Note: In Edna, the foldBlock keeps the first line visible (as a fold label),
@@ -116,9 +90,10 @@ describe("Math mode (browser tests)", () => {
   // The Heynote test expects all math results to be hidden, which may require
   // different fold behavior or CSS-level hiding.
   it.skip("folded math block hides math results", async () => {
-    createEditor(
+    te = createEditor(
       "\n\u221E\u221E\u221Emath\n1 + 1\n2 + 2\n\u221E\u221E\u221Etext\nAfter block\n",
     );
+    const { editor, container } = te;
 
     // Wait for math results to appear
     await expect.poll(() => {

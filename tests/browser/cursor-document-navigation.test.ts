@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
 import {
   cursorDocStart,
@@ -6,11 +6,10 @@ import {
   selectDocStart,
   selectDocEnd,
 } from "@codemirror/commands";
-import { MultiBlockEditor } from "../../src/editor/editor";
+import { createEditor, cleanup, type TestEditor } from "./utils";
 
 describe("Cursor document navigation (browser tests)", () => {
-  let editor: MultiBlockEditor;
-  let container: HTMLDivElement;
+  let te: TestEditor;
 
   const threeBlockContent = [
     "\n\u221E\u221E\u221Etext",
@@ -22,38 +21,19 @@ describe("Cursor document navigation (browser tests)", () => {
     "\nSome markdown content\n",
   ].join("");
 
-  function createEditor(content: string) {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-
-    editor = new MultiBlockEditor({
-      element: container,
-      save: async () => {},
-      setIsDirty: () => {},
-      createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: true,
-      useTabs: false,
-      tabSize: 4,
-    });
-
-    editor.setContent(content);
-    editor.view.focus();
-  }
-
   function getSelectedText(): string {
-    const state = editor.view.state;
+    const state = te.editor.view.state;
     const sel = state.selection.main;
     return state.doc.sliceString(sel.from, sel.to);
   }
 
   afterEach(() => {
-    if (container) {
-      container.remove();
-    }
+    cleanup(te);
   });
 
   it("cursorDocStart moves to beginning of document", async () => {
-    createEditor(threeBlockContent);
+    te = createEditor(threeBlockContent);
+    const { editor } = te;
 
     // Move cursor to the end of the document
     cursorDocEnd(editor.view);
@@ -67,7 +47,8 @@ describe("Cursor document navigation (browser tests)", () => {
   });
 
   it("cursorDocEnd moves to end of document", async () => {
-    createEditor(threeBlockContent);
+    te = createEditor(threeBlockContent);
+    const { editor } = te;
 
     // Move cursor to the beginning of the document
     cursorDocStart(editor.view);
@@ -80,7 +61,8 @@ describe("Cursor document navigation (browser tests)", () => {
   });
 
   it("selectDocStart selects from cursor to beginning of document", async () => {
-    createEditor(threeBlockContent);
+    te = createEditor(threeBlockContent);
+    const { editor } = te;
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Position cursor in the middle of the document (in the second block)
@@ -99,7 +81,8 @@ describe("Cursor document navigation (browser tests)", () => {
   });
 
   it("selectDocEnd selects from cursor to end of document", async () => {
-    createEditor(threeBlockContent);
+    te = createEditor(threeBlockContent);
+    const { editor } = te;
 
     // Move cursor to the beginning, then forward 15 chars
     cursorDocStart(editor.view);
@@ -118,9 +101,10 @@ describe("Cursor document navigation (browser tests)", () => {
   });
 
   it("cursor navigation works with empty blocks", async () => {
-    createEditor(
+    te = createEditor(
       "\n\u221E\u221E\u221Etext\n\n\u221E\u221E\u221Ejavascript\n\n\u221E\u221E\u221Emarkdown\n",
     );
+    const { editor } = te;
 
     // Test moving to beginning
     cursorDocEnd(editor.view);
@@ -135,7 +119,8 @@ describe("Cursor document navigation (browser tests)", () => {
   });
 
   it("cursor cannot be set within block delimiter", async () => {
-    createEditor("\n\u221E\u221E\u221Etext\nhello");
+    te = createEditor("\n\u221E\u221E\u221Etext\nhello");
+    const { editor } = te;
 
     // Try to set cursor at position 0, which is inside the block delimiter
     editor.setCursorPosition(0);
@@ -146,7 +131,8 @@ describe("Cursor document navigation (browser tests)", () => {
   });
 
   it("cursor navigation works in single block", async () => {
-    createEditor("\n\u221E\u221E\u221Etext\nSingle block with some content\n");
+    te = createEditor("\n\u221E\u221E\u221Etext\nSingle block with some content\n");
+    const { editor } = te;
 
     // Move to middle of block
     cursorDocStart(editor.view);

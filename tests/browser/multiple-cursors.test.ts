@@ -1,43 +1,25 @@
 import { describe, expect, it, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
 import { EditorSelection } from "@codemirror/state";
-import { MultiBlockEditor } from "../../src/editor/editor";
 import { newCursorBelow } from "../../src/editor/block/commands";
+import { createEditor, cleanup, type TestEditor } from "./utils";
 
 describe("Multiple cursors (browser tests)", () => {
-  let editor: MultiBlockEditor;
-  let container: HTMLDivElement;
-
-  function createEditor(content: string) {
-    container = document.createElement("div");
-    document.body.appendChild(container);
-
-    editor = new MultiBlockEditor({
-      element: container,
-      save: async () => {},
-      setIsDirty: () => {},
-      createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: true,
-      useTabs: false,
-      tabSize: 4,
-    });
-
-    editor.setContent(content);
-    editor.view.focus();
-  }
+  let te: TestEditor;
 
   afterEach(() => {
-    if (container) container.remove();
+    cleanup(te);
   });
 
   function getCursorCount(): number {
-    return editor.view.state.selection.ranges.length;
+    return te.editor.view.state.selection.ranges.length;
   }
 
   it("newCursorBelow creates additional cursors", async () => {
-    createEditor(
+    te = createEditor(
       "\n\u221E\u221E\u221Etext\nFirst line of content\nSecond line of content\nThird line of content\n",
     );
+    const { editor } = te;
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Position cursor at first content line
@@ -55,9 +37,10 @@ describe("Multiple cursors (browser tests)", () => {
   });
 
   it("programmatic multiple cursors via dispatch", async () => {
-    createEditor(
+    te = createEditor(
       "\n\u221E\u221E\u221Etext\nFirst line\nSecond line\nThird line\nFourth line\n",
     );
+    const { editor } = te;
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Find content lines (skip the delimiter line)
@@ -82,7 +65,8 @@ describe("Multiple cursors (browser tests)", () => {
   });
 
   it("multiple cursors typing behavior", async () => {
-    createEditor("\n\u221E\u221E\u221Etext\nLine 1\nLine 2\nLine 3\n");
+    te = createEditor("\n\u221E\u221E\u221Etext\nLine 1\nLine 2\nLine 3\n");
+    const { editor } = te;
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Find the content lines using block boundaries
@@ -114,9 +98,10 @@ describe("Multiple cursors (browser tests)", () => {
   });
 
   it("Alt+Click creates additional cursor via mouse event", async () => {
-    createEditor(
+    te = createEditor(
       "\n\u221E\u221E\u221Etext\nFirst line of content\nSecond line of content\nThird line of content\n",
     );
+    const { container } = te;
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Click on first line to position cursor
