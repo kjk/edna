@@ -30,6 +30,7 @@ class AppState {
   showingBlockMoveSelector = $state(false);
   showingNoteSelector = $state(false);
   showingLanguageSelector = $state(false);
+  showingContextMenu = $state(false);
   showingArchived = $state(false); // show archived notes in note selector
 
   searchIncludeArchived = $state(false);

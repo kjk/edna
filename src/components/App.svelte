@@ -167,7 +167,6 @@
   let noteName = $derived(settings.currentNoteName);
   let selectionSize = $state(0);
 
-  let showingContextMenu = $state(false);
   let showingCommandPalette = $state(false);
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
@@ -180,7 +179,7 @@
 
   let isShowingDialog = $derived.by(() => {
     return (
-      showingContextMenu ||
+      appState.showingContextMenu ||
       appState.showingLanguageSelector ||
       appState.showingNoteSelector ||
       appState.showingBlockMoveSelector ||
@@ -199,7 +198,7 @@
   });
 
   function closeDialogs() {
-    showingContextMenu = false;
+    appState.showingContextMenu = false;
     appState.showingLanguageSelector = false;
     appState.showingNoteSelector = false;
     appState.showingBlockMoveSelector = false;
@@ -1293,7 +1292,7 @@
 
   async function onmenucmd(cmdId: number) {
     // console.log("cmd:", cmdId);
-    showingContextMenu = false;
+    appState.showingContextMenu = false;
     let view = getEditorView();
     let ednaEditor = getEditor();
 
@@ -1531,7 +1530,7 @@
     ev.stopImmediatePropagation();
     contextMenuDef = buildMenuDef();
     contextMenuPos = pos || { x: ev.x, y: ev.y };
-    showingContextMenu = true;
+    appState.showingContextMenu = true;
   }
 
   function commandNameOverride(id: number, name?: string): string {
@@ -2215,7 +2214,7 @@
   </Overlay>
 {/if}
 
-{#if showingContextMenu}
+{#if appState.showingContextMenu}
   <Overlay onclose={closeDialogs}>
     <Menu {menuItemStatus} {onmenucmd} menuDef={contextMenuDef} pos={contextMenuPos} />
   </Overlay>
