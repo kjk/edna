@@ -126,7 +126,6 @@
   import type { Item as BlockItem } from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
-  import Editor from "./Editor.svelte";
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
   import FindInNotes from "./FindInNotes.svelte";
@@ -141,6 +140,7 @@
   } from "./Menu.svelte";
   import type { MenuDef, MenuItemDef } from "./Menu.svelte";
   import ModalMessage, { clearModalMessage, modalMessageState, showModalMessageHTML } from "./ModalMessage.svelte";
+  import Editor from "./MultiBlockEditor.svelte";
   import NoteSelector from "./NoteSelector.svelte";
   import NoteSelectorWide from "./NoteSelectorWide.svelte";
   import Overlay from "./Overlay.svelte";
