@@ -14,8 +14,7 @@
     "build": "vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.json --noEmit",
     "gen": "bun ./src/gen.ts",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:vitest": "vitest"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
@@ -24,6 +23,7 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "@tailwindcss/vite": "^4.1.18",
+    "@toon-format/toon": "^2.1.0",
     "@types/bun": "^1.3.8",
     "@types/node": "^24.10.10",
     "markdown-it": "^14.1.0",

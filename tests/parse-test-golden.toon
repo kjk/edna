@@ -1,0 +1,187 @@
+[2]:
+  - file: src/notes/note-scratch-dev.edna.txt
+    content: "\n∞∞∞python-a\n# hmm\ndef my_func():\n  print(\"hejsan\")\n\n∞∞∞javascript-a\nimport {basicSetup} from \"codemirror\"\nimport {EditorView, keymap} from \"@codemirror/view\"\nimport {javascript} from \"@codemirror/lang-javascript\"\nimport {indentWithTab, insertTab, indentLess, indentMore} from \"@codemirror/commands\"\nimport {nord} from \"./nord.mjs\"\n\nlet editor = new EditorView({\n  //extensions: [basicSetup, javascript()],\n  extensions: [\n    basicSetup,\n    javascript(),\n    //keymap.of([indentWithTab]),\n    keymap.of([\n      {\n          key: 'Tab',\n          preventDefault: true,\n          //run: insertTab,\n          run: indentMore,\n      },\n      {\n          key: 'Shift-Tab',\n          preventDefault: true,\n          run: indentLess,\n      },\n    ]),\n    nord,\n  ],\n  parent: document.getElementById(\"editor\"),\n})\n\n∞∞∞json\n{\n    \"name\": \"heynote-codemirror\",\n    \"type\": \"module\",\n    \"version\": \"1.0.0\",\n    \"description\": \"\",\n    \"main\": \"index.js\",\n    \"scripts\": {\n        \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\",\n        \"build\": \"rollup -c\"\n    },\n    \"keywords\": [],\n    \"author\": \"\",\n    \"license\": \"ISC\",\n    \"dependencies\": {\n        \"@codemirror/commands\": \"^6.1.2\",\n        \"@codemirror/lang-javascript\": \"^6.1.2\",\n        \"@codemirror/lang-json\": \"^6.0.1\",\n        \"@codemirror/lang-python\": \"^6.1.1\",\n        \"@rollup/plugin-node-resolve\": \"^15.0.1\",\n        \"codemirror\": \"^6.0.1\",\n        \"i\": \"^0.3.7\",\n        \"npm\": \"^9.2.0\",\n        \"rollup\": \"^3.8.1\",\n        \"rollup-plugin-typescript2\": \"^0.34.1\",\n        \"typescript\": \"^4.9.4\"\n    }\n}\n∞∞∞html\n<html>\n    <head>\n        <title>Test</title>\n    </head>\n    <body>\n        <h1>Test</h1>\n        <script>\n            console.log(\"hej\")\n        </script>\n    </body>\n</html>\n∞∞∞sql\nSELECT * FROM table WHERE id = 1;\n∞∞∞text\nShopping list:\n\n- Milk\n- Eggs\n- Bread\n- Cheese`\n"
+    blocks[6]:
+      - index: 0
+        language: python
+        autoDetect: true
+        content:
+          from: 13
+          to: 52
+        delimiter:
+          from: 0
+          to: 13
+        range:
+          from: 0
+          to: 52
+      - index: 1
+        language: javascript
+        autoDetect: true
+        content:
+          from: 69
+          to: 808
+        delimiter:
+          from: 52
+          to: 69
+        range:
+          from: 52
+          to: 808
+      - index: 2
+        language: json
+        autoDetect: false
+        content:
+          from: 817
+          to: 1567
+        delimiter:
+          from: 808
+          to: 817
+        range:
+          from: 808
+          to: 1567
+      - index: 3
+        language: html
+        autoDetect: false
+        content:
+          from: 1576
+          to: 1752
+        delimiter:
+          from: 1567
+          to: 1576
+        range:
+          from: 1567
+          to: 1752
+      - index: 4
+        language: sql
+        autoDetect: false
+        content:
+          from: 1760
+          to: 1793
+        delimiter:
+          from: 1752
+          to: 1760
+        range:
+          from: 1752
+          to: 1793
+      - index: 5
+        language: text
+        autoDetect: false
+        content:
+          from: 1802
+          to: 1850
+        delimiter:
+          from: 1793
+          to: 1802
+        range:
+          from: 1793
+          to: 1850
+  - file: src/notes/note-scratch.edna.txt
+    content: "\n∞∞∞markdown\nWelcome to Edna - a note taking app for developers and power users.\n\nTo learn more: https://edna.arslexis.io/help (or right-click for context menu and use `Help` / `Show help`).\n\nThis is a scratch note. Feel free to delete the content and use it for temporary notes.\n∞∞∞text\n# Keyboard shortcuts\n\n{{keyHelp}}\n∞∞∞markdown\n# Blocks\n\nNotes consist of blocks. Each block has a type:\n* markdown\n* plain text\n* code block (JavaScript, Go and 30+ other programming languages)\n* math block\n\nMod + L to change the type of block\nMod + B to navigate between blocks\n\nBlocks have alternate background color.\n∞∞∞markdown\n# Command Palette\n\nUse Mod + Shift + K to open command palette or use icon in top navigation bar.\n∞∞∞markdown\n# Multiple notes\n\nUse Mod + K to switch between notes.\n\nTo create new note:\n* Mod + K, type the name of new note and Enter or Mod + Enter to create the note\n* Mod + Shift + K for Command Palette, Create New Note, provide a name of the note\n* Mod + Shift + K for Command Palette, Create New Scratch Note. Meant for temporary, scratch notes, the name will automatically be scratch-<N>\n∞∞∞markdown\n# Note storage\n\nBy default notes are stored in browsers' localStorage.\n\nIn supported browsers (Chrome, Edge, Brave) you can store notes on disk.\n\nTo share notes between computers, you can store notes on shared file system like DropBox, One Drive, Google Drive etc.\n\nRead more at https://edna.arslexis.io/help#storing-notes-on-disk\n∞∞∞math\nThis is a Math block. Lines are evaluated as math expressions with result rendered at end of line right.\n\nradius = 5\narea = radius^2 * PI\nsqrt(9)\n\nWe support basic unit conversions and currencies:\n\n13 inches in cm\ntime = 3900 seconds to minutes\ntime * 2\n\n1 EUR in USD\n∞∞∞markdown\nIn Markdown blocks, lists with [x] and [ ] are rendered as checkboxes:\n\n- [ ] Try out Edna\n- [ ] Do laundry\n∞∞∞markdown\n# Programmability\n\nLearn more at https://edna.arslexis.io/help#running-code\n\nIf current block is Go or JavaScript block, you can run it:\n\n- `Alt + Shift + R` keyboard shortcut\n- context menu: `Run / Run <javascript> block`\n- command palette: `Block: Run <language> block`\n\nThe output of execution will be shown in a new block created below the executed block.\n\nYou can run JavaScript functions with the content of a current block or a selection.\n\nThe function gets the content as argument, can traform it, and we show the output in a block below.\n\nFor example a function can sort the lines in a block, calculate md5 hash or transform it to upper case. The possibilities are literally limitless.\n\nTo run a JavasScript function with content of block:\n- context menu: `Run` / `Run function with block content`\n- command palette: `Run function with block content`\n- pick a function from the list\n\nTo run a JavasScript function with selection:\n- context menu: `Run` / `Run function with selection`\n- command palette: `Run function with selection`\n- pick a function from the list\n\nIf you want to see all built-in functions use:\n- context menu: `Run`, `Show built-in functions`\n- command palette: `Shw built-in functions`\n"
+    blocks[9]:
+      - index: 0
+        language: markdown
+        autoDetect: false
+        content:
+          from: 13
+          to: 279
+        delimiter:
+          from: 0
+          to: 13
+        range:
+          from: 0
+          to: 279
+      - index: 1
+        language: text
+        autoDetect: false
+        content:
+          from: 288
+          to: 321
+        delimiter:
+          from: 279
+          to: 288
+        range:
+          from: 279
+          to: 321
+      - index: 2
+        language: markdown
+        autoDetect: false
+        content:
+          from: 334
+          to: 607
+        delimiter:
+          from: 321
+          to: 334
+        range:
+          from: 321
+          to: 607
+      - index: 3
+        language: markdown
+        autoDetect: false
+        content:
+          from: 620
+          to: 717
+        delimiter:
+          from: 607
+          to: 620
+        range:
+          from: 607
+          to: 717
+      - index: 4
+        language: markdown
+        autoDetect: false
+        content:
+          from: 730
+          to: 1112
+        delimiter:
+          from: 717
+          to: 730
+        range:
+          from: 717
+          to: 1112
+      - index: 5
+        language: markdown
+        autoDetect: false
+        content:
+          from: 1125
+          to: 1455
+        delimiter:
+          from: 1112
+          to: 1125
+        range:
+          from: 1112
+          to: 1455
+      - index: 6
+        language: math
+        autoDetect: false
+        content:
+          from: 1464
+          to: 1731
+        delimiter:
+          from: 1455
+          to: 1464
+        range:
+          from: 1455
+          to: 1731
+      - index: 7
+        language: markdown
+        autoDetect: false
+        content:
+          from: 1744
+          to: 1851
+        delimiter:
+          from: 1731
+          to: 1744
+        range:
+          from: 1731
+          to: 1851
+      - index: 8
+        language: markdown
+        autoDetect: false
+        content:
+          from: 1864
+          to: 3079
+        delimiter:
+          from: 1851
+          to: 1864
+        range:
+          from: 1851
+          to: 3079

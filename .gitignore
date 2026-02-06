@@ -9,3 +9,4 @@ dist/gitkeep.txt
 dist/
 .claude/settings.local.json
 .DS_Store
+ailog.txt
