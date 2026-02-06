@@ -1,9 +1,5 @@
 import { expect, test } from "bun:test";
-import {
-  parseBoopFunction,
-  parseBuiltInFunctions,
-  parseUserFunctions,
-} from "./functions";
+import { parseBoopFunction, parseBuiltInFunctions, parseUserFunctions } from "./functions";
 import { len } from "./util";
 
 test("parseFunction", async () => {
@@ -24,7 +20,7 @@ async function main(input) {
   input.text = lodash.snakeCase(input.text);
 }`;
 
-  let meta = parseBoopFunction(sampleFunc);
+  let meta = parseBoopFunction(sampleFunc)!;
   expect(meta.api).toBe(1);
   expect(meta.name).toBe("Snake Case");
   expect(meta.description).toBe("converts_your_text_to_snake_case.");
@@ -39,9 +35,7 @@ test("parseBuiltInFunctiosn", async () => {
 });
 
 test("parseCustomFunctions", async () => {
-  let jsRaw = await Bun.file(
-    "./src/notes/note-custom-functions.edna.txt",
-  ).text();
+  let jsRaw = await Bun.file("./src/notes/note-custom-functions.edna.txt").text();
   let res = parseUserFunctions(jsRaw);
   expect(len(res)).toBe(1);
   expect(res[0].name).toBe("My Camel Case");

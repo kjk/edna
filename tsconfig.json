@@ -23,7 +23,7 @@
     "noEmit": true,
 
     // https://twitter.com/housecor/status/1768283265889136835
-    "noUncheckedIndexedAccess": true,
+    // "noUncheckedIndexedAccess": true,
 
     "paths": {
       "@/*": ["./*"],
