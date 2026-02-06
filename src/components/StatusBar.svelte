@@ -72,7 +72,7 @@
     {/if}
   </div>
   <div class="text-gray-400">&bull;</div>
-  <div class="doc-size px-[6px]" title="Note Size: {docSize} bytes">
+  <div class="doc-size px-1.5" title="Note Size: {docSize} bytes">
     {formatSize}
   </div>
 

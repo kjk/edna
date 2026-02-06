@@ -190,7 +190,7 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-  class="overflow-y-auto cursor-pointer flex flex-wrap gap-y-[2px] pb-4"
+  class="overflow-y-auto cursor-pointer flex flex-wrap gap-y-0.5 pb-4"
   tabindex="-1"
   role="listbox"
   bind:this={listboxRef}

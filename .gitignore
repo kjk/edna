@@ -11,3 +11,4 @@ dist/
 .DS_Store
 ailog.txt
 dist/gitkeep.txt
+tsconfig.tsbuildinfo

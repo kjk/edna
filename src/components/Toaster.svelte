@@ -96,7 +96,7 @@
 </script>
 
 {#if len(toasts) > 0}
-  <div class="toast-wrap fixed top-10 right-[19px] text-sm" {style}>
+  <div class="toast-wrap fixed top-10 right-4.75 text-sm" {style}>
     {#each toasts as t}
       <div
         class="flex justify-between items-center mb-4 border rounded-md py-2 pl-4 pr-2 min-w-[14ch] {bgClass(t.type)}"

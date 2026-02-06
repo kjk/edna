@@ -130,7 +130,7 @@
 <form
   onkeydown={onKeydown}
   tabindex="-1"
-  class="selector absolute flex flex-col z-20 center-x-with-translate top-[2rem] max-h-[90vh] w-[32em] p-2"
+  class="selector absolute flex flex-col z-20 center-x-with-translate top-8 max-h-[90vh] w-[32em] p-2"
 >
   <div>
     <div class="flex">
@@ -147,7 +147,7 @@
         bind:value={filter}
         class="py-1 px-2 bg-white w-full mb-2 rounded-xs relative"
       />
-      <div class="absolute right-[1rem] top-[2.6rem] italic text-gray-400">
+      <div class="absolute right-4 top-[2.6rem] italic text-gray-400">
         {itemsCountMsg}
       </div>
     </div>
@@ -161,7 +161,7 @@
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
       <button
-        class="ml-[-6px] cursor-pointer hover:text-yellow-600"
+        class="-ml-1.5 cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
           toggleStarred(item);
           ev.preventDefault();

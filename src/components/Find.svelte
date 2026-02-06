@@ -274,7 +274,7 @@
 </script>
 
 {#snippet InsideInput()}
-  <div class="absolute right-[0.25rem] top-[6px] flex">
+  <div class="absolute right-1 top-1.5 flex">
     {#if counter.total}
       <div class="flex text-gray-300 ml-4 self-center whitespace-nowrap">
         {counter.current} of {counter.total}
@@ -322,7 +322,7 @@
 {/snippet}
 
 <div
-  class="selector-colors fixed top-[2px] left-1/2 -translate-x-1/2 z-20 px-1 py-1 bg-white text-sm max-w-4/5 shadow-lg border border-gray-300 dark:border-gray-700"
+  class="selector-colors fixed top-0.5 left-1/2 -translate-x-1/2 z-20 px-1 py-1 bg-white text-sm max-w-4/5 shadow-lg border border-gray-300 dark:border-gray-700"
   use:trapfocus
 >
   <div class="flex flex-row">
@@ -361,10 +361,10 @@
   @reference "tailwindcss";
 
   input {
-    @apply bg-white px-2 py-1 border-1 border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;
+    @apply bg-white px-2 py-1 border border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;
   }
 
   button {
-    @apply px-[6px] py-[2px] hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
+    @apply px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
   }
 </style>
