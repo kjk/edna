@@ -270,43 +270,14 @@ func serverListenAndWait(httpSrv *http.Server) func() {
 	}
 }
 
-func waitForServerReadyMust(uri string) {
-	logf("waitForServerReady: waiting for '%s' to be ready\n", uri)
-	for range 10 {
-		resp, err := http.Get(uri)
-		if err == nil && resp.StatusCode == http.StatusOK {
-			logf("waitForServerReady: got response from '%s'\n", uri)
-			resp.Body.Close()
-			return
-		}
-		logf("waitForServerReady: failed to get response from '%s', error: %v\n", uri, err)
-		time.Sleep(time.Second * 1)
-	}
-	panicIf(true, "failed to get response from '%s'", uri)
-}
-
 func openBrowserForServerMust(httpSrv *http.Server) {
 	// wait for go server
-	waitForServerReadyMust("http://" + httpSrv.Addr + "/ping.txt")
+	must(u.WaitForServerReady("http://" + httpSrv.Addr + "/ping.txt"))
 	if flgRunDev {
 		// wait for vite dev server
-		waitForServerReadyMust(proxyURLStr + "/")
+		must(u.WaitForServerReady(proxyURLStr + "/"))
 	}
 	u.OpenBrowser("http://" + httpSrv.Addr)
-}
-
-func mkFsysEmbedded() fs.ReadDirFS {
-	printFS(DistFS)
-	logf("mkFsysEmbedded: serving from embedded FS\n")
-	return DistFS
-}
-
-func mkFsysDirPublic() fs.FS {
-	dir := filepath.Join("src", "public")
-	fsys := os.DirFS(dir)
-	printFS(fsys)
-	logf("mkFsysDirPublic: serving from dir '%s'\n", dir)
-	return fsys
 }
 
 func mkServeFileOptions(fsys fs.FS) *hutil.ServeFileOptions {
@@ -337,7 +308,7 @@ func runServerDev() {
 	must(err)
 	proxyHandler := httputil.NewSingleHostReverseProxy(proxyURL)
 
-	fsys := mkFsysDirPublic()
+	fsys := os.DirFS(filepath.Join("src", "public"))
 	serveOpts := mkServeFileOptions(fsys)
 	serveOpts.DirPrefix = "./"
 	httpSrv := makeHTTPServer(serveOpts, proxyHandler)
@@ -352,11 +323,9 @@ func runServerDev() {
 func runServerProd() {
 	testingProd := isWinOrMac()
 
-	var fsys fs.ReadDirFS = mkFsysEmbedded()
-	// u.CountFilesInFS(fsys)
-	// checkHasEmbeddedFilesMust()
+	panicIf(u.CountFilesInFS(DistFS) < 5)
 
-	serveOpts := mkServeFileOptions(fsys)
+	serveOpts := mkServeFileOptions(DistFS)
 	httpSrv := makeHTTPServer(serveOpts, nil)
 
 	waitFn := serverListenAndWait(httpSrv)
