@@ -1,6 +1,7 @@
 // this logically belongs in functions.js but I use bun test
 // to test to test functions.js and it doesn't handle
 // importing ?raw
+import { blockHdrJavaScript, blockHdrMarkdown } from "./constants";
 import type { BoopFunction } from "./functions";
 import { parseBuiltInFunctions } from "./functions.js";
 import { fixUpShortcuts, keyHelpStr } from "./key-helper.js";
@@ -33,9 +34,6 @@ export function getHelp(platform = platformName): string {
   return fixUpNoteContent(help);
 }
 
-export const blockHdrJavaScript = "\n∞∞∞javascript\n";
-
-const blockHdrMarkdown = "\n∞∞∞markdown\n"; // avoid circular deps
 let builtInHdr =
   blockHdrMarkdown +
   `# Edna bundled JavaScript function

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import { kReleaseNotesSystemNoteName } from "../notes";
+  import { kReleaseNotesSystemNoteName } from "../constants";
   import ListBox from "./ListBox.svelte";
 
   interface Props {

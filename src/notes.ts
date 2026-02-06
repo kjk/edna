@@ -3,6 +3,19 @@ import { decryptBlobAsString, encryptStringAsBlob, hash } from "kiss-crypto";
 import { appState } from "./appstate.svelte";
 // @ts-ignore
 import { clearModalMessage, showModalMessageHTML } from "./components/ModalMessage.svelte";
+import {
+  blockHdrMarkdown,
+  kBuiltInFunctionsNoteName,
+  kDailyJournalNoteName,
+  kEdnaEncrFileExt,
+  kEdnaFileExt,
+  kHelpSystemNoteName,
+  kInboxNoteName,
+  kReleaseNotesSystemNoteName,
+  kScratchNoteName,
+  kWelcomeDevSystemNoteName,
+  kWelcomeSystemNoteName,
+} from "./constants";
 import { KV } from "./dbutil";
 import { fromFileName, isValidFileName, toFileName } from "./filenamify";
 import {
@@ -113,9 +126,6 @@ export async function dbDelDirHandle() {
   storageFS = undefined;
 }
 
-export const kEdnaFileExt = ".edna.txt";
-const kEdnaEncrFileExt = ".encr.edna.txt";
-
 function isEncryptedEdnaFile(fileName: string): boolean {
   return fileName.endsWith(kEdnaEncrFileExt);
 }
@@ -160,17 +170,6 @@ export function notePathFromName(name: string): string {
   }
 }
 
-export const kScratchNoteName = "scratch";
-export const kDailyJournalNoteName = "daily journal";
-export const kInboxNoteName = "inbox";
-export const kMyFunctionsNoteName = "edna: my functions";
-
-export const kHelpSystemNoteName = "system:help";
-export const kReleaseNotesSystemNoteName = "system:Release Notes";
-export const kWelcomeSystemNoteName = "system:welcome";
-export const kWelcomeDevSystemNoteName = "system:welcome dev";
-export const kBuiltInFunctionsNoteName = "system:built in functions";
-
 const systemNotes = [
   kHelpSystemNoteName,
   kReleaseNotesSystemNoteName,
@@ -182,11 +181,6 @@ const systemNotes = [
 export function isSystemNoteName(name: string): boolean {
   return systemNotes.includes(name);
 }
-
-export const blockHdrPlainText = "\n∞∞∞text-a\n";
-export const blockHdrMarkdown = "\n∞∞∞markdown\n";
-export const blockHdrJSON = "\n∞∞∞json\n";
-export const blockHdrPHP = "\n∞∞∞php\n";
 
 export async function createIfNotExists(name: string, content: string, existingNotes?: string[]): Promise<number> {
   if (!existingNotes) {

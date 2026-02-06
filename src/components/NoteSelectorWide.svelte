@@ -1,8 +1,9 @@
 <script lang="ts">
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
+  import { kScratchNoteName } from "../constants";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
-  import { isSystemNoteName, kScratchNoteName, sanitizeNoteName } from "../notes";
+  import { isSystemNoteName, sanitizeNoteName } from "../notes";
   import {
     findMatchingItems,
     getAltChar,

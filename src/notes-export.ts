@@ -1,8 +1,8 @@
 import { appState } from "./appstate.svelte";
+import { kSettingsPath } from "./constants";
 import { blobFromUint8Array, fsReadBinaryFile, readDir } from "./fileutil";
 import { kMetadataName, loadNotesMetadata } from "./metadata";
 import { forEachNoteFileFS, getStorageFS, loadNote, loadNoteNames, notePathFromNameFS } from "./notes";
-import { kSettingsPath } from "./settings.svelte";
 import { formatDateYYYYMMDD, len, throwIf } from "./util";
 
 async function addBinaryBlob(libZip: any, zipWriter: any, fileName: string, fileBlob: Blob) {

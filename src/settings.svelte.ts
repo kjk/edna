@@ -1,6 +1,6 @@
 import { appState } from "./appstate.svelte";
+import { kScratchNoteName, kSettingsPath } from "./constants";
 import { kModelIDIdx, modelsShort } from "./models-short";
-import { kScratchNoteName } from "./notes";
 import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf } from "./util";
 
 const settingsKeys = [
@@ -105,7 +105,6 @@ export const isMobileDevice = window.matchMedia("(max-width: 600px)").matches;
 // heynote has 12 but Hack at 12 looks like Consolas at 14
 export let kDefaultFontSize = isMobileDevice ? 16 : 14;
 console.log("kDefaultFontSize:", kDefaultFontSize);
-export const kSettingsPath = "settings.json";
 
 function validateFontSize(fontSize: number): number {
   if (!fontSize) {

@@ -6,6 +6,18 @@
   import { EditorSelection, EditorState } from "@codemirror/state";
   import type { EditorView } from "@codemirror/view";
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
+  import {
+    blockHdrMarkdown,
+    kBuiltInFunctionsNoteName,
+    kDailyJournalNoteName,
+    kEdnaFileExt,
+    kHelpSystemNoteName,
+    kMyFunctionsNoteName,
+    kReleaseNotesSystemNoteName,
+    kScratchNoteName,
+    kWelcomeDevSystemNoteName,
+    kWelcomeSystemNoteName,
+  } from "../constants";
   import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
   import { getActiveNoteBlock, getBlockN, getBlocksInfo, insertAfterActiveBlock } from "../editor/block/block";
   import type { NoteBlock } from "../editor/block/block-parsing";
@@ -62,7 +74,6 @@
   import { isMoving } from "../mouse-track.svelte";
   import {
     appendToNote,
-    blockHdrMarkdown,
     canDeleteNote,
     createIfNotExists,
     createNewScratchNote,
@@ -76,15 +87,6 @@
     isNoteArchivable,
     isSystemNoteName,
     isUsingEncryption,
-    kBuiltInFunctionsNoteName,
-    kDailyJournalNoteName,
-    kEdnaFileExt,
-    kHelpSystemNoteName,
-    kMyFunctionsNoteName,
-    kReleaseNotesSystemNoteName,
-    kScratchNoteName,
-    kWelcomeDevSystemNoteName,
-    kWelcomeSystemNoteName,
     loadNoteIfExists,
     noteExists,
     pickAnotherDirectory,
@@ -96,7 +98,13 @@
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
   import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
   import type { CapturingEval } from "../run";
-  import { getSettings, kDefaultFontFamily, kDefaultFontSize, settingsAddTab, settingsRemoveTab } from "../settings.svelte";
+  import {
+    getSettings,
+    kDefaultFontFamily,
+    kDefaultFontSize,
+    settingsAddTab,
+    settingsRemoveTab,
+  } from "../settings.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
     addNoteToBrowserHistory,

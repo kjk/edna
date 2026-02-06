@@ -4,6 +4,7 @@ import "highlight.js/styles/github.css";
 import { mount, unmount } from "svelte";
 import App from "./components/App.svelte";
 import AskFSPermissions from "./components/AskFSPermissions.svelte";
+import { kScratchNoteName } from "./constants";
 import { hasHandlePermission } from "./fileutil";
 import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import {
@@ -12,7 +13,6 @@ import {
   dbGetDirHandle,
   ensureValidNoteNamesFS,
   isSystemNoteName,
-  kScratchNoteName,
   loadNoteNames,
   preLoadAllNotes,
   setStorageFS,
