@@ -555,7 +555,8 @@
     let block = getActiveNoteBlock(editor.view.state)!;
     let ext = extForLang(block.language);
     let name = toFileName(settings.currentNoteName) + `-${bi.active}.` + ext;
-    let from = block.contentFrom, to = block.to;
+    let from = block.contentFrom,
+      to = block.to;
     let s = editor.view.state.sliceDoc(from, to);
     console.log("exportCurrentBlock:", name);
     const blob = new Blob([s], { type: "text/plain" });
@@ -1630,7 +1631,8 @@
   function openAskAI() {
     let view = getEditorView();
     let b = getActiveNoteBlock(view.state)!;
-    let from = b.contentFrom, to = b.to;
+    let from = b.contentFrom,
+      to = b.to;
     let { selectedText } = getCurrentSelection(view.state);
     askAIStartText = selectedText ? selectedText : view.state.sliceDoc(from, to);
     showingAskAI = true;
@@ -1745,7 +1747,8 @@
       return false;
     }
 
-    let from = block.contentFrom, to = block.to;
+    let from = block.contentFrom,
+      to = block.to;
     const content = state.sliceDoc(from, to);
 
     showModalMessageHTML("running code", 300);
@@ -2096,7 +2099,6 @@
   <Editor
     class="row-start-2 col-start-2"
     cursorChange={onCursorChange}
-    debugSyntaxTree={false}
     {extraKeymap}
     {didLoadNote}
     {docDidChange}

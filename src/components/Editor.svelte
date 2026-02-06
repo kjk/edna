@@ -35,15 +35,13 @@
 
   interface Props {
     class?: string;
-    debugSyntaxTree: boolean;
     extraKeymap?: KeymapSpec;
     cursorChange: (e: SelectionChangeEvent) => void;
     docDidChange: () => void;
     didLoadNote: (name: string, noPushHistory: boolean) => void;
   }
-  let { class: klass = "", debugSyntaxTree, extraKeymap, cursorChange, docDidChange, didLoadNote }: Props = $props();
+  let { class: klass = "", extraKeymap, cursorChange, docDidChange, didLoadNote }: Props = $props();
 
-  let syntaxTreeDebugContent: string | null = $state(null);
   let settings = getSettings();
   let theme = settings.theme;
 
@@ -188,24 +186,6 @@
     loadCurrencies();
     setInterval(loadCurrencies, 1000 * 3600 * 4);
 
-    // if debugSyntaxTree prop is set, display syntax tree for debugging
-    if (debugSyntaxTree) {
-      setInterval(() => {
-        function render(tree: any) {
-          let lists = "";
-          tree.iterate({
-            enter(type: any) {
-              lists += `<ul><li>${type.name} (${type.from},${type.to})`;
-            },
-            leave() {
-              lists += "</ul>";
-            },
-          });
-          return lists;
-        }
-        syntaxTreeDebugContent = render(syntaxTree(editor.view.state));
-      }, 1000);
-    }
     return () => {
       window.document.removeEventListener("currenciesLoaded", didLoadCurrencies);
     };
@@ -269,11 +249,6 @@
 
 <div class="overflow-hidden {klass}">
   <div class="editor" bind:this={editorRef}></div>
-  {#if debugSyntaxTree}
-    <div class="debug-syntax-tree">
-      {@html syntaxTreeDebugContent}
-    </div>
-  {/if}
 </div>
 
 <style lang="postcss">
