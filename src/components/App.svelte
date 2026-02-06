@@ -246,7 +246,7 @@
 
   let gf = {
     focusEditor: focusEditor,
-    getPassword: getPassword,
+    getPasswordFromUser: getPasswordFromUser,
     requestFileWritePermission: requestFileWritePermission,
     updateAfterNoteStateChange: updateAfterNoteStateChange,
   };
@@ -423,7 +423,7 @@
   let closeDecryptPassword = $state();
   let onDecryptPassword = $state();
 
-  async function getPassword(msg: string = ""): Promise<string> {
+  async function getPasswordFromUser(msg: string = ""): Promise<string> {
     showingDecryptPassword = true;
     showingDecryptMessage = msg;
     clearModalMessage();
@@ -1497,7 +1497,7 @@
     await openNote(kMyFunctionsNoteName);
   }
 
-  let contextMenuDef = $state(null);
+  let contextMenuDef: MenuDef | undefined = $state();
 
   async function oncontextmenu(ev: MouseEvent) {
     console.log("oncontextmenu");
@@ -1549,8 +1549,8 @@
     return name;
   }
 
-  function buildCommandsDef() {
-    let a = [];
+  function buildCommandsDef(): MenuItemDef[] {
+    let a: MenuItemDef[] = [];
     function addMenuItems(items: MenuItemDef[]) {
       for (let mi of items) {
         // console.log(mi);
@@ -1574,7 +1574,7 @@
           continue;
         }
         name = commandNameOverride(id, name);
-        let el = [name, id];
+        let el: MenuItemDef = [name, id];
         a.push(el);
       }
     }
@@ -1622,7 +1622,7 @@
 
   function openAskAI() {
     let view = getEditorView();
-    let b = getActiveNoteBlock(view.state);
+    let b = getActiveNoteBlock(view.state)!;
     let { from, to } = b.content;
     let { selectedText } = getCurrentSelection(view.state);
     askAIStartText = selectedText ? selectedText : view.state.sliceDoc(from, to);
@@ -1681,7 +1681,7 @@
     if (isReadOnly(view)) {
       return false;
     }
-    const block = getActiveNoteBlock(state);
+    const block = getActiveNoteBlock(state)!;
     const lang = getLanguage(block.language);
     // console.log("runBlockContent: lang:", lang);
     if (!langSupportsRun(lang)) {
@@ -1727,8 +1727,8 @@
     if (isReadOnly(view)) {
       return false;
     }
-    const block = getActiveNoteBlock(state);
-    const lang = getLanguage(block.language);
+    const block = getActiveNoteBlock(state)!;
+    const lang = getLanguage(block.language)!;
     // console.log("runBlockContent: lang:", lang);
     if (!langSupportsRun(lang)) {
       return false;
@@ -1740,7 +1740,7 @@
     showModalMessageHTML("running code", 300);
     editor.setReadOnly(true);
 
-    let res: CapturingEval = null;
+    let res: CapturingEval | undefined;
     let token = lang.token;
 
     if (token === "javascript") {
@@ -1778,9 +1778,9 @@
     logNoteOp("runBlock");
   }
 
-  let fnSelectBlock = $state(null);
+  let fnSelectBlock: Function | undefined = $state();
 
-  function runBlockWithAnotherBlock(argBlockItem) {
+  function runBlockWithAnotherBlock(argBlockItem: BlockItem) {
     console.log(argBlockItem);
     closeDialogs();
     let n = argBlockItem.key;
