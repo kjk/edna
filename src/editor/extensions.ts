@@ -29,8 +29,7 @@ export function createDynamicCloseBracketsExtension(): Extension {
     keymap.of(closeBracketsKeymap),
     EditorState.languageData.of((state) => {
       let block = getActiveNoteBlock(state);
-      let isMarkdown =
-        block && block.language && block.language.name === "markdown";
+      let isMarkdown = block && block.language === "markdown";
       let hasSel = hasSelection(state);
       if (isMarkdown && hasSel) {
         return [markdownCloseBracketsConfig];

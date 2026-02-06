@@ -5,10 +5,12 @@ import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms";
 import type { SimpleRange } from "../types";
 
 export interface NoteBlock {
-  language: { name: string; auto: boolean };
+  index: number;
+  range: SimpleRange;
   content: SimpleRange;
   delimiter: SimpleRange;
-  range: SimpleRange;
+  language: string;
+  autoDetect: boolean;
 }
 
 // tracks the size of the first delimiter
@@ -42,10 +44,9 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
           const contentNode = type.node.nextSibling;
           if (!contentNode) return false;
           blocks.push({
-            language: {
-              name: language,
-              auto: isAuto,
-            },
+            index: blocks.length,
+            language: language,
+            autoDetect: isAuto,
             content: {
               from: contentNode.from,
               to: contentNode.to,
@@ -110,10 +111,9 @@ export function getBlocksFromString(state: EditorState): NoteBlock[] {
     }
 
     const block = {
-      language: {
-        name: lang,
-        auto: auto,
-      },
+      index: blocks.length,
+      language: lang,
+      autoDetect: auto,
       content: {
         from: contentFrom,
         to: blockEnd,

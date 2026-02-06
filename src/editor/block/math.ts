@@ -59,7 +59,7 @@ function mathDeco(view: EditorView): DecorationSet {
       let line = view.state.doc.lineAt(pos);
       var block = getNoteBlockFromPos(view.state, pos);
 
-      if (block && block.language.name == "math") {
+      if (block && block.language == "math") {
         // get math.js parser and cache it for this block
         let cached = mathParsers.get(block);
         let parser = cached?.parser;

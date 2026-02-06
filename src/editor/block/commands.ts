@@ -32,7 +32,7 @@ export function insertNewBlockAtCursor({ state, dispatch }: EditorView) {
   const currentBlock = getActiveNoteBlock(state);
   let delimText;
   if (currentBlock) {
-    delimText = `\n∞∞∞${currentBlock.language.name}${currentBlock.language.auto ? "-a" : ""}\n`;
+    delimText = `\n∞∞∞${currentBlock.language}${currentBlock.autoDetect ? "-a" : ""}\n`;
   } else {
     delimText = "\n∞∞∞text-a\n";
   }

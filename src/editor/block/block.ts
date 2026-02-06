@@ -89,13 +89,12 @@ export function getActiveNoteBlock(state: EditorState): Block | undefined {
 }
 
 export interface Block {
+  index: number;
   range: SimpleRange;
   content: SimpleRange;
   delimiter: SimpleRange;
-  language: {
-    name: string;
-    auto: boolean;
-  };
+  language: string;
+  autoDetect: boolean;
 }
 
 export interface BlocksInfo {
@@ -422,8 +421,8 @@ const emitCursorChange = (editor: MultiBlockEditor) =>
               new SelectionChangeEvent({
                 cursorLine,
                 selectionSize,
-                language: block.language.name,
-                languageAuto: block.language.auto,
+                language: block.language,
+                languageAuto: block.autoDetect,
               }),
             );
           }

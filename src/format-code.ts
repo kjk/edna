@@ -34,7 +34,7 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   const block = getActiveNoteBlock(state);
   if (!block) return false;
   console.log("formatBlockContent:", block);
-  const language = getLanguage(block.language.name);
+  const language = getLanguage(block.language);
   if (!language || !langSupportsFormat(language)) {
     return false;
   }

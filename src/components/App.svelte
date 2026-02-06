@@ -545,7 +545,7 @@
     let editor = getEditor();
     let bi = getBlocksInfo(editor.view.state);
     let block = getActiveNoteBlock(editor.view.state);
-    let ext = extForLang(block.language.name);
+    let ext = extForLang(block.language);
     let name = toFileName(settings.currentNoteName) + `-${bi.active}.` + ext;
     let { from, to } = block.content;
     let s = editor.view.state.sliceDoc(from, to);
@@ -1682,7 +1682,7 @@
       return false;
     }
     const block = getActiveNoteBlock(state);
-    const lang = getLanguage(block.language.name);
+    const lang = getLanguage(block.language);
     // console.log("runBlockContent: lang:", lang);
     if (!langSupportsRun(lang)) {
       return false;
@@ -1728,7 +1728,7 @@
       return false;
     }
     const block = getActiveNoteBlock(state);
-    const lang = getLanguage(block.language.name);
+    const lang = getLanguage(block.language);
     // console.log("runBlockContent: lang:", lang);
     if (!langSupportsRun(lang)) {
       return false;
@@ -1795,7 +1795,7 @@
 
   function currentBlockSupportsRun(state: EditorState): boolean {
     const block = getActiveNoteBlock(state);
-    const lang = getLanguage(block.language.name);
+    const lang = getLanguage(block.language);
     // console.log("runBlockContent: lang:", lang);
     return langSupportsRun(lang);
   }

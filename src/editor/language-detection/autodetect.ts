@@ -41,7 +41,7 @@ export function languageDetection(getView: () => EditorView) {
     const block = getActiveNoteBlock(state);
     if (!block) return;
     const newLang = GUESSLANG_TO_TOKEN[event.data.guesslang.language];
-    if (newLang && block.language.auto === true && block.language.name !== newLang) {
+    if (newLang && block.autoDetect === true && block.language !== newLang) {
       console.log("New auto detected language:", newLang, "Confidence:", event.data.guesslang.confidence);
       let content = state.doc.sliceString(block.content.from, block.content.to);
       const threshold = content.length * 0.1;
@@ -83,7 +83,7 @@ export function languageDetection(getView: () => EditorView) {
         }
         if (block === null || idx === null) {
           return;
-        } else if (block.language.auto === false) {
+        } else if (block.autoDetect === false) {
           // if language is not auto, set it's previousBlockContent to null so that we'll trigger a language detection
           // immediately if the user changes the language to auto
           delete previousBlockContent[idx];
@@ -95,7 +95,7 @@ export function languageDetection(getView: () => EditorView) {
           // if content is cleared, set language to plaintext
           const view = getView();
           const activeBlock = getActiveNoteBlock(view.state);
-          if (activeBlock && activeBlock.language.name !== "text") {
+          if (activeBlock && activeBlock.language !== "text") {
             changeLanguageTo(view.state, view.dispatch, activeBlock, "text", true);
           }
           delete previousBlockContent[idx];
