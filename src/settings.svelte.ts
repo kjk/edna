@@ -127,16 +127,15 @@ function validateTabSize(tabSize: number): number {
   return tabSize;
 }
 
-export function findModelByID(modelID: string): any[] | null {
+export function findModelByID(modelID: string): any[] | undefined {
   for (let m of modelsShort) {
     if (m[kModelIDIdx] == modelID) {
       return m;
     }
   }
-  return null;
 }
 
-function validateAiModelID(modelID: string): string {
+function validateAiModelID(modelID: string): string | undefined {
   let model = findModelByID(modelID);
   if (model) {
     return modelID;
@@ -215,7 +214,7 @@ export function getSettings(): Settings {
     // logSettings(appState.settings);
     let m = appState.settings.aiModelID;
     let nm = validateAiModelID(m);
-    if (m !== nm) {
+    if (nm && m !== nm) {
       appState.settings.aiModelID = nm;
     }
     return appState.settings;
@@ -228,10 +227,13 @@ export function getSettings(): Settings {
   let m = settings.aiModelID;
   if (!findModelByID(m)) {
     console.warn(`getSettings: model not found for id: ${m}, fixing`);
-    settings.aiModelID = getFreeModelID();
+    let mid = getFreeModelID();
+    if (mid) {
+      settings.aiModelID = mid;
+    }
   }
-  settings.aiModelID = validateAiModelID(settings.aiModelID);
-  settings.fontSize = validateFontSize(settings.fontSize);
+  settings.aiModelID = validateAiModelID(settings.aiModelID) || "";
+  settings.fontSize = validateFontSize(settings.fontSize || kDefaultFontSize);
   settings.fontFamily = settings.fontFamily || kDefaultFontFamily;
   settings.starredModels = removeUnknownAiModels(settings.starredModels || []);
 
@@ -266,9 +268,10 @@ function saveSettings(newSettings: Settings): boolean {
   throwIf(!newSettings.currentNoteName);
   newSettings.tabSize = validateTabSize(newSettings.tabSize);
   let settingsRaw = $state.snapshot(newSettings);
-  let changed = [];
+  let changed: string[] = [];
   for (let key of settingsKeys) {
     let valLast = lastSettingsRaw[key];
+    // @ts-ignore
     let valNew = settingsRaw[key];
     if (!objectEqualDeep(valNew, valLast)) {
       changed.push(key);
@@ -279,9 +282,9 @@ function saveSettings(newSettings: Settings): boolean {
     return false;
   }
   for (let key of changed) {
-    console.log(`saveSettings: ${key} changed from ${lastSettingsRaw[key]} to ${settingsRaw[key]}`);
+    let v = (settingsRaw as any)[key];
+    console.log(`saveSettings: ${key} changed from ${lastSettingsRaw[key]} to ${v}`);
   }
-
   // console.log("saveSettings:", s);
   localStorage.setItem(kSettingsPath, JSON.stringify(settingsRaw, null, 2));
   lastSettingsRaw = settingsRaw;

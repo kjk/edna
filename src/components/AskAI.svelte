@@ -2,6 +2,7 @@
   import { tick } from "svelte";
   import hljs from "highlight.js";
   import markdownIt from "markdown-it";
+  import MarkdownIt from "markdown-it";
   import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";
@@ -74,7 +75,7 @@
   let reqFinished = $state(false);
   let err = $state("");
   let forceShowingApiKey = $state(false);
-  let aiModel = $derived(findModelByID(settings.aiModelID));
+  let aiModel = $derived(findModelByID(settings.aiModelID) || []);
   let aiModelName = $derived(aiModel[kModelNameIdx] as string);
   let apiProvider = $derived(apiProviderForAiModel(aiModel));
   let apiProviderOpenAI = $derived(apiProvider == kApiProviderOpenAI);
@@ -314,7 +315,7 @@
   }
 
   function mdToHTML(md: string): string {
-    let mdIt = markdownIt({
+    let mdIt: MarkdownIt = markdownIt({
       linkify: true,
       highlight: function (str: string, lang: string) {
         try {
@@ -472,7 +473,7 @@
     {/if}
   {/if}
   {#if err}
-    <div class="flex mt-2 text-red-600 px-2 py-[2px] whitespace-pre-line overflow-auto">
+    <div class="flex mt-2 text-red-600 px-2 py-0.5 whitespace-pre-line overflow-auto">
       {err}
     </div>
   {/if}

@@ -18,7 +18,7 @@
   let replaceTerm = $state("");
 
   let currSearchTerm = "";
-  let selectedItem: { note: string; pos?: number } | null;
+  let selectedItem: { note: string; pos?: number } | undefined;
 
   let searchInputRef: HTMLInputElement;
 
@@ -28,7 +28,7 @@
   let noteBeingSearched = $state("");
 
   // svelte-ignore non_reactive_update
-  let hiliRegExp: RegExp | null;
+  let hiliRegExp: RegExp | undefined;
   // svelte-ignore non_reactive_update
   let listboxRef: ListBox;
 
@@ -43,7 +43,7 @@
     currSearchTerm = searchTerm;
     hiliRegExp = makeHilightRegExp(searchTerm);
     results = [];
-    selectedItem = null;
+    selectedItem = undefined;
     lastChangeNo = changeNo;
     noResultsMsg = "";
     let notesToSearch = $state.snapshot(appState.regularNotes);
@@ -180,10 +180,10 @@
 
   function openItem(item: { note: string; pos?: number }) {
     // console.log("openItem:", $state.snapshot(item));
-    openNote(item.note, item.pos);
+    openNote(item.note, item?.pos || 0);
   }
 
-  function selectionChanged(item: { note: string; pos?: number } | null, idx: number) {
+  function selectionChanged(item: { note: string; pos?: number } | undefined, idx: number) {
     // console.log("selectionChanged:", $state.snapshot(item), idx);
     selectedItem = item;
   }
@@ -249,7 +249,7 @@
   {#if len(results) > 0}
     <ListBox bind:this={listboxRef} items={results} {selectionChanged} onclick={(item) => openItem(item)}>
       {#snippet renderItem(searchResult)}
-        {@const hili = hilightText(searchResult.line, hiliRegExp)}
+        {@const hili = hilightText(searchResult.line, hiliRegExp!)}
         <div class="ml-2 truncate">
           {@html hili}
         </div>
