@@ -167,7 +167,6 @@
   let noteName = $derived(settings.currentNoteName);
   let selectionSize = $state(0);
 
-  let showingCommandPalette = $state(false);
   let showingBlockSelector = $state(false);
   let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
@@ -180,7 +179,7 @@
       appState.showingLanguageSelector ||
       appState.showingNoteSelector ||
       appState.showingBlockMoveSelector ||
-      showingCommandPalette ||
+      appState.showingCommandPalette ||
       appState.showingCreateNewNote ||
       appState.showingFunctionSelector ||
       appState.showingSettings ||
@@ -199,7 +198,7 @@
     appState.showingLanguageSelector = false;
     appState.showingNoteSelector = false;
     appState.showingBlockMoveSelector = false;
-    showingCommandPalette = false;
+    appState.showingCommandPalette = false;
     appState.showingCreateNewNote = false;
     appState.showingFunctionSelector = false;
     appState.showingSettings = false;
@@ -667,7 +666,7 @@
   }
 
   function switchToNoteSelector() {
-    showingCommandPalette = false;
+    appState.showingCommandPalette = false;
     openNoteSelector();
   }
 
@@ -1638,12 +1637,12 @@
 
   function openCommandPalette() {
     buildCommandPaletteDef();
-    showingCommandPalette = true;
+    appState.showingCommandPalette = true;
   }
 
   async function executeCommand(cmdId: number) {
     // console.log("executeCommand:", cmdId);
-    showingCommandPalette = false;
+    appState.showingCommandPalette = false;
     onmenucmd(cmdId);
   }
 
@@ -2205,7 +2204,7 @@
 {/if}
 <Toaster></Toaster>
 
-{#if showingCommandPalette}
+{#if appState.showingCommandPalette}
   <Overlay onclose={closeDialogs} blur={true}>
     <CommandPalette {commandsDef} {executeCommand} {switchToNoteSelector} />
   </Overlay>
