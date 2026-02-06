@@ -31,43 +31,44 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
   //const timer = startTimer()
   const blocks: NoteBlock[] = [];
   const tree = syntaxTree(state);
-  if (tree) {
-    tree.iterate({
-      enter: (type) => {
-        if (type.type.id == Document || type.type.id == Note) {
-          return true;
-        } else if (type.type.id === NoteDelimiter) {
-          const langNode = type.node.getChild("NoteLanguage");
-          if (!langNode) return false;
-          const language = state.doc.sliceString(langNode.from, langNode.to);
-          const isAuto = !!type.node.getChild("Auto");
-          const contentNode = type.node.nextSibling;
-          if (!contentNode) return false;
-          blocks.push({
-            index: blocks.length,
-            language: language,
-            autoDetect: isAuto,
-            content: {
-              from: contentNode.from,
-              to: contentNode.to,
-            },
-            delimiter: {
-              from: type.from,
-              to: type.to,
-            },
-            range: {
-              from: type.node.from,
-              to: contentNode.to,
-            },
-          });
-          return false;
-        }
-        return false;
-      },
-      mode: IterMode.IgnoreMounts,
-    });
-    firstBlockDelimiterSize = blocks[0]?.delimiter.to;
+  if (!tree) {
+    return blocks;
   }
+  tree.iterate({
+    enter: (type) => {
+      if (type.type.id == Document || type.type.id == Note) {
+        return true;
+      } else if (type.type.id === NoteDelimiter) {
+        const langNode = type.node.getChild("NoteLanguage");
+        if (!langNode) return false;
+        const language = state.doc.sliceString(langNode.from, langNode.to);
+        const isAuto = !!type.node.getChild("Auto");
+        const contentNode = type.node.nextSibling;
+        if (!contentNode) return false;
+        blocks.push({
+          index: blocks.length,
+          language: language,
+          autoDetect: isAuto,
+          content: {
+            from: contentNode.from,
+            to: contentNode.to,
+          },
+          delimiter: {
+            from: type.from,
+            to: type.to,
+          },
+          range: {
+            from: type.node.from,
+            to: contentNode.to,
+          },
+        });
+        return false;
+      }
+      return false;
+    },
+    mode: IterMode.IgnoreMounts,
+  });
+  firstBlockDelimiterSize = blocks[0]?.delimiter.to;
   //console.log("getBlocksSyntaxTree took", timer(), "ms")
   return blocks;
 }
@@ -75,29 +76,25 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
 /**
  * Parse blocks from document's string contents using String.indexOf()
  */
-export function getBlocksFromString(state: EditorState): NoteBlock[] {
+export function getBlocksFromString(s: string): NoteBlock[] {
   //const timer = startTimer()
   const blocks: NoteBlock[] = [];
-  const doc = state.doc;
-  if (doc.length === 0) {
-    return [];
-  }
-  const content = doc.sliceString(0, doc.length);
+  const sLen = s.length;
   const delim = "\n∞∞∞";
   let pos = 0;
-  while (pos < doc.length) {
-    const blockStart = content.indexOf(delim, pos);
+  while (pos < sLen) {
+    const blockStart = s.indexOf(delim, pos);
     if (blockStart != pos) {
       console.error("Error parsing blocks, expected delimiter at", pos);
       break;
     }
     const langStart = blockStart + delim.length;
-    const delimiterEnd = content.indexOf("\n", langStart);
+    const delimiterEnd = s.indexOf("\n", langStart);
     if (delimiterEnd < 0) {
       console.error("Error parsing blocks. Delimiter didn't end with newline");
       break;
     }
-    const langFull = content.substring(langStart, delimiterEnd);
+    const langFull = s.substring(langStart, delimiterEnd);
     let auto = false;
     let lang = langFull;
     if (langFull.endsWith("-a")) {
@@ -105,9 +102,9 @@ export function getBlocksFromString(state: EditorState): NoteBlock[] {
       lang = langFull.substring(0, langFull.length - 2);
     }
     const contentFrom = delimiterEnd + 1;
-    let blockEnd = content.indexOf(delim, contentFrom);
+    let blockEnd = s.indexOf(delim, contentFrom);
     if (blockEnd < 0) {
-      blockEnd = doc.length;
+      blockEnd = sLen;
     }
 
     const block = {

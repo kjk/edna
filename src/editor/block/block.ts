@@ -41,7 +41,9 @@ export function getBlocks(state: EditorState): Block[] {
   if (syntaxTreeAvailable(state, state.doc.length)) {
     return getBlocksFromSyntaxTree(state);
   } else {
-    return getBlocksFromString(state);
+    const doc = state.doc;
+    const s = doc.sliceString(0, doc.length);
+    return getBlocksFromString(s);
   }
 }
 
