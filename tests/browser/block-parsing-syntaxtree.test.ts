@@ -1,10 +1,10 @@
-import { describe, expect, it, beforeAll } from "vitest";
+import { syntaxTreeAvailable } from "@codemirror/language";
+import type { EditorState } from "@codemirror/state";
 import { decode } from "@toon-format/toon";
+import { beforeAll, describe, expect, it } from "vitest";
 import { getBlocksFromString, getBlocksFromSyntaxTree } from "../../src/editor/block/block-parsing";
 import type { NoteBlock } from "../../src/editor/block/block-parsing";
-import { syntaxTreeAvailable } from "@codemirror/language";
 import { MultiBlockEditor } from "../../src/editor/editor";
-import type { EditorState } from "@codemirror/state";
 
 // Golden data uses the old nested format
 interface OldNoteBlock {
@@ -40,7 +40,7 @@ describe("Block parsing with syntax tree (browser tests)", () => {
     // Load golden test data in a browser-compatible way
     const response = await fetch("/tests/parse-test-golden.toon");
     const goldenDataRaw = await response.text();
-    goldenData = decode(goldenDataRaw) as GoldenTestData[];
+    goldenData = decode(goldenDataRaw) as unknown as GoldenTestData[];
   });
 
   // Helper function to wait for syntax tree to be available
