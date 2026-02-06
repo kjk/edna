@@ -151,8 +151,8 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			handleGoPlayground(w, r)
 			return
 		}
-		if strings.HasPrefix(uri, "/event") {
-			log.HandleEvent(w, r)
+		if strings.HasPrefix(uri, "/lejson") {
+			log.HandleEventJSON(w, r)
 			return
 		}
 		if uri == "/help" {

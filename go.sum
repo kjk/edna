@@ -13,6 +13,8 @@ github.com/kjk/common v0.0.0-20260204150548-353351f0b9aa h1:+rINkWzuhqYS8DayT9jq
 github.com/kjk/common v0.0.0-20260204150548-353351f0b9aa/go.mod h1:QuRdNMRMxZD7BOmD+sA/2FBNbEkcg8ZJnMFpq5oe0As=
 github.com/kjk/common v0.0.0-20260204162208-09360468d5f7 h1:on5rbGmsXOnJhfDahdQerVxM2s83Rm6lS1eu4ZjkhIQ=
 github.com/kjk/common v0.0.0-20260204162208-09360468d5f7/go.mod h1:QuRdNMRMxZD7BOmD+sA/2FBNbEkcg8ZJnMFpq5oe0As=
+github.com/kjk/common v0.0.0-20260206085450-d5dc4f4d6b54 h1:nkEJUinA7TTaakUI958V0qTXU5S48o3oKUxZBtG2qq4=
+github.com/kjk/common v0.0.0-20260206085450-d5dc4f4d6b54/go.mod h1:QuRdNMRMxZD7BOmD+sA/2FBNbEkcg8ZJnMFpq5oe0As=
 github.com/klauspost/compress v1.18.2 h1:iiPHWW0YrcFgpBYhsA6D1+fqHssJscY/Tm/y2Uqnapk=
 github.com/klauspost/compress v1.18.2/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/klauspost/compress v1.18.3 h1:9PJRvfbmTabkOX8moIpXPbMMbYN60bWImDDU7L+/6zw=

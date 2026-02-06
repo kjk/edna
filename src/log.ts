@@ -3,7 +3,8 @@ import { getSessionDurationInMs, getStats } from "./state";
 import { throwIf } from "./util";
 
 export function logEvent(o: object) {
-  fetch("/event", {
+  let uri = "/lejson";
+  fetch(uri, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
