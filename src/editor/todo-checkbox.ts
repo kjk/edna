@@ -63,7 +63,7 @@ function checkboxes(view: EditorView) {
     let range = view.state.sliceDoc(from, to);
     let match: RegExpExecArray | null;
     while ((match = checkboxRegex.exec(range)) !== null) {
-      if (getNoteBlockFromPos(view.state, from + match.index)?.language?.name === "markdown") {
+      if (getNoteBlockFromPos(view.state, from + match.index)?.language === "markdown") {
         let deco = Decoration.replace({
           widget: new CheckboxWidget(match[2] === "x" || match[2] === "X", view.state.facet(isMonospaceFont)),
           inclusive: false,
