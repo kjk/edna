@@ -26,7 +26,7 @@ describe("Basic editing (browser tests)", () => {
     // Position cursor at start of content area
     const blocks = editor.getBlocks();
     if (blocks.length > 0) {
-      editor.setCursorPosition(blocks[0].content.from);
+      editor.setCursorPosition(blocks[0].contentFrom);
     }
 
     editor.view.focus();
@@ -39,7 +39,7 @@ describe("Basic editing (browser tests)", () => {
     const content = editor.getContent();
     expect(blocks.length).toBeGreaterThan(blockIndex);
     const block = blocks[blockIndex];
-    return content.slice(block.content.from, block.content.to);
+    return content.slice(block.contentFrom, block.to);
   }
 
   beforeEach(() => {

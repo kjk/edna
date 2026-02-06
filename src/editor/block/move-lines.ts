@@ -109,7 +109,7 @@ export const moveLineUp = ({ state, dispatch }: EditorView) => {
   if (
     state.selection.ranges.some((range) => {
       let startLine = state.doc.lineAt(range.from);
-      return startLine.from <= firstBlock.content.from;
+      return startLine.from <= firstBlock.contentFrom;
     })
   ) {
     return true;

@@ -29,7 +29,7 @@ describe("Markdown (browser tests)", () => {
     const content = editor.getContent();
     expect(blocks.length).toBeGreaterThan(blockIndex);
     const block = blocks[blockIndex];
-    return content.slice(block.content.from, block.content.to);
+    return content.slice(block.contentFrom, block.to);
   }
 
   afterEach(() => {

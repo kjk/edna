@@ -6,10 +6,31 @@ import { syntaxTreeAvailable } from "@codemirror/language";
 import { MultiBlockEditor } from "../../src/editor/editor";
 import type { EditorState } from "@codemirror/state";
 
+// Golden data uses the old nested format
+interface OldNoteBlock {
+  index: number;
+  range: { from: number; to: number };
+  content: { from: number; to: number };
+  delimiter: { from: number; to: number };
+  language: string;
+  autoDetect: boolean;
+}
+
 interface GoldenTestData {
   file: string;
   content: string;
-  blocks: NoteBlock[];
+  blocks: OldNoteBlock[];
+}
+
+function translateBlock(old: OldNoteBlock): NoteBlock {
+  return {
+    index: old.index,
+    from: old.range.from,
+    to: old.range.to,
+    contentFrom: old.content.from,
+    language: old.language,
+    autoDetect: old.autoDetect,
+  };
 }
 
 describe("Block parsing with syntax tree (browser tests)", () => {
@@ -69,21 +90,23 @@ describe("Block parsing with syntax tree (browser tests)", () => {
     const testData = goldenData[0];
     if (!testData) throw new Error("Test data not found");
 
+    const expectedBlocks = testData.blocks.map(translateBlock);
     const blocksFromString = getBlocksFromString(testData.content);
     const blocksFromSyntaxTree = await parseWithSyntaxTree(testData.content);
 
     expect(blocksFromSyntaxTree).toEqual(blocksFromString);
-    expect(blocksFromSyntaxTree).toEqual(testData.blocks);
+    expect(blocksFromSyntaxTree).toEqual(expectedBlocks);
   }, 15000);
 
   it("should parse note-scratch.edna.txt same as getBlocksFromString", async () => {
     const testData = goldenData[1];
     if (!testData) throw new Error("Test data not found");
 
+    const expectedBlocks = testData.blocks.map(translateBlock);
     const blocksFromString = getBlocksFromString(testData.content);
     const blocksFromSyntaxTree = await parseWithSyntaxTree(testData.content);
 
     expect(blocksFromSyntaxTree).toEqual(blocksFromString);
-    expect(blocksFromSyntaxTree).toEqual(testData.blocks);
+    expect(blocksFromSyntaxTree).toEqual(expectedBlocks);
   }, 15000);
 });

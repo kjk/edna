@@ -63,7 +63,7 @@ describe("Cursor document navigation (browser tests)", () => {
 
     // Verify cursor is at the beginning of the first block's content
     const blocks = editor.getBlocks();
-    expect(editor.getCursorPosition()).toBe(blocks[0].content.from);
+    expect(editor.getCursorPosition()).toBe(blocks[0].contentFrom);
   });
 
   it("cursorDocEnd moves to end of document", async () => {
@@ -85,8 +85,8 @@ describe("Cursor document navigation (browser tests)", () => {
 
     // Position cursor in the middle of the document (in the second block)
     const blocks = editor.getBlocks();
-    const secondBlockContent = blocks[1].content;
-    const midPos = Math.floor((secondBlockContent.from + secondBlockContent.to) / 2);
+    const secondBlock = blocks[1];
+    const midPos = Math.floor((secondBlock.contentFrom + secondBlock.to) / 2);
     editor.setCursorPosition(midPos);
 
     // Select from cursor to beginning of document
@@ -127,7 +127,7 @@ describe("Cursor document navigation (browser tests)", () => {
     cursorDocStart(editor.view);
 
     const blocks = editor.getBlocks();
-    expect(editor.getCursorPosition()).toBe(blocks[0].content.from);
+    expect(editor.getCursorPosition()).toBe(blocks[0].contentFrom);
 
     // Test moving to end
     cursorDocEnd(editor.view);
@@ -142,7 +142,7 @@ describe("Cursor document navigation (browser tests)", () => {
 
     // Cursor should be clamped to the start of the block's content range
     const blocks = editor.getBlocks();
-    expect(editor.getCursorPosition()).toBe(blocks[0].content.from);
+    expect(editor.getCursorPosition()).toBe(blocks[0].contentFrom);
   });
 
   it("cursor navigation works in single block", async () => {
@@ -157,7 +157,7 @@ describe("Cursor document navigation (browser tests)", () => {
     // Test Home
     cursorDocStart(editor.view);
     const blocks = editor.getBlocks();
-    expect(editor.getCursorPosition()).toBe(blocks[0].content.from);
+    expect(editor.getCursorPosition()).toBe(blocks[0].contentFrom);
 
     // Test End
     cursorDocEnd(editor.view);

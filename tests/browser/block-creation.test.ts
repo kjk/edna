@@ -32,7 +32,7 @@ describe("Block creation (browser tests)", () => {
     const content = editor.getContent();
     expect(blocks.length).toBeGreaterThan(blockIndex);
     const block = blocks[blockIndex];
-    return content.slice(block.content.from, block.content.to);
+    return content.slice(block.contentFrom, block.to);
   }
 
   /** Convert key notation like "Alt+Enter" or "Mod+Shift+Enter" to vitest keyboard syntax */
@@ -81,7 +81,7 @@ describe("Block creation (browser tests)", () => {
 
     // Position cursor at end of last block (Block C)
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[blocks.length - 1].content.to);
+    editor.setCursorPosition(blocks[blocks.length - 1].to);
     editor.view.focus();
 
     // check that visual block layers are created
@@ -144,7 +144,7 @@ describe("Block creation (browser tests)", () => {
     // Reset with markdown content
     editor.setContent("\n\u221E\u221E\u221Emarkdown\n# Markdown!\n");
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from);
+    editor.setCursorPosition(blocks[0].contentFrom);
     editor.view.focus();
 
     await userEvent.keyboard(keyToKeyboard("Alt+Enter"));
@@ -155,15 +155,15 @@ describe("Block creation (browser tests)", () => {
     expect(newBlocks.length).toBe(2);
     const cursorPos = editor.getCursorPosition();
     // Cursor should be within the first block's content area (the new empty block)
-    expect(cursorPos).toBeGreaterThanOrEqual(newBlocks[0].content.from);
-    expect(cursorPos).toBeLessThanOrEqual(newBlocks[0].content.to);
+    expect(cursorPos).toBeGreaterThanOrEqual(newBlocks[0].contentFrom);
+    expect(cursorPos).toBeLessThanOrEqual(newBlocks[0].to);
   });
 
   it("create block before first Markdown block", async () => {
     editor.setContent("\n\u221E\u221E\u221Emarkdown\n# Markdown!\n\u221E\u221E\u221Etext\n");
     const blocks = editor.getBlocks();
     // Position cursor in the second block (text)
-    editor.setCursorPosition(blocks[1].content.from);
+    editor.setCursorPosition(blocks[1].contentFrom);
     editor.view.focus();
 
     await userEvent.keyboard(keyToKeyboard("Alt+Shift+Enter"));
@@ -173,8 +173,8 @@ describe("Block creation (browser tests)", () => {
     const newBlocks = editor.getBlocks();
     expect(newBlocks.length).toBe(3);
     const cursorPos = editor.getCursorPosition();
-    expect(cursorPos).toBeGreaterThanOrEqual(newBlocks[0].content.from);
-    expect(cursorPos).toBeLessThanOrEqual(newBlocks[0].content.to);
+    expect(cursorPos).toBeGreaterThanOrEqual(newBlocks[0].contentFrom);
+    expect(cursorPos).toBeLessThanOrEqual(newBlocks[0].to);
   });
 
   // Note: "test custom default block language" from Heynote is skipped because

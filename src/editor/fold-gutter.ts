@@ -151,11 +151,11 @@ export const toggleBlockFold = (editor: MultiBlockEditor) => (view: EditorView) 
     numUnfolded = 0;
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
-    const firstLine = state.doc.lineAt(block.content.from);
+    const firstLine = state.doc.lineAt(block.contentFrom);
     let blockIsFolded = false;
     const blockFolds: SimpleRange[] = [];
-    folds.between(block.content.from, block.content.to, (from, to) => {
-      if (from <= firstLine.to && to === block.content.to) {
+    folds.between(block.contentFrom, block.to, (from, to) => {
+      if (from <= firstLine.to && to === block.to) {
         blockIsFolded = true;
         blockFolds.push({ from, to });
       }
@@ -164,12 +164,12 @@ export const toggleBlockFold = (editor: MultiBlockEditor) => (view: EditorView) 
       unfoldEffects.push(...blockFolds.map((range) => unfoldEffect.of(range)));
       numFolded++;
     } else {
-      const lastLine = state.doc.lineAt(block.content.to);
+      const lastLine = state.doc.lineAt(block.to);
       // skip single-line blocks, since they are not folded
       if (firstLine.from != lastLine.from) {
         const range = {
-          from: Math.min(firstLine.to, block.content.from + FOLD_LABEL_LENGTH),
-          to: block.content.to,
+          from: Math.min(firstLine.to, block.contentFrom + FOLD_LABEL_LENGTH),
+          to: block.to,
         };
         if (range.to > range.from) {
           foldEffects.push(foldEffect.of(range));
@@ -193,10 +193,10 @@ export const foldBlock = (editor: MultiBlockEditor) => (view: EditorView) => {
   const blockRanges: SimpleRange[] = [];
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
-    const line = state.doc.lineAt(block.content.from);
+    const line = state.doc.lineAt(block.contentFrom);
     // fold the block content, but only the first line
-    const from = Math.min(line.to, block.content.from + FOLD_LABEL_LENGTH);
-    const to = block.content.to;
+    const from = Math.min(line.to, block.contentFrom + FOLD_LABEL_LENGTH);
+    const to = block.to;
     if (from < to) {
       // skip empty ranges
       blockRanges.push({ from, to });
@@ -215,9 +215,9 @@ export const unfoldBlock = (editor: MultiBlockEditor) => (view: EditorView) => {
   const blockFolds: SimpleRange[] = [];
 
   for (const block of getNoteBlocksFromRangeSet(state, state.selection.ranges)) {
-    const firstLine = state.doc.lineAt(block.content.from);
-    folds.between(block.content.from, block.content.to, (from, to) => {
-      if (from <= firstLine.to && to === block.content.to) {
+    const firstLine = state.doc.lineAt(block.contentFrom);
+    folds.between(block.contentFrom, block.to, (from, to) => {
+      if (from <= firstLine.to && to === block.to) {
         blockFolds.push({ from, to });
       }
     });
@@ -235,10 +235,10 @@ export const foldAllBlocks = (editor: MultiBlockEditor) => (view: EditorView) =>
   const blockRanges = [];
 
   for (const block of getBlocks(state)) {
-    const line = state.doc.lineAt(block.content.from);
+    const line = state.doc.lineAt(block.contentFrom);
     // fold the block content, but only the first line
-    const from = Math.min(line.to, block.content.from + FOLD_LABEL_LENGTH);
-    const to = block.content.to;
+    const from = Math.min(line.to, block.contentFrom + FOLD_LABEL_LENGTH);
+    const to = block.to;
     if (from < to) {
       // skip empty ranges
       blockRanges.push({ from, to });
@@ -257,9 +257,9 @@ export const unfoldAlBlocks = (editor: MultiBlockEditor) => (view: EditorView) =
   const blockFolds: SimpleRange[] = [];
 
   for (const block of getBlocks(state)) {
-    const firstLine = state.doc.lineAt(block.content.from);
-    folds.between(block.content.from, block.content.to, (from: number, to: number) => {
-      if (from <= firstLine.to && to === block.content.to) {
+    const firstLine = state.doc.lineAt(block.contentFrom);
+    folds.between(block.contentFrom, block.to, (from: number, to: number) => {
+      if (from <= firstLine.to && to === block.to) {
         blockFolds.push({ from, to });
       }
     });

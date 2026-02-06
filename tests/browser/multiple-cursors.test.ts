@@ -42,7 +42,7 @@ describe("Multiple cursors (browser tests)", () => {
 
     // Position cursor at first content line
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from);
+    editor.setCursorPosition(blocks[0].contentFrom);
 
     expect(getCursorCount()).toBe(1);
 
@@ -62,7 +62,7 @@ describe("Multiple cursors (browser tests)", () => {
 
     // Find content lines (skip the delimiter line)
     const blocks = editor.getBlocks();
-    const contentFrom = blocks[0].content.from;
+    const contentFrom = blocks[0].contentFrom;
     const doc = editor.view.state.doc;
     const contentLine = doc.lineAt(contentFrom);
 
@@ -88,7 +88,7 @@ describe("Multiple cursors (browser tests)", () => {
     // Find the content lines using block boundaries
     const blocks = editor.getBlocks();
     const doc = editor.view.state.doc;
-    const firstContentLine = doc.lineAt(blocks[0].content.from);
+    const firstContentLine = doc.lineAt(blocks[0].contentFrom);
 
     const line1 = doc.line(firstContentLine.number);     // "Line 1"
     const line2 = doc.line(firstContentLine.number + 1);  // "Line 2"

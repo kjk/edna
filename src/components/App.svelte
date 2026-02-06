@@ -555,7 +555,7 @@
     let block = getActiveNoteBlock(editor.view.state)!;
     let ext = extForLang(block.language);
     let name = toFileName(settings.currentNoteName) + `-${bi.active}.` + ext;
-    let { from, to } = block.content;
+    let from = block.contentFrom, to = block.to;
     let s = editor.view.state.sliceDoc(from, to);
     console.log("exportCurrentBlock:", name);
     const blob = new Blob([s], { type: "text/plain" });
@@ -639,7 +639,7 @@
     let blockNo = 0;
     let currBlockNo = 0;
     for (let b of blocks) {
-      let title = extractBlockTitle(content, b.content.from, b.content.to);
+      let title = extractBlockTitle(content, b.contentFrom, b.to);
       let bi = {
         block: b,
         text: title,
@@ -789,7 +789,7 @@
     const block = getActiveNoteBlock(state)!;
     console.log("editorRunBlockFunction:", block);
     const cursorPos = state.selection.asSingle().ranges[0].head;
-    const content = state.sliceDoc(block.content.from, block.content.to);
+    const content = state.sliceDoc(block.contentFrom, block.to);
     let res = "";
     let input = null;
     try {
@@ -808,15 +808,15 @@
     }
 
     if (replace) {
-      let cursorOffset = cursorPos - block.content.from;
+      let cursorOffset = cursorPos - block.contentFrom;
       const tr = view.state.update(
         {
           changes: {
-            from: block.content.from,
-            to: block.content.to,
+            from: block.contentFrom,
+            to: block.to,
             insert: res,
           },
-          selection: EditorSelection.cursor(block.content.from + Math.min(cursorOffset, res.length)),
+          selection: EditorSelection.cursor(block.contentFrom + Math.min(cursorOffset, res.length)),
         },
         {
           userEvent: "input",
@@ -1630,7 +1630,7 @@
   function openAskAI() {
     let view = getEditorView();
     let b = getActiveNoteBlock(view.state)!;
-    let { from, to } = b.content;
+    let from = b.contentFrom, to = b.to;
     let { selectedText } = getCurrentSelection(view.state);
     askAIStartText = selectedText ? selectedText : view.state.sliceDoc(from, to);
     showingAskAI = true;
@@ -1698,7 +1698,7 @@
       return false;
     }
 
-    const content = state.sliceDoc(block.content.from, block.content.to);
+    const content = state.sliceDoc(block.contentFrom, block.to);
 
     showModalMessageHTML("running code", 300);
     editor.setReadOnly(true);
@@ -1745,7 +1745,7 @@
       return false;
     }
 
-    let { from, to } = block.content;
+    let from = block.contentFrom, to = block.to;
     const content = state.sliceDoc(from, to);
 
     showModalMessageHTML("running code", 300);
@@ -1798,7 +1798,7 @@
     let editor = getEditor();
     let state = editor.view.state;
     let blockArg = getBlockN(state, n);
-    let arg = state.sliceDoc(blockArg.content.from, blockArg.content.to);
+    let arg = state.sliceDoc(blockArg.contentFrom, blockArg.to);
     runBlockContentWithArg(editor, arg);
     editor.focus();
     logNoteOp("runBlockWithBlock");
@@ -1948,8 +1948,8 @@
     // name can be new or existing note
     let state = getEditorView().state;
     let block = getActiveNoteBlock(state)!;
-    let delim = state.sliceDoc(block.delimiter.from, block.delimiter.to);
-    let content = state.sliceDoc(block.content.from, block.content.to);
+    let delim = state.sliceDoc(block.from, block.contentFrom);
+    let content = state.sliceDoc(block.contentFrom, block.to);
     await appendToNote(name, delim + content);
     let view = getEditorView();
     let ednaEditor = getEditor();

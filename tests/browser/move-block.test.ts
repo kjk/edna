@@ -17,7 +17,7 @@ describe("Move block (browser tests)", () => {
     const content = editor.getContent();
     expect(blocks.length).toBeGreaterThan(blockIndex);
     const block = blocks[blockIndex];
-    return content.slice(block.content.from, block.content.to);
+    return content.slice(block.contentFrom, block.to);
   }
 
   function moveBlockKey(direction: "up" | "down"): string {
@@ -44,7 +44,7 @@ describe("Move block (browser tests)", () => {
 
     // Position cursor at end of last block (Block C)
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[blocks.length - 1].content.to);
+    editor.setCursorPosition(blocks[blocks.length - 1].to);
     editor.view.focus();
 
     await new Promise((resolve) => setTimeout(resolve, 100));

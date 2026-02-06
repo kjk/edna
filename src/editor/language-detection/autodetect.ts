@@ -43,7 +43,7 @@ export function languageDetection(getView: () => EditorView) {
     const newLang = GUESSLANG_TO_TOKEN[event.data.guesslang.language];
     if (newLang && block.autoDetect === true && block.language !== newLang) {
       console.log("New auto detected language:", newLang, "Confidence:", event.data.guesslang.confidence);
-      let content = state.doc.sliceString(block.content.from, block.content.to);
+      let content = state.doc.sliceString(block.contentFrom, block.to);
       const threshold = content.length * 0.1;
       if (levenshtein_distance(content, event.data.content) <= threshold) {
         // the content has not changed significantly so it's safe to change the language
@@ -75,7 +75,7 @@ export function languageDetection(getView: () => EditorView) {
         let idx: number | null = null;
         for (let i = 0; i < blocks.length; i++) {
           const b = blocks[i]!;
-          if (b.content.from <= range.from && b.content.to >= range.from) {
+          if (b.contentFrom <= range.from && b.to >= range.from) {
             block = b;
             idx = i;
             break;
@@ -90,7 +90,7 @@ export function languageDetection(getView: () => EditorView) {
           return;
         }
 
-        const content = update.state.doc.sliceString(block.content.from, block.content.to);
+        const content = update.state.doc.sliceString(block.contentFrom, block.to);
         if (content === "" && redoDepth(update.state) === 0) {
           // if content is cleared, set language to plaintext
           const view = getView();

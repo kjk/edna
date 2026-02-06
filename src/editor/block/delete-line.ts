@@ -38,7 +38,7 @@ export const deleteLine = (view: EditorView) => {
 
   const changes = state.changes(
     selectedLines.map(({ from, to }) => {
-      if (from !== block.content.from || to !== block.content.to) {
+      if (from !== block.contentFrom || to !== block.to) {
         if (from > 0) from--;
         else if (to < state.doc.length) to++;
       }

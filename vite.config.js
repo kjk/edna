@@ -72,6 +72,7 @@ export default defineConfig({
         return [];
       },
     },
+    emptyOutDir: false,
     sourcemap: true,
     minify: "terser",
     terserOptions: {
@@ -94,13 +95,11 @@ export default defineConfig({
     },
   },
 
-  resolve: { alias: { "@": path.resolve(__dirname, "..") } },
+  // resolve: { alias: { "@": path.resolve(__dirname, "..") } },
 
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
-    __GIT_HASH__: JSON.stringify(
-      child.execSync("git rev-parse --short HEAD").toString().trim(),
-    ),
+    __GIT_HASH__: JSON.stringify(child.execSync("git rev-parse --short HEAD").toString().trim()),
   },
 
   server: {

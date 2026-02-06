@@ -40,7 +40,7 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   }
 
   const cursorPos = state.selection.asSingle().main.head;
-  const content = state.sliceDoc(block.content.from, block.content.to);
+  const content = state.sliceDoc(block.contentFrom, block.to);
 
   // console.log("prettier supports:", getSupportInfo());
   if (language.token == "golang") {
@@ -64,7 +64,7 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
     }
     // console.log("formatted go:", s)
     // console.log("block:", block)
-    let cursorOffset = cursorPos - block.content.from;
+    let cursorOffset = cursorPos - block.contentFrom;
     // console.log("cursorOffset:", cursorOffset)
     // TODO: this probably might fail. For some reason during formatGo()
     // view.state is changed so we might be updating incorrect part
@@ -72,11 +72,11 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
     const tr = view.state.update(
       {
         changes: {
-          from: block.content.from,
-          to: block.content.to,
+          from: block.contentFrom,
+          to: block.to,
           insert: s,
         },
-        selection: EditorSelection.cursor(block.content.from + Math.min(cursorOffset, s.length)),
+        selection: EditorSelection.cursor(block.contentFrom + Math.min(cursorOffset, s.length)),
       },
       {
         userEvent: "input",
@@ -95,7 +95,7 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   // This is not a perfect solution, and once the following PR is merged and released, we should be abe to remove this workaround:
   // https://github.com/prettier/prettier/pull/15709
   let useFormat = false;
-  if (cursorPos == block.content.from || cursorPos == block.content.to) {
+  if (cursorPos == block.contentFrom || cursorPos == block.to) {
     useFormat = true;
   }
 
@@ -116,10 +116,10 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
         }),
         cursorOffset: 0,
       };
-      formattedContent.cursorOffset = cursorPos == block.content.from ? 0 : formattedContent.formatted.length;
+      formattedContent.cursorOffset = cursorPos == block.contentFrom ? 0 : formattedContent.formatted.length;
     } else {
       formattedContent = await prettier.formatWithCursor(content, {
-        cursorOffset: cursorPos - block.content.from,
+        cursorOffset: cursorPos - block.contentFrom,
         parser: parser,
         plugins: plugins,
         tabWidth: state.tabSize,
@@ -135,12 +135,12 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   const tr = view.state.update(
     {
       changes: {
-        from: block.content.from,
-        to: block.content.to,
+        from: block.contentFrom,
+        to: block.to,
         insert: formattedContent.formatted,
       },
       selection: EditorSelection.cursor(
-        block.content.from + Math.min(formattedContent.cursorOffset, formattedContent.formatted.length),
+        block.contentFrom + Math.min(formattedContent.cursorOffset, formattedContent.formatted.length),
       ),
     },
     {

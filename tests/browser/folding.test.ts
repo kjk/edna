@@ -51,7 +51,7 @@ describe("Block folding (browser tests)", () => {
     const content = editor.getContent();
     expect(blocks.length).toBeGreaterThan(blockIndex);
     const block = blocks[blockIndex];
-    return content.slice(block.content.from, block.content.to);
+    return content.slice(block.contentFrom, block.to);
   }
 
   function foldPlaceholderCount(): number {
@@ -237,7 +237,7 @@ describe("Block folding (browser tests)", () => {
 
     // Fold the block
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from + 5);
+    editor.setCursorPosition(blocks[0].contentFrom + 5);
     foldBlock(editor)(editor.view);
     await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -245,7 +245,7 @@ describe("Block folding (browser tests)", () => {
 
     // Position cursor at the very beginning of the folded block
     const blocksAfterFold = editor.getBlocks();
-    editor.setCursorPosition(blocksAfterFold[0].content.from);
+    editor.setCursorPosition(blocksAfterFold[0].contentFrom);
 
     // Type a character
     await userEvent.keyboard("X");
@@ -264,7 +264,7 @@ describe("Block folding (browser tests)", () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from + 5);
+    editor.setCursorPosition(blocks[0].contentFrom + 5);
     foldBlock(editor)(editor.view);
     await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -272,7 +272,7 @@ describe("Block folding (browser tests)", () => {
 
     // Position cursor at the very end of the folded block
     const blocksAfterFold = editor.getBlocks();
-    editor.setCursorPosition(blocksAfterFold[0].content.to);
+    editor.setCursorPosition(blocksAfterFold[0].to);
 
     await userEvent.keyboard("Y");
 
@@ -291,7 +291,7 @@ describe("Block folding (browser tests)", () => {
 
     // Fold the first block
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from + 5);
+    editor.setCursorPosition(blocks[0].contentFrom + 5);
     foldBlock(editor)(editor.view);
     await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -301,7 +301,7 @@ describe("Block folding (browser tests)", () => {
     expect(blocks2.length).toBe(2);
 
     // Type into the empty second block
-    editor.setCursorPosition(blocks2[1].content.from);
+    editor.setCursorPosition(blocks2[1].contentFrom);
     await userEvent.keyboard("a");
 
     // The folded block should remain folded
@@ -325,7 +325,7 @@ describe("Block folding (browser tests)", () => {
 
     // Position cursor at beginning of block and create new block after
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from);
+    editor.setCursorPosition(blocks[0].contentFrom);
     const modKey = isMac ? "Meta" : "Control";
     await userEvent.keyboard(`{${modKey}>}{Enter}{/${modKey}}`);
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -349,7 +349,7 @@ describe("Block folding (browser tests)", () => {
 
     // Fold the block
     let blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from + 10);
+    editor.setCursorPosition(blocks[0].contentFrom + 10);
     foldBlock(editor)(editor.view);
     await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -357,7 +357,7 @@ describe("Block folding (browser tests)", () => {
 
     // Re-query blocks after fold, then create a new block before the folded block
     blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from);
+    editor.setCursorPosition(blocks[0].contentFrom);
     await userEvent.keyboard("{Alt>}{Enter}{/Alt}");
     await new Promise((resolve) => setTimeout(resolve, 100));
 

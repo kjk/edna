@@ -20,7 +20,7 @@ describe("Delete line (browser tests)", () => {
     const content = editor.getContent();
     expect(blocks.length).toBeGreaterThan(blockIndex);
     const block = blocks[blockIndex];
-    return content.slice(block.content.from, block.content.to);
+    return content.slice(block.contentFrom, block.to);
   }
 
   beforeEach(async () => {
@@ -51,7 +51,7 @@ describe("Delete line (browser tests)", () => {
   it("delete line on single line in Block A", async () => {
     // Position cursor at first line of Block A
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].content.from);
+    editor.setCursorPosition(blocks[0].contentFrom);
 
     // Delete 4 lines: "Block A", "text content 1", "text content 2", "text content 3"
     for (let i = 0; i < 4; i++) {
@@ -64,7 +64,7 @@ describe("Delete line (browser tests)", () => {
   it("delete line on selection in Block B", async () => {
     // Position cursor in Block B
     const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[1].content.from);
+    editor.setCursorPosition(blocks[1].contentFrom);
     editor.view.focus();
 
     // Select all in block (Mod+A selects current block)

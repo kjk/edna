@@ -63,8 +63,7 @@ export const blockState = StateField.define({
 
 function findBlockWithPos(blocks: Block[], pos: number): Block | undefined {
   for (let block of blocks) {
-    let r = block.range;
-    if (r.from <= pos && r.to >= pos) {
+    if (block.from <= pos && block.to >= pos) {
       return block;
     }
   }
@@ -74,8 +73,7 @@ function findBlockWithPos(blocks: Block[], pos: number): Block | undefined {
 function findBlocNokWithPos(blocks: Block[], pos: number): number {
   let no = 0;
   for (let block of blocks) {
-    let r = block.range;
-    if (r.from <= pos && r.to >= pos) {
+    if (block.from <= pos && block.to >= pos) {
       return no;
     }
     no++;
@@ -90,13 +88,27 @@ export function getActiveNoteBlock(state: EditorState): Block | undefined {
   return findBlockWithPos(blocks, range.head);
 }
 
+// layout: [delimiter][content]
+// delimiter: {from, contentFrom}
+// content: {contentFrom, to}
+// full block: {from, to}
 export interface Block {
   index: number;
-  range: SimpleRange;
-  content: SimpleRange;
-  delimiter: SimpleRange;
+  from: number;
+  to: number;
+  contentFrom: number;
   language: string;
   autoDetect: boolean;
+}
+
+export function blockDelimiter(b: Block): SimpleRange {
+  return { from: b.from, to: b.contentFrom };
+}
+export function blockContent(b: Block): SimpleRange {
+  return { from: b.contentFrom, to: b.to };
+}
+export function blockRange(b: Block): SimpleRange {
+  return { from: b.from, to: b.to };
 }
 
 export interface BlocksInfo {
@@ -139,7 +151,7 @@ export function getNoteBlockFromPos(state: EditorState, pos: number): Block | un
 }
 
 export function getNoteBlocksBetween(state: EditorState, from: number, to: number): Block[] {
-  return state.field(blockState).filter((block) => block.range.from < to && block.range.to >= from);
+  return state.field(blockState).filter((block) => block.from < to && block.to >= from);
 }
 
 export function getNoteBlocksFromRangeSet(state: EditorState, ranges: any): Block[] {
@@ -178,15 +190,14 @@ const noteBlockWidget = () => {
     const widgets: Range<Decoration>[] = [];
 
     state.field(blockState).forEach((block: Block) => {
-      let delimiter = block.delimiter;
       let deco = Decoration.replace({
-        widget: new NoteBlockStart(delimiter.from === 0 ? true : false),
+        widget: new NoteBlockStart(block.from === 0 ? true : false),
         inclusive: true,
         block: true,
         side: 0,
       });
-      //console.log("deco range:", delimiter.from === 0 ? delimiter.from : delimiter.from+1,delimiter.to-1)
-      widgets.push(deco.range(delimiter.from === 0 ? delimiter.from : delimiter.from + 1, delimiter.to - 1));
+      //console.log("deco range:", block.from === 0 ? block.from : block.from+1,block.contentFrom-1)
+      widgets.push(deco.range(block.from === 0 ? block.from : block.from + 1, block.contentFrom - 1));
     });
 
     return widgets.length > 0 ? RangeSet.of(widgets) : Decoration.none;
@@ -218,7 +229,7 @@ const noteBlockWidget = () => {
 function atomicRanges(view: EditorView): DecorationSet {
   let builder = new RangeSetBuilder<Decoration>();
   view.state.field(blockState).forEach((block) => {
-    builder.add(block.delimiter.from, block.delimiter.to, Decoration.mark({}));
+    builder.add(block.from, block.contentFrom, Decoration.mark({}));
   });
   return builder.finish();
 }
@@ -257,7 +268,7 @@ const blockLayer = layer({
     const blocks = view.state.field(blockState);
     blocks.forEach((block) => {
       // make sure the block is visible
-      if (!view.visibleRanges.some((range) => rangesOverlaps(block.content, range))) {
+      if (!view.visibleRanges.some((range) => rangesOverlaps(blockContent(block), range))) {
         idx++;
         return;
       }
@@ -267,13 +278,13 @@ const blockLayer = layer({
         idx++;
         return;
       }
-      const fromCoords = view.coordsAtPos(Math.max(block.content.from, firstVisibleRange.from));
+      const fromCoords = view.coordsAtPos(Math.max(block.contentFrom, firstVisibleRange.from));
       if (!fromCoords) {
         // this often fires during refresh in vite
         return;
       }
       const fromCoordsTop = fromCoords.top;
-      const toCoords = view.coordsAtPos(Math.min(block.content.to, lastVisibleRange.to));
+      const toCoords = view.coordsAtPos(Math.min(block.to, lastVisibleRange.to));
       if (!toCoords) {
         idx++;
         return;
@@ -328,7 +339,7 @@ const preventFirstBlockFromBeingDeleted = EditorState.changeFilter.of((tr) => {
   ) {
     const blocks = tr.startState.field(blockState);
     blocks.forEach((block) => {
-      protect.push(block.delimiter.from, block.delimiter.to);
+      protect.push(block.from, block.contentFrom);
     });
     //console.log("protected ranges:", protect)
   }
@@ -366,9 +377,9 @@ export function getBlockLineFromPos(state: EditorState, pos: number) {
   const line = state.doc.lineAt(pos);
   const block = state
     .field(blockState)
-    .find((block) => block.content.from <= line.from && block.content.to >= line.from);
+    .find((block) => block.contentFrom <= line.from && block.to >= line.from);
   if (block) {
-    const firstBlockLine = state.doc.lineAt(block.content.from).number;
+    const firstBlockLine = state.doc.lineAt(block.contentFrom).number;
     return {
       line: line.number - firstBlockLine + 1,
       col: pos - line.from + 1,
@@ -394,8 +405,8 @@ function getSelectionSize(state: EditorState, sel: any): number {
   let count = 0;
   let numBlocks = 0;
   for (const block of state.field(blockState)) {
-    if (sel.from <= block.range.to && sel.to > block.range.from) {
-      count += Math.min(sel.to, block.content.to) - Math.max(sel.from, block.content.from);
+    if (sel.from <= block.to && sel.to > block.from) {
+      count += Math.min(sel.to, block.to) - Math.max(sel.from, block.contentFrom);
       numBlocks++;
     }
   }
@@ -457,10 +468,10 @@ export function insertAfterActiveBlock(view: EditorView, text: string): boolean 
   let tr = view.state.update(
     {
       changes: {
-        from: block.content.to,
+        from: block.to,
         insert: text,
       },
-      selection: EditorSelection.cursor(block.content.to + text.length),
+      selection: EditorSelection.cursor(block.to + text.length),
     },
     {
       scrollIntoView: true,

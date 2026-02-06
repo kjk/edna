@@ -70,7 +70,7 @@ export function selectAll({ state, dispatch }: EditorView): boolean {
   if (!block) return false;
 
   // handle empty blocks separately
-  if (block.content.from === block.content.to) {
+  if (block.contentFrom === block.to) {
     // check if C-a has already been pressed,
     if (state.field(emptyBlockSelected)) {
       // if the active block is already marked as selected we want to select the whole buffer
@@ -81,20 +81,20 @@ export function selectAll({ state, dispatch }: EditorView): boolean {
       // and the users presses C-a twice so that the whole buffer gets selected, the active block will
       // still be empty but we don't want to mark it as selected
       dispatch({
-        effects: setEmptyBlockSelected.of(block.content.from),
+        effects: setEmptyBlockSelected.of(block.contentFrom),
       });
     }
     return true;
   }
 
   // check if all the text of the note is already selected, in which case we want to select all the text of the whole document
-  if (range.from === block.content.from && range.to === block.content.to) {
+  if (range.from === block.contentFrom && range.to === block.to) {
     return defaultSelectAll({ state, dispatch });
   }
 
   dispatch(
     state.update({
-      selection: { anchor: block.content.from, head: block.content.to },
+      selection: { anchor: block.contentFrom, head: block.to },
       userEvent: "select",
     }),
   );

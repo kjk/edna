@@ -2,13 +2,12 @@ import { syntaxTree } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { IterMode } from "@lezer/common";
 import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms";
-import type { SimpleRange } from "../types";
 
 export interface NoteBlock {
   index: number;
-  range: SimpleRange;
-  content: SimpleRange;
-  delimiter: SimpleRange;
+  from: number;
+  to: number;
+  contentFrom: number;
   language: string;
   autoDetect: boolean;
 }
@@ -49,18 +48,9 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
           index: blocks.length,
           language: language,
           autoDetect: isAuto,
-          content: {
-            from: contentNode.from,
-            to: contentNode.to,
-          },
-          delimiter: {
-            from: type.from,
-            to: type.to,
-          },
-          range: {
-            from: type.node.from,
-            to: contentNode.to,
-          },
+          from: type.node.from,
+          to: contentNode.to,
+          contentFrom: contentNode.from,
         });
         return false;
       }
@@ -68,7 +58,7 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
     },
     mode: IterMode.IgnoreMounts,
   });
-  firstBlockDelimiterSize = blocks[0]?.delimiter.to;
+  firstBlockDelimiterSize = blocks[0]?.contentFrom;
   //console.log("getBlocksSyntaxTree took", timer(), "ms")
   return blocks;
 }
@@ -111,18 +101,9 @@ export function getBlocksFromString(s: string): NoteBlock[] {
       index: blocks.length,
       language: lang,
       autoDetect: auto,
-      content: {
-        from: contentFrom,
-        to: blockEnd,
-      },
-      delimiter: {
-        from: blockStart,
-        to: delimiterEnd + 1,
-      },
-      range: {
-        from: blockStart,
-        to: blockEnd,
-      },
+      from: blockStart,
+      to: blockEnd,
+      contentFrom: contentFrom,
     };
     blocks.push(block);
     pos = blockEnd;

@@ -55,10 +55,10 @@ export function addNewBlockBeforeCurrent({ state, dispatch }: EditorView): boole
     state.update(
       {
         changes: {
-          from: block.delimiter.from,
+          from: block.from,
           insert: delimText,
         },
-        selection: EditorSelection.cursor(block.delimiter.from + delimText.length),
+        selection: EditorSelection.cursor(block.from + delimText.length),
         annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
       },
       {
@@ -85,12 +85,12 @@ export function addNewBlockAfterCurrent({ state, dispatch }: EditorView): boolea
   // if current block is not completely empty and cursor is at last
   // line of the block and that line is empty, delete the last line
   // in current block
-  let isBlockEmpty = block.content.from === block.content.to;
+  let isBlockEmpty = block.contentFrom === block.to;
   if (!isBlockEmpty) {
     const selection = state.selection;
     if (selection.ranges.length === 1) {
       const main = selection.main;
-      if (main.empty && main.from == block.content.to) {
+      if (main.empty && main.from == block.to) {
         if (isEmptyLineAtPosition(state.doc, main.from)) {
           delimText = "∞∞∞text-a\n";
         }
@@ -102,10 +102,10 @@ export function addNewBlockAfterCurrent({ state, dispatch }: EditorView): boolea
     state.update(
       {
         changes: {
-          from: block.content.to,
+          from: block.to,
           insert: delimText,
         },
-        selection: EditorSelection.cursor(block.content.to + delimText.length),
+        selection: EditorSelection.cursor(block.to + delimText.length),
       },
       {
         scrollIntoView: true,
@@ -127,7 +127,7 @@ export function addNewBlockBeforeFirst({ state, dispatch }: EditorView): boolean
     state.update(
       {
         changes: {
-          from: block.delimiter.from,
+          from: block.from,
           insert: delimText,
         },
         selection: EditorSelection.cursor(delimText.length),
@@ -152,10 +152,10 @@ export function addNewBlockAfterLast({ state, dispatch }: EditorView): boolean {
     state.update(
       {
         changes: {
-          from: block.content.to,
+          from: block.to,
           insert: delimText,
         },
-        selection: EditorSelection.cursor(block.content.to + delimText.length),
+        selection: EditorSelection.cursor(block.to + delimText.length),
       },
       {
         scrollIntoView: true,
@@ -176,19 +176,19 @@ export function changeLanguageTo(
 ): void {
   if (state.readOnly) return;
   const delimRegex = /^\n∞∞∞[a-z]+?(-a)?\n/g;
-  if (state.doc.sliceString(block.delimiter.from, block.delimiter.to).match(delimRegex)) {
+  if (state.doc.sliceString(block.from, block.contentFrom).match(delimRegex)) {
     dispatch(
       state.update({
         changes: {
-          from: block.delimiter.from,
-          to: block.delimiter.to,
+          from: block.from,
+          to: block.contentFrom,
           insert: `\n∞∞∞${language}${auto ? "-a" : ""}\n`,
         },
         annotations: [heynoteEvent.of(LANGUAGE_CHANGE)],
       }),
     );
   } else {
-    throw new Error("Invalid delimiter: " + state.doc.sliceString(block.delimiter.from, block.delimiter.to));
+    throw new Error("Invalid delimiter: " + state.doc.sliceString(block.from, block.contentFrom));
   }
 }
 
@@ -236,14 +236,14 @@ function previousBlock(state: EditorState, range: SelectionRange): SelectionRang
   if (blocks.length === 0) return range;
   const block = getNoteBlockFromPos(state, range.head);
   if (!block) return range;
-  if (range.head === block.content.from) {
+  if (range.head === block.contentFrom) {
     const index = blocks.indexOf(block);
     const previousBlockIndex = index > 0 ? index - 1 : 0;
     const targetBlock = blocks[previousBlockIndex];
     if (!targetBlock) return range;
-    return EditorSelection.cursor(targetBlock.content.from);
+    return EditorSelection.cursor(targetBlock.contentFrom);
   } else {
-    return EditorSelection.cursor(block.content.from);
+    return EditorSelection.cursor(block.contentFrom);
   }
 }
 
@@ -252,14 +252,14 @@ function nextBlock(state: EditorState, range: SelectionRange): SelectionRange {
   if (blocks.length === 0) return range;
   const block = getNoteBlockFromPos(state, range.head);
   if (!block) return range;
-  if (range.head === block.content.to) {
+  if (range.head === block.to) {
     const index = blocks.indexOf(block);
     const nextBlockIndex = index < blocks.length - 1 ? index + 1 : index;
     const targetBlock = blocks[nextBlockIndex];
     if (!targetBlock) return range;
-    return EditorSelection.cursor(targetBlock.content.to);
+    return EditorSelection.cursor(targetBlock.to);
   } else {
-    return EditorSelection.cursor(block.content.to);
+    return EditorSelection.cursor(block.to);
   }
 }
 
@@ -267,13 +267,13 @@ function nextBlockNo(index: number, state: EditorState, range: SelectionRange): 
   const blocks = state.field(blockState);
   const block = blocks[index];
   if (!block) return range;
-  if (range.head === block.content.to) {
+  if (range.head === block.to) {
     const nextBlockIndex = index < blocks.length - 1 ? index + 1 : index;
     const targetBlock = blocks[nextBlockIndex];
     if (!targetBlock) return range;
-    return EditorSelection.cursor(targetBlock.content.to);
+    return EditorSelection.cursor(targetBlock.to);
   } else {
-    return EditorSelection.cursor(block.content.to);
+    return EditorSelection.cursor(block.to);
   }
 }
 
@@ -307,17 +307,17 @@ function previousParagraph(state: EditorState, range: SelectionRange): Selection
   let seenContentLine = false;
   let pos;
   // if we're on the first row of a block, and it's not the first block, we start from the end of the previous block
-  if (state.doc.lineAt(range.head).from === block.content.from && blockIndex > 0) {
+  if (state.doc.lineAt(range.head).from === block.contentFrom && blockIndex > 0) {
     const prevBlock = blocks[blockIndex - 1];
     if (prevBlock) {
       block = prevBlock;
     }
-    pos = state.doc.lineAt(block.content.to).from;
+    pos = state.doc.lineAt(block.to).from;
   } else {
     pos = state.doc.lineAt(range.head).from;
   }
 
-  while (pos > block.content.from) {
+  while (pos > block.contentFrom) {
     const line = state.doc.lineAt(pos);
     if (line.text.replace(/\s/g, "").length == 0) {
       if (seenContentLine) {
@@ -329,7 +329,7 @@ function previousParagraph(state: EditorState, range: SelectionRange): Selection
     // set position to beginning go previous line
     pos = state.doc.lineAt(line.from - 1).from;
   }
-  return EditorSelection.cursor(block.content.from);
+  return EditorSelection.cursor(block.contentFrom);
 }
 
 function nextParagraph(state: EditorState, range: SelectionRange): SelectionRange {
@@ -341,17 +341,17 @@ function nextParagraph(state: EditorState, range: SelectionRange): SelectionRang
   let seenContentLine = false;
   let pos;
   // if we're at the last line of a block, and it's not the last block, we start from the beginning of the next block
-  if (state.doc.lineAt(range.head).to === block.content.to && blockIndex < blocks.length - 1) {
+  if (state.doc.lineAt(range.head).to === block.to && blockIndex < blocks.length - 1) {
     const nextBlockEl = blocks[blockIndex + 1];
     if (nextBlockEl) {
       block = nextBlockEl;
     }
-    pos = state.doc.lineAt(block.content.from).to;
+    pos = state.doc.lineAt(block.contentFrom).to;
   } else {
     pos = state.doc.lineAt(range.head).to;
   }
 
-  while (pos < block.content.to) {
+  while (pos < block.to) {
     const line = state.doc.lineAt(pos);
     if (line.text.replace(/\s/g, "").length == 0) {
       if (seenContentLine) {
@@ -363,7 +363,7 @@ function nextParagraph(state: EditorState, range: SelectionRange): SelectionRang
     // set position to beginning go previous line
     pos = state.doc.lineAt(line.to + 1).to;
   }
-  return EditorSelection.cursor(block.content.to);
+  return EditorSelection.cursor(block.to);
 }
 
 export function gotoNextParagraph({ state, dispatch }: EditorView) {
@@ -442,21 +442,21 @@ function moveCurrentBlock(state: EditorState, dispatch: EditorView["dispatch"], 
   const neighborBlock = blocks[blockIndex + dir];
   if (!neighborBlock) return false;
 
-  const currentBlockContent = state.sliceDoc(currentBlock.delimiter.from, currentBlock.content.to);
-  const neighborBlockContent = state.sliceDoc(neighborBlock.delimiter.from, neighborBlock.content.to);
+  const currentBlockContent = state.sliceDoc(currentBlock.from, currentBlock.to);
+  const neighborBlockContent = state.sliceDoc(neighborBlock.from, neighborBlock.to);
   const newContent = up ? currentBlockContent + neighborBlockContent : neighborBlockContent + currentBlockContent;
 
   const selectionRange = state.selection.asSingle().main;
   let newSelectionRange;
   if (up) {
     newSelectionRange = EditorSelection.range(
-      selectionRange.anchor - currentBlock.delimiter.from + neighborBlock.delimiter.from,
-      selectionRange.head - currentBlock.delimiter.from + neighborBlock.delimiter.from,
+      selectionRange.anchor - currentBlock.from + neighborBlock.from,
+      selectionRange.head - currentBlock.from + neighborBlock.from,
     );
   } else {
     newSelectionRange = EditorSelection.range(
-      selectionRange.anchor + neighborBlock.content.to - neighborBlock.delimiter.from,
-      selectionRange.head + neighborBlock.content.to - neighborBlock.delimiter.from,
+      selectionRange.anchor + neighborBlock.to - neighborBlock.from,
+      selectionRange.head + neighborBlock.to - neighborBlock.from,
     );
   }
 
@@ -464,8 +464,8 @@ function moveCurrentBlock(state: EditorState, dispatch: EditorView["dispatch"], 
     state.update(
       {
         changes: {
-          from: up ? neighborBlock.delimiter.from : currentBlock.delimiter.from,
-          to: up ? currentBlock.content.to : neighborBlock.content.to,
+          from: up ? neighborBlock.from : currentBlock.from,
+          to: up ? currentBlock.to : neighborBlock.to,
           insert: newContent,
         },
         selection: newSelectionRange,
@@ -489,7 +489,7 @@ export const deleteBlock =
     let nextBlock: Block | undefined;
     for (let i = 0; i < blocks.length; i++) {
       const currentBlock = blocks[i];
-      if (currentBlock && currentBlock.range.from <= range.head && currentBlock.range.to >= range.head) {
+      if (currentBlock && currentBlock.from <= range.head && currentBlock.to >= range.head) {
         block = currentBlock;
         if (i < blocks.length - 1) {
           nextBlock = blocks[i + 1];
@@ -508,17 +508,17 @@ export const deleteBlock =
       newSelection = replace.length;
     } else if (!nextBlock) {
       // if it's the last block, the cursor should go at the en of the previous block
-      newSelection = block.delimiter.from;
+      newSelection = block.from;
     } else {
       // if there is a next block, we want the cursor to be at the beginning of that block
-      newSelection = block.delimiter.from + (nextBlock.delimiter.to - nextBlock.delimiter.from);
+      newSelection = block.from + (nextBlock.contentFrom - nextBlock.from);
     }
 
     dispatch(
       state.update({
         changes: {
-          from: block.range.from,
-          to: block.range.to,
+          from: block.from,
+          to: block.to,
           insert: replace,
         },
         selection: EditorSelection.cursor(newSelection),
@@ -535,7 +535,7 @@ export const deleteBlockSetCursorPreviousBlock =
     if (!block) return false;
     const blocks = state.field(blockState);
     let replace = "";
-    let newSelection = block.delimiter.from;
+    let newSelection = block.from;
     if (blocks.length == 1) {
       replace = getBlockDelimiter(editor.defaultBlockToken, editor.defaultBlockAutoDetect);
       newSelection = replace.length;
@@ -543,8 +543,8 @@ export const deleteBlockSetCursorPreviousBlock =
     dispatch(
       state.update({
         changes: {
-          from: block.range.from,
-          to: block.range.to,
+          from: block.from,
+          to: block.to,
           insert: replace,
         },
         selection: EditorSelection.cursor(newSelection),
