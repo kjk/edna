@@ -176,7 +176,6 @@
   let showingFunctionSelector = $state(false);
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
-  let showingQuickAccess = $state(false);
   let showingBlockSelector = $state(false);
   let showingFindInNotes = $state(false);
   let showingDecryptPassword = $state(false);
@@ -195,7 +194,7 @@
       showingFunctionSelector ||
       showingSettings ||
       showingRenameNote ||
-      showingQuickAccess ||
+      appState.showingQuickAccess ||
       showingBlockSelector ||
       showingFindInNotes ||
       showingDecryptPassword ||
@@ -214,7 +213,7 @@
     showingFunctionSelector = false;
     showingSettings = false;
     showingRenameNote = false;
-    showingQuickAccess = false;
+    appState.showingQuickAccess = false;
     showingBlockSelector = false;
     showingFindInNotes = false;
     showingAskAI = false;
@@ -341,8 +340,8 @@
       if (ev.ctrlKey || ev.metaKey) {
         if (isShowingDialog) {
           ev.preventDefault();
-          if (showingQuickAccess) {
-            showingQuickAccess = false;
+          if (appState.showingQuickAccess) {
+            appState.showingQuickAccess = false;
             getEditor().focus();
           }
         }
@@ -391,7 +390,7 @@
           if (note.altShortcut == altN && note.name !== noteName) {
             // console.log("onKeyDown: opening note: ", o.name, " altN:", altN, " e:", e)
             openNote(note.name);
-            showingQuickAccess = false;
+            appState.showingQuickAccess = false;
             ev.preventDefault();
             return;
           }
@@ -1892,7 +1891,7 @@
   }
 
   function openQuickAccess() {
-    showingQuickAccess = true;
+    appState.showingQuickAccess = true;
   }
 
   async function onOpenNote(name: string, newTab = false) {
@@ -2131,7 +2130,7 @@
   {toggleSpellCheck}
 />
 
-{#if showingQuickAccess}
+{#if appState.showingQuickAccess}
   <Overlay onclose={closeDialogs} blur={true}>
     <QuickAccess openNote={onOpenNote} forHistory={true} />
   </Overlay>

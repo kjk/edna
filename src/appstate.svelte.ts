@@ -24,6 +24,7 @@ class AppState {
   searchNotesMatchCase = $state(false);
   searchNotesMatchWholeWord = $state(false);
 
+  showingQuickAccess = $state(false);
   showingArchived = $state(false); // show archived notes in note selector
 
   searchIncludeArchived = $state(false);
