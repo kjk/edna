@@ -134,6 +134,17 @@ describe("Cursor document navigation (browser tests)", () => {
     expect(editor.getCursorPosition()).toBe(editor.getContent().length);
   });
 
+  it("cursor cannot be set within block delimiter", async () => {
+    createEditor("\n\u221E\u221E\u221Etext\nhello");
+
+    // Try to set cursor at position 0, which is inside the block delimiter
+    editor.setCursorPosition(0);
+
+    // Cursor should be clamped to the start of the block's content range
+    const blocks = editor.getBlocks();
+    expect(editor.getCursorPosition()).toBe(blocks[0].content.from);
+  });
+
   it("cursor navigation works in single block", async () => {
     createEditor("\n\u221E\u221E\u221Etext\nSingle block with some content\n");
 
