@@ -26,7 +26,7 @@
     // "noUncheckedIndexedAccess": true,
 
     "paths": {
-      "@/*": ["./*"],
+      // "@/*": ["./*"],
     },
 
     // tsconfig.node.json
@@ -38,7 +38,6 @@
    * to avoid limiting type declarations.
    */
   "include": [
-    "./src/**/*.d.ts",
     "./src/**/*.ts",
     "./src/**/*.js",
     "./src/**/*.svelte",

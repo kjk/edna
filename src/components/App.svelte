@@ -131,8 +131,8 @@
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
   import FindInNotes from "./FindInNotes.svelte";
-  import HomePage from "./HomePage.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
+  import HomePage from "./HomePage.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
   import Menu, {
     kMenuIdJustText,
@@ -209,7 +209,7 @@
 
     appState.forceNewTab = false;
 
-    if (editorRef) {
+    if (editorComp) {
       getEditorComp().focus();
     }
   }
@@ -222,11 +222,8 @@
   let contextMenuPos = $state({ x: 0, y: 0 });
 
   let askAIStartText = $state("");
-
-  // /** @type {import("../editor/editor").EdnaEditor} */
-  // let ednaEditor = $state(null);
-
-  let editorRef: Editor;
+  // svelte-ignore non_reactive_update
+  let editorComp: Editor;
 
   $effect(() => {
     isMoving.disableMoveTracking = isShowingDialog;
@@ -274,13 +271,13 @@
   }
 
   $effect(() => {
-    if (editorRef) {
+    if (editorComp) {
       getEditorComp().setSpellChecking(isSpellChecking);
     }
   });
 
   function focusEditor() {
-    if (!editorRef) return;
+    if (!editorComp) return;
     getEditor().focus();
   }
 
@@ -362,8 +359,12 @@
 
     // When there's no editor (e.g. Home tab), handle shortcuts that are
     // normally bound through CodeMirror's extraKeymap
-    if (!editorRef && !isShowingDialog) {
-      if (mod && ev.shiftKey && (ev.key === "K" || ev.key === "k" || ev.key === "P" || ev.key === "p" || ev.key === "O" || ev.key === "o")) {
+    if (!editorComp && !isShowingDialog) {
+      if (
+        mod &&
+        ev.shiftKey &&
+        (ev.key === "K" || ev.key === "k" || ev.key === "P" || ev.key === "p" || ev.key === "O" || ev.key === "o")
+      ) {
         ev.preventDefault();
         ev.stopImmediatePropagation();
         openCommandPalette();
@@ -1673,7 +1674,7 @@
       return;
     }
     // save current editor state before switching away
-    if (editorRef) {
+    if (editorComp) {
       await getEditor().save();
     }
     let idx = settings.tabs.indexOf(tab);
@@ -1718,21 +1719,21 @@
   }
 
   function getEditorComp(): Editor {
-    return editorRef;
+    return editorComp;
   }
 
   function getEditor(): MultiBlockEditor {
-    return editorRef.getEditor();
+    return editorComp.getEditor();
   }
 
   function getEditorView(): EditorView {
-    if (!editorRef) {
+    if (!editorComp) {
       // TODO: change result type to EditorView | undefined but it'll
       // require fixing a lot of callers
       // @ts-ignore
       return;
     }
-    let view = editorRef.getEditorView();
+    let view = editorComp.getEditorView();
     return view;
   }
 
@@ -1988,7 +1989,7 @@
 
   async function openNote(name: string, skipSave = false, noPushHistory = false) {
     console.log("App.openNote:", name);
-    if (!editorRef) {
+    if (!editorComp) {
       // Editor not mounted (e.g. coming from Home tab).
       // Setting currentTab mounts the Editor, whose onMount loads the note.
       settings.currentTab = name;
@@ -2119,7 +2120,7 @@
     console.log("didLoadNote:", name);
     throwIf(!name);
     console.log("onDocChanged: just opened");
-    let editor = editorRef.getEditor();
+    let editor = editorComp.getEditor();
     let readOnly = isSystemNoteName(name);
     editor.setReadOnly(readOnly);
     window.document.title = name;
@@ -2184,7 +2185,7 @@
       {extraKeymap}
       {didLoadNote}
       {docDidChange}
-      bind:this={editorRef}
+      bind:this={editorComp}
     />
   {/if}
 </div>
