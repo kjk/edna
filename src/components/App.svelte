@@ -170,7 +170,6 @@
   let showingContextMenu = $state(false);
   let showingLanguageSelector = $state(false);
   let showingNoteSelector = $state(false);
-  let showingBlockMoveSelector = $state(false);
   let showingCommandPalette = $state(false);
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
@@ -186,7 +185,7 @@
       showingContextMenu ||
       showingLanguageSelector ||
       showingNoteSelector ||
-      showingBlockMoveSelector ||
+      appState.showingBlockMoveSelector ||
       showingCommandPalette ||
       appState.showingCreateNewNote ||
       appState.showingFunctionSelector ||
@@ -205,7 +204,7 @@
     showingContextMenu = false;
     showingLanguageSelector = false;
     showingNoteSelector = false;
-    showingBlockMoveSelector = false;
+    appState.showingBlockMoveSelector = false;
     showingCommandPalette = false;
     appState.showingCreateNewNote = false;
     appState.showingFunctionSelector = false;
@@ -1948,11 +1947,11 @@
   }
 
   function moveCurrentBlock() {
-    showingBlockMoveSelector = true;
+    appState.showingBlockMoveSelector = true;
   }
 
   async function onMoveBlockToNote(name: string) {
-    showingBlockMoveSelector = false;
+    appState.showingBlockMoveSelector = false;
     // name can be new or existing note
     let state = getEditorView().state;
     let block = getActiveNoteBlock(state)!;
@@ -2153,7 +2152,7 @@
   </Overlay>
 {/if}
 
-{#if showingBlockMoveSelector}
+{#if appState.showingBlockMoveSelector}
   <Overlay onclose={closeDialogs} blur={true}>
     <NoteSelector
       header="Move current block to note:"
