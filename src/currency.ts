@@ -9,16 +9,21 @@ interface CurrencyData {
   rates: Record<string, number>;
 }
 
-let currencyData: CurrencyData | null = null;
+let currencyData: CurrencyData | undefined;
 async function getCurrencyData() {
-  if (currencyData !== null) {
+  if (currencyData !== undefined) {
     return currencyData;
   }
   const response = await fetch("/api/currency_rates.json", {
     cache: "no-cache",
   });
-  currencyData = JSON.parse(await response.text());
-  return currencyData;
+  if (!response.ok) return;
+  try {
+    currencyData = JSON.parse(await response.text());
+    return currencyData;
+  } catch (e) {
+    console.log("getCurrencyData: error:", e);
+  }
 }
 
 let currenciesLoaded = false;
