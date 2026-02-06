@@ -26,6 +26,7 @@ class AppState {
 
   showingQuickAccess = $state(false);
   showingCreateNewNote = $state(false);
+  showingFunctionSelector = $state(false);
   showingArchived = $state(false); // show archived notes in note selector
 
   searchIncludeArchived = $state(false);

@@ -172,7 +172,6 @@
   let showingNoteSelector = $state(false);
   let showingBlockMoveSelector = $state(false);
   let showingCommandPalette = $state(false);
-  let showingFunctionSelector = $state(false);
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
   let showingBlockSelector = $state(false);
@@ -190,7 +189,7 @@
       showingBlockMoveSelector ||
       showingCommandPalette ||
       appState.showingCreateNewNote ||
-      showingFunctionSelector ||
+      appState.showingFunctionSelector ||
       showingSettings ||
       showingRenameNote ||
       appState.showingQuickAccess ||
@@ -209,7 +208,7 @@
     showingBlockMoveSelector = false;
     showingCommandPalette = false;
     appState.showingCreateNewNote = false;
-    showingFunctionSelector = false;
+    appState.showingFunctionSelector = false;
     showingSettings = false;
     showingRenameNote = false;
     appState.showingQuickAccess = false;
@@ -720,7 +719,7 @@
     } else {
       userFunctions = parseUserFunctions(userFunctionsStr);
     }
-    showingFunctionSelector = true;
+    appState.showingFunctionSelector = true;
   }
 
   export async function runBoopFunctionWithText(f: BoopFunction, txt: string): Promise<BoopFunctionArg> {
@@ -844,7 +843,7 @@
 
   async function runFunction(fdef: BoopFunction, replace: boolean) {
     console.log("runFunction");
-    showingFunctionSelector = false;
+    appState.showingFunctionSelector = false;
     let view = getEditorView();
     if (isReadOnly(view)) {
       view.focus();
@@ -2148,7 +2147,7 @@
   </Overlay>
 {/if}
 
-{#if showingFunctionSelector}
+{#if appState.showingFunctionSelector}
   <Overlay onclose={closeDialogs} blur={true}>
     <FunctionSelector context={functionContext} {userFunctions} {runFunction}></FunctionSelector>
   </Overlay>
