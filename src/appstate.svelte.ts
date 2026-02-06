@@ -1,5 +1,4 @@
 import { getNoteMeta } from "./metadata";
-
 import { defaultSettings, type Settings } from "./settings.svelte";
 
 class AppState {
@@ -51,6 +50,7 @@ function calcWithBoolKey(noteNames: string[], key: string): string[] {
   let res: string[] = [];
   for (let name of noteNames) {
     let m = getNoteMeta(name, false);
+    // @ts-ignore
     if (m && m[key]) {
       res.push(name);
     }
