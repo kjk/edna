@@ -1,7 +1,15 @@
 import { syntaxTree } from "@codemirror/language";
-import { EditorState } from "@codemirror/state";
+import { EditorState, Facet } from "@codemirror/state";
 import { IterMode } from "@lezer/common";
 import { Document, Note, NoteDelimiter } from "../lang-heynote/parser.terms";
+
+/**
+ * Facet to indicate that the new parser (src/editor/new-parser) is being used
+ * instead of lang-heynote.
+ */
+export const useNewParserFacet = Facet.define<boolean, boolean>({
+  combine: (values) => values.length > 0 ? values[0] : false,
+});
 
 export interface NoteBlock {
   index: number;
@@ -53,6 +61,60 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
   });
   firstBlockDelimiterSize = blocks[0]?.contentFrom;
   //console.log("getBlocksSyntaxTree took", timer(), "ms")
+  return blocks;
+}
+
+/**
+ * Return a list of blocks from the syntax tree produced by the new parser
+ * (src/editor/new-parser). The new parser uses different node IDs and has
+ * no "Auto" node, so auto-detect is determined by checking for "-a" after
+ * the language token in the delimiter text.
+ */
+export function getBlocksFromSyntaxTreeNewParser(state: EditorState): NoteBlock[] {
+  const blocks: NoteBlock[] = [];
+  const tree = syntaxTree(state);
+  if (!tree) {
+    return blocks;
+  }
+  tree.iterate({
+    enter: (type) => {
+      if (type.name === "Document" || type.name === "Note") {
+        return true;
+      } else if (type.name === "NoteDelimiter") {
+        const langNode = type.node.getChild("NoteLanguage");
+        if (!langNode) return false;
+        const language = state.doc.sliceString(langNode.from, langNode.to);
+        // New parser has no Auto node — check for "-a" suffix after language token
+        const afterLang = state.doc.sliceString(langNode.to, type.to);
+        const isAuto = afterLang.startsWith("-a");
+        const contentNode = type.node.nextSibling;
+        if (contentNode) {
+          blocks.push({
+            index: blocks.length,
+            language: language,
+            autoDetect: isAuto,
+            from: type.from,
+            to: contentNode.to,
+            contentFrom: contentNode.from,
+          });
+        } else {
+          // Empty block: new parser omits NoteContent when content is empty
+          blocks.push({
+            index: blocks.length,
+            language: language,
+            autoDetect: isAuto,
+            from: type.from,
+            to: type.to,
+            contentFrom: type.to,
+          });
+        }
+        return false;
+      }
+      return false;
+    },
+    mode: IterMode.IgnoreMounts,
+  });
+  firstBlockDelimiterSize = blocks[0]?.contentFrom;
   return blocks;
 }
 

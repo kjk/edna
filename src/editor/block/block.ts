@@ -24,7 +24,7 @@ import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation";
 import type { MultiBlockEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
 import type { SimpleRange } from "../types";
-import { firstBlockDelimiterSize, getBlocksFromString, getBlocksFromSyntaxTree } from "./block-parsing";
+import { firstBlockDelimiterSize, getBlocksFromString, getBlocksFromSyntaxTree, getBlocksFromSyntaxTreeNewParser, useNewParserFacet } from "./block-parsing";
 import { mathBlock } from "./math";
 import { emptyBlockSelected } from "./select-all";
 
@@ -39,6 +39,9 @@ export const delimiterRegexWithoutNewline = /^∞∞∞[a-z]+?(-a)?$/;
  */
 export function getBlocks(state: EditorState): Block[] {
   if (syntaxTreeAvailable(state, state.doc.length)) {
+    if (state.facet(useNewParserFacet)) {
+      return getBlocksFromSyntaxTreeNewParser(state);
+    }
     return getBlocksFromSyntaxTree(state);
   } else {
     const doc = state.doc;

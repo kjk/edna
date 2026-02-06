@@ -11,7 +11,9 @@ import { emacsKeymap } from "./emacs";
 import { createDynamicCloseBracketsExtension } from "./extensions";
 import { foldGutterExtension, unfoldEverything } from "./fold-gutter";
 import { ednaKeymap, keymapFromSpec } from "./keymap";
+import { useNewParserFacet } from "./block/block-parsing";
 import { heynoteLang } from "./lang-heynote/heynote";
+import { multiBlock } from "./new-parser/language";
 import { languageDetection } from "./language-detection/autodetect";
 import { links } from "./links";
 import { autoSaveContent } from "./save";
@@ -53,6 +55,7 @@ interface MultiBlockEditorConfig {
   defaultBlockAutoDetect?: boolean;
   fontFamily?: string;
   fontSize?: number;
+  newParser?: boolean;
 }
 
 export class MultiBlockEditor {
@@ -94,6 +97,7 @@ export class MultiBlockEditor {
     defaultBlockAutoDetect,
     fontFamily,
     fontSize,
+    newParser,
   }: MultiBlockEditorConfig) {
     this.element = element;
     this.saveCallback = save;
@@ -148,7 +152,7 @@ export class MultiBlockEditor {
         EditorView.scrollMargins.of((f) => {
           return { top: 80, bottom: 80 };
         }),
-        heynoteLang(),
+        newParser ? [multiBlock(), useNewParserFacet.of(true)] : heynoteLang(),
         noteBlockExtension(this),
         languageDetection(() => this.view),
 
