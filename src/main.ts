@@ -7,6 +7,7 @@ import AskFSPermissions from "./components/AskFSPermissions.svelte";
 import { hasHandlePermission } from "./fileutil";
 import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import {
+  clearStorageFS,
   createDefaultNotes,
   dbGetDirHandle,
   ensureValidNoteNamesFS,
@@ -34,7 +35,7 @@ export async function boot() {
     let ok = await hasHandlePermission(dh, true);
     if (!ok) {
       console.log("no permission to write files in directory", dh.name);
-      setStorageFS(undefined);
+      clearStorageFS();
       const target = document.getElementById("app");
       if (!target) return;
       appSvelte = mount(AskFSPermissions, { target });

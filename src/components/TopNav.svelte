@@ -47,9 +47,9 @@
     return noteName;
   }
 
-  function myOpenNote(noteName: string, newTab: boolean) {
+  function myOpenNote(noteName: string, newTab?: boolean) {
     showingQuickAccess = false;
-    openNote(noteName, newTab);
+    openNote(noteName, newTab || false);
   }
 
   let settings = getSettings();
@@ -64,7 +64,7 @@
     return "invisible fixed top-0 z-10 right-0";
   });
 
-  let ednaRef: HTMLElement = $state(null);
+  let ednaRef: HTMLElement | undefined = $state();
 
   const colors = [
     "red",
@@ -95,12 +95,12 @@
     "saddlebrown",
   ];
   let colorIndex = 0;
-  let colorChangeInterval;
-  let startColor;
+  let colorChangeInterval = 0;
+  let startColor = "";
 
   let showingHelp = $state(false);
 
-  function openURLOrNote(url) {
+  function openURLOrNote(url: string) {
     showingHelp = false;
     if (url.startsWith("system:")) {
       openNote(url, true);
@@ -114,14 +114,13 @@
 
   let shwingMenu = $state(false);
   let noFocusEditorOnMenuOut = false;
-  let menuPos = { x: 0, y: 0 };
-  function myOnMenuCmd(cmdid) {
+  function myOnMenuCmd(cmdid: number) {
     noFocusEditorOnMenuOut = true;
     shwingMenu = false;
     onmenucmd(cmdid);
   }
 
-  function noteCls(name) {
+  function noteCls(name: string) {
     let m = getNoteMeta(name);
     let isArchived = m && m.isArchived;
     if (isSystemNoteName(name) || isArchived) {
@@ -146,7 +145,6 @@
 
   <button
     onmouseenter={(ev) => {
-      menuPos = { x: ev.x, y: ev.y };
       noFocusEditorOnMenuOut = false;
       shwingMenu = true;
     }}
@@ -255,16 +253,16 @@
       class="edna mr-2 font-bold text-slate-600 dark:text-slate-200"
       onmouseenter={() => {
         if (!startColor) {
-          startColor = ednaRef.style.color;
+          startColor = ednaRef!.style.color;
         }
-        colorChangeInterval = setInterval(() => {
-          ednaRef.style.color = colors[colorIndex];
+        colorChangeInterval = window.setInterval(() => {
+          ednaRef!.style.color = colors[colorIndex];
           colorIndex = (colorIndex + 1) % colors.length;
         }, 300); // Change color every 500 milliseconds
       }}
       onmouseleave={() => {
-        clearInterval(colorChangeInterval);
-        ednaRef.style.color = startColor;
+        window.clearInterval(colorChangeInterval);
+        ednaRef!.style.color = startColor;
       }}
       href="/help"
       target="_blank"

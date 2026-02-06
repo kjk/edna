@@ -1,14 +1,22 @@
 <script lang="ts">
   import { requestHandlePermission } from "../fileutil";
   import { boot } from "../main";
-  import { dbDelDirHandle, dbGetDirHandle, pickAnotherDirectory, preLoadAllNotes, setStorageFS } from "../notes";
+  import {
+    clearStorageFS,
+    dbDelDirHandle,
+    dbGetDirHandle,
+    pickAnotherDirectory,
+    preLoadAllNotes,
+    setStorageFS,
+  } from "../notes";
 
   let dirName = $state("");
 
   $effect(() => {
     console.log("AskFSPermissions");
-    dbGetDirHandle().then((dh: FileSystemDirectoryHandle) => {
+    dbGetDirHandle().then((dh?: FileSystemDirectoryHandle) => {
       console.log("dh:", dh);
+      if (!dh) return;
       dirName = dh.name;
     });
   });
@@ -19,7 +27,7 @@
       console.log("trying to mount app now");
       await boot();
     } else {
-      setStorageFS(null);
+      clearStorageFS();
     }
   }
 

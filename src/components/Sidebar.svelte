@@ -15,7 +15,7 @@
   }
   let { class: klass, openNote }: Props = $props();
 
-  function localBuildNoteInfos(regular, archived) {
+  function localBuildNoteInfos(regular: string[], archived: string[]) {
     let notes = [...regular];
     notes.push(...archived);
     let res = buildNoteInfos(notes);
@@ -47,7 +47,7 @@
     return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
-  let selectedNote: NoteInfo = $state(null);
+  let selectedNote: NoteInfo | undefined = $state();
   let selectedName = $state("");
 
   let notesCountMsg = $derived.by(() => {
@@ -63,10 +63,10 @@
     return `${n} of ${nItems} notes`;
   });
 
-  function selectionChanged(item, idx) {
+  function selectionChanged(item: any, idx: number) {
     // console.log("selectionChanged:", $state.snapshot(item), idx);
     selectedNote = item;
-    selectedName = item ? selectedNote.name : "";
+    selectedName = selectedNote ? selectedNote.name : "";
   }
 
   function sysNoteCls(note: NoteInfo): string {
@@ -105,7 +105,7 @@
       return;
     }
 
-    listboxRef.onkeydown(ev, filter === "");
+    listboxComp.onkeydown(ev, filter === "");
   }
 
   function emitOpenNote(noteInfo: NoteInfo, newTab: boolean) {
@@ -127,10 +127,8 @@
     inputRef.focus();
   }
 
-  /** HTMLElemnt */
-  let inputRef;
-  /** HTMLElemnt */
-  let listboxRef;
+  let inputRef: HTMLElement;
+  let listboxComp: ListBox;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -147,21 +145,21 @@
       bind:value={filter}
       class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
     />
-    <div class="absolute right-[0.5rem] top-[0.25rem] italic text-gray-400">
+    <div class="absolute right-2 top-1 italic text-gray-400">
       {notesCountMsg}
     </div>
   </div>
   <ListBox
-    bind:this={listboxRef}
+    bind:this={listboxComp}
     items={filteredNoteInfos}
     {selectionChanged}
-    onclick={(item, ev) => emitOpenNote(item, ev.ctrlKey)}
+    onclick={(item, newTab) => emitOpenNote(item, newTab)}
   >
     {#snippet renderItem(noteInfo)}
       {@const hili = hilightText(noteInfo.name, hiliRegExp)}
       <button
         tabindex="-1"
-        class="ml-[-6px] cursor-pointer hover:text-yellow-600"
+        class="-ml-1.5 cursor-pointer hover:text-yellow-600"
         onclick={(ev) => {
           toggleStarred(noteInfo);
           ev.preventDefault();

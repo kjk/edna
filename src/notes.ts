@@ -48,8 +48,12 @@ export function getStorageFS(): FileSystemDirectoryHandle | undefined {
 }
 
 export function setStorageFS(dh: FileSystemDirectoryHandle | undefined) {
-  console.log("setStorageFS:", dh);
+  // console.log("setStorageFS:", dh);
   storageFS = dh;
+}
+
+export function clearStorageFS() {
+  storageFS = undefined;
 }
 
 // some things, like FilesystemDirectoryHandle, we need to store in indexedDb
@@ -93,6 +97,7 @@ async function getPasswordHashMust(msg: string): Promise<string> {
 
 export async function dbGetDirHandle(): Promise<FileSystemDirectoryHandle | undefined> {
   let dh = await db.get(kStorageDirHandleKey);
+  if (!dh) return;
   setStorageFS(dh);
   return storageFS;
 }

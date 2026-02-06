@@ -56,7 +56,7 @@
   role="dialog"
   tabindex="0"
   {onkeydown}
-  class="selector z-20 absolute center-x-with-translate top-[4rem] flex flex-col max-w-full p-3"
+  class="selector z-20 absolute center-x-with-translate top-16 flex flex-col max-w-full p-3"
 >
   <div class="text-lg font-semibold ml-1">Create new note</div>
   <input bind:value={newName} use:focus class="py-1 px-2 bg-white mt-2 rounded-xs w-[80ch]" />

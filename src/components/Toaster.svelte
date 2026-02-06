@@ -82,7 +82,7 @@
     //   0,
     // );
   }
-  function bgClass(type) {
+  function bgClass(type: number) {
     let res = "bg-white dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500";
     if (type === kToastWarning) {
       res = "bg-yellow-100 dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500";

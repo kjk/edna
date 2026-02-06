@@ -18,7 +18,7 @@
     });
   }
 
-  let intervalId;
+  let intervalId = 0;
 
   $effect(() => {
     const now = new Date();
@@ -30,7 +30,7 @@
       formattedTime = formatTime(new Date());
 
       // Start the regular interval once synchronized
-      intervalId = setInterval(() => {
+      intervalId = window.setInterval(() => {
         formattedTime = formatTime(new Date());
       }, 60 * 1000);
     }, msUntilNextMinute);
