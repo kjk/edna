@@ -171,7 +171,6 @@
   let showingSettings = $state(false);
   let showingRenameNote = $state(false);
   let showingBlockSelector = $state(false);
-  let showingFindInNotes = $state(false);
   let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
   let showingAskFileWritePermissions = $state(false);
@@ -190,7 +189,7 @@
       showingRenameNote ||
       appState.showingQuickAccess ||
       showingBlockSelector ||
-      showingFindInNotes ||
+      appState.showingFindInNotes ||
       showingDecryptPassword ||
       showingEncryptPassword ||
       showingAskFileWritePermissions
@@ -209,7 +208,7 @@
     showingRenameNote = false;
     appState.showingQuickAccess = false;
     showingBlockSelector = false;
-    showingFindInNotes = false;
+    appState.showingFindInNotes = false;
     showingAskAI = false;
 
     appState.forceNewTab = false;
@@ -236,7 +235,7 @@
   });
 
   function openFindInNotes() {
-    showingFindInNotes = true;
+    appState.showingFindInNotes = true;
   }
 
   function updateAfterNoteStateChange() {
@@ -2220,7 +2219,7 @@
   </Overlay>
 {/if}
 
-{#if showingFindInNotes}
+{#if appState.showingFindInNotes}
   <Overlay blur={true} onclose={closeDialogs}>
     <FindInNotes openNote={openNoteFromFind}></FindInNotes>
   </Overlay>

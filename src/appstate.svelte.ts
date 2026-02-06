@@ -31,6 +31,7 @@ class AppState {
   showingNoteSelector = $state(false);
   showingLanguageSelector = $state(false);
   showingContextMenu = $state(false);
+  showingFindInNotes = $state(false);
   showingArchived = $state(false); // show archived notes in note selector
 
   searchIncludeArchived = $state(false);
