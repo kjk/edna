@@ -8,7 +8,7 @@
 
   interface Props {
     items: any[];
-    onclick: (n: number) => void;
+    onclick: (n: number, metaPressed: boolean) => void;
     renderItem: Snippet<[any, number]>;
     selectionChanged?: (item: any, idx: number) => void;
     initialSelection?: number;
@@ -104,7 +104,7 @@
     let isEnter = selectedItem && key === "Enter";
     let res = true;
     if (isEnter) {
-      onclick(selectedItem);
+      onclick(selectedItem, ev.ctrlKey);
     } else if (isUp) {
       up();
     } else if (isDown) {
@@ -172,7 +172,7 @@
       return;
     }
     let item = items[idx];
-    onclick(item);
+    onclick(item, ev.ctrlKey);
     // console.log("didn't find item for ev.target:", ev.target);
   }
 

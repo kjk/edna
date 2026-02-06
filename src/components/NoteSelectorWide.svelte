@@ -26,7 +26,7 @@
   }
   let { openNote, createNote, deleteNote, switchToCommandPalette, switchToRegularNoteSelector }: Props = $props();
 
-  function localBuildNoteInfos(regular, archived) {
+  function localBuildNoteInfos(regular: string[], archived: string[]) {
     let notes = [...regular];
     notes.push(...archived);
     let res = buildNoteInfos(notes);
@@ -61,7 +61,7 @@
     return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
   });
 
-  let selectedItem: NoteInfo = $state(null);
+  let selectedItem: NoteInfo | undefined = $state();
   let selectedName = $state("");
   let canOpenSelected = $state(false);
   let canCreate = $state(false);
@@ -169,10 +169,10 @@
 
     // console.log("listbox:", listbox);
     let allowLeftRight = filter === "" || isCursorAtEnd(inputRef);
-    listboxRef.onkeydown(ev, allowLeftRight);
+    listbox2Comp.onkeydown(ev, allowLeftRight);
   }
 
-  function isCursorAtEnd(input) {
+  function isCursorAtEnd(input: HTMLInputElement) {
     const cursorPosition = input.selectionStart;
     const inputLength = input.value.length;
     return cursorPosition === inputLength;
@@ -183,7 +183,7 @@
     openNote(noteInfo.name, newTab);
   }
 
-  function emitCreateNote(name) {
+  function emitCreateNote(name: string) {
     // log("create note", name);
     createNote(name);
   }
@@ -202,15 +202,15 @@
     inputRef.focus();
   }
 
-  let inputRef;
-  let listboxRef;
+  let inputRef: HTMLInputElement;
+  let listbox2Comp: ListBox2;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
   onkeydown={onKeydown}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-[2rem] flex flex-col max-h-[90vh] w-[95vw] p-2"
+  class="selector z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[95vw] p-2"
 >
   <div>
     <input
@@ -220,16 +220,16 @@
       type="text"
       class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
     />
-    <div class="absolute right-[1rem] top-[0.75rem] italic text-gray-400">
+    <div class="absolute right-4 top-3 italic text-gray-400">
       {notesCountMsg}
     </div>
   </div>
 
   <ListBox2
-    bind:this={listboxRef}
+    bind:this={listbox2Comp}
     items={itemsFiltered}
     {selectionChanged}
-    onclick={(item, metaPressed) => emitOpenNote(item, metaPressed)}
+    onclick={(item: any, metaPressed: boolean) => emitOpenNote(item, metaPressed)}
   >
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
