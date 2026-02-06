@@ -169,7 +169,6 @@
 
   let showingCommandPalette = $state(false);
   let showingSettings = $state(false);
-  let showingRenameNote = $state(false);
   let showingBlockSelector = $state(false);
   let showingDecryptPassword = $state(false);
   let showingDecryptMessage = $state("");
@@ -186,7 +185,7 @@
       appState.showingCreateNewNote ||
       appState.showingFunctionSelector ||
       showingSettings ||
-      showingRenameNote ||
+      appState.showingRenameNote ||
       appState.showingQuickAccess ||
       showingBlockSelector ||
       appState.showingFindInNotes ||
@@ -205,7 +204,7 @@
     appState.showingCreateNewNote = false;
     appState.showingFunctionSelector = false;
     showingSettings = false;
-    showingRenameNote = false;
+    appState.showingRenameNote = false;
     appState.showingQuickAccess = false;
     showingBlockSelector = false;
     appState.showingFindInNotes = false;
@@ -1311,7 +1310,7 @@
       closeCurrentTab();
       view.focus();
     } else if (cmdId === kCmdRenameCurrentNote) {
-      showingRenameNote = true;
+      appState.showingRenameNote = true;
     } else if (cmdId == kCmdPermanentlyDeleteNote) {
       deleteNotePermanently(settings.currentNoteName, true);
       view.focus();
@@ -2194,7 +2193,7 @@
   <ModalMessage />
 {/if}
 
-{#if showingRenameNote}
+{#if appState.showingRenameNote}
   <Overlay onclose={closeDialogs} blur={true}>
     <RenameNote onclose={closeDialogs} rename={onRename} oldName={noteName} />
   </Overlay>
