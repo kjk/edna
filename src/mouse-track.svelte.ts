@@ -5,7 +5,7 @@ class MouseMoveTracker {
 
 export const isMoving = new MouseMoveTracker();
 
-let timeoutId;
+let timeoutId = 0;
 function onMouseMove() {
   if (isMoving.disableMoveTracking) {
     isMoving.moving = false;
@@ -13,7 +13,7 @@ function onMouseMove() {
   }
 
   clearTimeout(timeoutId);
-  timeoutId = setTimeout(() => {
+  timeoutId = window.setTimeout(() => {
     isMoving.moving = false;
   }, 500);
   isMoving.moving = true;

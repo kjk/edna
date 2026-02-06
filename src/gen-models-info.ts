@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fs from "node:fs";
 import { humanPrice } from "./util";
 
@@ -17,9 +18,7 @@ function printSummary(models: Model[]) {
   }
 
   // Convert to array and sort by count ascending
-  const sortedProviders = Object.entries(providerCount).sort(
-    (a, b) => a[1] - b[1],
-  );
+  const sortedProviders = Object.entries(providerCount).sort((a, b) => a[1] - b[1]);
 
   // Print providers and their counts
   for (const [provider, count] of sortedProviders) {
@@ -65,9 +64,7 @@ async function downloadModelsJSON(force = false) {
     const response = await fetch(url, options);
     const data = await response.json();
     await Bun.write(modelsFilePath, JSON.stringify(data, null, 2));
-    console.log(
-      `Downloaded models JSON from https://api.openrouter.ai/v1/models to ${modelsFilePath}`,
-    );
+    console.log(`Downloaded models JSON from https://api.openrouter.ai/v1/models to ${modelsFilePath}`);
   } catch (error) {
     console.error(error);
   }
@@ -95,9 +92,7 @@ function parseModelsJSON(): Model[] {
       price_completion: parseFloat(m.pricing.completion),
     };
     res.push(o);
-    console.log(
-      `id: ${m.id}, name: ${m.name} ${humanPrice(m.pricing.prompt)} / ${humanPrice(m.pricing.completion)}`,
-    );
+    console.log(`id: ${m.id}, name: ${m.name} ${humanPrice(m.pricing.prompt)} / ${humanPrice(m.pricing.completion)}`);
   }
   res.sort((a, b) => a.name.localeCompare(b.name));
   return res;

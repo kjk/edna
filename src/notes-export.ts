@@ -1,13 +1,7 @@
 import { appState } from "./appstate.svelte";
 import { blobFromUint8Array, fsReadBinaryFile, readDir } from "./fileutil";
 import { kMetadataName, loadNotesMetadata } from "./metadata";
-import {
-  forEachNoteFileFS,
-  getStorageFS,
-  loadNote,
-  loadNoteNames,
-  notePathFromNameFS,
-} from "./notes";
+import { forEachNoteFileFS, getStorageFS, loadNote, loadNoteNames, notePathFromNameFS } from "./notes";
 import { kSettingsPath } from "./settings.svelte";
 import { formatDateYYYYMMDD, len, throwIf } from "./util";
 
@@ -32,6 +26,7 @@ export async function exportUnencryptedNotesToZipBlob(): Promise<Blob> {
   let noteNames = await loadNoteNames();
   for (let name of noteNames) {
     let s = await loadNote(name);
+    if (!s) continue;
     // always use un-encrypted file extension
     let fileName = notePathFromNameFS(name, false);
     await addTextFile(libZip, zipWriter, fileName, s);
@@ -52,7 +47,7 @@ export async function exportUnencryptedNotesToZipBlob(): Promise<Blob> {
 
 export async function exportRawNotesToZipBlob(): Promise<Blob> {
   console.log("exportRawNotesToZipBlob");
-  let dh = getStorageFS();
+  let dh = getStorageFS()!;
   throwIf(!dh, "only supported for a file system");
   let libZip = await import("@zip.js/zip.js");
   let blobWriter = new libZip.BlobWriter("application/zip");

@@ -2,12 +2,7 @@ import { cppLanguage } from "@codemirror/lang-cpp";
 import { cssLanguage } from "@codemirror/lang-css";
 import { htmlLanguage } from "@codemirror/lang-html";
 import { javaLanguage } from "@codemirror/lang-java";
-import {
-  javascriptLanguage,
-  jsxLanguage,
-  tsxLanguage,
-  typescriptLanguage,
-} from "@codemirror/lang-javascript";
+import { javascriptLanguage, jsxLanguage, tsxLanguage, typescriptLanguage } from "@codemirror/lang-javascript";
 import { jsonLanguage } from "@codemirror/lang-json";
 import { lezerLanguage } from "@codemirror/lang-lezer";
 import { markdownLanguage } from "@codemirror/lang-markdown";
@@ -410,10 +405,11 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   console.log("getPrettierInfo:", lang.token);
   let token = lang.token;
   if (token == "json") {
-    let babelPrettierPlugin = (await import("prettier/plugins/babel.mjs"))
-      .default;
+    // @ts-ignore
+    let babelPrettierPlugin = (await import("prettier/plugins/babel.mjs")).default;
     console.log("babelPrettierPlugin:", babelPrettierPlugin);
     // import * as prettierPluginEstree from "prettier/plugins/estree.mjs";
+    // @ts-ignore
     let prettierPluginEstree = await import("prettier/plugins/estree.mjs");
     console.log("prettierPluginEstree:", prettierPluginEstree);
     return {
@@ -423,8 +419,8 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   }
   if (token === "html") {
     // import htmlPrettierPlugin from "prettier/esm/parser-html.mjs";
-    let htmlPrettierPlugin = (await import("prettier/plugins/html.mjs"))
-      .default;
+    // @ts-ignore
+    let htmlPrettierPlugin = (await import("prettier/plugins/html.mjs")).default;
     console.log("htmlPrettierPlugin:", htmlPrettierPlugin);
     return {
       parser: "html",
@@ -434,8 +430,8 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
 
   if (token === "markdown") {
     // import markdownPrettierPlugin from "prettier/esm/parser-markdown.mjs";
-    let markdownPrettierPlugin = (await import("prettier/plugins/markdown.mjs"))
-      .default;
+    // @ts-ignore
+    let markdownPrettierPlugin = (await import("prettier/plugins/markdown.mjs")).default;
     console.log("markdownPrettierPlugin:", markdownPrettierPlugin);
     return {
       parser: "markdown",
@@ -444,8 +440,8 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   }
 
   if (token === "css") {
-    let cssPrettierPlugin = (await import("prettier/plugins/postcss.mjs"))
-      .default;
+    // @ts-ignore
+    let cssPrettierPlugin = (await import("prettier/plugins/postcss.mjs")).default;
     console.log("cssPrettierPlugin:", cssPrettierPlugin);
     return {
       parser: "css",
@@ -455,8 +451,8 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
 
   if (token === "yaml") {
     // import yamlPrettierPlugin from "prettier/plugins/yaml.mjs";
-    let yamlPrettierPlugin = (await import("prettier/plugins/yaml.mjs"))
-      .default;
+    // @ts-ignore
+    let yamlPrettierPlugin = (await import("prettier/plugins/yaml.mjs")).default;
     console.log("yamlPrettierPlugin:", yamlPrettierPlugin);
     return {
       parser: "yaml",
@@ -465,10 +461,11 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   }
 
   if (token === "javascript" || token === "jsx") {
-    let babelPrettierPlugin = (await import("prettier/plugins/babel.mjs"))
-      .default;
+    // @ts-ignore
+    let babelPrettierPlugin = (await import("prettier/plugins/babel.mjs")).default;
     console.log("babelPrettierPlugin:", babelPrettierPlugin);
     // import * as prettierPluginEstree from "prettier/plugins/estree.mjs";
+    // @ts-ignore
     let prettierPluginEstree = await import("prettier/plugins/estree.mjs");
     console.log("prettierPluginEstree:", prettierPluginEstree);
     return {
@@ -478,10 +475,11 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   }
 
   if (token === "typescript" || token === "tsx") {
-    let typescriptPlugin = (await import("prettier/plugins/typescript.mjs"))
-      .default;
+    // @ts-ignore
+    let typescriptPlugin = (await import("prettier/plugins/typescript.mjs")).default;
     console.log("typescriptPlugin:", typescriptPlugin);
     // import * as prettierPluginEstree from "prettier/plugins/estree.mjs";
+    // @ts-ignore
     let prettierPluginEstree = await import("prettier/plugins/estree.mjs");
     console.log("prettierPluginEstree:", prettierPluginEstree);
     return {
