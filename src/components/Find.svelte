@@ -322,7 +322,7 @@
 {/snippet}
 
 <div
-  class="selector-colors fixed top-0.5 left-1/2 -translate-x-1/2 z-20 px-1 py-1 bg-white text-sm max-w-4/5 shadow-lg border border-gray-300 dark:border-gray-700"
+  class="dlg-colors fixed top-0.5 left-1/2 -translate-x-1/2 z-20 px-1 py-1 bg-white text-sm max-w-4/5 shadow-lg border border-gray-300 dark:border-gray-700"
   use:trapfocus
 >
   <div class="flex flex-row">

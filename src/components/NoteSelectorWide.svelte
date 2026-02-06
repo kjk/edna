@@ -211,7 +211,7 @@
 <form
   onkeydown={onKeydown}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[95vw] p-2"
+  class="dlg z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[95vw] p-2"
 >
   <div>
     <input
@@ -315,7 +315,7 @@
           switchToRegularNoteSelector();
         }}
         class="link"
-        title="switch to regualar note selector">regular</button
+        title="switch to regualar note dlg">regular</button
       >
     </div>
   </div>

@@ -226,7 +226,7 @@
 {/snippet}
 
 <div
-  class="absolute top-8 left-1/2 -translate-x-1/2 z-20 bg-white dark:text-sm w-4/5 shadow-lg border border-gray-300 max-h-[90vh] flex flex-col p-2 selector-colors"
+  class="absolute top-8 left-1/2 -translate-x-1/2 z-20 bg-white dark:text-sm w-4/5 shadow-lg border border-gray-300 max-h-[90vh] flex flex-col p-2 dlg-colors"
   use:trapfocus
 >
   <div class="flex flex-row mb-2">

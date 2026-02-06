@@ -74,7 +74,7 @@
 <form
   {onkeydown}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-8 max-h-[94vh] flex flex-col p-2 max-w-[80vw] w-[40em]"
+  class="dlg z-20 absolute center-x-with-translate top-8 max-h-[94vh] flex flex-col p-2 max-w-[80vw] w-[40em]"
 >
   <div>
     <input use:focus type="text" bind:value={filter} class="py-1 px-2 bg-white w-full min-w-100 mb-2 rounded-xs" />

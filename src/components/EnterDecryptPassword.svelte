@@ -54,7 +54,7 @@
   role="dialog"
   tabindex="-1"
   {onkeydown}
-  class="selector z-20 absolute center-x-with-translate top-16 flex flex-col max-w-full p-3"
+  class="dlg z-20 absolute center-x-with-translate top-16 flex flex-col max-w-full p-3"
 >
   <div class="text-lg">Enter password to decrypt files:</div>
   {#if msg}

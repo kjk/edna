@@ -366,7 +366,7 @@
         ev.preventDefault();
         switchToWideNoteSelector();
       }}
-      title="switch to wide note selector"
+      title="switch to wide note dlg"
       class="link">wide</button
     >
     <button
@@ -383,14 +383,14 @@
 {/snippet}
 
 {#snippet longHelp()}
-  <div class="selector-info">
+  <div class="dlg-info">
     <div class="flex flex-col items-right absolute bottom-3 right-4">
       <button
         onclick={(ev) => {
           ev.preventDefault();
           switchToWideNoteSelector();
         }}
-        title="switch to wide note selector"
+        title="switch to wide note dlg"
         class="link mb-1 text-right">wide</button
       >
       <button
@@ -470,7 +470,7 @@
 <form
   onkeydown={onKeydown}
   tabindex="-1"
-  class="selector absolute flex flex-col z-20 center-x-with-translate top-8 max-h-[90vh] w-[42em] max-w-[90vw] p-2"
+  class="dlg absolute flex flex-col z-20 center-x-with-translate top-8 max-h-[90vh] w-[42em] max-w-[90vw] p-2"
 >
   {#if header}
     <div class="font-bold mb-2 text-lg ml-1">{header}</div>

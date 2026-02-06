@@ -130,7 +130,7 @@
 <form
   onkeydown={onKeydown}
   tabindex="-1"
-  class="selector absolute flex flex-col z-20 center-x-with-translate top-8 max-h-[90vh] w-[32em] p-2"
+  class="dlg absolute flex flex-col z-20 center-x-with-translate top-8 max-h-[90vh] w-[32em] p-2"
 >
   <div>
     <div class="flex">
@@ -179,7 +179,7 @@
     <div class="px-2 py-1 mt-2 text-sm text-gray-800 bg-yellow-100">
       {selectedItem.fdef.description}
     </div>
-    <div class="selector-info">
+    <div class="dlg-info">
       <div class="kbd">Enter</div>
       <div>Run function, output in new block</div>
       <div class="kbd">Ctrl + Enter</div>

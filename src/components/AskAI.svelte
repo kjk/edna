@@ -352,7 +352,7 @@
 <div
   tabindex="-1"
   use:trapfocus
-  class="selector z-20 absolute center-x-with-translate top-4 flex flex-col max-h-[78vh] w-[85vw] p-2"
+  class="dlg z-20 absolute center-x-with-translate top-4 flex flex-col max-h-[78vh] w-[85vw] p-2"
 >
   <div class="flex items-center">
     <div class="p-1 font-bold text-lg">Ask AI</div>

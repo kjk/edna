@@ -74,7 +74,7 @@
 </script>
 
 <div
-  class="selector absolute overflow-auto center-x-with-translate top-8 z-20 flex flex-col w-[68ch] max-w-full px-4 py-4 select-none"
+  class="dlg absolute overflow-auto center-x-with-translate top-8 z-20 flex flex-col w-[68ch] max-w-full px-4 py-4 select-none"
 >
   <div>
     <h2>Input settings</h2>

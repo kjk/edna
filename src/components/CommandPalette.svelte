@@ -110,7 +110,7 @@
     listboxComp.onkeydown(ev, allowLeftRight);
   }}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[42em] max-w-[90vw] p-2"
+  class="dlg z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[42em] max-w-[90vw] p-2"
 >
   <div>
     <input type="text" use:focus bind:value={filter} class="py-1 px-2 bg-white w-full mb-2 rounded-xs relative" />

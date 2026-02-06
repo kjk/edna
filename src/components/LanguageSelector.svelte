@@ -49,7 +49,7 @@
     listboxRef?.onkeydown(ev, filter === "");
   }}
   tabindex="-1"
-  class="selector z-20 absolute center-x-with-translate top-8 max-h-[94vh] flex flex-col p-2"
+  class="dlg z-20 absolute center-x-with-translate top-8 max-h-[94vh] flex flex-col p-2"
 >
   <input use:focus type="text" bind:value={filter} class="py-1 px-2 bg-white w-full min-w-100 mb-2 rounded-xs" />
   <ListBox bind:this={listboxRef} items={itemsFiltered} onclick={(item) => selectLanguage(item.token)}>

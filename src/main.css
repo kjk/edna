@@ -102,7 +102,7 @@ html.dark input {
 
 /* note selector, language selector, history selector */
 @media (max-width: 600px) {
-  .selector {
+  .dlg {
     max-width: calc(100% - 80px);
   }
 }
@@ -130,7 +130,7 @@ select {
   /* @apply h-fit; */
 }
 
-.selector {
+.dlg {
   /* font-size: 13px; */
   max-height: calc(100% - 4rem);
 
@@ -139,7 +139,7 @@ select {
   @apply dark:bg-gray-900 dark:text-gray-300;
 }
 
-.selector-colors {
+.dlg-colors {
   @apply dark:bg-gray-900 dark:text-gray-300;
 }
 
@@ -147,7 +147,7 @@ select {
   @apply text-red-500 dark:text-red-400;
 }
 
-.selector-info {
+.dlg-info {
   @apply grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 items-center text-xs;
   @apply rounded-lg py-1 px-2 mt-2 max-w-full;
   @apply bg-gray-100 dark:bg-gray-700;
