@@ -1,6 +1,8 @@
 <script module lang="ts">
-  export type MenuItemDef = [string, number | MenuItemDef[]];
-  export type MenuDef = MenuItemDef[];
+  export type CommandNoArg = [string, number | Command[]];
+  export type CommandWithArg = [string, number, any];
+  export type Command = CommandNoArg | CommandWithArg;
+  export type MenuDef = Command[];
 
   // when used as menu id this will show as a text, not a menu item
   export const kMenuIdJustText = -1;
@@ -9,7 +11,13 @@
   export const kMenuStatusDisabled = 1;
   export const kMenuStatusRemoved = 2;
 
-  export const kMenuSeparator: MenuItemDef = ["---", 0];
+  export const kMenuSeparator: Command = ["---", 0];
+
+  export function getCommandArg(cmd: Command): any {
+    if (len(cmd) != 3) return;
+    let c = cmd as CommandWithArg;
+    return c[2];
+  }
 
   export function fixMenuName(s: string): string {
     if (!s) {
@@ -23,7 +31,7 @@
     return parts[0] as string;
   }
 
-  function getShortcut(mi: MenuItemDef): string {
+  function getShortcut(mi: Command): string {
     let s = mi[0];
     let parts = splitMax(s, "\t", 2);
     if (len(parts) > 1) {
@@ -37,6 +45,7 @@
     shortcut = "";
     children?: MenuItem[];
     cmdId = 0;
+    arg = undefined;
     element?: HTMLElement = $state();
     submenuElement?: HTMLElement;
     parent?: MenuItem;
@@ -49,21 +58,21 @@
     isSelected = $state(false);
   }
 
-  function buildMenuFromDef(menuDef: MenuDef, nest: number, menuItemStatus: (mi: MenuItemDef) => number): MenuItem[] {
+  function buildMenuFromDef(menuDef: MenuDef, nest: number, menuItemStatus: (mi: Command) => number): MenuItem[] {
     let res: MenuItem[] = [];
-    for (let mi of menuDef) {
+    for (let cmd of menuDef) {
       let i = new MenuItem();
       res.push(i);
-      i.text = fixMenuName(mi[0]);
-      i.shortcut = getShortcut(mi);
-      const miStatus = menuItemStatus(mi);
+      i.text = fixMenuName(cmd[0]);
+      i.shortcut = getShortcut(cmd);
+      const miStatus = menuItemStatus(cmd);
       i.isDisabled = miStatus === kMenuStatusDisabled;
       i.isRemoved = miStatus === kMenuStatusRemoved;
-      i.isSeparator = mi[0] === kMenuSeparator[0];
+      i.isSeparator = cmd[0] === kMenuSeparator[0];
       if (i.isSeparator) {
         i.isDisabled = true;
       }
-      let idOrSubMenu = mi[1];
+      let idOrSubMenu = cmd[1];
       if (Array.isArray(idOrSubMenu)) {
         i.isSubMenu = true;
         i.zIndex += nest;
@@ -73,6 +82,7 @@
         }
       } else {
         i.cmdId = idOrSubMenu;
+        i.arg = getCommandArg(cmd);
       }
     }
     return res;
@@ -89,12 +99,12 @@
   interface Props {
     menuDef: MenuDef;
     pos: { x: number; y: number } | null;
-    menuItemStatus?: (mi: MenuItemDef) => number;
-    onmenucmd: (cmd: number) => void;
+    menuItemStatus?: (mi: Command) => number;
+    executeCommand: (cmdId: number, arg: any) => void;
   }
-  let { menuDef: menuDef, pos, menuItemStatus = undefined, onmenucmd }: Props = $props();
+  let { menuDef, pos, menuItemStatus = undefined, executeCommand }: Props = $props();
 
-  function menuItemStatusDefault(mid: MenuItemDef): number {
+  function menuItemStatusDefault(mid: Command): number {
     return kMenuStatusNormal;
   }
 
@@ -196,7 +206,7 @@
     if (!mi || mi.cmdId <= 0) {
       return;
     }
-    onmenucmd(mi.cmdId);
+    executeCommand(mi.cmdId, mi.arg);
     ev.stopPropagation();
   }
 
@@ -307,7 +317,7 @@
       if (found) {
         ev.preventDefault();
         ev.stopPropagation();
-        onmenucmd(found.cmdId);
+        executeCommand(found.cmdId, found.arg);
       }
       return;
     }

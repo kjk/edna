@@ -3,17 +3,18 @@
   import { extractShortcut } from "../keys";
   import { findMatchingItems, hilightText, isDev, len, makeHilightRegExp, splitMax, trimPrefix } from "../util";
   import ListBox from "./ListBox.svelte";
-  import { type MenuItemDef } from "./Menu.svelte";
+  import { getCommandArg, type Command } from "./Menu.svelte";
 
   interface Props {
-    executeCommand: (id: number) => void;
+    executeCommand: (cmdId: number, arg: any) => void;
     switchToNoteSelector: () => void;
-    commandsDef: MenuItemDef[];
+    commandsDef: Command[];
   }
   let { executeCommand, switchToNoteSelector, commandsDef }: Props = $props();
 
   interface Item {
     key: number;
+    cmdArg: any;
     name: string;
     nameLC: string;
     shortcut: string;
@@ -59,6 +60,7 @@
       // console.log(`i: ${i}, name: ${name} id: ${id}`);
       let item: Item = {
         key: id,
+        cmdArg: getCommandArg(cmd),
         name: name,
         nameLC: name.toLowerCase(),
         shortcut: shortcut,
@@ -97,7 +99,7 @@
 
   function emitExecuteCommand(item: Item) {
     // console.log("emitOpenNote", item);
-    executeCommand(item.key);
+    executeCommand(item.key, item.cmdArg);
   }
 
   let listboxComp: ListBox;

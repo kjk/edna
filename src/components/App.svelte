@@ -141,7 +141,7 @@
     kMenuStatusNormal,
     kMenuStatusRemoved,
   } from "./Menu.svelte";
-  import type { MenuDef, MenuItemDef } from "./Menu.svelte";
+  import type { Command, MenuDef } from "./Menu.svelte";
   import ModalMessage, { clearModalMessage, modalMessageState, showModalMessageHTML } from "./ModalMessage.svelte";
   import Editor from "./MultiBlockEditor.svelte";
   import NoteSelector from "./NoteSelector.svelte";
@@ -983,7 +983,7 @@
   const kCmdAskAI = nmid();
   const kCmdTestErrorTracking = nmid();
 
-  function buildStorageMenu(): MenuItemDef[] {
+  function buildStorageMenu(): Command[] {
     let dh = getStorageFS();
     let currStorage = "Current store: browser (local storage)";
     if (dh) {
@@ -1001,7 +1001,7 @@
     ];
   }
 
-  function buildEncryptMenu(): MenuItemDef[] {
+  function buildEncryptMenu(): Command[] {
     return [
       ["Encrypt all notes", kCmdEncryptNotes],
       ["Decrypt all notes", kCmdDecryptNotes],
@@ -1009,8 +1009,8 @@
     ];
   }
 
-  function buildHelpMenu(): MenuItemDef[] {
-    const menuHelp: MenuItemDef[] = [
+  function buildHelpMenu(): Command[] {
+    const menuHelp: Command[] = [
       ["Show help", kCmdShowHelp],
       ["Show help as note", kCmdShowHelpAsNote],
       ["Release notes", kCmdShowReleaseNotes],
@@ -1031,7 +1031,7 @@
       starAction = "Remove from favorites";
     }
 
-    const menuNote: MenuItemDef[] = [
+    const menuNote: Command[] = [
       ["Close tab", kCmdCloseCurrentTab],
       ["Rename", kCmdRenameCurrentNote],
       [starAction, kCmdNoteToggleStarred],
@@ -1041,7 +1041,7 @@
       ["Export to file", kCmdExportCurrentNote],
     ];
 
-    const menuBlock: MenuItemDef[] = [
+    const menuBlock: Command[] = [
       ["Go To\tMod + B", kCmdGoToBlock],
       ["Add after current\tMod + Enter", kCmdNewBlockAfterCurrent],
       ["Add before current\tAlt + Enter", kCmdNewBlockBeforeCurrent],
@@ -1063,15 +1063,15 @@
             ["Toggle block fold\tMod + Alt + .", kCmdToggleBlockFold],
             ["Fold block\tMod + Alt + [", kCmdFoldBlock],
             ["Unfold block\tMod + Alt + ]", kCmdUnfoldBlock],
-          ] as MenuItemDef[])
+          ] as Command[])
         : ([
             ["Toggle block fold\tCtrl + Alt + .", kCmdToggleBlockFold],
             ["Fold block\tCtrl + Alt + [", kCmdFoldBlock],
             ["Unfold block\tCtrl + Alt + ]", kCmdUnfoldBlock],
-          ] as MenuItemDef[])),
+          ] as Command[])),
     ];
 
-    const menuRun: MenuItemDef[] = [
+    const menuRun: Command[] = [
       ["Smart Run\tMod + E", kCmdSmartRun],
       ["Run this block", kCmdRunBlock],
       ["Run this block with another block", kCmdRunBlockWithAnotherBlock],
@@ -1159,7 +1159,7 @@
     "Un-archive note",
   ];
 
-  const commandPaletteAdditions: MenuItemDef[] = [
+  const commandPaletteAdditions: Command[] = [
     ["Test error tracking", kCmdTestErrorTracking],
     ["Create New Scratch Note", kCmdCreateScratchNote],
     // ["Create New Note", kCmdCreateNewNote],
@@ -1198,7 +1198,7 @@
         ]),
   ];
 
-  function menuItemStatus(mi: MenuItemDef): number {
+  function menuItemStatus(mi: Command): number {
     let mid = mi[1] as number;
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
@@ -1340,9 +1340,16 @@
     openSearchPanel(view);
   }
 
-  async function onmenucmd(cmdId: number) {
+  async function executeCommand(cmdId: number, arg: any) {
     // console.log("cmd:", cmdId);
     appState.showingContextMenu = false;
+    appState.showingCommandPalette = false;
+
+    if (typeof arg == "function") {
+      await arg();
+      return;
+    }
+
     // lazy — only call when a branch actually needs the editor
     let view: EditorView;
     let ednaEditor: MultiBlockEditor;
@@ -1618,9 +1625,9 @@
     return name || "";
   }
 
-  function buildCommandsDef(): MenuItemDef[] {
-    let a: MenuItemDef[] = [];
-    function addMenuItems(items: MenuItemDef[]) {
+  function buildCommandsDef(): Command[] {
+    let a: Command[] = [];
+    function addMenuItems(items: Command[]) {
       for (let mi of items) {
         // console.log(mi);
         let name = mi[0];
@@ -1643,7 +1650,7 @@
           continue;
         }
         name = commandNameOverride(id, name);
-        let el: MenuItemDef = [name, id];
+        let el: Command = [name, id];
         a.push(el);
       }
     }
@@ -1652,7 +1659,7 @@
     return a;
   }
 
-  let commandsDef: MenuItemDef[] = $state([]);
+  let commandsDef: Command[] = $state([]);
 
   function buildCommandPaletteDef() {
     commandsDef = buildCommandsDef();
@@ -1710,12 +1717,6 @@
   function openCommandPalette() {
     buildCommandPaletteDef();
     appState.showingCommandPalette = true;
-  }
-
-  async function executeCommand(cmdId: number) {
-    // console.log("executeCommand:", cmdId);
-    appState.showingCommandPalette = false;
-    onmenucmd(cmdId);
   }
 
   function getEditorComp(): Editor {
@@ -2165,7 +2166,7 @@
       {closeTab}
       {openNoteSelector}
       {menuItemStatus}
-      {onmenucmd}
+      {executeCommand}
       {buildMenuDef}
     />
   {:else}
@@ -2191,7 +2192,7 @@
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav openNote={onOpenNote} {closeTab} {openNoteSelector} {menuItemStatus} {onmenucmd} {buildMenuDef} />
+  <TopNav openNote={onOpenNote} {closeTab} {openNoteSelector} {menuItemStatus} {executeCommand} {buildMenuDef} />
 {/if}
 {#if !isTabHome(settings.currentTab)}
   <StatusBar
@@ -2301,7 +2302,7 @@
 
 {#if appState.showingContextMenu}
   <Overlay onclose={closeDialogs}>
-    <Menu {menuItemStatus} {onmenucmd} menuDef={contextMenuDef} pos={contextMenuPos} />
+    <Menu {menuItemStatus} {executeCommand} menuDef={contextMenuDef} pos={contextMenuPos} />
   </Overlay>
 {/if}
 

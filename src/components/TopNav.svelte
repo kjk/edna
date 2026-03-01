@@ -17,7 +17,7 @@
     IconTablerPlus,
     IconTablerX,
   } from "./Icons.svelte";
-  import Menu, { type MenuDef, type MenuItemDef } from "./Menu.svelte";
+  import Menu, { type Command, type MenuDef } from "./Menu.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
   interface Props {
@@ -26,8 +26,8 @@
     closeTab: (name: string) => void;
     openNoteSelector: () => void;
     buildMenuDef: () => MenuDef;
-    menuItemStatus?: (mi: MenuItemDef) => number;
-    onmenucmd: (cmd: number) => void;
+    menuItemStatus?: (mi: Command) => number;
+    executeCommand: (cmdId: number, arg: any) => void;
   }
   let {
     class: klass = "",
@@ -36,7 +36,7 @@
     openNoteSelector,
     buildMenuDef,
     menuItemStatus,
-    onmenucmd,
+    executeCommand,
   }: Props = $props();
 
   let altChar = getAltChar();
@@ -116,10 +116,10 @@
 
   let shwingMenu = $state(false);
   let noFocusEditorOnMenuOut = false;
-  function myOnMenuCmd(cmdid: number) {
+  function myExecuteCommand(cmdid: number) {
     noFocusEditorOnMenuOut = true;
     shwingMenu = false;
-    onmenucmd(cmdid);
+    executeCommand(cmdid, undefined);
   }
 
   function noteCls(name: string) {
@@ -161,7 +161,7 @@
     {@render IconMenu()}
     {#if shwingMenu}
       {@const menuDef = buildMenuDef()}
-      <Menu {menuItemStatus} onmenucmd={myOnMenuCmd} {menuDef} pos={null} />
+      <Menu {menuItemStatus} executeCommand={myExecuteCommand} {menuDef} pos={null} />
     {/if}
   </button>
 
