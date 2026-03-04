@@ -234,22 +234,17 @@ func loadHandler(w http.ResponseWriter, r *http.Request) {
 
 func handleGoPlayground(w http.ResponseWriter, r *http.Request) {
 	uri := r.URL.Path
-	call := strings.TrimPrefix(uri, "/api/goplay/")
-	if call == "" {
-		logErrorf("/api/goplay/ has no name\n")
-		return
-	}
-	switch call {
-	case "compile":
+	switch uri {
+	case "/api/goplay/compile":
 		compileHandler(w, r)
 		return
-	case "share":
+	case "/api/goplay/share":
 		shareHandler(w, r)
 		return
-	case "load":
+	case "/api/goplay/load":
 		loadHandler(w, r)
 		return
-	case "fmt":
+	case "/api/goplay/fmt":
 		fmtHandler(w, r)
 		return
 	}
