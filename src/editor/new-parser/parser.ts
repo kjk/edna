@@ -104,7 +104,8 @@ class MultiBlockParse implements PartialParse {
   constructor(
     private input: Input,
     private fragments: readonly TreeFragment[],
-    private ranges: readonly { from: number; to: number }[]
+    private ranges: readonly { from: number; to: number }[],
+    private configuredNodeSet: NodeSet = nodeSet
   ) {}
 
   advance(): Tree | null {
@@ -119,7 +120,7 @@ class MultiBlockParse implements PartialParse {
   private parseDocument(text: string): Tree {
     const delimiters = findDelimiters(text);
 
-    const docType = nodeSet.types[NodeID.Document];
+    const docType = this.configuredNodeSet.types[NodeID.Document];
     if (delimiters.length === 0 || !docType) {
       // No blocks found - create empty document
       return Tree.empty;
@@ -152,10 +153,10 @@ class MultiBlockParse implements PartialParse {
     contentStart: number,
     contentEnd: number
   ): Tree {
-    const langType = nodeSet.types[NodeID.NoteLanguage];
-    const delimType = nodeSet.types[NodeID.NoteDelimiter];
-    const contentType = nodeSet.types[NodeID.NoteContent];
-    const noteType = nodeSet.types[NodeID.Note];
+    const langType = this.configuredNodeSet.types[NodeID.NoteLanguage];
+    const delimType = this.configuredNodeSet.types[NodeID.NoteDelimiter];
+    const contentType = this.configuredNodeSet.types[NodeID.NoteContent];
+    const noteType = this.configuredNodeSet.types[NodeID.Note];
 
     // Build NoteLanguage node
     const langTree = langType
@@ -223,7 +224,7 @@ export class MultiBlockParser extends Parser {
     fragments: readonly TreeFragment[],
     ranges: readonly { from: number; to: number }[]
   ): PartialParse {
-    const baseParse = new MultiBlockParse(input, fragments, ranges);
+    const baseParse = new MultiBlockParse(input, fragments, ranges, this._nodeSet);
 
     // If we have a wrapper (e.g., from parseMixed), apply it
     if (this._wrap) {
