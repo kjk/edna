@@ -4,7 +4,7 @@ import { Compartment, EditorSelection, EditorState, Prec, Transaction } from "@c
 import { keymap as cmKeymap, drawSelection, EditorView, lineNumbers } from "@codemirror/view";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
 import { blockLineNumbers, blockState, noteBlockExtension } from "./block/block";
-import { triggerCurrenciesLoaded } from "./block/commands";
+import { defaultBlockDelimiter, getBlockDelimiter, triggerCurrenciesLoaded } from "./block/commands";
 import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs";
@@ -63,6 +63,7 @@ export class MultiBlockEditor {
   lineNumberCompartment: Compartment;
   foldGutterCompartment: Compartment;
   readOnlyCompartment: Compartment;
+  defaultBlockCompartment: Compartment;
   closeBracketsCompartment: Compartment;
   tabsCompartment: Compartment;
   deselectOnCopy: boolean;
@@ -104,6 +105,7 @@ export class MultiBlockEditor {
     this.lineNumberCompartment = new Compartment();
     this.foldGutterCompartment = new Compartment();
     this.readOnlyCompartment = new Compartment();
+    this.defaultBlockCompartment = new Compartment();
     this.closeBracketsCompartment = new Compartment();
     this.tabsCompartment = new Compartment();
     this.deselectOnCopy = keymap === "emacs";
@@ -140,6 +142,9 @@ export class MultiBlockEditor {
         this.closeBracketsCompartment.of(bracketClosing ? createDynamicCloseBracketsExtension() : []),
 
         this.readOnlyCompartment.of([]),
+        this.defaultBlockCompartment.of(
+          defaultBlockDelimiter.of(getBlockDelimiter(this.defaultBlockToken, this.defaultBlockAutoDetect)),
+        ),
 
         this.themeCompartment.of(theme === "dark" ? heynoteDark : heynoteLight),
         heynoteBase,
@@ -323,6 +328,12 @@ export class MultiBlockEditor {
   setDefaultBlockLanguage(token: string, autoDetect?: boolean) {
     this.defaultBlockToken = token || "text";
     this.defaultBlockAutoDetect = autoDetect === undefined ? true : autoDetect;
+    // view doesn't exist yet when called from the constructor
+    this.view?.dispatch({
+      effects: this.defaultBlockCompartment.reconfigure(
+        defaultBlockDelimiter.of(getBlockDelimiter(this.defaultBlockToken, this.defaultBlockAutoDetect)),
+      ),
+    });
   }
 
   didLoadCurrencies() {

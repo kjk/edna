@@ -150,7 +150,13 @@ describe("Block creation (browser tests)", () => {
     expect(cursorPos).toBeLessThanOrEqual(newBlocks[0].to);
   });
 
-  // Note: "test custom default block language" from Heynote is skipped because
-  // Edna's block creation commands use hardcoded "text-a" rather than the
-  // editor's defaultBlockToken setting, and the test requires UI settings interaction.
+  it("new blocks use the default block language", async () => {
+    const { editor } = te;
+    editor.setDefaultBlockLanguage("markdown", false);
+    await userEvent.keyboard(keyToKeyboard("Mod+Shift+Enter"));
+    const blocks = editor.getBlocks();
+    expect(blocks.length).toBe(4);
+    expect(blocks[3]!.language).toBe("markdown");
+    expect(blocks[3]!.autoDetect).toBe(false);
+  });
 });

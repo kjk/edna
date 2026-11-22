@@ -1,4 +1,4 @@
-import { EditorSelection, EditorState, SelectionRange, Transaction } from "@codemirror/state";
+import { EditorSelection, EditorState, Facet, SelectionRange, Transaction } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import {
   ADD_NEW_BLOCK,
@@ -27,6 +27,12 @@ export function getBlockDelimiter(defaultToken: string, autoDetect: boolean): st
   return `\n∞∞∞${autoDetect ? defaultToken + "-a" : defaultToken}\n`;
 }
 
+// delimiter for new blocks (including surrounding newlines), configured by
+// MultiBlockEditor.setDefaultBlockLanguage()
+export const defaultBlockDelimiter = Facet.define<string, string>({
+  combine: (values) => (values.length > 0 ? values[values.length - 1]! : getBlockDelimiter("text", true)),
+});
+
 export function insertNewBlockAtCursor({ state, dispatch }: EditorView) {
   if (state.readOnly) return false;
 
@@ -35,7 +41,7 @@ export function insertNewBlockAtCursor({ state, dispatch }: EditorView) {
   if (currentBlock) {
     delimText = `\n∞∞∞${currentBlock.language}${currentBlock.autoDetect ? "-a" : ""}\n`;
   } else {
-    delimText = "\n∞∞∞text-a\n";
+    delimText = state.facet(defaultBlockDelimiter);
   }
   dispatch(state.replaceSelection(delimText), {
     scrollIntoView: true,
@@ -50,7 +56,7 @@ export function addNewBlockBeforeCurrent({ state, dispatch }: EditorView): boole
 
   const block = getActiveNoteBlock(state);
   if (!block) return false;
-  const delimText = "\n∞∞∞text-a\n";
+  const delimText = state.facet(defaultBlockDelimiter);
 
   dispatch(
     state.update(
@@ -81,7 +87,7 @@ export function addNewBlockAfterCurrent({ state, dispatch }: EditorView): boolea
 
   const block = getActiveNoteBlock(state);
   if (!block) return false;
-  let delimText = "\n∞∞∞text-a\n";
+  let delimText = state.facet(defaultBlockDelimiter);
 
   // if current block is not completely empty and cursor is at last
   // line of the block and that line is empty, delete the last line
@@ -93,7 +99,8 @@ export function addNewBlockAfterCurrent({ state, dispatch }: EditorView): boolea
       const main = selection.main;
       if (main.empty && main.from == block.to) {
         if (isEmptyLineAtPosition(state.doc, main.from)) {
-          delimText = "∞∞∞text-a\n";
+          // the empty line provides the newline before the delimiter
+          delimText = delimText.slice(1);
         }
       }
     }
@@ -122,7 +129,7 @@ export function addNewBlockBeforeFirst({ state, dispatch }: EditorView): boolean
 
   const block = getFirstNoteBlock(state);
   if (!block) return false;
-  const delimText = "\n∞∞∞text-a\n";
+  const delimText = state.facet(defaultBlockDelimiter);
 
   dispatch(
     state.update(
@@ -147,7 +154,7 @@ export function addNewBlockAfterLast({ state, dispatch }: EditorView): boolean {
   if (state.readOnly) return false;
   const block = getLastNoteBlock(state);
   if (!block) return false;
-  const delimText = "\n∞∞∞text-a\n";
+  const delimText = state.facet(defaultBlockDelimiter);
 
   dispatch(
     state.update(
