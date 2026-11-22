@@ -521,6 +521,8 @@ to state machines). Ordered by impact.
   a response without a base / rates (kept stale data instead) and drops invalid rates (0 gave
   a unit worth Infinity).
 - **U22.** Math blocks: evaluation starts at the block start, not the viewport start.
+  **Fixed**: lines above the viewport and inside folds are evaluated (without a result widget).
+  **Fixed**: lines above the viewport and inside folds are evaluated (without a result widget).
 
 ## Status
 

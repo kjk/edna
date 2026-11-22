@@ -50,6 +50,23 @@ class MathResult extends WidgetType {
 interface MathParser {
   parser: { evaluate: (s: string) => unknown; get: (s: string) => unknown; set: (s: string, v: unknown) => void };
   prev: unknown;
+  // start of the next line of the block to evaluate
+  next: number;
+}
+
+// evaluates a line, updating prev. Returns the result (undefined if none)
+function evalMathLine(mp: MathParser, text: string): unknown {
+  let result;
+  try {
+    mp.parser.set("prev", mp.prev);
+    result = mp.parser.evaluate(text);
+    if (result !== undefined) {
+      mp.prev = result;
+    }
+  } catch (e) {
+    // suppress any errors
+  }
+  return result;
 }
 
 // is the end of the line inside a folded range? The result widget is placed
@@ -76,28 +93,26 @@ function mathDeco(view: EditorView): DecorationSet {
 
       if (block && block.language == "math") {
         // get math.js parser and cache it for this block
-        let cached = mathParsers.get(block);
-        let parser = cached?.parser;
-        let prev = cached?.prev;
-        if (!parser) {
-          parser = (window as unknown as { math: { parser: () => MathParser["parser"] } }).math.parser();
-          mathParsers.set(block, { parser, prev });
+        let mp = mathParsers.get(block);
+        if (!mp) {
+          let parser = (window as unknown as { math: { parser: () => MathParser["parser"] } }).math.parser();
+          mp = { parser, prev: undefined, next: block.contentFrom };
+          mathParsers.set(block, mp);
         }
+        let parser = mp.parser;
 
-        // evaluate math line
-        let result;
-        try {
-          parser.set("prev", prev);
-          result = parser.evaluate(line.text);
-          if (result !== undefined) {
-            mathParsers.set(block, { parser, prev: result });
-          }
-        } catch (e) {
-          // suppress any errors
+        // lines are evaluated in order from the start of the block: lines above
+        // the viewport or inside a fold aren't visible but can define variables
+        // and prev (U22)
+        while (mp.next < line.from) {
+          let l = view.state.doc.lineAt(mp.next);
+          evalMathLine(mp, l.text);
+          mp.next = l.to + 1;
         }
+        let result = evalMathLine(mp, line.text);
+        mp.next = line.to + 1;
 
         // if we got a result from math.js, add the result decoration
-        // note: lines are still evaluated when folded because of prev variable
         if (result !== undefined && !isLineEndFolded(view, line.to)) {
           let format = parser.get("format");
 

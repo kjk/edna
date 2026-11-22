@@ -107,4 +107,15 @@ describe("Math mode (browser tests)", () => {
   // Note: "each row of math blocks are processed even if outside visible ranges" test
   // is skipped because it requires a large document with 200+ rows and PageUp/PageDown
   // scrolling behavior that is difficult to test reliably in vitest browser mode.
+
+  it("variables defined above the viewport are used (U22)", async () => {
+    const filler = Array(300).fill("1").join("\n");
+    te = createEditor(`\n\u221E\u221E\u221Emath\nxyz = 21\n${filler}\nxyz * 2`);
+    const view = te.editor.view;
+    view.dom.style.height = "200px";
+    view.requestMeasure();
+    view.dispatch({ selection: { anchor: view.state.doc.length }, scrollIntoView: true });
+    await expect.poll(() => view.visibleRanges[0]?.from ?? 0).toBeGreaterThan(20);
+    await expect.poll(() => getMathResults()).toContain("42");
+  });
 });
