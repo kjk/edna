@@ -2,9 +2,30 @@ import { EditorSelection, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import type { MultiBlockEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
-import { delimiterRegexGlobal } from "./new-parser/node-types";
+import { delimiterRegexGlobal, parseDelimiterLine } from "./new-parser/node-types";
 
 const blockSeparatorRegex = delimiterRegexGlobal();
+
+function isDelimiterLine(state: EditorState, lineNo: number): boolean {
+  if (lineNo < 1 || lineNo > state.doc.lines) return false;
+  return parseDelimiterLine(state.doc.line(lineNo).text) !== null;
+}
+
+// range removed when cutting line lineNo without a selection: the line and a
+// line break. The line break that starts the next block's delimiter must stay,
+// otherwise the next block merges into this one (U10): then the line break
+// before the line is removed, unless that ends a delimiter (the line is the
+// only line of the block, which becomes empty)
+function wholeLineCutRange(state: EditorState, lineNo: number): { from: number; to: number } {
+  let line = state.doc.line(lineNo);
+  if (!isDelimiterLine(state, lineNo + 1)) {
+    return { from: line.from, to: Math.min(line.to + 1, state.doc.length) };
+  }
+  if (lineNo > 1 && !isDelimiterLine(state, lineNo - 1)) {
+    return { from: line.from - 1, to: line.to };
+  }
+  return { from: line.from, to: line.to };
+}
 
 // ranges are what gets deleted on cut
 function copiedRange(state: EditorState): { text: string; ranges: { from: number; to: number }[] } {
@@ -25,8 +46,7 @@ function copiedRange(state: EditorState): { text: string; ranges: { from: number
         const lineContent = state.sliceDoc(line.from, line.to);
         if (!copiedLines.includes(line.from)) {
           content.push(lineContent);
-          // cut removes the whole line, including the line break
-          ranges.push({ from: line.from, to: Math.min(line.to + 1, state.doc.length) });
+          ranges.push(wholeLineCutRange(state, line.number));
           copiedLines.push(line.from);
         }
       }

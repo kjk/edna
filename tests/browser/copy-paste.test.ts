@@ -32,4 +32,22 @@ describe("Cut", () => {
 
     expect(getBlockContent(te.editor, 0)).toBe("line 1\n 2");
   });
+
+  // cutting the last line of a block keeps the next block's delimiter intact (U10)
+  for (let [doc, at, want] of [
+    ["\n∞∞∞text\nonly\n∞∞∞markdown\nx", "only", ["", "x"]],
+    ["\n∞∞∞text\na\nlast\n∞∞∞markdown\nx", "last", ["a", "x"]],
+    ["\n∞∞∞text\n\n∞∞∞markdown\nx", "", ["", "x"]],
+  ] as [string, string, string[]][]) {
+    it(`cut line '${at}' before a delimiter doesn't merge blocks`, () => {
+      te = createEditor(doc);
+      const view = te.editor.view;
+      const pos = at ? doc.indexOf(at) : doc.indexOf("\n\n") + 1;
+      view.dispatch({ selection: EditorSelection.cursor(pos) });
+      cutCommand(te.editor)(view);
+      expect(te.editor.getBlocks().length).toBe(2);
+      expect(getBlockContent(te.editor, 0)).toBe(want[0]);
+      expect(getBlockContent(te.editor, 1)).toBe(want[1]);
+    });
+  }
 });

@@ -482,7 +482,8 @@ to state machines). Ordered by impact.
   with the real grammar; empty notes get a header.
 - **U10. Adjacent delimiters are separated by a newline.** Cut-line (Mod-X without selection)
   cut `line.to + 1`, eating the next delimiter's leading `\n`; the next block merged and its
-  delimiter became visible text.
+  delimiter became visible text. **Fixed**: before a delimiter the preceding line break is cut
+  instead (`wholeLineCutRange`).
 - **U11. The document doesn't change while formatting awaits.** `formatBlockContent` used
   offsets read before awaiting prettier / the Go formatter.
 - **U12. Every block language is known.** The delimiter grammar accepts any `[a-z]+`;
