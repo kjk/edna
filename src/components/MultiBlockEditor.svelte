@@ -12,7 +12,7 @@
   import { getSettings, resolveTheme } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
   import Find from "./Find.svelte";
-  import { showError } from "./Toaster.svelte";
+  import { showError, showWarning } from "./Toaster.svelte";
 
   function createFindPanel(view: EditorView) {
     const dom = document.createElement("div");
@@ -179,7 +179,21 @@
       if (storageChanged()) {
         return Promise.reject(new Error(`notes storage changed, can't save '${name}'`));
       }
-      return saveNote(name, content);
+      // base: what we loaded / last saved, to detect changes made elsewhere
+      let gen = editor.contentGen;
+      return saveNote(name, content, editor.diskContent).then(async (res) => {
+        if (!res.conflictName) {
+          return;
+        }
+        showWarning(
+          `Note '${name}' was changed in another tab or window. Your version was saved as '${res.conflictName}'.`,
+          0,
+        );
+        if (loader.current === name && editor.contentGen === gen) {
+          // continue editing the copy so that further saves don't overwrite the other version
+          await openNote(res.conflictName, true);
+        }
+      });
     }
 
     function setIsDirty(dirty: boolean) {
@@ -261,6 +275,32 @@
     } else {
       ce.setAttribute("spellcheck", "false");
     }
+  }
+
+  // if the note was changed elsewhere (e.g. in another Edna tab) and has no
+  // unsaved edits here, show the new content (issue 15g)
+  export async function reloadIfChangedElsewhere() {
+    let name = loader?.current;
+    if (!name || editor.getContent() !== editor.diskContent) {
+      return;
+    }
+    let gen = editor.contentGen;
+    let stored: string | undefined;
+    try {
+      stored = await loadNote(name);
+    } catch {
+      return;
+    }
+    if (stored === undefined || stored === editor.diskContent) {
+      return;
+    }
+    if (destroyed || gen !== editor.contentGen || loader.current !== name || editor.getContent() !== editor.diskContent) {
+      // changed while reading
+      return;
+    }
+    let selection = editor.getSelectionJSON();
+    editor.setContent(stored);
+    editor.setSelection(selection);
   }
 
   // saves current note and its selection / folds

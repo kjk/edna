@@ -8,6 +8,7 @@ import {
   loadNote,
   loadNoteNames,
   renameNote,
+  saveNote,
 } from "../../src/notes";
 import { getSettings } from "../../src/settings.svelte";
 
@@ -43,5 +44,19 @@ describe("notes (localStorage)", () => {
     await renameNote("Foo", "foo", blockHdrMarkdown + "content");
     expect(appState.allNotes).toEqual(["foo"]);
     expect(await loadNote("foo")).toContain("content");
+  });
+
+  it("saving doesn't overwrite a note changed elsewhere (e.g. another tab)", async () => {
+    const a = blockHdrMarkdown + "version A";
+    await createNoteWithName("x", a);
+    // no change elsewhere: saved normally
+    expect(await saveNote("x", a + " edited", a)).toEqual({});
+    const mine = a + " edited";
+    // another tab saves its version
+    localStorage.setItem("note:x", blockHdrMarkdown + "other tab");
+    const res = await saveNote("x", mine + " more", mine);
+    expect(res.conflictName).toBe("x-conflict");
+    expect(await loadNote("x")).toBe(blockHdrMarkdown + "other tab");
+    expect(await loadNote("x-conflict")).toBe(mine + " more");
   });
 });

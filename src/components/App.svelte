@@ -337,6 +337,12 @@
     };
     window.addEventListener("popstate", onPopState);
 
+    // the note might have been changed in another tab / window
+    const onWindowFocus = () => {
+      editorComp?.reloadIfChangedElsewhere();
+    };
+    window.addEventListener("focus", onWindowFocus);
+
     logAppOpen();
 
     startInstanceDetection();
@@ -353,6 +359,7 @@
       window.removeEventListener("keydown", onKeyDown, { capture: true });
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("focus", onWindowFocus);
       // App's functions must not be used after it's unmounted
       clearGlobalFuncs(gf);
     };

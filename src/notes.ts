@@ -505,19 +505,56 @@ function pickUniqueName(base: string, existingNames: string[]): string {
 }
 
 // writes to the same note are serialized so that they complete in order
-let saveQueues = new Map<string, Promise<void>>();
+let saveQueues = new Map<string, Promise<unknown>>();
+
+export interface SaveResult {
+  // set if the note was changed elsewhere (e.g. in another Edna tab) and
+  // content was saved as this new note instead (issue 15g)
+  conflictName?: string;
+}
+
+// true if the stored note differs from both base (what the caller loaded /
+// last saved) and content (what it wants to save): someone else changed it
+async function isChangedElsewhere(name: string, content: string, base: string): Promise<boolean> {
+  let stored: string | undefined;
+  try {
+    stored = await loadNote(name);
+  } catch (e) {
+    // can't read it (e.g. deleted): nothing to protect
+    return false;
+  }
+  if (stored === undefined) {
+    return false;
+  }
+  return stored !== fixUpNoteContent(base) && stored !== fixUpNoteContent(content);
+}
 
 // Saves note content. Throws if the note couldn't be saved.
+// If base is given (the content the caller loaded or last saved) and the
+// stored note was changed elsewhere since, it's not overwritten: content is
+// saved as a new note (see SaveResult).
 // Note: storage location is determined synchronously, when called.
-export function saveNote(name: string, content: string): Promise<void> {
+export function saveNote(name: string, content: string, base?: string): Promise<SaveResult> {
   if (isSystemNoteName(name)) {
     console.log("skipped saving system note", name);
-    return Promise.resolve();
+    return Promise.resolve({});
   }
   let openedNote = getOpenedNote(name);
   let dh = getStorageFS();
   let prev = saveQueues.get(name) || Promise.resolve();
-  let p = prev.catch(() => {}).then(() => saveNoteNow(name, content, openedNote, dh));
+  // note: the check and the write run in the queue so they're not interleaved
+  // with other saves of this note
+  let p = prev
+    .catch(() => {})
+    .then(async (): Promise<SaveResult> => {
+      if (base !== undefined && (await isChangedElsewhere(name, content, base))) {
+        let conflictName = pickUniqueName(name + "-conflict", appState.allNotes);
+        await createNoteWithName(conflictName, content);
+        return { conflictName };
+      }
+      await saveNoteNow(name, content, openedNote, dh);
+      return {};
+    });
   saveQueues.set(name, p);
   p.finally(() => {
     if (saveQueues.get(name) === p) {

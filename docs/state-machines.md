@@ -179,6 +179,8 @@ Invariants:
 - **D-I1** `diskContent` is what was last successfully written for E.
 - **D-I2** `isDirty` ⇔ editor content ≠ `diskContent`.
 - **D-I3** a failed save keeps `isDirty` and is retried by the next save.
+- **D-I4** a save never overwrites changes made to the note elsewhere (another tab) since
+  the editor loaded / last saved it.
 
 | From | Event | To | Code |
 |---|---|---|---|
@@ -186,6 +188,8 @@ Invariants:
 | dirty | debounce fires / Ctrl+S / switch note / close tab / destroy | saving | `editor.save` |
 | saving | write ok | `diskContent` = written content; dirty iff content changed meanwhile | `editor.save` |
 | saving | write failed | dirty (retried by next save) | `editor.save` |
+| saving | stored note changed elsewhere since load / last save | content saved as `<name>-conflict`, editor switches to it | `saveNote` (`base`), `MultiBlockEditor` |
+| clean | window focus, stored note changed elsewhere | reload content | `MultiBlockEditor reloadIfChangedElsewhere` |
 
 ## M7. Tabs
 
@@ -411,7 +415,11 @@ other tabs are open.
   mounted, or after it was unmounted) had no UI: boot failed or hung. **Fixed**: without `App`
   `getPasswordFromUser` mounts a standalone dialog (`PasswordPrompt.svelte`); `App` clears its
   global functions when unmounted (`tests/browser/password.test.ts`).
-- 15g. Two Edna tabs editing the same note: last writer won.
+- 15g. Two Edna tabs editing the same note: last writer won. **Fixed**: a save checks that the stored note still matches
+  what the editor loaded / last saved; if it was changed elsewhere the edits are saved as
+  `<name>-conflict` (and the editor switches to it) instead of overwriting. A note without
+  local edits is reloaded when the window gets focus (`tests/browser/notes.test.ts`,
+  `tests/browser/app.test.ts`).
 
 ## Status
 
@@ -429,6 +437,6 @@ other tabs are open.
 | 10 Tabs / navigation | fixed (10a, 10b); `tests/browser/app.test.ts` covers 10b (passes on old code too: the old timer happened to be long enough in localStorage mode) |
 | 11 Find in notes | fixed (11a–11c), `tests/browser/app.test.ts` (11a) |
 | 12 Ask AI | fixed (12a–12c), `tests/browser/askai.test.ts` |
-| 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent editing of the same note in two tabs is still last-writer-wins |
+| 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent edits of the same note: see 15g |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
-| 15 Previously open items | 15a–15f fixed; 15g open |
+| 15 Previously open items | fixed (15a–15g) |

@@ -198,4 +198,22 @@ describe("app", () => {
     await expect.poll(() => appState.currentNoteName).toBe("daily journal");
     expect(settings.tabs.length).toBe(nTabs);
   });
+
+  it("note changed in another tab: reloaded on focus if no edits, else edits saved as a copy", async () => {
+    await openWithShortcut(1, "scratch");
+    const view = () => EditorView.findFromDOM(document.querySelector(".cm-editor") as HTMLElement)!;
+    // another tab changes the note; we have no edits
+    localStorage.setItem("note:scratch", "\n\u221E\u221E\u221Emarkdown\nchanged in other tab\n");
+    window.dispatchEvent(new Event("focus"));
+    await expect.poll(() => view().state.doc.toString()).toContain("changed in other tab");
+
+    // another tab changes it again while we have edits
+    view().dispatch({ changes: { from: view().state.doc.length, insert: "my edit" }, userEvent: "input" });
+    localStorage.setItem("note:scratch", "\n\u221E\u221E\u221Emarkdown\nsecond change in other tab\n");
+    const isMac = /Mac/.test(navigator.platform);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "s", ctrlKey: !isMac, metaKey: isMac, bubbles: true }));
+    await expect.poll(() => appState.currentNoteName).toBe("scratch-conflict");
+    expect(await loadNote("scratch")).toContain("second change in other tab");
+    expect(await loadNote("scratch-conflict")).toContain("my edit");
+  });
 });
