@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine3.21
+FROM golang:1.26-alpine
 
 RUN set -eux \
   & apk add \
