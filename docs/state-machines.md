@@ -155,8 +155,8 @@ Five pieces of state must agree:
 Invariants:
 - **O-I1** E is always the note whose content is in the editor (C). E changes only together
   with `setContent()`.
-- **O-I2** only the most recently requested load is applied; earlier loads that finish
-  later are discarded.
+- **O-I2** only the most recently *requested* note is shown; earlier requests that finish
+  (or start loading) later are discarded.
 - **O-I3** a failed load leaves the editor on the previous note (E, C, T unchanged).
 - **O-I4** selection / folds are saved to E only after they were restored for E.
 
@@ -277,6 +277,10 @@ Breaks O-I1..O-I4.
 - 1f. Going Home during a load: `didLoadNote` called on an unmounted editor (TypeError).
 - 1g. Rename with a pending auto-save: the save could fire during the rename and re-create
   the old note (needs a slow file system).
+- 1h. (found after the first fix, when checking in the browser) quickly switching notes (Alt+2,
+  Alt+1) could end on the earlier note: the "latest load" was decided when the load started,
+  after the save of the current note, which can take longer for the first request. Now the
+  request is numbered when the note is requested (`NoteLoader.newRequest`).
 
 ### Issue 2 — Save bookkeeping loses edits
 Breaks D-I1..D-I3.
@@ -402,7 +406,7 @@ Lower impact or suspected; not fixed yet:
 
 | Issue | Status |
 |---|---|
-| 1 Note switching | fixed (1a–1g): `NoteLoader` (`editor/note-loader.ts`), `tests/browser/note-loader.test.ts` |
+| 1 Note switching | fixed (1a–1h): `NoteLoader` (`editor/note-loader.ts`), `tests/browser/note-loader.test.ts` |
 | 2 Save bookkeeping | fixed (2a–2c), `tests/browser/save.test.ts` |
 | 3 Create / move overwrites | fixed (3a–3c), `tests/browser/notes.test.ts` |
 | 4 Dialog invariants | fixed (4a–4e), `tests/browser/app.test.ts` (4a, 4b, 4d) |

@@ -26,14 +26,27 @@ export class NoteLoader {
   constructor(private opts: NoteLoaderOptions) {}
 
   /**
+   * Starts a request to show a note. Call before any awaits done on behalf of
+   * the request (e.g. saving the current note) and pass the result to load():
+   * the latest *requested* note wins, even if an earlier request reaches
+   * load() later.
+   */
+  newRequest(): number {
+    return ++this.gen;
+  }
+
+  /**
    * Loads note `name` into the editor. didShow() is called in the next
-   * animation frame unless another load was started in the meantime.
+   * animation frame unless another load was requested in the meantime.
    * If saveCurrent, edits made to the current note while loading are saved
    * to the current note before switching.
    */
-  async load(name: string, saveCurrent: boolean, didShow: () => void): Promise<LoadResult> {
+  async load(name: string, saveCurrent: boolean, didShow: () => void, request?: number): Promise<LoadResult> {
     const { editor } = this.opts;
-    const gen = ++this.gen;
+    const gen = request ?? ++this.gen;
+    if (gen !== this.gen) {
+      return "superseded";
+    }
     let content: string;
     try {
       content = (await this.opts.loadNote(name)) || "";

@@ -283,6 +283,7 @@
   // returns true if the note was loaded and shown
   export async function openNote(name: string, skipSave = false, noPushHistory = false, replaceTab = false) {
     console.log("openNote:", name);
+    let request = loader.newRequest();
     if (!skipSave) {
       try {
         await editor.save();
@@ -293,10 +294,15 @@
       }
       await saveEditorState();
     }
-    let res = await loader.load(name, !skipSave, () => {
-      restoreEditorState(name);
-      didLoadNote(name, noPushHistory, replaceTab);
-    });
+    let res = await loader.load(
+      name,
+      !skipSave,
+      () => {
+        restoreEditorState(name);
+        didLoadNote(name, noPushHistory, replaceTab);
+      },
+      request,
+    );
     return res === "shown";
   }
 </script>

@@ -161,4 +161,16 @@ describe("app", () => {
     expect(appState.allNotes).not.toContain("inbox");
     expect(await loadNote("inbox-renamed")).toContain("edit-before-rename");
   }, 10000);
+
+  it("switching notes quickly ends on the last requested note", async () => {
+    await openWithShortcut(2, "daily journal");
+    // move the cursor so that switching away saves the selection (slower path)
+    const view = EditorView.findFromDOM(document.querySelector(".cm-editor") as HTMLElement)!;
+    view.dispatch({ selection: { anchor: Math.min(5, view.state.doc.length) } });
+    altDigit(3);
+    altDigit(1);
+    await new Promise((r) => setTimeout(r, 500));
+    expect(appState.currentNoteName).toBe("scratch");
+    expect(document.title).toBe("scratch");
+  });
 });

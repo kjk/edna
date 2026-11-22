@@ -91,4 +91,17 @@ describe("NoteLoader", () => {
     await pC;
     await expect.poll(() => shown).toEqual(["C"]);
   });
+
+  it("latest requested note wins even if an earlier request starts loading later", async () => {
+    const { loader, pending, editor } = setup();
+    const reqB = loader.newRequest();
+    const reqC = loader.newRequest();
+    // C reaches load() first (e.g. B's request was slower saving the current note)
+    const pC = loader.load("C", true, () => {}, reqC);
+    pending.get("C")!.resolve(doc("C"));
+    expect(await pC).toBe("shown");
+    expect(await loader.load("B", true, () => {}, reqB)).toBe("superseded");
+    expect(editor.getContent()).toBe(doc("C"));
+    expect(loader.current).toBe("C");
+  });
 });
