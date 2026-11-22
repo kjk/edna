@@ -24,7 +24,7 @@ import { heynoteEvent, LANGUAGE_CHANGE } from "../annotation";
 import type { MultiBlockEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
 import type { SimpleRange } from "../types";
-import { firstBlockDelimiterSize, getBlocksFromString, getBlocksFromSyntaxTree } from "./block-parsing";
+import { getBlocksFromString, getBlocksFromSyntaxTree } from "./block-parsing";
 import { mathBlock } from "./math";
 import { emptyBlockSelected } from "./select-all";
 
@@ -315,15 +315,21 @@ const blockLayer = layer({
   class: "heynote-blocks-layer",
 });
 
+// size of the first block's delimiter i.e. content of the first block starts at this position
+function firstBlockDelimiterSize(state: EditorState): number | undefined {
+  return state.field(blockState)[0]?.contentFrom;
+}
+
 const preventFirstBlockFromBeingDeleted = EditorState.changeFilter.of((tr) => {
   //console.log("change filter!", tr)
   const protect = [];
+  const delimSize = firstBlockDelimiterSize(tr.startState);
   if (
     // @ts-ignore
     !tr.annotations.some((a) => a.type === heynoteEvent) &&
-    firstBlockDelimiterSize
+    delimSize
   ) {
-    protect.push(0, firstBlockDelimiterSize);
+    protect.push(0, delimSize);
   }
   // if the transaction is a search and replace, we want to protect all block delimiters
   if (
@@ -346,24 +352,20 @@ const preventFirstBlockFromBeingDeleted = EditorState.changeFilter.of((tr) => {
  * Transaction filter to prevent the selection from being before the first block
  */
 const preventSelectionBeforeFirstBlock = EditorState.transactionFilter.of((tr) => {
-  if (!firstBlockDelimiterSize || tr.annotation(heynoteEvent)) {
+  const sel = tr.selection;
+  if (!sel || tr.annotation(heynoteEvent)) {
     return tr;
   }
-  const delimSize = firstBlockDelimiterSize;
-  tr?.selection?.ranges.forEach((range) => {
-    // change the selection to after the first block if the transaction sets the selection before the first block
-    if (range && range.from < delimSize) {
-      // @ts-ignore
-      range.from = delimSize;
-      //console.log("changing the from selection to", markerSize)
-    }
-    if (range && range.to < delimSize) {
-      // @ts-ignore
-      range.to = delimSize;
-      //console.log("changing the from selection to", markerSize)
-    }
-  });
-  return tr;
+  // selection is in the coordinates of the new document
+  const delimSize = firstBlockDelimiterSize(tr.docChanged ? tr.state : tr.startState);
+  if (!delimSize || !sel.ranges.some((r) => r.from < delimSize)) {
+    return tr;
+  }
+  // move the parts of the selection that are before the first block to its start
+  const ranges = sel.ranges.map((r) =>
+    EditorSelection.range(Math.max(r.anchor, delimSize), Math.max(r.head, delimSize)),
+  );
+  return [tr, { selection: EditorSelection.create(ranges, sel.mainIndex), sequential: true }];
 });
 
 export function getBlockLineFromPos(state: EditorState, pos: number) {

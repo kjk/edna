@@ -130,6 +130,17 @@ describe("Cursor document navigation (browser tests)", () => {
     expect(editor.getCursorPosition()).toBe(blocks[0].contentFrom);
   });
 
+  it("selection starting before first block is clamped to first block content", () => {
+    te = createEditor(threeBlockContent);
+    const view = te.editor.view;
+    const firstContentFrom = te.editor.getBlocks()[0]!.contentFrom;
+    const end = view.state.doc.length;
+    view.dispatch({ selection: { anchor: 0, head: end } });
+    const sel = view.state.selection.main;
+    expect(sel.anchor).toBe(firstContentFrom);
+    expect(sel.head).toBe(end);
+  });
+
   it("cursor navigation works in single block", async () => {
     te = createEditor("\n\u221E\u221E\u221Etext\nSingle block with some content\n");
     const { editor } = te;

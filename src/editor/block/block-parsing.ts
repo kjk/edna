@@ -12,9 +12,6 @@ export interface NoteBlock {
   autoDetect: boolean;
 }
 
-// tracks the size of the first delimiter
-export let firstBlockDelimiterSize: number | undefined;
-
 /**
  * Return a list of blocks from the syntax tree produced by the parser
  * in src/editor/new-parser. There is no "Auto" node, so auto-detect is
@@ -65,7 +62,6 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
     },
     mode: IterMode.IgnoreMounts,
   });
-  firstBlockDelimiterSize = blocks[0]?.contentFrom;
   return blocks;
 }
 
