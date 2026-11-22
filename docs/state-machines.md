@@ -522,7 +522,12 @@ to state machines). Ordered by impact.
   a unit worth Infinity).
 - **U22.** Math blocks: evaluation starts at the block start, not the viewport start.
   **Fixed**: lines above the viewport and inside folds are evaluated (without a result widget).
-  **Fixed**: lines above the viewport and inside folds are evaluated (without a result widget).
+
+### More
+- **U23. Find in notes positions are positions in the editor's document.** The search read
+  saved content (unsaved edits in the open note shifted positions) and, when lower-casing
+  changed the length (`İ`), returned positions in the lower-cased text. **Fixed**: the open
+  note is searched in the editor; positions are mapped back to the original text.
 
 ## Status
 

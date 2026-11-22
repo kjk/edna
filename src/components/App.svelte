@@ -94,6 +94,7 @@
     getStorageFS,
     isNoteArchivable,
     isSystemNoteName,
+    loadNote,
     loadNoteIfExists,
     noteExists,
     pickAnotherDirectory,
@@ -2212,6 +2213,14 @@
     openNote(name);
   }
 
+  // the open note can have unsaved edits: search what's in the editor
+  async function getNoteContentForFind(name: string): Promise<string | undefined> {
+    if (name === noteName && editorComp) {
+      return getEditor().getContent();
+    }
+    return loadNote(name);
+  }
+
   function setCursorPos(pos: number) {
     let view = getEditorView();
     if (!view || pos > view.state.doc.length) {
@@ -2549,7 +2558,7 @@
 
 {#if appState.showingFindInNotes}
   <Overlay blur={true} onclose={closeDialogs}>
-    <FindInNotes openNote={openNoteFromFind}></FindInNotes>
+    <FindInNotes openNote={openNoteFromFind} getNoteContent={getNoteContentForFind}></FindInNotes>
   </Overlay>
 {/if}
 

@@ -6,6 +6,24 @@ export interface NoteMatch {
   pos: number; // position of the match in content
 }
 
+// lower-cases content character by character. map[i] is the position in
+// content of position i in the result (and map[result.length] = content.length)
+function toLowerCaseWithMap(content: string): { s: string; map: number[] } {
+  let parts: string[] = [];
+  let map: number[] = [];
+  for (let i = 0; i < content.length; ) {
+    let ch = String.fromCodePoint(content.codePointAt(i)!);
+    let lc = ch.toLowerCase();
+    for (let k = 0; k < lc.length; k++) {
+      map.push(i);
+    }
+    parts.push(lc);
+    i += ch.length;
+  }
+  map.push(content.length);
+  return { s: parts.join(""), map };
+}
+
 /**
  * Find lines in note content that match all search parts.
  * The first part is searched in the whole content, other parts must be on the
@@ -24,10 +42,14 @@ export function findMatchesInNote(
     return res;
   }
   // when not matching case we search in lower-cased text but show original text.
-  // toLowerCase() can change length for some characters, in which case positions
-  // don't match and we show lower-cased line
-  const s = matchCase ? content : content.toLowerCase();
-  const display = s.length === content.length ? content : s;
+  // toLowerCase() can change length for some characters (e.g. "İ"): then
+  // positions are mapped back to content (U23)
+  let s = matchCase ? content : content.toLowerCase();
+  let map: number[] | undefined;
+  if (s.length !== content.length) {
+    ({ s, map } = toLowerCaseWithMap(content));
+  }
+  const toContentPos = (i: number) => (map ? map[i]! : i);
 
   // must match all other parts on the same line
   function matchesOtherParts(line: string): boolean {
@@ -59,7 +81,8 @@ export function findMatchesInNote(
     }
     const line = s.substring(lineStartIdx, lineEndIdx);
     // block delimiter lines (e.g. ∞∞∞markdown) are not content
-    if (parseDelimiterLine(display.substring(lineStartIdx, lineEndIdx))) {
+    const contentLine = content.substring(toContentPos(lineStartIdx), toContentPos(lineEndIdx));
+    if (parseDelimiterLine(contentLine)) {
       startIdx = lineEndIdx;
       continue;
     }
@@ -71,7 +94,7 @@ export function findMatchesInNote(
     if (!matchesOtherParts(line)) {
       continue;
     }
-    res.push({ line: display.substring(lineStartIdx, lineEndIdx), pos: idx });
+    res.push({ line: contentLine, pos: toContentPos(idx) });
   }
   return res;
 }

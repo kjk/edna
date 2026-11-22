@@ -10,8 +10,11 @@
 
   interface Props {
     openNote: (name: string, pos: number) => void;
+    // content to search; the open note's content can have unsaved edits so
+    // positions in saved content would be off (U23)
+    getNoteContent?: (name: string) => Promise<string | undefined>;
   }
-  let { openNote }: Props = $props();
+  let { openNote, getNoteContent = loadNote }: Props = $props();
 
   let searchTerm = $state("");
   let replaceTerm = $state("");
@@ -67,7 +70,7 @@
       notesToSearch.splice(0, 1);
       let content: string | undefined;
       try {
-        content = await loadNote(noteBeingSearched);
+        content = await getNoteContent(noteBeingSearched);
       } catch (e) {
         // e.g. encrypted note and the user cancelled the password dialog
         console.log(`find in notes: failed to load '${noteBeingSearched}'`, e);

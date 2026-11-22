@@ -43,3 +43,12 @@ test("whole word: first non-whole-word occurrence doesn't hide a later whole wor
   const res = findMatchesInNote("foobar foo\n", ["foo"], true, true);
   expect(res).toEqual([{ line: "foobar foo", pos: 7 }]);
 });
+
+// toLowerCase() makes "İ" 2 characters: positions must still be in content (U23)
+test("positions are in the original content when lower-casing changes length", () => {
+  const content = "\n∞∞∞text\nİİİ abc\nxyz abc";
+  const res = findMatchesInNote(content, ["abc"], false, false);
+  expect(res.map((m) => m.pos)).toEqual([content.indexOf("abc"), content.lastIndexOf("abc")]);
+  expect(res[0]!.line).toBe("İİİ abc");
+  expect(res[1]!.line).toBe("xyz abc");
+});
