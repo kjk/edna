@@ -6,6 +6,21 @@ import { delimiterRegexGlobal, parseDelimiterLine } from "./new-parser/node-type
 
 const blockSeparatorRegex = delimiterRegexGlobal();
 
+// a delimiter line in pasted text (at the start, or after a line break)
+const reDelimiterLineInText = /(^|\n)\u221e\u221e\u221e[a-z]+(?:-a)?(?=\n|$)/g;
+
+/**
+ * Pasted / dropped text must not create blocks (U27): delimiter lines become
+ * empty lines, like when copying in Edna. Text from outside Edna (e.g. a raw
+ * note file) could otherwise add blocks with unknown languages.
+ */
+export function removeDelimitersFromPastedText(text: string): string {
+  if (!text.includes("\u221e\u221e\u221e")) {
+    return text;
+  }
+  return text.replace(reDelimiterLineInText, "$1");
+}
+
 function isDelimiterLine(state: EditorState, lineNo: number): boolean {
   if (lineNo < 1 || lineNo > state.doc.lines) return false;
   return parseDelimiterLine(state.doc.line(lineNo).text) !== null;
@@ -95,10 +110,13 @@ export const heynoteCopyCut = (editor: MultiBlockEditor) => {
     }
   };
 
-  return EditorView.domEventHandlers({
-    copy,
-    cut,
-  });
+  return [
+    EditorView.domEventHandlers({
+      copy,
+      cut,
+    }),
+    EditorView.clipboardInputFilter.of(removeDelimitersFromPastedText),
+  ];
 };
 
 const copyCut = (view: EditorView, cut: boolean, editor: MultiBlockEditor): boolean => {
@@ -135,6 +153,7 @@ const copyCut = (view: EditorView, cut: boolean, editor: MultiBlockEditor): bool
 };
 
 function doPaste(view: EditorView, input: string) {
+  input = removeDelimitersFromPastedText(input);
   let { state } = view,
     changes,
     i = 1,

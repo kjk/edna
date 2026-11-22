@@ -537,6 +537,10 @@ to state machines). Ordered by impact.
 - **U26. The parser and `getBlocksFromString` find the same blocks.** They disagreed on a
   delimiter at position 0 without a leading newline and on text before the first delimiter, so
   the block list changed when parsing finished. **Fixed**: both use `findDelimiters`.
+- **U27. Pasted text doesn't change the block structure.** Copying in Edna replaces delimiters,
+  but text from outside (a raw note file) added blocks, possibly with unknown languages.
+  **Fixed**: delimiter lines in pasted / dropped text become empty lines
+  (`removeDelimitersFromPastedText`, also used by `clipboardInputFilter`).
 
 ## Status
 

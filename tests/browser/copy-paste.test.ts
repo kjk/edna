@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { EditorSelection } from "@codemirror/state";
-import { cutCommand } from "../../src/editor/copy-paste";
+import { cutCommand, removeDelimitersFromPastedText } from "../../src/editor/copy-paste";
 import { cleanup, createEditor, getBlockContent, type TestEditor } from "./utils";
 
 describe("Cut", () => {
@@ -50,4 +50,23 @@ describe("Cut", () => {
       expect(getBlockContent(te.editor, 1)).toBe(want[1]);
     });
   }
+
+  // pasted text doesn't create blocks (U27)
+  it("removeDelimitersFromPastedText", () => {
+    expect(removeDelimitersFromPastedText("a\n∞∞∞js\nb")).toBe("a\n\nb");
+    expect(removeDelimitersFromPastedText("∞∞∞text-a\nb")).toBe("\nb");
+    expect(removeDelimitersFromPastedText("a\n∞∞∞Text\nb")).toBe("a\n∞∞∞Text\nb");
+    expect(removeDelimitersFromPastedText("plain")).toBe("plain");
+  });
+
+  it("pasting a note's raw text doesn't add blocks", () => {
+    te = createEditor("\n∞∞∞text\nhello\n");
+    const view = te.editor.view;
+    view.dispatch({ selection: EditorSelection.cursor(view.state.doc.length) });
+    const dt = new DataTransfer();
+    dt.setData("text/plain", "\n∞∞∞js\nlet x\n∞∞∞markdown\n# hi");
+    view.contentDOM.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
+    expect(view.state.doc.toString()).toContain("let x");
+    expect(te.editor.getBlocks().length).toBe(1);
+  });
 });
