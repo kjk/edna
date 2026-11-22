@@ -8,7 +8,7 @@
   import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
-  import { loadNote, saveNote } from "../notes";
+  import { getStorageFS, loadNote, saveNote } from "../notes";
   import { getSettings, resolveTheme } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
   import Find from "./Find.svelte";
@@ -52,6 +52,14 @@
   // loads notes; loader.current is the note shown in the editor (saves go there)
   let loader: NoteLoader;
   let destroyed = false;
+  // storage the current note was loaded from (undefined: localStorage). If
+  // storage changed (e.g. notes were moved to a directory) we must not save
+  // to the new storage (S-I4)
+  let storageAtLoad: FileSystemDirectoryHandle | undefined;
+
+  function storageChanged(): boolean {
+    return getStorageFS() !== storageAtLoad;
+  }
 
   let editorRef: HTMLElement;
 
@@ -100,7 +108,7 @@
   async function saveEditorState() {
     // don't save state that wasn't restored for this note (O-I4)
     let name = loader?.current;
-    if (!editorStateRestored || !name) {
+    if (!editorStateRestored || !name || storageChanged()) {
       return;
     }
     let meta = getNoteMeta(name, true)!;
@@ -168,6 +176,9 @@
       if (!name) {
         return Promise.reject(new Error("no note loaded"));
       }
+      if (storageChanged()) {
+        return Promise.reject(new Error(`notes storage changed, can't save '${name}'`));
+      }
       return saveNote(name, content);
     }
 
@@ -202,6 +213,7 @@
       loadNote,
       willShow: () => {
         editorStateRestored = false;
+        storageAtLoad = getStorageFS();
       },
       loadFailed: (name, e) => {
         showError(`Failed to load note '${name}': ${e}`);

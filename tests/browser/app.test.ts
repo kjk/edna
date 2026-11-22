@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { appState } from "../../src/appstate.svelte";
+import { dbDelDirHandle } from "../../src/notes";
 
 // Integration tests: boot the whole app (docs/state-machines.md M8 dialogs)
 
@@ -19,6 +20,8 @@ function altDigit(n: number) {
 describe("app", () => {
   beforeAll(async () => {
     localStorage.clear();
+    // other tests might have stored a notes directory
+    await dbDelDirHandle();
     const div = document.createElement("div");
     div.id = "app";
     document.body.appendChild(div);

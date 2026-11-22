@@ -35,6 +35,7 @@ import { getPasswordFromUser, requestFileWritePermission } from "./globals";
 import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import {
   kMetadataName,
+  type Metadata,
   loadNotesMetadata,
   readMetadataFileFS,
   reassignNoteShortcut,
@@ -127,14 +128,13 @@ async function passwordHashDecryptsNotes(dh: FileSystemDirectoryHandle, pwdHash:
 
 // asks the user for a password until it decrypts existing notes (P-I1).
 // throws PasswordCancelledError if the user cancels (P-I2)
-async function askForPasswordHash(msg: string): Promise<string> {
+async function askForPasswordHash(msg: string, dh = getStorageFS()): Promise<string> {
   while (true) {
     let pwd = await getPasswordFromUser(msg);
     if (!pwd) {
       throw new PasswordCancelledError();
     }
     let pwdHash = saltPassword(pwd);
-    let dh = getStorageFS();
     if (!dh || (await passwordHashDecryptsNotes(dh, pwdHash))) {
       rememberPassword(pwd);
       return pwdHash;
@@ -842,36 +842,6 @@ async function renameNoteCaseOnly(
   await loadNoteNames();
 }
 
-async function migrateNote(noteName: string, diskNoteNames: string[], dh: FileSystemDirectoryHandle) {
-  let name = noteName;
-  let noteInfoOnDisk: string | undefined;
-  for (let ni of diskNoteNames) {
-    if (ni === name) {
-      noteInfoOnDisk = ni;
-      break;
-    }
-  }
-  let content = loadNoteLS(noteName) || "";
-  if (!noteInfoOnDisk) {
-    // didn't find a note with the same name so create
-    let fileName = notePathFromNameFS(name);
-    await fsWriteTextFile(dh, fileName, content);
-    console.log("migrateNote: created new note", fileName, "from note with name", name);
-    return;
-  }
-  let path = notePathFromNameFS(name);
-  let diskContent = await fsReadTextFile(dh, path);
-  if (content === diskContent) {
-    console.log("migrateNote: same content, skipping", noteName);
-    return;
-  }
-  // if the content is different, create a new note with a different name
-  let newName = pickUniqueName(name, diskNoteNames);
-  let fileName = notePathFromNameFS(newName);
-  await fsWriteTextFile(dh, fileName, content);
-  console.log("migrateNote: created new note", fileName, "because of different content with", name);
-}
-
 // when notes are stored on disk, they can be stored on replicated online
 // storage like OneDrive
 // just in case we pre-load them to force downloading them to local drive
@@ -893,69 +863,113 @@ export async function preLoadAllNotes(): Promise<number | undefined> {
   return n;
 }
 
-// merge metadata from localStorage into metadata in the directory
-// (which might already exist, e.g. if the user previously used this directory)
-async function moveMetadataLSToFS(dh: FileSystemDirectoryHandle) {
-  let s = localStorage.getItem(kMetadataName);
+// parses metadata stored in localStorage / a file; corrupted data is treated as empty
+function parseMetadataLenient(s: string | null): Metadata {
   if (s === null) {
-    return;
+    return normalizeMetadata(null);
   }
-  let lsMeta = normalizeMetadata(JSON.parse(s));
-  let diskRaw = await readMetadataFileFS(dh);
-  let merged = lsMeta;
-  if (diskRaw !== null) {
-    let diskMeta = normalizeMetadata(JSON.parse(diskRaw));
-    merged = mergeMetadata(diskMeta, lsMeta);
+  try {
+    return normalizeMetadata(JSON.parse(s));
+  } catch (e) {
+    console.error("failed to parse metadata:", e);
+    return normalizeMetadata(null);
   }
-  await fsWriteTextFile(dh, kMetadataName, JSON.stringify(merged, null, 2));
-  localStorage.removeItem(kMetadataName);
 }
 
-export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle) {
-  console.log("switchToStoringNotesOnDisk");
-  let res = await loadNoteNamesFS(dh);
-  let diskNoteNames = res[0] as string[];
-
-  // migrate notes
-  let latestNoteNames = appState.allNotes;
-  for (let name of latestNoteNames) {
-    if (isSystemNoteName(name)) {
-      continue;
-    }
-    let openedNote = getOpenedNote(name);
-    if (openedNote) {
-      continue;
-    }
-    await migrateNote(name, diskNoteNames, dh);
+// returns a name not in `used` (compared case-insensitively)
+function pickUniqueNameIgnoreCase(base: string, used: Set<string>): string {
+  let name = base;
+  for (let i = 1; used.has(name.toLowerCase()); i++) {
+    name = base + "-" + i;
   }
-  // remove migrated notes
-  for (let name of latestNoteNames) {
-    if (isSystemNoteName(name)) {
-      continue;
-    }
-    let openedNote = getOpenedNote(name);
-    if (openedNote) {
-      continue;
-    }
-    let key = notePathFromNameLS(name);
-    localStorage.removeItem(key);
+  return name;
+}
+
+// password hash that decrypts the notes in dh (remembered or asked for)
+async function getPasswordHashForDir(dh: FileSystemDirectoryHandle): Promise<string> {
+  let pwdHash = getPasswordHash();
+  if (pwdHash && (await passwordHashDecryptsNotes(dh, pwdHash))) {
+    return pwdHash;
   }
+  removePassword();
+  return askForPasswordHash("Please enter password of notes in this directory", dh);
+}
 
-  await moveMetadataLSToFS(dh);
+/**
+ * Moves notes from localStorage to directory dh (which might already have
+ * notes) and switches to storing notes in dh. Keeps S-I2: no note is lost or
+ * overwritten:
+ * - a note whose name is taken in the directory (ignoring case) and has
+ *   different content gets a unique name
+ * - if the directory has encrypted notes, moved notes are encrypted too
+ * - notes are removed from localStorage only after everything was written
+ * Returns map of renamed notes (old name => new name).
+ */
+export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle): Promise<Map<string, string>> {
+  return exclusiveStorageOp("move notes to directory", async () => {
+    console.log("switchToStoringNotesOnDisk");
+    let [diskNames, diskEncrNames] = await loadNoteNamesFS(dh);
+    let lsNames = appState.allNotes.filter((name) => !isSystemNoteName(name) && !getOpenedNote(name));
+    let encrypt = len(diskEncrNames!) > 0;
+    let pwdHash = encrypt ? await getPasswordHashForDir(dh) : "";
 
-  storageFS = dh;
-  // save in indexedDb so that it persists across sessions
-  await dbSetDirHandle(dh);
-  let noteNames = await loadNoteNames();
-  openedNotes = []; // can't guarantee names will be unique
+    // names taken in the directory or by notes being moved, lower-cased
+    // because file systems can be case-insensitive
+    let used = new Set<string>([...diskNames!, ...lsNames].map((n) => n.toLowerCase()));
+    let diskByLC = new Map(diskNames!.map((n) => [n.toLowerCase(), n]));
+    let renamed = new Map<string, string>();
 
-  // migrate settings, update currentTab
-  let settings = getSettings();
-  let tab = settings.currentTab;
-  if (tab && !isTabHome(tab) && !noteNames.includes(tab)) {
-    settings.currentTab = kScratchNoteName;
-  }
-  return noteNames;
+    for (let name of lsNames) {
+      let content = loadNoteLS(name) || "";
+      let diskName = diskByLC.get(name.toLowerCase());
+      if (diskName !== undefined) {
+        if (!diskEncrNames!.includes(diskName)) {
+          let diskContent = await fsReadTextFile(dh, notePathFromNameFS(diskName, false));
+          if (diskContent === content) {
+            console.log("switchToStoringNotesOnDisk: same content, skipping", name);
+            continue;
+          }
+        }
+        let newName = pickUniqueNameIgnoreCase(name, used);
+        used.add(newName.toLowerCase());
+        renamed.set(name, newName);
+        console.log(`switchToStoringNotesOnDisk: '${name}' exists, moving as '${newName}'`);
+        name = newName;
+      }
+      showModalMessageHTML(`Moving <b>${name}</b>`, 0);
+      let fileName = notePathFromNameFS(name, encrypt);
+      if (encrypt) {
+        await writeEncryptedFS(dh, pwdHash, fileName, content);
+      } else {
+        await fsWriteTextFile(dh, fileName, content);
+      }
+    }
+
+    // merge metadata (metadata of renamed notes moves with them)
+    let lsMeta = parseMetadataLenient(localStorage.getItem(kMetadataName));
+    for (let m of lsMeta.notes) {
+      m.name = renamed.get(m.name) || m.name;
+    }
+    let diskMeta = parseMetadataLenient(await readMetadataFileFS(dh));
+    let merged = mergeMetadata(diskMeta, lsMeta);
+    await fsWriteTextFile(dh, kMetadataName, JSON.stringify(merged, null, 2));
+
+    // everything is in the directory: switch to it and remove from localStorage
+    openedNotes = []; // can't guarantee names will be unique
+    await dbSetDirHandle(dh);
+    for (let name of lsNames) {
+      localStorage.removeItem(notePathFromNameLS(name));
+    }
+    localStorage.removeItem(kMetadataName);
+    await loadNoteNames();
+    await loadNotesMetadata();
+
+    // update tabs of renamed notes
+    let settings = getSettings();
+    settings.tabs = settings.tabs.map((tab) => renamed.get(tab) || tab);
+    settings.currentTab = renamed.get(settings.currentTab) || settings.currentTab;
+    return renamed;
+  });
 }
 
 export async function pickAnotherDirectory(): Promise<boolean> {

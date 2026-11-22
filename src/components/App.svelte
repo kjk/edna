@@ -441,11 +441,18 @@
     if (!dh) {
       return;
     }
-    // TODO: await getEditor().saveCurrentNote() ?
-    await switchToStoringNotesOnDisk(dh);
-    let settings = getSettings();
-    let noteToOpen = appState.currentNoteName || kScratchNoteName;
-    await openNote(noteToOpen, true);
+    let ok = false;
+    await runStorageOp(async () => {
+      let renamed = await switchToStoringNotesOnDisk(dh);
+      for (let [from, to] of renamed) {
+        showWarning(`Note '${from}' already exists in the directory, moved as '${to}'`);
+      }
+      ok = true;
+    });
+    if (ok) {
+      // re-load everything from the new storage
+      await boot();
+    }
   }
 
   async function pickAnotherDirectory2() {

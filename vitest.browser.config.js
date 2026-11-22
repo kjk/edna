@@ -7,6 +7,8 @@ export default defineConfig({
   publicDir: "./src/public",
   test: {
     include: ["tests/browser/**/*.test.ts"],
+    // test files share localStorage, IndexedDB and the Origin Private File System
+    fileParallelism: false,
     browser: {
       enabled: true,
       instances: [
