@@ -370,7 +370,7 @@ other tabs are open.
 | 7 Migration | fixed (7a–7f), `tests/browser/migration.test.ts`; 7b by `App runStorageOp` + editor refuses to save to a different storage (no automated test) |
 | 8 Storage switch / boot | fixed (8a–8c), `tests/browser/boot.test.ts` (8b), `tests/browser/encryption.test.ts` (8c); 8a by saving before switching + editor refuses to save to a different storage |
 | 9 Code runs | fixed (9a–9d), `tests/browser/app.test.ts` (9a) |
-| 10 Tabs / navigation | open |
+| 10 Tabs / navigation | fixed (10a, 10b); `tests/browser/app.test.ts` covers 10b (passes on old code too: the old timer happened to be long enough in localStorage mode) |
 | 11 Find in notes | open |
 | 12 Ask AI | open |
 | 13 Multiple browser tabs | open |

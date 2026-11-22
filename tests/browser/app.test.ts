@@ -93,4 +93,27 @@ describe("app", () => {
     await expect.poll(async () => await loadNote("scratch"), { timeout: 3000 }).toContain("run-output-42");
     expect(await loadNote("inbox")).not.toContain("run-output-42");
   });
+
+  it("opening a 'find in notes' result moves the cursor to the match", async () => {
+    await openWithShortcut(1, "scratch");
+    const word = "find-in-notes-target";
+    const inbox = (await loadNote("inbox"))!;
+    const { saveNote } = await import("../../src/notes");
+    await saveNote("inbox", inbox + "\nsome text " + word + "\n");
+    const pos = (inbox + "\nsome text ").length;
+
+    appState.showingFindInNotes = true;
+    await expect.poll(() => document.querySelector<HTMLInputElement>("input[placeholder^=\x27Find in notes\x27]")).not.toBeNull();
+    const input = document.querySelector<HTMLInputElement>("input[placeholder^=\x27Find in notes\x27]")!;
+    input.value = word;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    const enter = () =>
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    enter();
+    await expect.poll(() => document.querySelector(".dlg-colors")?.textContent ?? "").toContain(word);
+    enter();
+    await expect.poll(() => appState.currentNoteName).toBe("inbox");
+    const view = EditorView.findFromDOM(document.querySelector(".cm-editor") as HTMLElement)!;
+    await expect.poll(() => view.state.selection.main.head).toBe(pos);
+  });
 });

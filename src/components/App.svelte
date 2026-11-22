@@ -1852,11 +1852,10 @@
     }
     let idx = settings.tabs.indexOf(tab);
     settingsRemoveTab(settings, tab);
-    if (idx >= len(settings.tabs)) {
-      idx = len(settings.tabs) - 1;
-    }
+    // note: idx is -1 if the current tab wasn't in tabs (T-I1 broken)
+    idx = Math.max(0, Math.min(idx, len(settings.tabs) - 1));
     let toOpen = settings.tabs[idx];
-    if (isTabHome(toOpen)) {
+    if (!toOpen || isTabHome(toOpen)) {
       settings.currentTab = kTabHome;
     } else {
       openNote(toOpen, false);
@@ -2138,20 +2137,27 @@
     return ok;
   }
 
+  // position to move the cursor to after note is loaded (see didLoadNote)
+  let pendingCursorPos: { note: string; pos: number } | undefined;
+
   function openNoteFromFind(name: string, pos: number) {
     closeDialogs();
-    openNote(name).then(() => {
-      // TODO: this is not reliable, must pass pos down via openNote()
-      setTimeout(() => {
-        let view = getEditorView();
-        view.dispatch({
-          selection: {
-            anchor: pos,
-            head: pos,
-          },
-          scrollIntoView: true,
-        });
-      }, 200);
+    if (name === noteName && editorComp) {
+      setCursorPos(pos);
+      return;
+    }
+    pendingCursorPos = { note: name, pos };
+    openNote(name);
+  }
+
+  function setCursorPos(pos: number) {
+    let view = getEditorView();
+    if (!view || pos > view.state.doc.length) {
+      return;
+    }
+    view.dispatch({
+      selection: { anchor: pos, head: pos },
+      scrollIntoView: true,
     });
   }
 
@@ -2284,6 +2290,13 @@
     }
     settingsAddTab(settings, name);
     updateDocSize();
+    // note: called after selection was restored, so this overrides it
+    if (pendingCursorPos) {
+      if (pendingCursorPos.note === name) {
+        setCursorPos(pendingCursorPos.pos);
+      }
+      pendingCursorPos = undefined;
+    }
   }
 
   // computing size in utf8 bytes is expensive for large documents so we don't do it on every keystroke
