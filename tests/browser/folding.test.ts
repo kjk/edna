@@ -309,9 +309,7 @@ describe("Block folding (browser tests)", () => {
     await expect.poll(() => foldPlaceholderCount()).toBe(1);
   });
 
-  // Note: In Edna, pressing backspace in the empty block after fold unfolds the block
-  // (unlike Heynote where it's preserved). This is due to autoUnfoldOnEdit behavior.
-  it.skip("folded block does not unfold when new block created after it and backspace pressed immediately", async () => {
+  it("folded block does not unfold when new block created after it and backspace pressed immediately", async () => {
     const { editor } = te;
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3\n",

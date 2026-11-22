@@ -114,6 +114,7 @@ export function addNewBlockAfterCurrent({ state, dispatch }: EditorView): boolea
           insert: delimText,
         },
         selection: EditorSelection.cursor(block.to + delimText.length),
+        annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
       },
       {
         scrollIntoView: true,
@@ -164,6 +165,7 @@ export function addNewBlockAfterLast({ state, dispatch }: EditorView): boolean {
           insert: delimText,
         },
         selection: EditorSelection.cursor(block.to + delimText.length),
+        annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
       },
       {
         scrollIntoView: true,
