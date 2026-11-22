@@ -132,9 +132,10 @@ export class FsEntry extends Array {
     this[dirEntriesIdx] = v;
   }
 
-  static async fromHandle(handle: any, parentHandle: any, path: string): Promise<FsEntry> {
+  // getting the size requires reading file metadata, which is slow for many files
+  static async fromHandle(handle: any, parentHandle: any, path: string, withSize = true): Promise<FsEntry> {
     let size = 0;
-    if (handle.kind === "file") {
+    if (withSize && handle.kind === "file") {
       let file = await handle.getFile();
       size = file.size;
     }
@@ -172,10 +173,12 @@ export async function readDirRecur(
   return res;
 }
 
+// note: size of file entries is only set if withSizes is true
 export async function readDir(
   dirHandle: FileSystemDirectoryHandle,
   skipEntryFn = dontSkip,
   dir = dirHandle.name,
+  withSizes = false,
 ): Promise<FsEntry> {
   let entries: FsEntry[] = [];
   // @ts-ignore
@@ -184,7 +187,7 @@ export async function readDir(
       continue;
     }
     const path = dir == "" ? handle.name : `${dir}/${handle.name}`;
-    let e = await FsEntry.fromHandle(handle, dirHandle, path);
+    let e = await FsEntry.fromHandle(handle, dirHandle, path, withSizes);
     entries.push(e);
   }
   let res = new FsEntry(dirHandle, null, 0, dir, [], null);

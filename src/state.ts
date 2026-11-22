@@ -15,25 +15,27 @@ export function getSessionDurationInMs() {
 
 const kStatsKey = "stats.json";
 
-// TODO: optimize by keeping in-mem copy of kStatsKey
-// so that getCount() can get it from there and incCount()
-// doesn't have to read from localStorage and parse JSON
+// in-memory copy so that we don't have to read and parse JSON on every update
+let statsCached: Stats | undefined;
 
 export function getStats(): Stats {
-  let s = localStorage.getItem(kStatsKey) || "{}";
-  let stats: Stats = JSON.parse(s);
-  stats.appOpenCount = stats.appOpenCount || 0;
-  stats.noteCreateCount = stats.noteCreateCount || 0;
-  stats.noteDeleteCount = stats.noteDeleteCount || 0;
-  stats.noteSaveCount = stats.noteSaveCount || 0;
-  return stats;
+  if (!statsCached) {
+    let s = localStorage.getItem(kStatsKey) || "{}";
+    let stats: Stats = JSON.parse(s);
+    stats.appOpenCount = stats.appOpenCount || 0;
+    stats.noteCreateCount = stats.noteCreateCount || 0;
+    stats.noteDeleteCount = stats.noteDeleteCount || 0;
+    stats.noteSaveCount = stats.noteSaveCount || 0;
+    statsCached = stats;
+  }
+  return { ...statsCached };
 }
 
 export function updateStats(fn: (stats: Stats) => void) {
   let stats = getStats();
   fn(stats);
-  let s = JSON.stringify(stats, null, 2);
-  localStorage.setItem(kStatsKey, s);
+  statsCached = stats;
+  localStorage.setItem(kStatsKey, JSON.stringify(stats, null, 2));
 }
 
 function incCount(key: keyof Stats): number {
@@ -53,8 +55,17 @@ export function incNoteDeleteCount(): number {
   return incCount("noteDeleteCount");
 }
 
+// notes are auto-saved every few seconds while typing. Total save count is
+// sent with appOpen / appExit stats so we don't need to log every save
+const kLogNoteSaveIntervalMs = 10 * 60 * 1000;
+let lastNoteSaveLogTime = 0;
+
 export function incNoteSaveCount(): number {
-  logNoteOp("noteSave");
+  let now = Date.now();
+  if (now - lastNoteSaveLogTime > kLogNoteSaveIntervalMs) {
+    lastNoteSaveLogTime = now;
+    logNoteOp("noteSave");
+  }
   return incCount("noteSaveCount");
 }
 
