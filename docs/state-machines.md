@@ -468,7 +468,9 @@ to state machines). Ordered by impact.
   current storage's metadata is loaded); rename drops a leftover entry of the new name.
 - **U8. Stored data and the URL parse.** Unguarded `JSON.parse` of settings / stats, metadata
   cast instead of normalized, `decodeURIComponent` of the URL hash: corrupt data or a URL like
-  `#50%off` left the app blank.
+  `#50%off` left the app blank. **Fixed**: parse errors fall back to defaults (corrupt settings
+  are kept as `settings.json.corrupted`); `createSettings` ignores values of the wrong type;
+  metadata entries without a name are dropped.
 
 ### Editor / block model
 - **U9. Note content starts with a valid delimiter.** `fixUpNoteContent` only checked the

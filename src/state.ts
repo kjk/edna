@@ -21,7 +21,16 @@ let statsCached: Stats | undefined;
 export function getStats(): Stats {
   if (!statsCached) {
     let s = localStorage.getItem(kStatsKey) || "{}";
-    let stats: Stats = JSON.parse(s);
+    let stats: Stats = {} as Stats;
+    try {
+      let v = JSON.parse(s);
+      if (v && typeof v === "object") {
+        stats = v;
+      }
+    } catch (e) {
+      // runs at module load: corrupt stats must not stop the app (U8)
+      console.error("getStats: stats are not valid JSON", e);
+    }
     stats.appOpenCount = stats.appOpenCount || 0;
     stats.noteCreateCount = stats.noteCreateCount || 0;
     stats.noteDeleteCount = stats.noteDeleteCount || 0;

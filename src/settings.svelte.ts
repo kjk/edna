@@ -81,11 +81,25 @@ export function createSettings(raw?: any): Settings {
     tabs: [...defaultSettings.tabs],
     starredModels: [...defaultSettings.starredModels],
   };
-  if (raw) {
+  if (raw && typeof raw === "object") {
     for (let key of settingsKeys) {
-      if (key in raw) {
-        (s as any)[key] = raw[key];
+      if (!(key in raw)) {
+        continue;
       }
+      let v = raw[key];
+      let def = (defaultSettings as any)[key];
+      // values must have the type of the default (U8): e.g. a non-array tabs
+      // crashed boot
+      if (Array.isArray(def)) {
+        if (!Array.isArray(v)) continue;
+        v = v.filter((e: unknown) => typeof e === "string");
+      } else if (def === undefined) {
+        // optional: fontFamily (string), fontSize (number)
+        if (v !== undefined && v !== null && typeof v !== "string" && typeof v !== "number") continue;
+      } else if (typeof v !== typeof def) {
+        continue;
+      }
+      (s as any)[key] = v;
     }
     // backward compat: migrate currentNoteName -> currentTab
     if (raw.currentNoteName && !raw.currentTab) {
@@ -212,7 +226,14 @@ export function getSettings(): Settings {
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
   // console.log("getSettings: loaded from localStorage:", d);
-  let settingsRaw = d === null ? {} : JSON.parse(d);
+  let settingsRaw: any = {};
+  try {
+    settingsRaw = JSON.parse(d);
+  } catch (e) {
+    // corrupt settings must not leave the app blank (U8); keep a copy
+    console.error("getSettings: settings are not valid JSON, using defaults", e);
+    localStorage.setItem(kSettingsPath + ".corrupted", d);
+  }
   let settings = createSettings(settingsRaw);
   settings.tabSize = validateTabSize(settings.tabSize || 2);
   let m = settings.aiModelID;

@@ -2,6 +2,7 @@
 import { showError } from "./components/Toaster.svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
+import { normalizeMetadata } from "./metadata-merge";
 import { getStorageFS } from "./notes";
 
 export const kMetadataName = "__metadata.edna.json";
@@ -82,7 +83,7 @@ export async function loadNotesMetadata(): Promise<Metadata> {
   }
   let v = s ? await parseMetadata(s, dh) : null;
   // note: "[]" is the old format, upgraded by upgradeMetadata()
-  metadata = (v ?? []) as Metadata;
+  metadata = v == null || Array.isArray(v) ? ((v ?? []) as any) : normalizeMetadata(v);
   metadataStorage = dh;
   console.log("loadNotesMetadata: finished", metadata);
   return metadata!;

@@ -6,11 +6,14 @@ export function normalizeMetadata(v: unknown): Metadata {
     return { ver: 1, notes: v, functions: [] };
   }
   let m = (v && typeof v === "object" ? v : {}) as Partial<Metadata>;
+  // entries must be objects with a name (U8): metadata is user-editable
+  let entries = (a: unknown): any[] =>
+    Array.isArray(a) ? a.filter((e) => e && typeof e === "object" && typeof e.name === "string") : [];
   return {
     ...m,
     ver: m.ver ?? 1,
-    notes: m.notes ?? [],
-    functions: m.functions ?? [],
+    notes: entries(m.notes),
+    functions: entries(m.functions),
   };
 }
 

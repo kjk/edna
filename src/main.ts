@@ -91,7 +91,12 @@ async function bootNow() {
   // - fallback to home tab
   let toOpenAtStartup: string = kTabHome; // default if nothing else matches
   let nameFromURLHash = window.location.hash.slice(1);
-  nameFromURLHash = decodeURIComponent(nameFromURLHash);
+  try {
+    nameFromURLHash = decodeURIComponent(nameFromURLHash);
+  } catch {
+    // e.g. a hand-typed "#50%off" (U8)
+    console.warn("invalid URL hash:", nameFromURLHash);
+  }
   let tabFromSettings = settings.currentTab;
 
   function isValidNote(name: string): boolean {
