@@ -18,29 +18,17 @@ describe("Markdown (browser tests)", () => {
       .poll(() => container.querySelectorAll(".cm-content input[type=checkbox]").length)
       .toBe(1);
 
-    // Toggle checkbox by finding the "[ ] " position and dispatching a change
-    // (The plugin's mousedown handler calls toggleBoolean which does this)
-    function toggleCheckbox() {
-      const content = editor.getContent();
-      const unchecked = content.indexOf("[ ] ");
-      const checked = content.indexOf("[x] ");
-      const pos = unchecked >= 0 ? unchecked + 4 : checked >= 0 ? checked + 4 : -1;
-      if (pos < 0) return;
-      const before = content.slice(pos - 4, pos);
-      if (before === "[ ] ") {
-        editor.view.dispatch({ changes: { from: pos - 4, to: pos, insert: "[x] " } });
-      } else if (before === "[x] ") {
-        editor.view.dispatch({ changes: { from: pos - 4, to: pos, insert: "[ ] " } });
-      }
-    }
+    const checkbox = () => container.querySelector<HTMLInputElement>(".cm-content input[type=checkbox]")!;
 
-    // Check → [x]
-    toggleCheckbox();
+    // Check → [x] (the plugin's mousedown handler toggles the text)
+    await userEvent.click(checkbox());
     await expect.poll(() => getBlockContent(editor, 0)).toBe("- [x] todo\n");
+    await expect.poll(() => checkbox().checked).toBe(true);
 
     // Uncheck → [ ]
-    toggleCheckbox();
+    await userEvent.click(checkbox());
     await expect.poll(() => getBlockContent(editor, 0)).toBe("- [ ] todo\n");
+    await expect.poll(() => checkbox().checked).toBe(false);
   });
 
   it("todo list continue on enter", async () => {

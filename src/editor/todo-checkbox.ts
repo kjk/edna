@@ -75,13 +75,14 @@ function checkboxes(view: EditorView) {
   return Decoration.set(widgets);
 }
 
+// pos is the start of "[ ] " / "[x] " (view.posAtDOM() of the widget returns its start)
 function toggleBoolean(view: EditorView, pos: number) {
-  let before = view.state.doc.sliceString(pos - 4, pos).toLowerCase();
+  let s = view.state.doc.sliceString(pos, pos + 4).toLowerCase();
   let change: ChangeSpec;
-  if (before === "[x] ") {
-    change = { from: pos - 4, to: pos, insert: "[ ] " };
-  } else if (before === "[ ] ") {
-    change = { from: pos - 4, to: pos, insert: "[x] " };
+  if (s === "[x] ") {
+    change = { from: pos, to: pos + 4, insert: "[ ] " };
+  } else if (s === "[ ] ") {
+    change = { from: pos, to: pos + 4, insert: "[x] " };
   } else {
     return false;
   }
