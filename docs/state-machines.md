@@ -530,7 +530,9 @@ to state machines). Ordered by impact.
   note is searched in the editor; positions are mapped back to the original text.
 - **U24. A model id sent to the OpenAI / xAI API exists there.** Model ids are OpenRouter ids;
   `:free` / `:extended` variants, `o4-mini-high`, `gpt-oss-*` were sent to api.openai.com.
-  **Fixed**: `isOpenRouterOnlyModel` routes them to OpenRouter.
+  **Fixed**: `isOpenRouterOnlyModel` routes them to OpenRouter; since that's based on naming
+  patterns, a request the provider rejects because of the model (HTTP 400 / 404 mentioning the
+  model) is retried with OpenRouter when there's an OpenRouter key.
 - **U25. Command palette ids are unique.** The list is keyed by id; uniqueness was only checked
   (and only logged) in dev builds. **Fixed**: duplicates are dropped (and logged) in all builds;
   a test checks there are none.
@@ -574,4 +576,4 @@ to state machines). Ordered by impact.
 | 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent edits of the same note: see 15g |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
 | 15 Previously open items | fixed (15a–15g) |
-| U1–U31 Unenforced invariants | fixed, each with a regression test. Remaining known gaps: U24's list of OpenRouter-only ids is based on naming patterns; U27 drops a pasted line that is exactly a delimiter even mid-line; U30 leaves a narrow race (no exclusive create) |
+| U1–U31 Unenforced invariants | fixed, each with a regression test. Remaining known gaps: U24 without an OpenRouter key, a model the provider doesn't have still fails (with its error shown); U27 drops a pasted line that is exactly a delimiter even mid-line; U30 leaves a narrow race (no exclusive create) |

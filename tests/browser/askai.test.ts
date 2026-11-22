@@ -81,4 +81,30 @@ describe("Ask AI", () => {
     expect(closed.v).toBe(false);
     expect(target!.textContent).toContain("read-only");
   });
+
+  it("a model the provider's API doesn't know is retried with OpenRouter (U24)", async () => {
+    const settings = getSettings();
+    const saved = { openAIKey: settings.openAIKey, aiModelID: settings.aiModelID };
+    try {
+      settings.openAIKey = "sk-proj-" + "x".repeat(120);
+      settings.aiModelID = "gpt-4o";
+      const calls: { url: string; model: string }[] = [];
+      window.fetch = vi.fn(async (url: unknown, init?: RequestInit) => {
+        const model = JSON.parse(init!.body as string).model;
+        calls.push({ url: String(url), model });
+        if (String(url).includes("api.openai.com")) {
+          return new Response(JSON.stringify({ error: { message: "The model `gpt-4o` does not exist" } }), { status: 404 });
+        }
+        return new Response(data("from openrouter") + "data: [DONE]\n", { status: 200 });
+      }) as typeof fetch;
+      setup(() => true);
+      button("Ask AI").click();
+      await expect.poll(() => target!.textContent).toContain("from openrouter");
+      expect(calls.map((c) => c.model)).toEqual(["gpt-4o", "openai/gpt-4o"]);
+      expect(calls[1]!.url).toContain("openrouter.ai");
+    } finally {
+      settings.openAIKey = saved.openAIKey;
+      settings.aiModelID = saved.aiModelID;
+    }
+  });
 });

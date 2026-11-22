@@ -15,3 +15,20 @@ export function isOpenRouterOnlyModel(modelID: string): boolean {
     modelID.startsWith("gpt-5-image")
   );
 }
+
+/**
+ * True if a failed chat completion response says the model doesn't exist (or
+ * the key can't use it). isOpenRouterOnlyModel() is a heuristic: when the
+ * provider's API rejects a model, the request can be retried with OpenRouter.
+ */
+export async function isUnknownModelResponse(r: Response): Promise<boolean> {
+  if (r.status !== 400 && r.status !== 404) {
+    return false;
+  }
+  try {
+    let s = await r.clone().text();
+    return /model/i.test(s);
+  } catch {
+    return false;
+  }
+}

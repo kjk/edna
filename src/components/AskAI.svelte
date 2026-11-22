@@ -2,7 +2,7 @@
   import { tick } from "svelte";
   import hljs from "highlight.js";
   import markdownIt, { type MarkdownIt } from "markdown-it";
-  import { isOpenRouterOnlyModel } from "../ai-provider";
+  import { isOpenRouterOnlyModel, isUnknownModelResponse } from "../ai-provider";
   import { parseChatStreamData } from "../ai-stream";
   import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
@@ -140,14 +140,32 @@
     err = "";
     responseText = "";
     responseModelName = aiModelName;
-    let baseURL = getApiProviderBaseURL(apiProviderToUse);
+    let provider = apiProviderToUse;
     abortController?.abort();
     abortController = new AbortController();
     let signal = abortController.signal;
     try {
       reqFinished = false;
       reqInProgress = true;
-      await streamChatGPTResponse(questionText, maybeValidApiKey, baseURL, signal);
+      try {
+        await streamChatGPTResponse(questionText, maybeValidApiKey, provider, signal);
+      } catch (e: any) {
+        // the provider's API doesn't know the model (U24): try OpenRouter, where
+        // model ids come from, if we have a key for it
+        let canRetry =
+          !signal.aborted &&
+          provider !== kApiProviderOpenRouter &&
+          responseText === "" &&
+          looksValidOpenRouterKey(settings.openRouterKey) &&
+          e?.cause instanceof Response &&
+          (await isUnknownModelResponse(e.cause));
+        if (!canRetry) {
+          throw e;
+        }
+        console.log(`askai: model ${settings.aiModelID} not available with provider ${provider}, using OpenRouter`);
+        provider = kApiProviderOpenRouter;
+        await streamChatGPTResponse(questionText, settings.openRouterKey, provider, signal);
+      }
       // looks like a valid key, remember it
       reqFinished = true;
     } catch (e: any) {
@@ -171,7 +189,7 @@
     }
     if (err == "") {
       let providerName = "unknown";
-      switch (apiProviderToUse) {
+      switch (provider) {
         case kApiProviderOpenAI:
           providerName = "openai";
           break;
@@ -224,7 +242,8 @@
     close();
   }
 
-  async function streamChatGPTResponse(prompt: string, apiKey: string, baseURL: string, signal: AbortSignal) {
+  async function streamChatGPTResponse(prompt: string, apiKey: string, provider: number, signal: AbortSignal) {
+    let baseURL = getApiProviderBaseURL(provider);
     // console.warn("streamChatGPTResponse");
 
     if (forceBadApiKey) {
@@ -232,7 +251,7 @@
     }
 
     let modelID = settings.aiModelID;
-    if (apiProviderToUse == kApiProviderOpenRouter) {
+    if (provider == kApiProviderOpenRouter) {
       let providerIdx = aiModel[kModelProviderIdx];
       let prefix = providersInfo[providerIdx]![0];
       modelID = prefix + "/" + modelID;
