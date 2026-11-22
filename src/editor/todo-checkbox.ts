@@ -1,4 +1,4 @@
-import type { ChangeSpec } from "@codemirror/state";
+import type { ChangeSpec, EditorState, Line } from "@codemirror/state";
 import { Decoration, EditorView, ViewPlugin, ViewUpdate, WidgetType, type DecorationSet } from "@codemirror/view";
 import { SET_FONT, transactionsHasAnnotation } from "./annotation";
 import { getNoteBlockFromPos } from "./block/block";
@@ -126,3 +126,81 @@ export const todoCheckboxPlugin = [
     },
   ),
 ];
+
+const checkboxLineRegex = /^([\t\f\v ]*-[\t\f\v ]*)\[( |x|X)\] /;
+
+interface CheckboxTarget {
+  pos: number; // position of " " / "x" inside "[ ]"
+  checked: boolean;
+}
+
+function checkboxTargetFromLine(state: EditorState, line: Line): CheckboxTarget | null {
+  if (getNoteBlockFromPos(state, line.from)?.language !== "markdown") {
+    return null;
+  }
+  const m = checkboxLineRegex.exec(line.text);
+  if (!m) {
+    return null;
+  }
+  return { pos: line.from + m[1]!.length + 1, checked: m[2] !== " " };
+}
+
+// lines touched by non-empty selection ranges or, if there are none, lines with a cursor
+function linesForToggle(state: EditorState): Line[] {
+  const ranges = state.selection.ranges;
+  const hasSelection = ranges.some((r) => !r.empty);
+  const res: Line[] = [];
+  const seen = new Set<number>();
+  for (const r of ranges) {
+    if (hasSelection && r.empty) {
+      continue;
+    }
+    const first = state.doc.lineAt(r.from).number;
+    let last = state.doc.lineAt(r.to).number;
+    // selection ending at the start of a line doesn't include that line
+    if (!r.empty && r.to === state.doc.line(last).from && last > first) {
+      last--;
+    }
+    for (let n = first; n <= last; n++) {
+      if (!seen.has(n)) {
+        seen.add(n);
+        res.push(state.doc.line(n));
+      }
+    }
+  }
+  return res;
+}
+
+/**
+ * Toggle "[ ]" / "[x]" todo checkboxes in markdown blocks on lines with a cursor
+ * or in the selection. With a selection, all checkboxes are set to the same
+ * state: checked unless most of them are already checked.
+ */
+export const toggleCheckbox = (view: EditorView): boolean => {
+  const { state } = view;
+  if (state.readOnly) {
+    return false;
+  }
+  const targets: CheckboxTarget[] = [];
+  for (const line of linesForToggle(state)) {
+    const t = checkboxTargetFromLine(state, line);
+    if (t) {
+      targets.push(t);
+    }
+  }
+  if (targets.length === 0) {
+    return false;
+  }
+  let changes;
+  if (state.selection.ranges.some((r) => !r.empty)) {
+    const nChecked = targets.filter((t) => t.checked).length;
+    const check = nChecked <= targets.length - nChecked;
+    changes = targets.filter((t) => t.checked !== check).map((t) => ({ from: t.pos, to: t.pos + 1, insert: check ? "x" : " " }));
+  } else {
+    changes = targets.map((t) => ({ from: t.pos, to: t.pos + 1, insert: t.checked ? " " : "x" }));
+  }
+  if (changes.length > 0) {
+    view.dispatch({ changes, userEvent: "input" });
+  }
+  return true;
+};

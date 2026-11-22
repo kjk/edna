@@ -47,6 +47,7 @@
   import { MultiBlockEditor } from "../editor/editor";
   import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
+  import { toggleCheckbox } from "../editor/todo-checkbox";
   import {
     foldAllBlocks,
     foldBlock,
@@ -963,6 +964,7 @@
   const kCmdDecryptNotes = nmid();
   const kCmdEncryptionHelp = nmid();
   const kCmdToggleSpellChecking = nmid();
+  const kCmdToggleCheckbox = nmid();
   const kCmdShowStorageHelp = nmid();
   const kCmdSettings = nmid();
   const kCmdOpenQuickAccess = nmid();
@@ -1188,6 +1190,7 @@
     ["Edit: Toggle comment\tMod-/", kCmdToggleComment],
     ["Edit: Toggle line comment", kCmdToggleLineComment],
     ["Edit: Toggle block comment\tAlt-Shift-a", kCmdToggleBlockComment],
+    ["Edit: Toggle todo checkbox\tMod-Shift-Space", kCmdToggleCheckbox],
     // ["Export current note", kCmdExportCurrentNote],
     ...((isMac
       ? [
@@ -1273,6 +1276,7 @@
       kCmdToggleComment,
       kCmdToggleLineComment,
       kCmdToggleBlockComment,
+      kCmdToggleCheckbox,
       kCmdMoveLineUp,
       kCmdMoveLineDown,
       kCmdMoveSelectionUp,
@@ -1460,6 +1464,9 @@
       focusView();
     } else if (cmdId === kCmdToggleBlockComment) {
       toggleBlockComment(requireView());
+      focusView();
+    } else if (cmdId === kCmdToggleCheckbox) {
+      toggleCheckbox(requireView());
       focusView();
     } else if (cmdId === kCmdInsertDateAndTime) {
       insertDateAndTime(requireView());

@@ -29,6 +29,7 @@ import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
 import { insertDateAndTime } from "./date-time";
 import type { MultiBlockEditor } from "./editor";
 import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
+import { toggleCheckbox } from "./todo-checkbox";
 
 export function keymapFromSpec(specs: any[]) {
   return keymap.of(
@@ -64,6 +65,7 @@ export function ednaKeymap(editor: MultiBlockEditor) {
     ["Mod-Enter", addNewBlockAfterCurrent],
     ["Mod-Alt-Enter", insertNewBlockAtCursor],
     ["Mod-a", selectAll],
+    ["Mod-Shift-Space", toggleCheckbox],
     ["Alt-ArrowUp", moveLineUp],
     ["Alt-ArrowDown", moveLineDown],
     ["Mod-Alt-ArrowDown", newCursorBelow],

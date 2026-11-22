@@ -40,6 +40,7 @@ function getKeyHelp(platform = platformName): string[][] {
     [`Mod + A`, "Select all text in a note block"],
     [``, "Press again to select the whole buffer"],
     [`Mod + Alt + Up/Down`, "Add additional cursor above/below"],
+    [`Mod + Shift + Space`, "Toggle todo checkbox in markdown block"],
     [`Alt + Shift + F`, "Format block content"],
     [``, "Supports Go, JSON, JavaScript, HTML, CSS and Markdown"],
     [`Mod + E`, "Smart Code Run"],
