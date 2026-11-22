@@ -2115,10 +2115,22 @@
     let currentNote = appState.currentNoteName!;
     closeDialogs();
     let editor = getEditor();
+    // save pending edits now: a pending auto-save of the old name firing
+    // after the rename would re-create the old note
+    try {
+      await editor.save();
+    } catch (e) {
+      showError(`Failed to save note '${currentNote}': ${e}`);
+      return;
+    }
     let s = editor.getContent() || "";
-    await renameNote(currentNote, newName, s);
+    try {
+      await renameNote(currentNote, newName, s);
+    } catch (e) {
+      showError(`Failed to rename note '${currentNote}': ${e}`);
+      return;
+    }
     await openNote(newName, true);
-    // console.log("onRename: newName:", newName);
   }
 
   function openQuickAccess() {

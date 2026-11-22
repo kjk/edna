@@ -144,4 +144,21 @@ describe("app", () => {
     expect(dlg()).not.toContain("No results");
     appState.showingFindInNotes = false;
   });
+
+  it("renaming a note with pending edits doesn't re-create the old note", async () => {
+    await openWithShortcut(3, "inbox");
+    const view = EditorView.findFromDOM(document.querySelector(".cm-editor") as HTMLElement)!;
+    view.dispatch({ changes: { from: view.state.doc.length, insert: "\nedit-before-rename" }, userEvent: "input" });
+    appState.showingRenameNote = true;
+    await expect.poll(() => document.querySelector<HTMLInputElement>(".dlg input, form input")).not.toBeNull();
+    const input = document.querySelector<HTMLInputElement>(".dlg input, form input")!;
+    input.value = "inbox-renamed";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    await expect.poll(() => appState.currentNoteName).toBe("inbox-renamed");
+    // wait for the auto-save delay
+    await new Promise((r) => setTimeout(r, 2500));
+    expect(appState.allNotes).not.toContain("inbox");
+    expect(await loadNote("inbox-renamed")).toContain("edit-before-rename");
+  }, 10000);
 });
