@@ -81,11 +81,15 @@
     editor?.didLoadCurrencies();
   }
 
+  // true after selection / folds of current note were restored, so it's safe to save them
+  let editorStateRestored = false;
+
   function restoreEditorState(noteName: string) {
     let noteMeta = getNoteMeta(noteName, false);
     let defaultPos = noteName.startsWith("scratch") ? editor.view.state.doc.length : 0;
     editor.setSelection(noteMeta?.selection, defaultPos);
     editor.setFoldedRanges(noteMeta?.foldedRanges || []);
+    editorStateRestored = true;
   }
 
   async function saveEditorState() {
@@ -194,6 +198,11 @@
 
     return () => {
       destroyed = true;
+      // save selection and folds when switching to Home tab, closing the tab etc.
+      // note: reads editor state synchronously, before the editor is destroyed
+      if (editorStateRestored) {
+        saveEditorState();
+      }
       document.removeEventListener("keydown", onKeyDown);
       window.document.removeEventListener("currenciesLoaded", didLoadCurrencies);
       editorRef.removeEventListener("selectionChange", onSelChange);
@@ -247,6 +256,7 @@
       await editor.save();
       await saveEditorState();
     }
+    editorStateRestored = false;
     currentNoteName = name;
     const content = (await loadNote(name)) || "";
     editor.setContent(content);
