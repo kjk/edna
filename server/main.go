@@ -43,10 +43,8 @@ func rebuildFrontend(c *deploy.Config) {
 	// assuming this is not deployment: re-build the frontend
 	emptyFrontEndBuildDir(c)
 	logf("deleted frontend dist dir '%s'\n", c.FrontEndBuildDir)
-	{
-		must(os.RemoveAll("node_modules"))
-		u.RunLoggedInDirMust(".", "bun", "install")
-	}
+	// --frozen-lockfile: install exactly what's in bun.lock (fails if package.json and bun.lock are out of sync)
+	u.RunLoggedInDirMust(".", "bun", "install", "--frozen-lockfile")
 	u.RunLoggedInDirMust(".", "bun", "run", "build")
 }
 
