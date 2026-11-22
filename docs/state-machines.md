@@ -573,3 +573,4 @@ to state machines). Ordered by impact.
 | 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent edits of the same note: see 15g |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
 | 15 Previously open items | fixed (15a–15g) |
+| U1–U31 Unenforced invariants | fixed, each with a regression test except U19 (needs a failing note load in the full app). Remaining known gaps: auto-detect decides whether to request detection by block index (at worst an extra / skipped detection); U24's list of OpenRouter-only ids is based on naming patterns; U27 drops a pasted line that is exactly a delimiter even mid-line; U30 leaves a narrow race (no exclusive create) |
