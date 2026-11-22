@@ -146,8 +146,8 @@ if (isDev()) {
     console.log("reloading");
     window.location.reload();
   };
+  // @ts-ignore
+  window.testError = function () {
+    throw new Error("test error");
+  };
 }
-// @ts-ignore
-window.testError = function () {
-  throw new Error("test error");
-};

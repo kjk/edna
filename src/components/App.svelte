@@ -1166,7 +1166,7 @@
   ];
 
   const commandPaletteAdditions: Command[] = [
-    ["Test error tracking", kCmdTestErrorTracking],
+    ...(isDev() ? [["Test error tracking", kCmdTestErrorTracking] as Command] : []),
     ["Create New Scratch Note", kCmdCreateScratchNote],
     // ["Create New Note", kCmdCreateNewNote],
     ["Open recent note", kCmdOpenQuickAccess],
@@ -1191,8 +1191,7 @@
     ["Edit: Toggle line comment", kCmdToggleLineComment],
     ["Edit: Toggle block comment\tAlt-Shift-a", kCmdToggleBlockComment],
     // ["Export current note", kCmdExportCurrentNote],
-    // @ts-ignore
-    ...(isMac
+    ...((isMac
       ? [
           ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
           ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
@@ -1200,7 +1199,7 @@
       : [
           ["Edit: Fold code\tCtrl-Shift-[", kCmdFoldCode],
           ["Edit: Unfold code\tCtrl-Shift-]", kCmdUnfoldColde],
-        ]),
+        ]) as Command[]),
   ];
 
   // commands that work when there's no editor (e.g. on Home tab)
