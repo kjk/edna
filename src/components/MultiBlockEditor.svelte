@@ -11,6 +11,7 @@
   import { getSettings, resolveTheme } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
   import Find from "./Find.svelte";
+  import { showError } from "./Toaster.svelte";
 
   function createFindPanel(view: EditorView) {
     const dom = document.createElement("div");
@@ -121,7 +122,7 @@
       if (isCtrlS) {
         e.preventDefault();
         if (appState.isDirty) {
-          editor.save();
+          editor.save().catch((e) => showError(`Failed to save note: ${e}`));
         }
         saveEditorState();
       }

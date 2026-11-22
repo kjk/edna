@@ -78,7 +78,11 @@ export class MultiBlockEditor {
   setIsDirtyCallback: (dirty: boolean) => void;
   extraKeymapSpec: KeymapSpec;
   view: EditorView;
+  // content last successfully saved (or loaded) for the current document
   diskContent: string = "";
+  // incremented by setContent(); a save started for an earlier document must
+  // not update diskContent / dirty state of the current one
+  contentGen: number = 0;
   defaultBlockToken: string = "";
   defaultBlockAutoDetect: boolean = false;
   constructor({
@@ -198,13 +202,23 @@ export class MultiBlockEditor {
     this.view.destroy();
   }
 
+  // Saves current content if it changed. Note: saveCallback() is called
+  // synchronously so it can capture which note is being saved.
+  // On failure diskContent is not updated so the next save() retries.
   async save() {
     const content = this.getContent();
     if (content === this.diskContent) {
       return;
     }
-    this.diskContent = content;
+    const gen = this.contentGen;
     await this.saveCallback(content);
+    if (gen !== this.contentGen) {
+      // a different document was loaded in the meantime
+      return;
+    }
+    this.diskContent = content;
+    // the user might have typed while we were saving
+    this.setIsDirtyCallback(this.getContent() !== this.diskContent);
   }
 
   getContent() {
@@ -212,7 +226,9 @@ export class MultiBlockEditor {
   }
 
   setContent(content: string) {
+    this.contentGen++;
     this.diskContent = content;
+    this.setIsDirtyCallback(false);
     this.view.dispatch({
       changes: {
         from: 0,

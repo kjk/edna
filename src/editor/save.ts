@@ -6,9 +6,10 @@ import type { MultiBlockEditor } from "./editor";
 export const autoSaveContent = (editor: MultiBlockEditor, interval: number) => {
   const debouncedSave = debounce(async () => {
     try {
+      // note: save() updates dirty state
       await editor.save();
-      editor.setIsDirtyCallback(false);
     } catch (e) {
+      // content stays dirty and is saved by the next save()
       console.error("autoSaveContent: save failed:", e);
     }
   }, interval);

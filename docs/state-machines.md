@@ -362,7 +362,7 @@ other tabs are open.
 | Issue | Status |
 |---|---|
 | 1 Note switching | open |
-| 2 Save bookkeeping | open |
+| 2 Save bookkeeping | fixed (2a–2c), `tests/browser/save.test.ts` |
 | 3 Create / move overwrites | open |
 | 4 Dialog invariants | open |
 | 5 Password handling | open |

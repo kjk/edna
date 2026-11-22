@@ -456,34 +456,48 @@ function pickUniqueName(base: string, existingNames: string[]): string {
   return name;
 }
 
-export async function saveNote(name: string, content: string) {
-  console.log("note name:", name);
+// writes to the same note are serialized so that they complete in order
+let saveQueues = new Map<string, Promise<void>>();
+
+// Saves note content. Throws if the note couldn't be saved.
+// Note: storage location is determined synchronously, when called.
+export function saveNote(name: string, content: string): Promise<void> {
   if (isSystemNoteName(name)) {
     console.log("skipped saving system note", name);
-    return;
+    return Promise.resolve();
   }
   let openedNote = getOpenedNote(name);
+  let dh = getStorageFS();
+  let prev = saveQueues.get(name) || Promise.resolve();
+  let p = prev.catch(() => {}).then(() => saveNoteNow(name, content, openedNote, dh));
+  saveQueues.set(name, p);
+  p.finally(() => {
+    if (saveQueues.get(name) === p) {
+      saveQueues.delete(name);
+    }
+  }).catch(() => {});
+  return p;
+}
+
+async function saveNoteNow(
+  name: string,
+  content: string,
+  openedNote: OpenedNote | null,
+  dh: FileSystemDirectoryHandle | undefined,
+) {
   if (openedNote) {
     let fh = openedNote.handle;
     let ok = await requestFileWritePermission(fh);
     if (!ok) {
-      return;
+      throw new Error(`no permission to write file '${fh.name}'`);
     }
-    console.log("saveNote: ok:", ok);
     await fsFileHandleWriteText(fh, content);
-    appState.isDirty = false;
-    incNoteSaveCount();
-    return;
-  }
-
-  let dh = getStorageFS();
-  if (!dh) {
+  } else if (!dh) {
     let path = notePathFromNameLS(name);
     localStorage.setItem(path, content);
   } else {
     await writeMaybeEncryptedFS(dh, name, content);
   }
-  appState.isDirty = false;
   incNoteSaveCount();
 }
 

@@ -1723,7 +1723,12 @@
     }
     // save current editor state before switching away
     if (editorComp) {
-      await getEditor().save();
+      try {
+        await getEditor().save();
+      } catch (e) {
+        showError(`Failed to save note '${tab}': ${e}`);
+        return;
+      }
     }
     let idx = settings.tabs.indexOf(tab);
     settingsRemoveTab(settings, tab);
