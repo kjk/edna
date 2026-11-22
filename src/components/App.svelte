@@ -317,7 +317,11 @@
         console.log(`Note with name '${name}' doesn't exist`);
         return;
       }
-      openNote(name, false /* skip save */, true /* noPushHistory */);
+      // dialogs act on the current note (G-I2) so close them before switching
+      if (isShowingDialog) {
+        closeDialogs();
+      }
+      openNote(name, false, true /* noPushHistory */);
     };
     window.addEventListener("popstate", onPopState);
 
@@ -399,9 +403,10 @@
       }
     }
 
-    // TODO: can I do this better? The same keydown event that sets the Alt-N shortcut
-    // in NoteSelector also seems to propagate here and immediately opens the note.
-    if (!appState.showingNoteSelector) {
+    // Alt + 1..9 opens a note with that shortcut. Not while a dialog is open
+    // (other than quick access which shows the shortcuts): dialogs act on the
+    // current note (G-I2) and some (note selectors) use Alt + N themselves
+    if (!isShowingDialog || appState.showingQuickAccess) {
       let altN = isAltNumEvent(ev);
       // console.log("onKeyDown: ev:", ev, "altN:", altN);
       if (altN) {
@@ -501,8 +506,8 @@
 
   function closeEncryptPassword() {
     appState.showingEncryptPassword = false;
-    let view = getEditorView();
-    view.focus();
+    // note: no editor on Home tab
+    focusEditor();
   }
 
   function onEncryptPassword(pwd: string) {
@@ -701,6 +706,8 @@
 
   function switchToCommandPalette() {
     appState.showingNoteSelector = false;
+    // forceNewTab only applies to the note selector (G-I3)
+    appState.forceNewTab = false;
     openCommandPalette();
   }
 
@@ -739,6 +746,10 @@
       userFunctions = [];
     } else {
       userFunctions = parseUserFunctions(userFunctionsStr);
+    }
+    if (isShowingDialog || !editorComp) {
+      // another dialog was opened (or the editor closed) while loading (G-I1)
+      return;
     }
     appState.showingFunctionSelector = true;
   }
