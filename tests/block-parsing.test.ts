@@ -24,3 +24,32 @@ describe.each(goldenData)("Block parsing: $file", (testData) => {
     expect(blocks).toEqual(testData.blocks);
   });
 });
+
+// both ways of getting blocks agree, also for malformed text (U26)
+describe("getBlocksFromString matches the parser", async () => {
+  const { parser } = await import("../src/editor/new-parser/parser");
+  const D = "∞∞∞";
+  const cases = [
+    `\n${D}text\n${D}markdown\nx`,
+    `${D}text\nhello\n${D}markdown\nx`,
+    `junk\n${D}text\nhello`,
+    "",
+    `\n${D}text`,
+    `\n${D}Text\nhi`,
+    `\n${D}text\na\n${D}math-a\n1+1\n`,
+  ];
+  for (const s of cases) {
+    it(JSON.stringify(s), () => {
+      const tree: [number, number][] = [];
+      parser.parse(s).iterate({
+        enter: (n) => {
+          if (n.name === "Note") {
+            tree.push([n.from, n.to]);
+            return false;
+          }
+        },
+      });
+      expect(getBlocksFromString(s).map((b) => [b.from, b.to])).toEqual(tree);
+    });
+  }
+});

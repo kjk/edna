@@ -25,7 +25,7 @@ import { NodeID, nodeSet, DELIMITER_PREFIX, parseDelimiterLine } from "./node-ty
  * Find all delimiter positions in the input text.
  * Returns array of {start, end, langStart, langEnd, autoDetect}
  */
-interface DelimiterInfo {
+export interface DelimiterInfo {
   start: number; // Start of delimiter (including leading newline if present)
   end: number; // End of delimiter (after trailing newline)
   langStart: number; // Start of language token
@@ -33,7 +33,8 @@ interface DelimiterInfo {
   autoDetect: boolean; // Whether -a suffix is present
 }
 
-function findDelimiters(text: string): DelimiterInfo[] {
+// also used by getBlocksFromString() so that both ways of getting blocks agree (U26)
+export function findDelimiters(text: string): DelimiterInfo[] {
   const delimiters: DelimiterInfo[] = [];
   let pos = 0;
 

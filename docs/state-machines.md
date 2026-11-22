@@ -534,6 +534,9 @@ to state machines). Ordered by impact.
 - **U25. Command palette ids are unique.** The list is keyed by id; uniqueness was only checked
   (and only logged) in dev builds. **Fixed**: duplicates are dropped (and logged) in all builds;
   a test checks there are none.
+- **U26. The parser and `getBlocksFromString` find the same blocks.** They disagreed on a
+  delimiter at position 0 without a leading newline and on text before the first delimiter, so
+  the block list changed when parsing finished. **Fixed**: both use `findDelimiters`.
 
 ## Status
 

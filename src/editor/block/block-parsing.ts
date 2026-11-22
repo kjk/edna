@@ -1,7 +1,7 @@
 import { syntaxTree } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { IterMode } from "@lezer/common";
-import { DELIMITER_PREFIX, parseDelimiterLine } from "../new-parser/node-types";
+import { findDelimiters } from "../new-parser/parser";
 
 export interface NoteBlock {
   index: number;
@@ -65,54 +65,26 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
   return blocks;
 }
 
-// returns position of the next valid delimiter ("\n∞∞∞lang\n") at or after pos, -1 if none
-function findNextDelimiter(s: string, pos: number): number {
-  const delim = "\n" + DELIMITER_PREFIX;
-  while (true) {
-    const idx = s.indexOf(delim, pos);
-    if (idx < 0) {
-      return -1;
-    }
-    const lineEnd = s.indexOf("\n", idx + 1);
-    if (lineEnd >= 0 && parseDelimiterLine(s.substring(idx + 1, lineEnd))) {
-      return idx;
-    }
-    pos = idx + 1;
-  }
-}
-
 /**
- * Parse blocks from document's string contents using String.indexOf()
+ * Parse blocks from document's string contents. Uses the same delimiter scan as
+ * the parser so the blocks are the same as getBlocksFromSyntaxTree() for any
+ * text, including malformed text (U26): a delimiter at the start without a
+ * leading newline is accepted, text before the first delimiter is in no block.
  */
 export function getBlocksFromString(s: string): NoteBlock[] {
-  //const timer = startTimer()
+  const delimiters = findDelimiters(s);
   const blocks: NoteBlock[] = [];
-  const sLen = s.length;
-  let pos = 0;
-  while (pos < sLen) {
-    const blockStart = findNextDelimiter(s, pos);
-    if (blockStart != pos) {
-      console.error("Error parsing blocks, expected delimiter at", pos);
-      break;
-    }
-    const delimiterEnd = s.indexOf("\n", blockStart + 1);
-    const { language: lang, autoDetect: auto } = parseDelimiterLine(s.substring(blockStart + 1, delimiterEnd))!;
-    const contentFrom = delimiterEnd + 1;
-    let blockEnd = findNextDelimiter(s, contentFrom);
-    if (blockEnd < 0) {
-      blockEnd = sLen;
-    }
-
-    const block = {
-      index: blocks.length,
-      language: lang,
-      autoDetect: auto,
-      from: blockStart,
-      to: blockEnd,
-      contentFrom: contentFrom,
-    };
-    blocks.push(block);
-    pos = blockEnd;
+  for (let i = 0; i < delimiters.length; i++) {
+    const d = delimiters[i]!;
+    const next = delimiters[i + 1];
+    blocks.push({
+      index: i,
+      language: s.substring(d.langStart, d.langEnd),
+      autoDetect: d.autoDetect,
+      from: d.start,
+      to: next ? next.start : s.length,
+      contentFrom: d.end,
+    });
   }
   //console.log("getBlocksFromString() took", timer(), "ms")
   return blocks;
