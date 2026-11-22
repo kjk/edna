@@ -25,3 +25,8 @@ test("whole word", () => {
 test("maxResults", () => {
   expect(findMatchesInNote("a\na\na\n", ["a"], true, false, 2).length).toBe(2);
 });
+
+test("block delimiter lines are not matched", () => {
+  const s = "\n\u221E\u221E\u221Emarkdown\n# markdown notes\n\u221E\u221E\u221Emarkdown-a\nmore\n";
+  expect(findMatchesInNote(s, ["markdown"], false, false).map((m) => m.line)).toEqual(["# markdown notes"]);
+});

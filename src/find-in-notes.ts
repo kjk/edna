@@ -1,3 +1,4 @@
+import { parseDelimiterLine } from "./editor/new-parser/node-types";
 import { isWholeWord, len } from "./util";
 
 export interface NoteMatch {
@@ -57,6 +58,11 @@ export function findMatchesInNote(
       lineEndIdx = s.length;
     }
     const line = s.substring(lineStartIdx, lineEndIdx);
+    // block delimiter lines (e.g. ∞∞∞markdown) are not content
+    if (parseDelimiterLine(display.substring(lineStartIdx, lineEndIdx))) {
+      startIdx = lineEndIdx;
+      continue;
+    }
     if (wholeWord && !isWholeWord(s, idx, idx + len(toFind))) {
       continue;
     }
