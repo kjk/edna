@@ -627,6 +627,9 @@ export async function createNoteWithName(name: string, content: string | null = 
   if (nameErr) {
     throw new Error(`invalid note name '${name}': ${nameErr}`);
   }
+  // re-read names: a note created by another tab or a sync tool since they
+  // were last read would be overwritten (U30)
+  await loadNoteNames();
   let existing = findNoteIgnoreCase(name);
   if (existing) {
     throw new Error(`note '${existing}' already exists`);
@@ -649,6 +652,8 @@ export async function createNoteWithName(name: string, content: string | null = 
 
 export async function appendToNote(name: string, content: string) {
   throwIf(!startsWithBlockHeader(content), "content must start with block header ~~~");
+  // re-read names: appending to a note we don't know about would overwrite it (U30)
+  await loadNoteNames();
   // append to existing note even if the name differs in case, instead of
   // creating a note that would overwrite it on case-insensitive file systems
   name = findNoteIgnoreCase(name) || name;

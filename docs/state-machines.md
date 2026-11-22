@@ -547,6 +547,10 @@ to state machines). Ordered by impact.
   if the block was deleted, or another note loaded).
 - **U29. Edits respect read-only.** Clicking a todo checkbox changed the note while code was
   running (the run's output then overwrote it). **Fixed**: the toggle checks `readOnly`.
+- **U30. The in-memory note list matches storage when creating a note** (N-I1 relied on it).
+  A note created by another tab or a sync tool since the list was read was overwritten by
+  create / move-block-to-note. **Fixed**: `createNoteWithName` and `appendToNote` re-read the
+  names first (a narrow race remains: the File System Access API has no exclusive create).
 
 ## Status
 
