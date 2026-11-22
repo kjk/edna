@@ -69,4 +69,22 @@ describe("Cut", () => {
     expect(view.state.doc.toString()).toContain("let x");
     expect(te.editor.getBlocks().length).toBe(1);
   });
+
+  it("removeDelimitersFromPastedText: first / last line only if pasted at a line start / end", () => {
+    expect(removeDelimitersFromPastedText("∞∞∞js", false, false)).toBe("∞∞∞js");
+    expect(removeDelimitersFromPastedText("∞∞∞js", true, false)).toBe("∞∞∞js");
+    expect(removeDelimitersFromPastedText("∞∞∞js", true, true)).toBe("");
+    expect(removeDelimitersFromPastedText("∞∞∞js\na\n∞∞∞md\nb\n∞∞∞py", false, false)).toBe("∞∞∞js\na\n\nb\n∞∞∞py");
+  });
+
+  it("pasting a delimiter-like word in the middle of a line keeps it", () => {
+    te = createEditor("\n∞∞∞text\nab\n");
+    const view = te.editor.view;
+    const pos = view.state.doc.toString().indexOf("ab") + 1;
+    view.dispatch({ selection: EditorSelection.cursor(pos) });
+    const dt = new DataTransfer();
+    dt.setData("text/plain", "∞∞∞markdown");
+    view.contentDOM.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
+    expect(getBlockContent(te.editor, 0)).toBe("a∞∞∞markdownb\n");
+  });
 });

@@ -13,11 +13,31 @@ const reDelimiterLineInText = /(^|\n)\u221e\u221e\u221e[a-z]+(?:-a)?(?=\n|$)/g;
  * Pasted / dropped text must not create blocks (U27): delimiter lines become
  * empty lines, like when copying in Edna. Text from outside Edna (e.g. a raw
  * note file) could otherwise add blocks with unknown languages.
+ * The first / last line of the text only become a delimiter line if the text
+ * is inserted at the start / end of a line: atLineStart / atLineEnd say if it is.
  */
-export function removeDelimitersFromPastedText(text: string): string {
+export function removeDelimitersFromPastedText(text: string, atLineStart = true, atLineEnd = true): string {
   if (!text.includes("\u221e\u221e\u221e")) {
     return text;
   }
+  return text.replace(reDelimiterLineInText, (m: string, nl: string, offset: number) => {
+    const isFirstLine = nl === "" && offset === 0;
+    const isLastLine = offset + m.length === text.length;
+    if ((isFirstLine && !atLineStart) || (isLastLine && !atLineEnd)) {
+      // e.g. pasted in the middle of a line: stays text
+      return m;
+    }
+    return nl;
+  });
+}
+
+// removeDelimitersFromPastedText() for text inserted at the main selection
+function removeDelimitersForState(text: string, state: EditorState): string {
+  const { from, to } = state.selection.main;
+  const atLineStart = from === 0 || state.sliceDoc(from - 1, from) === "\n";
+  const atLineEnd = to === state.doc.length || state.sliceDoc(to, to + 1) === "\n";
+  return removeDelimitersFromPastedText(text, atLineStart, atLineEnd);
+}
   return text.replace(reDelimiterLineInText, "$1");
 }
 
@@ -115,7 +135,7 @@ export const heynoteCopyCut = (editor: MultiBlockEditor) => {
       copy,
       cut,
     }),
-    EditorView.clipboardInputFilter.of(removeDelimitersFromPastedText),
+    EditorView.clipboardInputFilter.of(removeDelimitersForState),
   ];
 };
 
@@ -153,7 +173,7 @@ const copyCut = (view: EditorView, cut: boolean, editor: MultiBlockEditor): bool
 };
 
 function doPaste(view: EditorView, input: string) {
-  input = removeDelimitersFromPastedText(input);
+  input = removeDelimitersForState(input, view.state);
   let { state } = view,
     changes,
     i = 1,
