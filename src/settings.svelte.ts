@@ -253,17 +253,23 @@ export function getSettings(): Settings {
 
   appState.settings = settings;
   settingsLoaded = true;
+  updateWebsiteTheme();
   return appState.settings;
 }
 
 const mediaMatch = window.matchMedia("(prefers-color-scheme: dark)");
-function updateWebsiteTheme() {
-  // console.log("updateWebsiteTheme, settings.theme:", appState.settings.theme);
-  let theme = appState.settings.theme || "system";
-  if (theme === "system") {
-    theme = mediaMatch.matches ? "dark" : "light";
+appState.systemThemeIsDark = mediaMatch.matches;
+
+// resolves "system" theme to "light" or "dark"
+export function resolveTheme(theme: string | undefined): "light" | "dark" {
+  if (!theme || theme === "system") {
+    return appState.systemThemeIsDark ? "dark" : "light";
   }
-  // console.log("setting theme:", theme);
+  return theme === "dark" ? "dark" : "light";
+}
+
+function updateWebsiteTheme() {
+  let theme = resolveTheme(appState.settings.theme);
   let el = document.documentElement;
   if (theme === "dark") {
     el.classList.add("dark");
@@ -326,9 +332,9 @@ export function getOverlayScrollbarOptions() {
   };
 }
 
-mediaMatch.addEventListener("change", async () => {
+mediaMatch.addEventListener("change", () => {
+  appState.systemThemeIsDark = mediaMatch.matches;
   if (appState.settings.theme === "system") {
-    console.log("change event listener");
     updateWebsiteTheme();
   }
 });

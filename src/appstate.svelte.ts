@@ -41,6 +41,7 @@ class AppState {
   showingAskFileWritePermissions = $state(false);
   showingAskAI = $state(false);
   showingArchived = $state(false); // show archived notes in note selector
+  systemThemeIsDark = $state(false); // OS dark mode, for "system" theme
 
   searchIncludeArchived = $state(false);
 

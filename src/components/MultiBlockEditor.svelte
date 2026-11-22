@@ -9,7 +9,7 @@
   import type { SelectionChangeEvent } from "../editor/event";
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
   import { loadNote, saveNote } from "../notes";
-  import { getSettings } from "../settings.svelte";
+  import { getSettings, resolveTheme } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
   import Find from "./Find.svelte";
 
@@ -43,7 +43,6 @@
   let { class: klass = "", extraKeymap, cursorChange, docDidChange, didLoadNote }: Props = $props();
 
   let settings = getSettings();
-  let theme = settings.theme;
 
   let editor: MultiBlockEditor;
   let currentNoteName: string;
@@ -60,7 +59,7 @@
     editor?.setLineNumberGutter(showLineNumberGutter);
     let showFoldGutter = settings.showFoldGutter;
     editor?.setFoldGutter(showFoldGutter);
-    let theme = settings.theme;
+    let theme = resolveTheme(settings.theme);
     editor?.setTheme(theme);
     let keymap = settings.keymap;
     let emacsMetaKey = settings.emacsMetaKey;
@@ -159,7 +158,7 @@
       setIsDirty: setIsDirty,
       createFindPanel: createFindPanel,
       extraKeymap: extraKeymap,
-      theme: theme as "dark" | "light",
+      theme: resolveTheme(settings.theme),
       keymap: keymap as "default" | "emacs",
       emacsMetaKey: emacsMetaKey as "meta" | "alt" | "ctrl",
       showLineNumberGutter: showLineNumberGutter,
