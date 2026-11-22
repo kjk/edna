@@ -524,7 +524,6 @@
   async function getPasswordFromUser(msg: string = ""): Promise<string> {
     appState.showingDecryptPassword = true;
     showingDecryptMessage = msg;
-    clearModalMessage();
     return new Promise((resolve, reject) => {
       onDecryptPassword = (pwd: string) => {
         resolve(pwd);
@@ -560,7 +559,6 @@
     }
     fileWritePermissionsFileHandle = fh;
     appState.showingAskFileWritePermissions = true;
-    clearModalMessage();
     return new Promise((resolve, reject) => {
       askFileWritePermissionsClose = (ok) => {
         console.log("requestFileWritePermission: ok", ok);
@@ -899,7 +897,7 @@
       return;
     } finally {
       runInProgress = false;
-      clearModalMessage();
+      clearModalMessage("run");
       if (isSameDocument(run)) {
         editor.setReadOnly(run.wasReadOnly);
       }
@@ -1029,7 +1027,7 @@
     let onSelection = runFunctionOnSelection;
     await withRun(getEditor(), async (run) => {
       let msg = `Running <span class="font-bold">${fdef.name}</span>...`;
-      showModalMessageHTML(msg, 300);
+      showModalMessageHTML(msg, 300, "run");
       if (onSelection) {
         await runBoopFunctionWithSelection(run, fdef);
         logNoteOp("runFunctionWithSelection");
@@ -1980,7 +1978,7 @@
     }
     const content = state.sliceDoc(block.contentFrom, block.to);
     let res = await withRun(editor, async (run) => {
-      showModalMessageHTML("running code", 300);
+      showModalMessageHTML("running code", 300, "run");
       let token = lang.token;
       let res: CapturingEval;
       if (token === "golang") {
@@ -2015,7 +2013,7 @@
     }
     const content = state.sliceDoc(block.contentFrom, block.to);
     let res = await withRun(editor, async (run) => {
-      showModalMessageHTML("running code", 300);
+      showModalMessageHTML("running code", 300, "run");
       let res: CapturingEval;
       let token = lang.token;
       if (token === "javascript") {
@@ -2182,12 +2180,12 @@
       return true;
     }
     let msg = `Loading <span class="font-bold">${name}</span>...`;
-    showModalMessageHTML(msg, 300);
+    showModalMessageHTML(msg, 300, "load");
     let ok = false;
     try {
       ok = await getEditorComp().openNote(name, skipSave, noPushHistory, replaceTab);
     } finally {
-      clearModalMessage();
+      clearModalMessage("load");
     }
     // note: editor might have been unmounted (e.g. switched to Home tab) while loading
     editorComp?.focus();
@@ -2500,7 +2498,8 @@
   </Overlay>
 {/if}
 
-{#if modalMessageState.isShowing}
+<!-- busy messages are hidden while a prompt (that the operation waits for) is showing -->
+{#if modalMessageState.isShowing && !appState.showingDecryptPassword && !appState.showingAskFileWritePermissions}
   <ModalMessage />
 {/if}
 

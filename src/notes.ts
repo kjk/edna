@@ -936,7 +936,7 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
         console.log(`switchToStoringNotesOnDisk: '${name}' exists, moving as '${newName}'`);
         name = newName;
       }
-      showModalMessageHTML(`Moving <b>${name}</b>`, 0);
+      showModalMessageHTML(`Moving <b>${name}</b>`, 0, "storage");
       let fileName = notePathFromNameFS(name, encrypt);
       if (encrypt) {
         await writeEncryptedFS(dh, pwdHash, fileName, content);
@@ -1054,7 +1054,7 @@ async function exclusiveStorageOp<T>(name: string, fn: () => Promise<T>): Promis
     return await fn();
   } finally {
     storageOpInProgress = undefined;
-    clearModalMessage();
+    clearModalMessage("storage");
   }
 }
 
@@ -1092,7 +1092,7 @@ export async function encryptAllNotes(pwd: string) {
           return;
         }
         let msg = `Encrypting <b>${name}</b>`;
-        showModalMessageHTML(msg, 0);
+        showModalMessageHTML(msg, 0, "storage");
         await encryptNoteFS(dh, fileName, pwdHash);
       });
     } finally {
@@ -1115,7 +1115,7 @@ export async function decryptAllNotes() {
           return;
         }
         let msg = `Decrypting <b>${name}</b>`;
-        showModalMessageHTML(msg, 0);
+        showModalMessageHTML(msg, 0, "storage");
         await decryptNoteFS(dh, fileName);
       });
       removePassword();

@@ -1,32 +1,63 @@
 <script module lang="ts">
-  let modalMessageHTML = $state("");
-  let timerID: ReturnType<typeof setTimeout> | null = null;
+  // A "busy" message (e.g. "Loading note...", "running code"). Overlapping
+  // operations each own their message (identified by key) and clear only their
+  // own; the most recently shown message is displayed (issue 15c in
+  // docs/state-machines.md).
+
+  interface Msg {
+    key: string;
+    html: string;
+    visible: boolean; // false until the delay passes
+    timer: ReturnType<typeof setTimeout> | null;
+  }
+
+  let messages: Msg[] = $state([]);
 
   class ModalMessageState {
-    isShowing = $state(false);
+    get isShowing(): boolean {
+      return messages.some((m) => m.visible);
+    }
   }
 
   export let modalMessageState = new ModalMessageState();
 
-  export function showModalMessageHTML(msgHTML: string, delay: number) {
-    if (timerID) clearTimeout(timerID);
-    timerID = null;
-    if (delay <= 0) {
-      modalMessageHTML = msgHTML;
-      modalMessageState.isShowing = msgHTML != "";
-      return;
+  function removeMessage(key: string) {
+    let m = messages.find((m) => m.key === key);
+    if (m?.timer) {
+      clearTimeout(m.timer);
     }
-    timerID = setTimeout(() => {
-      modalMessageHTML = msgHTML;
-      modalMessageState.isShowing = msgHTML != "";
-    }, delay);
+    messages = messages.filter((m) => m.key !== key);
   }
 
-  export function clearModalMessage() {
-    modalMessageHTML = "";
-    if (timerID) clearTimeout(timerID);
-    timerID = null;
-    modalMessageState.isShowing = false;
+  // shows message msgHTML owned by key after delay ms (replaces the previous
+  // message with the same key)
+  export function showModalMessageHTML(msgHTML: string, delay: number, key = "default") {
+    removeMessage(key);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    if (delay > 0) {
+      timer = setTimeout(() => {
+        let m = messages.find((x) => x.key === key);
+        if (m) {
+          m.visible = true;
+          m.timer = null;
+        }
+      }, delay);
+    }
+    messages.push({ key, html: msgHTML, visible: delay <= 0, timer });
+  }
+
+  // clears message owned by key
+  export function clearModalMessage(key = "default") {
+    removeMessage(key);
+  }
+
+  function currentHTML(): string {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i]!.visible) {
+        return messages[i]!.html;
+      }
+    }
+    return "";
   }
 </script>
 
@@ -36,7 +67,7 @@
 >
   <button class="bg-white focus:outline-hidden min-w-[75vw]">
     <div class="text-lg text-black px-4 py-2 text-center">
-      {@html modalMessageHTML}
+      {@html currentHTML()}
     </div>
   </button>
 </form>

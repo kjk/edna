@@ -394,7 +394,10 @@ other tabs are open.
   history entry without a note in the URL (`addHomeToBrowserHistory`); Back to it switches
   to Home; Back/Forward replaces the current tab (`tests/browser/app.test.ts`).
 - 15c. One shared modal message for overlapping operations (e.g. "Loading..." cleared
-  "running code").
+  "running code"). **Fixed**: messages are owned by a key ("load", "run",
+  "storage"); each operation clears only its own and the latest visible one is shown.
+  Password / permission prompts hide messages instead of clearing them
+  (`tests/browser/modal-message.test.ts`).
 - 15d. Language auto-detect worker replies were applied to the active block if its content
   was similar (Levenshtein), not by block identity; could change another block or a block in
   another note.
@@ -422,4 +425,4 @@ other tabs are open.
 | 12 Ask AI | fixed (12a–12c), `tests/browser/askai.test.ts` |
 | 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent editing of the same note in two tabs is still last-writer-wins |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
-| 15 Previously open items | 15a, 15b fixed; 15c–15g open |
+| 15 Previously open items | 15a–15c fixed; 15d–15g open |
