@@ -4,7 +4,7 @@ import "highlight.js/styles/github.css";
 import { mount, unmount } from "svelte";
 import App from "./components/App.svelte";
 import AskFSPermissions from "./components/AskFSPermissions.svelte";
-import { isTabHome, kScratchNoteName, kTabHome } from "./constants";
+import { isTabHome, kTabHome } from "./constants";
 import { hasHandlePermission } from "./fileutil";
 import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import {
@@ -14,7 +14,6 @@ import {
   isSystemNoteName,
   loadNoteNames,
   preLoadAllNotes,
-  setStorageFS,
 } from "./notes";
 import { getSettings, settingsAddTab } from "./settings.svelte";
 import { isDev } from "./util";

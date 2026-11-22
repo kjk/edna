@@ -7,7 +7,6 @@
     dbGetDirHandle,
     pickAnotherDirectory,
     preLoadAllNotes,
-    setStorageFS,
   } from "../notes";
 
   let dirName = $state("");

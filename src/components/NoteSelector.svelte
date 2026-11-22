@@ -126,7 +126,7 @@
     makeHilightRegExp,
     noOp,
   } from "../util";
-  import { IconTablerArchive, IconTablerStar, IconTablerTrash } from "./Icons.svelte";
+  import { IconTablerArchive, IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
@@ -523,17 +523,6 @@
               >
             {/if}
           {/if}
-          <!-- {#if isNoteTrashable(noteInfo.name)}
-            <button
-              title={"permanently delete"}
-              class="clickable-icon text-red-400"
-              onclick={(ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
-                deleteNote(noteInfo.name, false);
-              }}>{@render IconTablerTrash()}</button
-            >
-          {/if} -->
         </div>
       </div>
     {/snippet}

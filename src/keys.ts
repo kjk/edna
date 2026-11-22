@@ -3,10 +3,6 @@
 import browser from "./browser";
 import { len } from "./util";
 
-export function isEsc(ev: KeyboardEvent): boolean {
-  return ev.key === "Escape";
-}
-
 export function isEnter(ev: KeyboardEvent): boolean {
   return ev.key === "Enter";
 }
@@ -17,20 +13,6 @@ export function isUp(ev: KeyboardEvent): boolean {
 
 export function isDown(ev: KeyboardEvent): boolean {
   return ev.key == "ArrowDown" || ev.key == "Down";
-}
-
-export function isNavUp(ev: KeyboardEvent): boolean {
-  if (isUp(ev)) {
-    return true;
-  }
-  return ev.ctrlKey && ev.code === "KeyP";
-}
-
-export function isNavDown(ev: KeyboardEvent): boolean {
-  if (isDown(ev)) {
-    return true;
-  }
-  return ev.ctrlKey && ev.code === "KeyN";
 }
 
 function isFuncKey(s: string): boolean {

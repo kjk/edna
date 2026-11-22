@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import { preventDefault, stopPropagation } from "svelte/legacy";
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";

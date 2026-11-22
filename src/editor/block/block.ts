@@ -1,4 +1,4 @@
-import { ensureSyntaxTree, syntaxTreeAvailable } from "@codemirror/language";
+import { syntaxTreeAvailable } from "@codemirror/language";
 import {
   EditorSelection,
   EditorState,
@@ -7,7 +7,6 @@ import {
   RangeSetBuilder,
   SelectionRange,
   StateField,
-  Transaction,
 } from "@codemirror/state";
 import {
   Decoration,

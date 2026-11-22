@@ -1,5 +1,4 @@
 import { redoDepth } from "@codemirror/commands";
-import { EditorState } from "@codemirror/state";
 import { EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { blockState, getActiveNoteBlock } from "../block/block";
 import { changeLanguageTo } from "../block/commands";

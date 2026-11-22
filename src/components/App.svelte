@@ -2040,7 +2040,6 @@
     showModalMessageHTML(msg, 300);
     let editor = getEditorComp();
     await editor.openNote(name, skipSave, noPushHistory);
-    // await sleep(400);
     clearModalMessage();
     getEditorComp().focus();
   }

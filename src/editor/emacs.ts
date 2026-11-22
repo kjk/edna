@@ -24,7 +24,7 @@ import {
   splitLine,
   undo,
 } from "@codemirror/commands";
-import { EditorSelection, EditorState, Prec } from "@codemirror/state";
+import { Prec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import {
   gotoNextBlock,

@@ -147,32 +147,6 @@ function dontSkip(entry: any, dir: string): boolean {
   return false;
 }
 
-export async function readDirRecur(
-  dirHandle: FileSystemDirectoryHandle,
-  skipEntryFn = dontSkip,
-  dir = dirHandle.name,
-): Promise<FsEntry> {
-  let entries: FsEntry[] = [];
-  // @ts-ignore
-  for await (const handle of dirHandle.values()) {
-    if (skipEntryFn(handle, dir)) {
-      continue;
-    }
-    const path = dir == "" ? handle.name : `${dir}/${handle.name}`;
-    if (handle.kind === "file") {
-      let e = await FsEntry.fromHandle(handle, dirHandle, path);
-      entries.push(e);
-    } else if (handle.kind === "directory") {
-      let e = await readDirRecur(handle, skipEntryFn, path);
-      e.path = path;
-      entries.push(e);
-    }
-  }
-  let res = new FsEntry(dirHandle, null, 0, dir, [], null);
-  res.dirEntries = entries;
-  return res;
-}
-
 // note: size of file entries is only set if withSizes is true
 export async function readDir(
   dirHandle: FileSystemDirectoryHandle,
@@ -193,42 +167,6 @@ export async function readDir(
   let res = new FsEntry(dirHandle, null, 0, dir, [], null);
   res.dirEntries = entries;
   return res;
-}
-
-export async function readDirRecurFiles(dirHandle: FileSystemDirectoryHandle, dir = dirHandle.name): Promise<File[]> {
-  const dirs = [];
-  const files = [];
-  // @ts-ignore
-  for await (const entry of dirHandle.values()) {
-    const path = dir == "" ? entry.name : `${dir}/${entry.name}`;
-    if (entry.kind === "file") {
-      files.push(
-        entry.getFile().then((file: File & { directoryHandle?: FileSystemDirectoryHandle; handle?: FileSystemFileHandle }) => {
-          file.directoryHandle = dirHandle;
-          file.handle = entry;
-          return Object.defineProperty(file, "webkitRelativePath", {
-            configurable: true,
-            enumerable: true,
-            get: () => path,
-          });
-        }),
-      );
-    } else if (entry.kind === "directory") {
-      dirs.push(readDirRecurFiles(entry, path));
-    }
-  }
-  return [...(await Promise.all(dirs)).flat(), ...(await Promise.all(files))];
-}
-
-export function forEachFsEntry(dir: FsEntry, fn: (e: FsEntry) => boolean) {
-  let entries = dir.dirEntries;
-  for (let e of entries) {
-    let skip = fn(e);
-    if (!skip && e.isDir) {
-      forEachFsEntry(e, fn);
-    }
-  }
-  fn(dir);
 }
 
 export async function openDirPicker(writeAccess: boolean): Promise<FileSystemDirectoryHandle | null> {
@@ -295,17 +233,6 @@ export async function fsReadBinaryFile(dh: FileSystemDirectoryHandle, fileName: 
   const blob = await fh.getFile();
   const res = await readBlobAsUint8Array(blob);
   return res;
-}
-
-export async function fsFileExists(dh: FileSystemDirectoryHandle, fileName: string): Promise<boolean> {
-  try {
-    await dh.getFileHandle(fileName);
-  } catch (e) {
-    // getFileHandle() throws exception if file doesn't exist
-    console.log(e);
-    return false;
-  }
-  return true;
 }
 
 export async function fsDeleteFile(dh: FileSystemDirectoryHandle, name: string) {

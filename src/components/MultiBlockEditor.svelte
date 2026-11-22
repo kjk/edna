@@ -1,6 +1,5 @@
 <script lang="ts">
   import { mount, onMount, unmount } from "svelte";
-  import { syntaxTree } from "@codemirror/language";
   import { EditorView, type ViewUpdate } from "@codemirror/view";
   import { appState } from "../appstate.svelte";
   import { startCurrencyRefresh } from "../currency";

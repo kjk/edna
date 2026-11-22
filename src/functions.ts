@@ -40,15 +40,6 @@ export function parseBoopFunction(s: string): BoopFunction | null {
   return meta;
 }
 
-export function findFunctionByName(funcs: BoopFunction[], name: string): BoopFunction | null {
-  for (let f of funcs) {
-    if (f.name === name) {
-      return f;
-    }
-  }
-  return null;
-}
-
 export function parseBuiltInFunctions(s: string): BoopFunction[] {
   let parts = s.split("// ----------------------------");
   let n = len(parts);

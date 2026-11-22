@@ -1,4 +1,3 @@
-import { tick } from "svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
 import { getStorageFS } from "./notes";
@@ -26,10 +25,6 @@ export interface Metadata {
 }
 
 let metadata: Metadata | null = null;
-
-export function getMetadata(): Metadata | null {
-  return metadata;
-}
 
 export function getNotesMetadata(): NoteMetadata[] {
   metadata!.notes = metadata!.notes || [];
@@ -223,16 +218,6 @@ export async function toggleFunctionStarred(name: string): Promise<boolean> {
   m.isStarred = !m.isStarred;
   await saveNotesMetadata();
   return !!m.isStarred;
-}
-
-export function printMetaInfo() {
-  let notes = getNotesMetadata();
-  console.log("Notes metadata:");
-  for (let m of notes) {
-    if (m.isArchived) {
-      console.log(`  ${m.name} isArchived: ${m.isArchived}`);
-    }
-  }
 }
 
 // TODO: temporary

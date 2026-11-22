@@ -3,9 +3,7 @@ import { RangeSet, StateEffect } from "@codemirror/state";
 import { BlockInfo, EditorView } from "@codemirror/view";
 import {
   ADD_NEW_BLOCK,
-  heynoteEvent,
   LANGUAGE_CHANGE,
-  transactionsHasAnnotation,
   transactionsHasAnnotationsAny,
   transactionsHasHistoryEvent,
 } from "./annotation";

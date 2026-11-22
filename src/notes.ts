@@ -53,7 +53,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { formatDateYYYYMMDDDay, len, removeDuplicates, throwIf, trimSuffix } from "./util";
+import { len, removeDuplicates, throwIf, trimSuffix } from "./util";
 
 // is set if we store notes on disk, null if in localStorage
 let storageFS: FileSystemDirectoryHandle | undefined;
@@ -294,11 +294,6 @@ function getOpenedNote(noteName: string): OpenedNote | null {
     }
   }
   return null;
-}
-
-export function unrememberOpenedNote(noteName: string) {
-  openedNotes = openedNotes.filter((openedNote) => openedNote.noteName !== noteName);
-  appState.allNotes = appState.allNotes.filter((name) => name != noteName);
 }
 
 export function rememberOpenedNote(fh: FileSystemFileHandle): string | null {
@@ -696,19 +691,8 @@ export function canDeleteNote(name: string): boolean {
   return !isSystemNoteName(name);
 }
 
-export function isNoteTrashable(name: string): boolean {
-  if (name === kScratchNoteName) {
-    return false;
-  }
-  let openedNote = getOpenedNote(name);
-  if (openedNote) {
-    return false;
-  }
-  return !isSystemNoteName(name);
-}
-
 export function isNoteArchivable(name: string): boolean {
-  return isNoteTrashable(name);
+  return canDeleteNote(name);
 }
 
 /* I've seen loadNoteNames() fail. I assume that's because of doing directory read

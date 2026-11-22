@@ -9,9 +9,7 @@ const base00 = "#2e3440", // black
   base02 = "#434c5e",
   base03 = "#4c566a"; // grey
 // Snow Storm
-const base04 = "#d8dee9", // grey
-  base05 = "#e5e9f0", // off white
-  base06 = "#eceff4"; // white
+const base04 = "#d8dee9"; // grey
 // Frost
 const base07 = "#8fbcbb", // moss green
   base08 = "#88c0d0", // ice blue
@@ -24,7 +22,6 @@ const base0b = "#bf616a", // red
   base0E = "#a3be8c", // green
   base0F = "#b48ead"; // purple
 const invalid = "#d30102",
-  darkBackground = "#252a33",
   background = "#1e222a",
   tooltipBackground = base01,
   cursor = "#fff";

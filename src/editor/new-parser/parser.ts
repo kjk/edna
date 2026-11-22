@@ -97,8 +97,6 @@ class MultiBlockParse implements PartialParse {
 
   constructor(
     private input: Input,
-    private fragments: readonly TreeFragment[],
-    private ranges: readonly { from: number; to: number }[],
     private configuredNodeSet: NodeSet = nodeSet
   ) {}
 
@@ -222,7 +220,7 @@ export class MultiBlockParser extends Parser {
     fragments: readonly TreeFragment[],
     ranges: readonly { from: number; to: number }[]
   ): PartialParse {
-    const baseParse = new MultiBlockParse(input, fragments, ranges, this._nodeSet);
+    const baseParse = new MultiBlockParse(input, this._nodeSet);
 
     // If we have a wrapper (e.g., from parseMixed), apply it
     if (this._wrap) {

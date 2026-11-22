@@ -18,15 +18,6 @@ export function objectEqualDeep(a: any, b: any): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export function cloneObjectShallow(o: any): any {
-  // could also be return { ...o };
-  return Object.assign({}, o);
-}
-
-export function cloneObjectDeep(o: any): any {
-  return JSON.parse(JSON.stringify(o));
-}
-
 export let platform = {
   // default to windows
   isMac: false,
@@ -102,21 +93,6 @@ export function fmtSize(n: number): string {
   return `${n} B`;
 }
 
-export function formatDuration(ms: number): string {
-  const days = Math.floor(ms / 86400000); // 1 day = 86400000 ms
-  const hours = Math.floor((ms % 86400000) / 3600000); // 1 hour = 3600000 ms
-  const mins = Math.floor((ms % 3600000) / 60000); // 1 minute = 60000 ms
-  const secs = Math.floor((ms % 60000) / 1000); // 1 second = 1000 ms
-
-  let res = "";
-
-  if (days > 0) res += `${days} day${days > 1 ? "s" : ""} `;
-  if (hours > 0) res += `${hours} hour${hours > 1 ? "s" : ""} `;
-  if (mins > 0) res += `${mins} minute${mins > 1 ? "s" : ""} `;
-  if (secs > 0) res += `${secs} second${secs > 1 ? "s" : ""}`;
-  return res.trim();
-}
-
 export function formatDurationShort(ms: number): string {
   const days = Math.floor(ms / 86400000); // 1 day = 86400000 ms
   const hours = Math.floor((ms % 86400000) / 3600000); // 1 hour = 3600000 ms
@@ -166,15 +142,6 @@ export function formatDateYYYYMMDDDay(date = new Date()): string {
   return formattedDate;
 }
 
-export function fileExt(fileName: string): string {
-  const idx = fileName.lastIndexOf(".");
-  if (idx === -1) {
-    return "";
-  }
-  const ext = fileName.substring(idx);
-  return ext.toLowerCase();
-}
-
 export function isAltNumEvent(e: KeyboardEvent): string | null {
   if (e.metaKey || e.ctrlKey || e.shiftKey || !e.altKey) {
     return null;
@@ -195,15 +162,6 @@ export function addNoteToBrowserHistory(noteName: string) {
   // update browser's URL without reloading the page
   window.history.pushState({ noteName: noteName }, noteName, url);
   console.log("window.history.pushState:", noteName);
-}
-
-let sleepSetTimeout_ctrl: ReturnType<typeof setTimeout> | undefined;
-
-export function sleep(ms: number): Promise<void> {
-  if (sleepSetTimeout_ctrl) clearInterval(sleepSetTimeout_ctrl);
-  return new Promise(
-    (resolve) => (sleepSetTimeout_ctrl = setTimeout(resolve, ms)),
-  );
 }
 
 let cachedScrollbarDx = 0;
@@ -280,26 +238,7 @@ export function stringMatchesParts(s: string, parts: string[]): boolean {
 }
 
 export function findMatchingItems(items: any[], filter: string, itemKey: string): any[] {
-  filter = filter.trim();
-  if (filter === "") {
-    return items;
-  }
-  filter = filter.toLowerCase();
-  let filterParts = filter.split(" ");
-  for (let [i, part] of filterParts.entries()) {
-    filterParts[i] = part.trim();
-  }
-  // perf: pre-allocate result to max capacity
-  let res = Array(len(items));
-  let i = 0;
-  for (let item of items) {
-    if (!stringMatchesParts(item[itemKey], filterParts)) {
-      continue;
-    }
-    res[i++] = item;
-  }
-  res.length = i;
-  return res;
+  return findMatchingItemsFn(items, filter, (item) => item[itemKey]);
 }
 
 export function findMatchingItemsFn(items: any[], filter: string, itemKeyFn: (item: any) => any): any[] {
@@ -352,35 +291,6 @@ export async function getClipboardText(): Promise<string> {
     // console.error("Error reading clipboard text:", error);
     return "";
   }
-}
-
-export async function hasClipboardPermissions(): Promise<boolean> {
-  try {
-    const permissionStatus = await navigator.permissions.query({
-      // @ts-ignore
-      name: "clipboard-read",
-    });
-    switch (permissionStatus.state) {
-      case "granted":
-        return true;
-      case "denied":
-        return false;
-      case "prompt":
-        return false;
-    }
-  } catch (error) {
-    return false;
-  }
-}
-
-export function renameLS(oldName: string, newName: string) {
-  let s = localStorage.getItem(oldName);
-  if (s === null) {
-    // doesn't exist
-    return;
-  }
-  localStorage.setItem(newName, s);
-  localStorage.removeItem(oldName);
 }
 
 export function noOp() {
@@ -446,14 +356,6 @@ export function hilightText(s: string, regexp: RegExp): string {
     last = m.index + m[0].length;
   }
   return res + escapeHTML(s.slice(last));
-}
-
-export function copyObj(src: Record<string, unknown>, keys: string[]): Record<string, unknown> {
-  let res: Record<string, unknown> = {};
-  for (let k of keys) {
-    res[k] = src[k];
-  }
-  return res;
 }
 
 export function pushIfNotExists(arr: any[], item: any) {

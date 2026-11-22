@@ -1,5 +1,5 @@
 import { appState } from "./appstate.svelte";
-import { kScratchNoteName, kSettingsPath, kTabHome } from "./constants";
+import { kSettingsPath, kTabHome } from "./constants";
 import { kModelIDIdx, modelsShort } from "./models-short";
 import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf } from "./util";
 

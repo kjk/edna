@@ -1,3 +1,4 @@
+import { getSessionDurationInMs } from "./state";
 import { formatDurationShort } from "./util";
 
 export interface GlobalFuncs {
@@ -7,11 +8,8 @@ export interface GlobalFuncs {
   updateAfterNoteStateChange: () => void;
 }
 
-let sessionStart = performance.now();
-
 export function getSessionDur(): string {
-  let durMs = Math.round(performance.now() - sessionStart);
-  return formatDurationShort(durMs);
+  return formatDurationShort(getSessionDurationInMs());
 }
 
 // it's easier to make some functions from App.vue available this way
