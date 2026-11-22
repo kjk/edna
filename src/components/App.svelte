@@ -2065,6 +2065,11 @@
 
   async function onMoveBlockToNote(name: string) {
     appState.showingBlockMoveSelector = false;
+    if (name.toLowerCase() === (noteName || "").toLowerCase()) {
+      // appending to the note and then deleting the block would lose it
+      showWarning("Can't move a block to the note it's in");
+      return;
+    }
     // name can be new or existing note
     let state = getEditorView().state;
     let block = getActiveNoteBlock(state)!;
@@ -2079,7 +2084,12 @@
 
   async function onCreateNote(name: string) {
     closeDialogs();
-    await createNoteWithName(name);
+    try {
+      await createNoteWithName(name);
+    } catch (e) {
+      showError(`${e}`);
+      return;
+    }
     openNote(name);
     // TODO: add a way to undo creation of the note
     showToast(`Created note '${name}'`);

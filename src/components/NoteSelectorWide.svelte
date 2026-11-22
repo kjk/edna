@@ -3,7 +3,7 @@
   import { appState } from "../appstate.svelte";
   import { kScratchNoteName } from "../constants";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
-  import { isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { findNoteIgnoreCase, isSystemNoteName, sanitizeNoteName } from "../notes";
   import {
     findMatchingItems,
     getAltChar,
@@ -83,13 +83,9 @@
 
     // TODO: use lowerCase name?
     let name = sanitizeNoteName(filter);
-    canCreate = len(name) > 0;
-    for (let i of itemsFiltered) {
-      if (i.name.toLowerCase() === name.toLowerCase()) {
-        canCreate = false;
-        break;
-      }
-    }
+    // check all notes, not just visible ones (archived notes might be hidden)
+    // to not overwrite an existing note (N-I1)
+    canCreate = len(name) > 0 && !findNoteIgnoreCase(name);
 
     canCreateWithEnter = !canOpenSelected;
     // if there are no matches for the filter, we can create with just Enter

@@ -501,24 +501,23 @@ async function saveNoteNow(
   incNoteSaveCount();
 }
 
+// creates a new note. Throws if a note with this name (ignoring case) already
+// exists, to never overwrite an existing note (N-I1)
 export async function createNoteWithName(name: string, content: string | null = null) {
+  let existing = findNoteIgnoreCase(name);
+  if (existing) {
+    throw new Error(`note '${existing}' already exists`);
+  }
   let dh = getStorageFS();
   content = fixUpNoteContent(content);
   if (!dh) {
     const path = notePathFromName(name);
-    // TODO: should it happen that note already exists?
-    if (localStorage.getItem(path) == null) {
-      localStorage.setItem(path, content);
-      console.log("created note", name);
-      incNoteCreateCount();
-    } else {
-      console.log("note already exists", name);
-    }
+    localStorage.setItem(path, content);
+    incNoteCreateCount();
     await loadNoteNames();
     return;
   }
 
-  // TODO: check if exists
   await writeNoteFS(dh, name, content);
   incNoteCreateCount();
   await loadNoteNames();
@@ -526,6 +525,9 @@ export async function createNoteWithName(name: string, content: string | null = 
 
 export async function appendToNote(name: string, content: string) {
   throwIf(!startsWithBlockHeader(content), "content must start with block header ~~~");
+  // append to existing note even if the name differs in case, instead of
+  // creating a note that would overwrite it on case-insensitive file systems
+  name = findNoteIgnoreCase(name) || name;
 
   let dh = getStorageFS();
   if (!dh) {
@@ -745,8 +747,8 @@ export async function deleteNote(name: string) {
 
 export async function renameNote(oldName: string, newName: string, content: string) {
   let dh = getStorageFS();
-  if (dh && oldName !== newName && oldName.toLowerCase() === newName.toLowerCase()) {
-    await renameNoteCaseOnlyFS(dh, oldName, newName, content);
+  if (oldName !== newName && oldName.toLowerCase() === newName.toLowerCase()) {
+    await renameNoteCaseOnly(dh, oldName, newName, content);
     return;
   }
   await createNoteWithName(newName, content);
@@ -764,13 +766,24 @@ export async function renameNote(oldName: string, newName: string, content: stri
 
 // on case-insensitive file systems (macOS, Windows) "Foo" and "foo" are the same
 // file, so creating the new note and deleting the old one would delete the note
-async function renameNoteCaseOnlyFS(dh: FileSystemDirectoryHandle, oldName: string, newName: string, content: string) {
-  await fsDeleteFile(dh, notePathFromNameFS(oldName));
-  try {
-    await writeNoteFS(dh, newName, content);
-  } catch (e) {
-    await writeNoteFS(dh, oldName, content);
-    throw e;
+// note: createNoteWithName() refuses names that differ only in case
+async function renameNoteCaseOnly(
+  dh: FileSystemDirectoryHandle | undefined,
+  oldName: string,
+  newName: string,
+  content: string,
+) {
+  if (!dh) {
+    localStorage.setItem(notePathFromNameLS(newName), content);
+    localStorage.removeItem(notePathFromNameLS(oldName));
+  } else {
+    await fsDeleteFile(dh, notePathFromNameFS(oldName));
+    try {
+      await writeNoteFS(dh, newName, content);
+    } catch (e) {
+      await writeNoteFS(dh, oldName, content);
+      throw e;
+    }
   }
   await renameNoteInMetadata(oldName, newName);
   renameNoteInHistory(oldName, newName);

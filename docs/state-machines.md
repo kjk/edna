@@ -363,7 +363,7 @@ other tabs are open.
 |---|---|
 | 1 Note switching | fixed (1a–1f): `NoteLoader` (`editor/note-loader.ts`), `tests/browser/note-loader.test.ts` |
 | 2 Save bookkeeping | fixed (2a–2c), `tests/browser/save.test.ts` |
-| 3 Create / move overwrites | open |
+| 3 Create / move overwrites | fixed (3a–3c), `tests/browser/notes.test.ts` |
 | 4 Dialog invariants | open |
 | 5 Password handling | open |
 | 6 Encrypt / decrypt all | open |

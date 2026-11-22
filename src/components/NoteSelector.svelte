@@ -113,7 +113,7 @@
     toggleNoteStarred,
     unArchiveNote,
   } from "../metadata";
-  import { isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { findNoteIgnoreCase, isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
   import {
     findMatchingItems,
     getAltChar,
@@ -147,7 +147,11 @@
   }: Props = $props();
 
   let noteInfos = $derived(
-    buildRegularAndArchivedNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []),
+    buildRegularAndArchivedNoteInfos(
+      // can't move a block to the note it's in
+      forMoveBlock ? appState.regularNotes.filter((n) => n !== appState.currentNoteName) : appState.regularNotes,
+      appState.showingArchived ? appState.archivedNotes : [],
+    ),
   );
 
   let filter = $state("");
@@ -194,12 +198,11 @@
     canOpenSelected = !!selectedNote;
     canCreateWithEnter = !(len(name) == 0) && !canOpenSelected;
     canCreate = len(name) > 0;
-    for (let i of filteredNoteInfos) {
-      if (i.name.toLowerCase() === name.toLowerCase()) {
-        canCreate = false;
-        canCreateWithEnter = false;
-        break;
-      }
+    // check all notes, not just visible ones (archived notes might be hidden)
+    // to not overwrite an existing note (N-I1)
+    if (findNoteIgnoreCase(name)) {
+      canCreate = false;
+      canCreateWithEnter = false;
     }
 
     canDeleteSelected = false;

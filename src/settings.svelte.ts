@@ -264,6 +264,10 @@ function updateWebsiteTheme() {
 }
 
 function saveSettings(newSettings: Settings): boolean {
+  if (!settingsLoaded) {
+    // nothing to save before settings were loaded by getSettings()
+    return false;
+  }
   throwIf(!newSettings.currentTab);
   newSettings.tabSize = validateTabSize(newSettings.tabSize);
   let settingsRaw = $state.snapshot(newSettings);
