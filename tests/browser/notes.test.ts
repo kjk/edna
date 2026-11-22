@@ -4,6 +4,7 @@ import { blockHdrMarkdown } from "../../src/constants";
 import { loadNotesMetadata, upgradeMetadata } from "../../src/metadata";
 import {
   appendToNote,
+  createDefaultNotes,
   createNoteWithName,
   loadNote,
   loadNoteNames,
@@ -58,5 +59,25 @@ describe("notes (localStorage)", () => {
     expect(res.conflictName).toBe("x-conflict");
     expect(await loadNote("x")).toBe(blockHdrMarkdown + "other tab");
     expect(await loadNote("x-conflict")).toBe(mine + " more");
+  });
+
+  it("conflict copy and default notes: names unique ignoring case (U4)", async () => {
+    const a = blockHdrMarkdown + "a";
+    await createNoteWithName("x", a);
+    await createNoteWithName("X-Conflict", blockHdrMarkdown + "older conflict");
+    localStorage.setItem("note:x", blockHdrMarkdown + "other tab");
+    const res = await saveNote("x", a + " mine", a);
+    expect(res.conflictName).toBe("x-conflict-1");
+    expect(await loadNote("X-Conflict")).toBe(blockHdrMarkdown + "older conflict");
+
+    // "Scratch" created outside Edna: becomes "scratch" instead of failing boot
+    localStorage.setItem("note:Scratch", blockHdrMarkdown + "my scratch");
+    const names = await loadNoteNames();
+    await createDefaultNotes(names);
+    expect(appState.allNotes).toContain("scratch");
+    expect(appState.allNotes).not.toContain("Scratch");
+    expect(await loadNote("scratch")).toBe(blockHdrMarkdown + "my scratch");
+    // not a new store: inbox / journal not created
+    expect(appState.allNotes).not.toContain("inbox");
   });
 });

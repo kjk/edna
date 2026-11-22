@@ -45,7 +45,7 @@ import {
 import { mergeMetadata, normalizeMetadata } from "./metadata-merge";
 import { noteNameError } from "./note-name";
 import { getSettings } from "./settings.svelte";
-import { getStats, incNoteCreateCount, incNoteDeleteCount, incNoteSaveCount } from "./state";
+import { incNoteCreateCount, incNoteDeleteCount, incNoteSaveCount } from "./state";
 import {
   getBuiltInFunctionsNote,
   getHelp,
@@ -271,7 +271,9 @@ export async function createIfNotExists(name: string, content: string, existingN
   if (!existingNotes) {
     existingNotes = appState.allNotes;
   }
-  if (existingNotes.includes(name)) {
+  // names are unique ignoring case (U4): creating would throw
+  let nameLC = name.toLowerCase();
+  if (existingNotes.some((n) => n.toLowerCase() === nameLC)) {
     console.log(`note ${name} already exists`);
     return 0;
   }
@@ -280,11 +282,20 @@ export async function createIfNotExists(name: string, content: string, existingN
 }
 
 export async function createDefaultNotes(existingNotes: string[]): Promise<number> {
-  let isFirstRun = getStats().appOpenCount < 2;
+  // a store without notes: a new user, or switched back to local storage after
+  // moving notes to disk. Not "first time the app runs": that's also true for a
+  // directory with existing notes picked in the first session, where we must not
+  // re-create deleted notes or take over their shortcuts
+  let isFirstRun = len(existingNotes) == 0;
   console.log(`isFirstRun: ${isFirstRun}, len(existingNotes): ${len(existingNotes)}`);
-  if (len(existingNotes) == 0) {
-    // scenario: moved notes to disk and switched back to local storage
-    isFirstRun = true;
+
+  // the app opens "scratch" by name: a case variant (e.g. "Scratch.edna.txt"
+  // created outside Edna) becomes "scratch"
+  let scratchVariant = existingNotes.find((n) => n !== kScratchNoteName && n.toLowerCase() === kScratchNoteName);
+  if (scratchVariant && !existingNotes.includes(kScratchNoteName)) {
+    let content = (await loadNote(scratchVariant)) ?? "";
+    await renameNote(scratchVariant, kScratchNoteName, fixUpNoteContent(content));
+    existingNotes = await loadNoteNames();
   }
 
   let welcomeNote = getWelcomeNote();
@@ -529,10 +540,13 @@ function getSystemNoteContent(name: string): string {
   return s;
 }
 
+// returns base or base-N that is not in existingNames, ignoring case because
+// names are unique ignoring case (U4)
 function pickUniqueName(base: string, existingNames: string[]): string {
+  let used = new Set(existingNames.map((n) => n.toLowerCase()));
   let name = base;
   let i = 1;
-  while (existingNames.includes(name)) {
+  while (used.has(name.toLowerCase())) {
     name = base + "-" + i;
     i++;
   }
@@ -583,7 +597,8 @@ export function saveNote(name: string, content: string, base?: string): Promise<
     .catch(() => {})
     .then(async (): Promise<SaveResult> => {
       if (base !== undefined && (await isChangedElsewhere(name, content, base))) {
-        let conflictName = pickUniqueName(name + "-conflict", appState.allNotes);
+        // re-read names: another tab might have created a conflict copy too
+        let conflictName = pickUniqueName(name + "-conflict", await loadNoteNames());
         await createNoteWithName(conflictName, content);
         return { conflictName };
       }
@@ -1010,9 +1025,13 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
     let used = new Set<string>([...diskNames!, ...lsNames].map((n) => n.toLowerCase()));
     let diskByLC = new Map(diskNames!.map((n) => [n.toLowerCase(), n]));
     let renamed = new Map<string, string>();
+    // lower-cased names written to the directory: localStorage keys are
+    // case-sensitive so "foo" and "Foo" can both exist (U4)
+    let written = new Set<string>();
 
     for (let name of lsNames) {
       let content = loadNoteLS(name) || "";
+      let lsName = name;
       if (noteNameError(name)) {
         // e.g. "foo.encr" would become encrypted note "foo" in the directory (U2)
         let newName = pickUniqueNameIgnoreCase(name, used);
@@ -1027,15 +1046,26 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
           let diskContent = await fsReadTextFile(dh, notePathFromNameFS(diskName, false));
           if (diskContent === content) {
             console.log("switchToStoringNotesOnDisk: same content, skipping", name);
+            if (diskName !== name) {
+              // metadata and tabs follow the note in the directory
+              renamed.set(lsName, diskName);
+            }
             continue;
           }
         }
         let newName = pickUniqueNameIgnoreCase(name, used);
         used.add(newName.toLowerCase());
-        renamed.set(name, newName);
+        renamed.set(lsName, newName);
         console.log(`switchToStoringNotesOnDisk: '${name}' exists, moving as '${newName}'`);
         name = newName;
+      } else if (written.has(name.toLowerCase())) {
+        let newName = pickUniqueNameIgnoreCase(name, used);
+        used.add(newName.toLowerCase());
+        renamed.set(lsName, newName);
+        console.log(`switchToStoringNotesOnDisk: '${name}' differs only in case from a moved note, moving as '${newName}'`);
+        name = newName;
       }
+      written.add(name.toLowerCase());
       showModalMessageHTML(html`Moving <b>${name}</b>`, 0, "storage");
       let fileName = notePathFromNameFS(name, encrypt);
       if (encrypt) {

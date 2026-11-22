@@ -452,6 +452,10 @@ to state machines). Ordered by impact.
   `createIfNotExists` (exact case: boot threw if `Scratch` existed but not `scratch`),
   `pickUniqueName` (`-conflict` / scratch names: create threw forever), migration of
   browser notes `foo` + `Foo` to a case-insensitive directory (one overwritten, both deleted).
+  **Fixed**: all three compare ignoring case; a case variant of `scratch` is renamed to
+  `scratch` at boot; the conflict copy name is picked from freshly read names. Also: default
+  notes (inbox, journal, their Alt+N shortcuts) are created only for a store without notes,
+  not for a directory with notes picked during the first session.
 - **U5. A note never exists both plain and encrypted (E-I1).** `encryptNoteFS` /
   `decryptNoteFS` wrote the target without checking it exists, overwriting the other copy.
 - **U6. Notes opened from disk belong to the current storage.** `openedNotes` survived a

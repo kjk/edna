@@ -72,6 +72,20 @@ describe("move notes to directory", () => {
     expect(files.filter((f) => f.startsWith("x.encr") || f.startsWith("system"))).toEqual([]);
   });
 
+  it("browser notes differing only in case don't overwrite each other (U4)", async () => {
+    await setup({}, { foo: note("ls foo") });
+    // localStorage keys are case-sensitive: created by an old version or another tab
+    localStorage.setItem("note:Foo", note("ls Foo"));
+    await loadNoteNames();
+    const renamed = await switchToStoringNotesOnDisk(dh);
+    const files = await listFiles(dh);
+    const newName = renamed.get("Foo") ?? renamed.get("foo");
+    expect(newName).toBeDefined();
+    expect(files.filter((f) => f.endsWith(".edna.txt")).length).toBe(2);
+    const contents = [await loadNote("foo"), await loadNote(newName!)].sort();
+    expect(contents).toEqual([note("ls Foo"), note("ls foo")]);
+  });
+
   it("can't run twice at the same time", async () => {
     await setup({}, { a: note("a") });
     const p = switchToStoringNotesOnDisk(dh);
