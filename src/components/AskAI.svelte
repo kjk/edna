@@ -249,14 +249,17 @@
 
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
+    // a chunk can end in the middle of a line (or a multi-byte character)
+    // so we keep the incomplete last line for the next chunk
+    let pending = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
-      // console.log("chunk:", chunk);
-      const lines = chunk.split("\n");
+      pending += decoder.decode(value, { stream: true });
+      const lines = pending.split("\n");
+      pending = lines.pop()!;
 
       for (const line of lines) {
         if (line.startsWith("data: ")) {
@@ -313,7 +316,12 @@
     };
   }
 
-  function mdToHTML(md: string): string {
+  // creating markdown-it instance is expensive and mdToHTML() is called for every streamed token
+  let mdItCached: MarkdownIt | undefined;
+  function getMarkdownIt(): MarkdownIt {
+    if (mdItCached) {
+      return mdItCached;
+    }
     let mdIt: MarkdownIt = markdownIt({
       linkify: true,
       highlight: function (str: string, lang: string) {
@@ -330,9 +338,12 @@
     mdIt.use(markdownItAnchor, {
       permalink: markdownItAnchor.permalink.headerLink(),
     });
+    mdItCached = mdIt;
+    return mdIt;
+  }
 
-    let html = mdIt.render(md);
-    return html;
+  function mdToHTML(md: string): string {
+    return getMarkdownIt().render(md);
   }
 
   function onkeydown(ev: KeyboardEvent) {
