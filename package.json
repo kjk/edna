@@ -14,7 +14,8 @@
     "gen": "bun ./src/gen.ts",
     "test:node": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.js",
-    "test": "vitest run && vitest run --config vitest.browser.config.js"
+    "test": "vitest run && vitest run --config vitest.browser.config.js",
+    "gen:golden": "bun ./scripts/gen-parse-test-golden.ts"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",

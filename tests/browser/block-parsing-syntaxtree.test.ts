@@ -6,31 +6,11 @@ import { getBlocksFromString, getBlocksFromSyntaxTree } from "../../src/editor/b
 import type { NoteBlock } from "../../src/editor/block/block-parsing";
 import { cleanup, createEditor } from "./utils";
 
-// Golden data uses the old nested format
-interface OldNoteBlock {
-  index: number;
-  range: { from: number; to: number };
-  content: { from: number; to: number };
-  delimiter: { from: number; to: number };
-  language: string;
-  autoDetect: boolean;
-}
-
+// generated with: bun run gen:golden
 interface GoldenTestData {
   file: string;
   content: string;
-  blocks: OldNoteBlock[];
-}
-
-function translateBlock(old: OldNoteBlock): NoteBlock {
-  return {
-    index: old.index,
-    from: old.range.from,
-    to: old.range.to,
-    contentFrom: old.content.from,
-    language: old.language,
-    autoDetect: old.autoDetect,
-  };
+  blocks: NoteBlock[];
 }
 
 describe("Block parsing with syntax tree (browser tests)", () => {
@@ -73,7 +53,7 @@ describe("Block parsing with syntax tree (browser tests)", () => {
     const testData = goldenData[0];
     if (!testData) throw new Error("Test data not found");
 
-    const expectedBlocks = testData.blocks.map(translateBlock);
+    const expectedBlocks = testData.blocks;
     const blocksFromString = getBlocksFromString(testData.content);
     const blocksFromSyntaxTree = await parseWithSyntaxTree(testData.content);
 
@@ -85,7 +65,7 @@ describe("Block parsing with syntax tree (browser tests)", () => {
     const testData = goldenData[1];
     if (!testData) throw new Error("Test data not found");
 
-    const expectedBlocks = testData.blocks.map(translateBlock);
+    const expectedBlocks = testData.blocks;
     const blocksFromString = getBlocksFromString(testData.content);
     const blocksFromSyntaxTree = await parseWithSyntaxTree(testData.content);
 
