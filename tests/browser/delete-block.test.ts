@@ -15,7 +15,6 @@ describe("Delete block (browser tests)", () => {
   beforeEach(async () => {
     te = createEditor(threeBlockContent);
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
     expect(te.editor.getBlocks().length).toBe(3);
   });
 
@@ -27,7 +26,6 @@ describe("Delete block (browser tests)", () => {
     const { editor } = te;
     editor.setCursorPosition(10); // in "Block A"
     deleteBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(editor.getBlocks().length).toBe(2);
     // Cursor should be at start of what was the second block's content
@@ -38,7 +36,6 @@ describe("Delete block (browser tests)", () => {
     const { editor } = te;
     editor.setCursorPosition(32); // in "Block B"
     deleteBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(editor.getBlocks().length).toBe(2);
     // Cursor should be at start of what was the third block's content
@@ -49,7 +46,6 @@ describe("Delete block (browser tests)", () => {
     const { editor } = te;
     editor.setCursorPosition(52); // end of "Block C"
     deleteBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(editor.getBlocks().length).toBe(2);
     // Cursor should be at end of what was the second block

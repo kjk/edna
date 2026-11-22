@@ -72,12 +72,10 @@ describe("Math mode (browser tests)", () => {
   it("select all in math block replaces content", async () => {
     te = createEditor("\n\u221E\u221E\u221Emath\n1\n2");
     const { editor } = te;
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // First Mod+A selects current block content
     const modKey = /Mac/.test(navigator.platform) ? "Meta" : "Control";
     await userEvent.keyboard(`{${modKey}>}a{/${modKey}}`);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Type to replace selected content
     await userEvent.keyboard("3");
@@ -100,7 +98,6 @@ describe("Math mode (browser tests)", () => {
     // Fold the math block
     editor.setCursorPosition(10);
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => container.querySelectorAll(".cm-foldPlaceholder").length).toBeGreaterThan(0);
 

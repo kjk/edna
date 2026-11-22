@@ -20,7 +20,6 @@ describe("Multiple cursors (browser tests)", () => {
       "\n\u221E\u221E\u221Etext\nFirst line of content\nSecond line of content\nThird line of content\n",
     );
     const { editor } = te;
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Position cursor at first content line
     const blocks = editor.getBlocks();
@@ -41,7 +40,6 @@ describe("Multiple cursors (browser tests)", () => {
       "\n\u221E\u221E\u221Etext\nFirst line\nSecond line\nThird line\nFourth line\n",
     );
     const { editor } = te;
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Find content lines (skip the delimiter line)
     const blocks = editor.getBlocks();
@@ -67,7 +65,6 @@ describe("Multiple cursors (browser tests)", () => {
   it("multiple cursors typing behavior", async () => {
     te = createEditor("\n\u221E\u221E\u221Etext\nLine 1\nLine 2\nLine 3\n");
     const { editor } = te;
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Find the content lines using block boundaries
     const blocks = editor.getBlocks();
@@ -102,14 +99,12 @@ describe("Multiple cursors (browser tests)", () => {
       "\n\u221E\u221E\u221Etext\nFirst line of content\nSecond line of content\nThird line of content\n",
     );
     const { container } = te;
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Click on first line to position cursor
     const lines = container.querySelectorAll(".cm-line");
     expect(lines.length).toBeGreaterThanOrEqual(3);
 
     (lines[0] as HTMLElement).click();
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Alt+Click on second line to add cursor using MouseEvent
     const rect = (lines[1] as HTMLElement).getBoundingClientRect();
@@ -120,7 +115,6 @@ describe("Multiple cursors (browser tests)", () => {
       clientY: rect.top + 5,
     });
     (lines[1] as HTMLElement).dispatchEvent(altClick);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(getCursorCount()).toBe(2);
   });

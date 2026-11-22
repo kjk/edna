@@ -29,7 +29,6 @@ describe("Basic editing (browser tests)", () => {
     const modKey = isMac ? "Meta" : "Control";
     await userEvent.keyboard(`{${modKey}>}{Enter}{/${modKey}}`);
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(editor.getBlocks().length).toBe(2);
     expect(getBlockContent(editor, 0)).toBe("Hello World!");

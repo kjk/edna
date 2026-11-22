@@ -17,7 +17,6 @@ describe("Delete line (browser tests)", () => {
   beforeEach(async () => {
     te = createEditor(threeBlockContent);
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
     expect(te.editor.getBlocks().length).toBe(3);
   });
 

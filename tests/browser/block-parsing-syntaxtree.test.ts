@@ -1,5 +1,4 @@
 import { syntaxTreeAvailable } from "@codemirror/language";
-import type { EditorState } from "@codemirror/state";
 import { decode } from "@toon-format/toon";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getBlocksFromString, getBlocksFromSyntaxTree } from "../../src/editor/block/block-parsing";
@@ -23,27 +22,13 @@ describe("Block parsing with syntax tree (browser tests)", () => {
     goldenData = decode(goldenDataRaw) as unknown as GoldenTestData[];
   });
 
-  // Helper function to wait for syntax tree to be available
-  async function waitForSyntaxTree(state: EditorState, timeout = 5000): Promise<boolean> {
-    const startTime = Date.now();
-    while (Date.now() - startTime < timeout) {
-      if (syntaxTreeAvailable(state, state.doc.length)) {
-        return true;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-    return false;
-  }
-
   // Helper to create editor and parse content
   async function parseWithSyntaxTree(content: string): Promise<NoteBlock[]> {
     const te = createEditor(content);
     try {
-      const available = await waitForSyntaxTree(te.editor.view.state, 10000);
-      if (!available) {
-        throw new Error("Syntax tree did not become available in time");
-      }
-      return getBlocksFromSyntaxTree(te.editor.view.state);
+      const view = te.editor.view;
+      await expect.poll(() => syntaxTreeAvailable(view.state, view.state.doc.length), { timeout: 10000 }).toBe(true);
+      return getBlocksFromSyntaxTree(view.state);
     } finally {
       cleanup(te);
     }

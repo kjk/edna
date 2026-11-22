@@ -26,7 +26,6 @@ describe("Move block (browser tests)", () => {
     editor.setCursorPosition(blocks[blocks.length - 1].to);
     editor.view.focus();
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
     expect(editor.getBlocks().length).toBe(3);
   });
 

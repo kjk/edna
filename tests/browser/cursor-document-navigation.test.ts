@@ -63,7 +63,6 @@ describe("Cursor document navigation (browser tests)", () => {
   it("selectDocStart selects from cursor to beginning of document", async () => {
     te = createEditor(threeBlockContent);
     const { editor } = te;
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Position cursor in the middle of the document (in the second block)
     const blocks = editor.getBlocks();

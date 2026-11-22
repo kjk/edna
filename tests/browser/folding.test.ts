@@ -55,14 +55,11 @@ describe("Block folding (browser tests)", () => {
   async function selectEntireBuffer() {
     const modKey = isMac ? "Meta" : "Control";
     await userEvent.keyboard(`{${modKey}>}a{/${modKey}}`);
-    await new Promise((resolve) => setTimeout(resolve, 50));
     await userEvent.keyboard(`{${modKey}>}a{/${modKey}}`);
-    await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
   beforeEach(async () => {
     te = createEditor(fourBlockContent);
-    await new Promise((resolve) => setTimeout(resolve, 100));
     await expect.poll(() => te.editor.getBlocks().length).toBe(4);
   });
 
@@ -111,7 +108,6 @@ describe("Block folding (browser tests)", () => {
 
     // Fold block using command
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBeGreaterThan(0);
   });
@@ -125,7 +121,6 @@ describe("Block folding (browser tests)", () => {
 
     // Fold all selected blocks
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Block A, B, and D should be folded (C is single line so won't fold)
     await expect.poll(() => foldPlaceholderCount()).toBe(3);
@@ -133,7 +128,6 @@ describe("Block folding (browser tests)", () => {
     // Unfold all
     await selectEntireBuffer();
     unfoldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(0);
   });
@@ -146,13 +140,11 @@ describe("Block folding (browser tests)", () => {
 
     // Toggle fold to fold the block
     toggleBlockFold(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBeGreaterThan(0);
 
     // Toggle fold again to unfold the block
     toggleBlockFold(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(0);
   });
@@ -164,13 +156,11 @@ describe("Block folding (browser tests)", () => {
     expect(foldPlaceholderCount()).toBe(0);
 
     toggleBlockFold(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(3);
 
     await selectEntireBuffer();
     toggleBlockFold(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(0);
   });
@@ -180,7 +170,6 @@ describe("Block folding (browser tests)", () => {
     // Fold Block A first
     editor.setCursorPosition(20);
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(1);
 
@@ -189,14 +178,12 @@ describe("Block folding (browser tests)", () => {
 
     // Toggle fold on mixed state - should fold all (more unfolded than folded)
     toggleBlockFold(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(3);
 
     // Toggle again - should unfold all
     await selectEntireBuffer();
     toggleBlockFold(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(0);
   });
@@ -210,19 +197,16 @@ describe("Block folding (browser tests)", () => {
         "\n\u221E\u221E\u221Etext\nBlock C single line" +
         "\n\u221E\u221E\u221Etext\nBlock C single line",
     );
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     await selectEntireBuffer();
 
     toggleBlockFold(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Block A and B should be folded (other blocks are single line)
     await expect.poll(() => foldPlaceholderCount()).toBe(2);
 
     await selectEntireBuffer();
     toggleBlockFold(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(0);
   });
@@ -232,13 +216,11 @@ describe("Block folding (browser tests)", () => {
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3",
     );
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Fold the block
     const blocks = editor.getBlocks();
     editor.setCursorPosition(blocks[0].contentFrom + 5);
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(1);
 
@@ -261,12 +243,10 @@ describe("Block folding (browser tests)", () => {
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3",
     );
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const blocks = editor.getBlocks();
     editor.setCursorPosition(blocks[0].contentFrom + 5);
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(1);
 
@@ -288,13 +268,11 @@ describe("Block folding (browser tests)", () => {
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3" +
         "\n\u221E\u221E\u221Etext\n",
     );
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Fold the first block
     const blocks = editor.getBlocks();
     editor.setCursorPosition(blocks[0].contentFrom + 5);
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(1);
 
@@ -314,12 +292,10 @@ describe("Block folding (browser tests)", () => {
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3\n",
     );
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Fold the first block
     editor.setCursorPosition(20);
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(1);
 
@@ -328,13 +304,11 @@ describe("Block folding (browser tests)", () => {
     editor.setCursorPosition(blocks[0].contentFrom);
     const modKey = isMac ? "Meta" : "Control";
     await userEvent.keyboard(`{${modKey}>}{Enter}{/${modKey}}`);
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     await expect.poll(() => editor.getBlocks().length).toBe(2);
 
     // Immediately press backspace
     await userEvent.keyboard("{Backspace}");
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // The folded block should NOT unfold
     await expect.poll(() => foldPlaceholderCount()).toBe(1);
@@ -346,13 +320,11 @@ describe("Block folding (browser tests)", () => {
     editor.setContent(
       "\n\u221E\u221E\u221Etext\nBlock B line 1\nBlock B line 2\nBlock B line 3\n",
     );
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Fold the block
     let blocks = editor.getBlocks();
     editor.setCursorPosition(blocks[0].contentFrom + 10);
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(1);
 
@@ -360,7 +332,6 @@ describe("Block folding (browser tests)", () => {
     blocks = editor.getBlocks();
     editor.setCursorPosition(blocks[0].contentFrom);
     await userEvent.keyboard("{Alt>}{Enter}{/Alt}");
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     await expect.poll(() => editor.getBlocks().length).toBe(2);
 
@@ -369,7 +340,6 @@ describe("Block folding (browser tests)", () => {
 
     // Immediately press delete
     await userEvent.keyboard("{Delete}");
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // After deleting the empty block, we should be back to 1 block
     await expect.poll(() => editor.getBlocks().length).toBe(1);
@@ -382,7 +352,6 @@ describe("Block folding (browser tests)", () => {
     editor.setContent(
       "\n\u221E\u221E\u221Emarkdown\n# Markdown Header\nThis is some markdown content\n- List item 1\n- List item 2\n\nAnother paragraph here\n\n\n\n",
     );
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(editor.getBlocks().length).toBe(1);
 
@@ -393,7 +362,6 @@ describe("Block folding (browser tests)", () => {
     // Fold the block
     editor.setCursorPosition(30);
     foldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBeGreaterThan(0);
 
@@ -408,7 +376,6 @@ describe("Block folding (browser tests)", () => {
 
     // Unfold
     unfoldBlock(editor)(editor.view);
-    await new Promise((resolve) => setTimeout(resolve, 50));
 
     await expect.poll(() => foldPlaceholderCount()).toBe(0);
     await expect

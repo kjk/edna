@@ -27,7 +27,6 @@ describe("Block creation (browser tests)", () => {
   async function runTest(key: string, expectedBlocks: string[]) {
     const { editor, container } = te;
     await userEvent.keyboard(keyToKeyboard(key));
-    await new Promise((resolve) => setTimeout(resolve, 100));
     await userEvent.keyboard("Block D");
 
     expect(editor.getBlocks().length).toBe(4);
@@ -48,7 +47,6 @@ describe("Block creation (browser tests)", () => {
     te = createEditor(threeBlockContent);
     const { editor, container } = te;
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(editor.getBlocks().length).toBe(3);
 
@@ -120,7 +118,6 @@ describe("Block creation (browser tests)", () => {
     editor.view.focus();
 
     await userEvent.keyboard(keyToKeyboard("Alt+Enter"));
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Cursor should be in the newly created block before the markdown block
     const newBlocks = editor.getBlocks();
@@ -140,7 +137,6 @@ describe("Block creation (browser tests)", () => {
     editor.view.focus();
 
     await userEvent.keyboard(keyToKeyboard("Alt+Shift+Enter"));
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Cursor should be in the newly created first block
     const newBlocks = editor.getBlocks();
