@@ -1031,26 +1031,68 @@ function saltPassword(pwd: string): string {
   return pwdHash;
 }
 
+// name of the storage operation in progress (S-I3: at most one at a time)
+let storageOpInProgress: string | undefined;
+
+export function getStorageOpInProgress(): string | undefined {
+  return storageOpInProgress;
+}
+
+async function exclusiveStorageOp<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  if (storageOpInProgress) {
+    throw new Error(`can't ${name} while '${storageOpInProgress}' is in progress`);
+  }
+  storageOpInProgress = name;
+  try {
+    return await fn();
+  } finally {
+    storageOpInProgress = undefined;
+    clearModalMessage();
+  }
+}
+
+// workspace has encrypted notes
+export function hasEncryptedNotes(): boolean {
+  return !!getStorageFS() && len(encryptedNoteNames) > 0;
+}
+
+// workspace (in a directory) has notes that are not encrypted
+export function hasUnencryptedNotes(): boolean {
+  if (!getStorageFS()) {
+    return false;
+  }
+  return appState.allNotes.some((name) => !isEncryptedNote(name) && !getOpenedNote(name));
+}
+
+// Encrypts all notes that are not encrypted yet. Can be used to finish an
+// interrupted encryption (E-I4): the password must decrypt already encrypted
+// notes (E-I2).
 export async function encryptAllNotes(pwd: string) {
   let dh = getStorageFS();
   throwIf(!dh, "no encryption for local storage notes");
   if (!dh) {
     return;
   }
-  rememberPassword(pwd);
-
-  let pwdHash = saltPassword(pwd);
-  await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-    if (isEncr) {
-      return;
+  await exclusiveStorageOp("encrypt notes", async () => {
+    let pwdHash = saltPassword(pwd);
+    if (!(await passwordHashDecryptsNotes(dh, pwdHash))) {
+      throw new Error("password doesn't match the password of already encrypted notes");
     }
-    let msg = `Encrypting <b>${name}</b>`;
-    showModalMessageHTML(msg, 0);
-    await encryptNoteFS(dh, fileName, pwdHash);
+    rememberPassword(pwd);
+    try {
+      await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
+        if (isEncr) {
+          return;
+        }
+        let msg = `Encrypting <b>${name}</b>`;
+        showModalMessageHTML(msg, 0);
+        await encryptNoteFS(dh, fileName, pwdHash);
+      });
+    } finally {
+      // also after a failure: names must match files (E-I3)
+      await loadNoteNames();
+    }
   });
-  clearModalMessage();
-
-  await loadNoteNames();
 }
 
 export async function decryptAllNotes() {
@@ -1059,16 +1101,19 @@ export async function decryptAllNotes() {
   if (!dh) {
     return;
   }
-  await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-    if (!isEncr) {
-      return;
+  await exclusiveStorageOp("decrypt notes", async () => {
+    try {
+      await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
+        if (!isEncr) {
+          return;
+        }
+        let msg = `Decrypting <b>${name}</b>`;
+        showModalMessageHTML(msg, 0);
+        await decryptNoteFS(dh, fileName);
+      });
+      removePassword();
+    } finally {
+      await loadNoteNames();
     }
-    let msg = `Decrypting <b>${name}</b>`;
-    showModalMessageHTML(msg, 0);
-    await decryptNoteFS(dh, fileName);
   });
-  clearModalMessage();
-
-  removePassword();
-  await loadNoteNames();
 }

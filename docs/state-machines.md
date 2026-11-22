@@ -366,7 +366,7 @@ other tabs are open.
 | 3 Create / move overwrites | fixed (3a–3c), `tests/browser/notes.test.ts` |
 | 4 Dialog invariants | fixed (4a–4e), `tests/browser/app.test.ts` (4a, 4b, 4d) |
 | 5 Password handling | fixed (5a–5c), `tests/browser/password.test.ts` |
-| 6 Encrypt / decrypt all | open |
+| 6 Encrypt / decrypt all | fixed (6a–6c), `tests/browser/encryption.test.ts` (6a, 6c); 6b by `App runStorageOp` (save + read-only editor), no automated test |
 | 7 Migration | open |
 | 8 Storage switch / boot | open |
 | 9 Code runs | open |

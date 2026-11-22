@@ -87,10 +87,12 @@
     decryptAllNotes,
     deleteNote,
     encryptAllNotes,
+    hasEncryptedNotes,
+    hasUnencryptedNotes,
+    PasswordCancelledError,
     getStorageFS,
     isNoteArchivable,
     isSystemNoteName,
-    isUsingEncryption,
     loadNoteIfExists,
     noteExists,
     pickAnotherDirectory,
@@ -522,7 +524,36 @@
 
   function onEncryptPassword(pwd: string) {
     closeEncryptPassword();
-    encryptAllNotes(pwd);
+    runStorageOp(() => encryptAllNotes(pwd));
+  }
+
+  // Runs an operation that changes how / where notes are stored (encrypt,
+  // decrypt, move to directory). The current note is saved first and the
+  // editor is read-only while it runs so that edits can't race with it.
+  async function runStorageOp(fn: () => Promise<unknown>) {
+    let editor = editorComp ? getEditor() : undefined;
+    if (editor) {
+      try {
+        await editor.save();
+      } catch (e) {
+        showError(`Failed to save note: ${e}`);
+        return;
+      }
+    }
+    let wasReadOnly = editor ? isReadOnly(editor.view) : false;
+    editor?.setReadOnly(true);
+    try {
+      await fn();
+    } catch (e) {
+      if (!(e instanceof PasswordCancelledError)) {
+        showError(`${e}`);
+      }
+    } finally {
+      // note: editor might have been destroyed in the meantime
+      if (editorComp && getEditor() === editor) {
+        editor?.setReadOnly(wasReadOnly);
+      }
+    }
   }
 
   function exportNotesToZipFile() {
@@ -1349,9 +1380,16 @@
         return kMenuStatusRemoved;
       }
     } else if (mid === kCmdEncryptNotes) {
-      return isUsingEncryption() ? kMenuStatusDisabled : kMenuStatusNormal;
+      // also enabled when some notes are encrypted, to finish an interrupted encryption
+      if (!dh) {
+        return kMenuStatusRemoved;
+      }
+      return hasUnencryptedNotes() ? kMenuStatusNormal : kMenuStatusDisabled;
     } else if (mid === kCmdDecryptNotes) {
-      return isUsingEncryption() ? kMenuStatusNormal : kMenuStatusDisabled;
+      if (!dh) {
+        return kMenuStatusRemoved;
+      }
+      return hasEncryptedNotes() ? kMenuStatusNormal : kMenuStatusDisabled;
     } else if (mid === kCmdRenameCurrentNote) {
       if (noteName === kScratchNoteName) {
         return kMenuStatusDisabled;
@@ -1590,7 +1628,7 @@
     } else if (cmdId === kCmdEncryptNotes) {
       openEncryptPassword();
     } else if (cmdId === kCmdDecryptNotes) {
-      decryptAllNotes();
+      runStorageOp(decryptAllNotes);
     } else if (cmdId === kCmdEncryptionHelp) {
       showHTMLHelp("#encryption");
     } else if (cmdId === kCmdOpenQuickAccess) {
