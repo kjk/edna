@@ -1,3 +1,4 @@
+// @ts-ignore: tsc can't see exports of .svelte modules (svelte-check does)
 import { showError } from "./components/Toaster.svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
