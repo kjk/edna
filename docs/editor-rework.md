@@ -11,7 +11,7 @@ The reference revisions are Edna c66eeab and Heynote c301e42f. The comparison wa
 | block | Both editors have block extraction, widgets, commands, selection, line movement and math. Edna has its own parser, block offsets, empty-block handling and delimiter protections. Rewrite all runtime modules. |
 | Editor and input | Editor construction, setup, keymaps, indentation, clipboard and autosave have counterparts. Edna has Svelte consumers, extra commands and asynchronous save bookkeeping. Keep the facade for those consumers. Rewrite the internals. |
 | Presentation and workers | Folding, font and color themes, task markers, links, color swatches, scroll margins and language detection have counterparts. Rewrite the extensions, including the edit-distance routine. |
-| Edna glue | Keep NoteLoader, the editor's shared range types and fold length constant. NoteLoader manages Edna note switching. Keep app-level storage, formatting, menus and commands. |
+| Edna glue | Keep NoteLoader, the editor's shared range types and fold length constant. NoteLoader manages Edna note switching. Keep app-level storage, menus and commands. |
 
 ## Implementation handoff
 
@@ -102,3 +102,5 @@ These are compatibility names. Internals may be grouped differently.
 Emacs mode layers familiar bindings over these. Ctrl+B/F, P/N and A/E move by character, line and line boundary. Ctrl+Left/Right moves by word. Ctrl+Space toggles the mark, Ctrl+G cancels, and movement extends while marking. Ctrl+D/H delete a character, Ctrl+K kills to end of line, Ctrl+O splits, Ctrl+T transposes grapheme clusters within block boundaries, Ctrl+V pages down, Ctrl+Y/W paste/cut and configured Meta+W copies. Ctrl+Shift+minus and Ctrl+period undo and redo.
 
 The executable detection adapter in `src/public/langdetect-worker.js` also has a Heynote counterpart. Replace it along with the client. Preserve the separate bundled GuessLang dependency. Requests contain content and idx. Object/array JSON gets a certain JSON result. For model guesses accept a supported first candidate above 0.15 confidence or the first supported alternative above 0.5. The reply echoes content and idx and includes the guessed language ID and confidence.
+
+The relocated `src/format-code.ts` also corresponds to Heynote’s block formatter. Replace `formatBlockContent(editor): Promise<boolean>`. Format only the active editable block. Go posts raw source to /api/goplay/fmt and reads Body/Error. Other supported tokens use standalone Prettier with the editor tab width, preserving the cursor at either boundary or mapping it through formatting inside the text. A failed, stale, or read-only operation leaves the document alone. A successful replacement scrolls to the caret and can be undone. The app-level format tests exercise both the status bar and the shortcut.
