@@ -963,7 +963,6 @@
   const kCmdDecryptNotes = nmid();
   const kCmdEncryptionHelp = nmid();
   const kCmdToggleSpellChecking = nmid();
-  const kCmdToggleSpellChecking2 = nmid();
   const kCmdShowStorageHelp = nmid();
   const kCmdSettings = nmid();
   const kCmdOpenQuickAccess = nmid();
@@ -1177,7 +1176,6 @@
     ["Search", kCmdSearch],
     ["Search in notes", kCmdSearchInNotes],
     ["Open note from disk", kCmdOpenNoteFromDisk],
-    ["Toggle Spellchecking", kCmdToggleSpellChecking2],
     ["Block: Fold all blocks", kCmdFoldAllBlocks],
     ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
     ["Edit: Transpose chars", kCmdTransposeChars],
@@ -1204,10 +1202,45 @@
         ]),
   ];
 
+  // commands that work when there's no editor (e.g. on Home tab)
+  const cmdsWithoutEditor = [
+    kCmdCommandPalette,
+    kCmdOpenNote,
+    kCmdOpenNoteInNewTab,
+    kCmdCreateNewNote,
+    kCmdCreateScratchNote,
+    kCmdShowHelp,
+    kCmdShowHelpAsNote,
+    kCmdShowReleaseNotes,
+    kCmdMoveNotesToDirectory,
+    kCmdSwitchToNotesInDir,
+    kCmdSwitchToLocalStorage,
+    kCmdExportNotes,
+    kCmdEncryptNotes,
+    kCmdDecryptNotes,
+    kCmdEncryptionHelp,
+    kCmdShowStorageHelp,
+    kCmdSettings,
+    kCmdOpenQuickAccess,
+    kCmdShowWelcomeNote,
+    kCmdShowWelcomeDevNote,
+    kCmdCreateYourOwnFunctions,
+    kCmdShowBuiltInFunctions,
+    kCmdRunHelp,
+    kCmdOpenNoteFromDisk,
+    kCmdToggleSidebar,
+    kCmdFindInNotes,
+    kCmdSearchInNotes,
+    kCmdTestErrorTracking,
+  ];
+
   function menuItemStatus(mi: Command): number {
     let mid = mi[1] as number;
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
+    }
+    if (!editorComp && !cmdsWithoutEditor.includes(mid)) {
+      return kMenuStatusRemoved;
     }
     let noteName = appState.currentNoteName || "";
     // console.log("menuItemStatus:", mi);
@@ -1368,7 +1401,8 @@
       return ednaEditor;
     }
     function focusView() {
-      requireView().focus();
+      // no editor e.g. on Home tab
+      getEditorView()?.focus();
     }
 
     if (cmdId === kCmdCommandPalette) {
@@ -1499,9 +1533,6 @@
     } else if (cmdId === kCmdAskAI) {
       openAskAI();
     } else if (cmdId === kCmdToggleSpellChecking) {
-      toggleSpellCheck();
-      focusView();
-    } else if (cmdId === kCmdToggleSpellChecking2) {
       toggleSpellCheck();
       focusView();
     } else if (cmdId === kCmdShowHelp) {
@@ -1677,8 +1708,10 @@
       commandsDef.push(mi);
     }
     // console.log("commandPaletteAdditions:", commandPaletteAdditions);
-    let name = commandNameOverride(kCmdToggleSpellChecking);
-    commandsDef.push([name, kCmdToggleSpellChecking]);
+    if (editorComp) {
+      let name = commandNameOverride(kCmdToggleSpellChecking);
+      commandsDef.push([name, kCmdToggleSpellChecking]);
+    }
   }
 
   async function closeTab(tab: string) {
