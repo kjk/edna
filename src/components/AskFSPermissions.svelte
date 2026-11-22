@@ -47,7 +47,7 @@
 </script>
 
 <div class="fixed inset-0 overflow-hidden bg-gray-50">
-  <div class="mt-8 mx-auto px-8 py-4 flex flex-col items-center shadow-xl2 bg-white text-base w-fit">
+  <div class="mt-8 mx-auto px-8 py-4 flex flex-col items-center shadow-2xl bg-white text-base w-fit">
     <div class="mt-2 self-center">
       Your're storing notes on disk in directory <span class="font-bold">{dirName}</span>
     </div>

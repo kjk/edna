@@ -313,7 +313,7 @@
 {#snippet showArchived()}
   {#if len(appState.archivedNotes)}
     <div
-      class="flex justify-around text-gray-700 text-sm max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
+      class="flex justify-around text-gray-700 text-sm max-w-full dark:text-white/50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
     >
       {#if len(appState.archivedNotes) > 0}
         <button
@@ -334,7 +334,7 @@
 
 {#snippet shortHelp()}
   <div
-    class="flex justify-between text-gray-700 text-xs max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
+    class="flex justify-between text-gray-700 text-xs max-w-full dark:text-white/50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
   >
     <button
       onclick={(ev) => {

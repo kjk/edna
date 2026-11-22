@@ -32,7 +32,7 @@
 
 <form
   tabindex="-1"
-  class="fixed flex justify-center items-center z-30 pointer-events-none select-none inset-0 bg-black bg-opacity-20"
+  class="fixed flex justify-center items-center z-30 pointer-events-none select-none inset-0 bg-black/20"
 >
   <button class="bg-white focus:outline-hidden min-w-[75vw]">
     <div class="text-lg text-black px-4 py-2 text-center">

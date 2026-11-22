@@ -195,3 +195,38 @@
   left: 0;
   top: 0.25em;
 }
+
+/* Dark mode */
+html.dark .markdown-body {
+  color: #d1d5db;
+}
+
+html.dark .markdown-body h6,
+html.dark .markdown-body blockquote {
+  color: #9ca3af;
+}
+
+html.dark .markdown-body blockquote,
+html.dark .markdown-body th,
+html.dark .markdown-body td {
+  border-color: #4b5563;
+}
+
+html.dark .markdown-body code,
+html.dark .markdown-body pre,
+html.dark .markdown-body th,
+html.dark .markdown-body tr:nth-child(even) {
+  background-color: #1f2937;
+}
+
+html.dark .markdown-body pre code {
+  background-color: transparent;
+}
+
+html.dark .markdown-body hr {
+  background-color: #4b5563;
+}
+
+html.dark .markdown-body a {
+  color: #60a5fa;
+}

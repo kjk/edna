@@ -104,10 +104,9 @@
   >
     {#snippet renderItem(noteInfo, idx)}
       {@const shortcut = noteShortcutStr(noteInfo)}
-      {@const cls = firstInHistoryIdx == idx ? "border-t-not-good-enough" : ""}
       {@const historyTrigger = idx - firstInHistoryIdx}
       {#if historyTrigger >= 0 && historyTrigger <= 9}
-        <div class="px-1 grow text-gray-500 dark:text-gray-400 {cls}">
+        <div class="px-1 grow text-gray-500 dark:text-gray-400">
           {"" + historyTrigger}
         </div>
       {:else if shortcut}
