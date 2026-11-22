@@ -15,6 +15,8 @@
     initialSelection?: number;
     selectedItem?: any;
     compact?: boolean;
+    // "list": one item per line, "inline": items wrapped in lines, separated by bullets
+    layout?: "list" | "inline";
   }
   let {
     items,
@@ -27,6 +29,7 @@
     selectedItem = $bindable(null),
     initialSelection = 0,
     compact = false,
+    layout = "list",
   }: Props = $props();
 
   let selectedIdx = $state(-1);
@@ -122,6 +125,11 @@
   export function onkeydown(ev: KeyboardEvent, allowLeftRight: boolean = false): boolean {
     let key = ev.key;
     let isUp = key === "ArrowUp" || (key === "ArrowLeft" && allowLeftRight);
+    if (layout === "inline" && isUp && selectedIdx <= 0) {
+      // don't block cursor going left if input box has cursor at the end
+      // of text and we're at first item
+      return false;
+    }
     let isDown = key === "ArrowDown" || (key === "ArrowRight" && allowLeftRight);
     let isEnter = selectedItem && key === "Enter";
     let res = true;
@@ -141,10 +149,13 @@
     return res;
   }
 
-  let listboxRef: HTMLElement;
+  let listboxRef: HTMLElement = $state()!;
   $effect(() => {
     let opts = getOverlayScrollbarOptions();
-    OverlayScrollbars(listboxRef, opts);
+    let osInstance = OverlayScrollbars(listboxRef, opts);
+    return () => {
+      osInstance.destroy();
+    };
   });
 
   function findItemIdxForMouseEvent(ev: MouseEvent): number {
@@ -156,7 +167,7 @@
     let n = len(items);
     for (let i = 0; i < n; i++) {
       let el = refs[i];
-      if (el.contains(ev.target)) {
+      if (el && el.contains(ev.target)) {
         return i;
       }
     }
@@ -188,28 +199,55 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<ul
-  class="overflow-y-auto cursor-pointer select-none"
-  role="listbox"
-  bind:this={listboxRef}
-  data-overlayscrollbars-initialize
-  onclick={click}
-  onmousemove={mousemove}
->
-  {#each items as item, idx (itemKey(item))}
-    <li
-      role="option"
-      aria-selected={idx === selectedIdx}
-      class="flex items-center px-2 leading-5 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-opacity-85 dark:aria-selected:bg-gray-700 {compact
-        ? ''
-        : 'py-0.5'}"
-      bind:this={refs[idx]}
-    >
-      {@render renderItem(item, idx)}
-    </li>
-  {/each}
-</ul>
+{#if layout === "inline"}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <div
+    class="overflow-y-auto cursor-pointer select-none flex flex-wrap gap-y-0.5 pb-4"
+    tabindex="-1"
+    role="listbox"
+    bind:this={listboxRef}
+    data-overlayscrollbars-initialize
+    onclick={click}
+    onmousemove={mousemove}
+  >
+    {#each items as item, idx (itemKey(item))}
+      {#if idx > 0}
+        <span class="text-gray-300">&bull;</span>
+      {/if}
+      <span
+        role="option"
+        aria-selected={idx === selectedIdx}
+        class="px-1 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-white/85 dark:aria-selected:bg-gray-700"
+        bind:this={refs[idx]}
+      >
+        {@render renderItem(item, idx)}
+      </span>
+    {/each}
+  </div>
+{:else}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <ul
+    class="overflow-y-auto cursor-pointer select-none"
+    role="listbox"
+    bind:this={listboxRef}
+    data-overlayscrollbars-initialize
+    onclick={click}
+    onmousemove={mousemove}
+  >
+    {#each items as item, idx (itemKey(item))}
+      <li
+        role="option"
+        aria-selected={idx === selectedIdx}
+        class="flex items-center px-2 leading-5 aria-selected:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 dark:aria-selected:text-white/85 dark:aria-selected:bg-gray-700 {compact
+          ? ''
+          : 'py-0.5'}"
+        bind:this={refs[idx]}
+      >
+        {@render renderItem(item, idx)}
+      </li>
+    {/each}
+  </ul>
+{/if}
 
 <style lang="postcss">
   :global(.os-scrollbar) {

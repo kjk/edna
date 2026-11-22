@@ -14,8 +14,8 @@
     makeHilightRegExp,
   } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
-  import ListBox2 from "./ListBox2.svelte";
-  import { buildNoteInfos } from "./NoteSelector.svelte";
+  import ListBox from "./ListBox.svelte";
+  import { buildRegularAndArchivedNoteInfos, noteShortcutStr } from "./NoteSelector.svelte";
   import type { NoteInfo } from "./NoteSelector.svelte";
 
   interface Props {
@@ -27,26 +27,13 @@
   }
   let { openNote, createNote, deleteNote, switchToCommandPalette, switchToRegularNoteSelector }: Props = $props();
 
-  function localBuildNoteInfos(regular: string[], archived: string[]) {
-    let notes = [...regular];
-    notes.push(...archived);
-    let res = buildNoteInfos(notes);
-    return res;
-  }
   let noteInfos = $derived(
-    localBuildNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []),
+    buildRegularAndArchivedNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []),
   );
 
   let filter = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
-
-  function updateNoteInfos() {
-    // actions like re-assigning quick access shortcut do
-    // not modify appState.noteNames so we have to force
-    // rebuilding of items
-    noteInfos = localBuildNoteInfos(appState.regularNotes, appState.showingArchived ? appState.archivedNotes : []);
-  }
 
   let sanitizedFilter = $derived.by(() => {
     return sanitizeNoteName(filter);
@@ -122,14 +109,6 @@
     showDelete = canOpenSelected;
   }
 
-  function noteShortcut(note: NoteInfo): string {
-    if (note.altShortcut) {
-      //console.log("noteShortcut:", note);
-      return `${altChar} + ${note.altShortcut}`;
-    }
-    return "";
-  }
-
   async function onKeydown(ev: KeyboardEvent) {
     // console.log("onKeyDown:", event);
     let altN = isAltNumEvent(ev);
@@ -137,7 +116,7 @@
       ev.preventDefault();
       let note = selectedItem;
       if (note) {
-        await reassignNoteShortcut(note.name, altN).then(updateNoteInfos);
+        await reassignNoteShortcut(note.name, altN);
         return;
       }
     }
@@ -176,7 +155,7 @@
 
     // console.log("listbox:", listbox);
     let allowLeftRight = filter === "" || isCursorAtEnd(inputRef);
-    listbox2Comp.onkeydown(ev, allowLeftRight);
+    listboxComp.onkeydown(ev, allowLeftRight);
   }
 
   function isCursorAtEnd(input: HTMLInputElement) {
@@ -196,21 +175,13 @@
   }
 
   async function toggleStarred(noteInfo: NoteInfo) {
-    // there's a noticeable UI lag when we do the obvious:
-    // item.isStarred = toggleNoteStarred(item.name);
-    // because we wait until metadata file is saved
-    // this version makes an optimistic change to reflect in UI
-    // and, just to be extra sure, reflects the state after saving
-    noteInfo.isStarred = !noteInfo.isStarred;
-    toggleNoteStarred(noteInfo.name).then((isStarred) => {
-      // not really necessary, should be in-sync
-      noteInfo.isStarred = isStarred;
-    });
+    // note: UI is updated via updateAfterNoteStateChange() after metadata is saved
+    await toggleNoteStarred(noteInfo.name);
     inputRef.focus();
   }
 
   let inputRef: HTMLInputElement;
-  let listbox2Comp: ListBox2;
+  let listboxComp: ListBox;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -232,8 +203,9 @@
     </div>
   </div>
 
-  <ListBox2
-    bind:this={listbox2Comp}
+  <ListBox
+    bind:this={listboxComp}
+    layout="inline"
     items={itemsFiltered}
     {selectionChanged}
     onclick={(item: any, metaPressed: boolean) => emitOpenNote(item, metaPressed)}
@@ -244,9 +216,9 @@
         {@render IconTablerStar("var(--color-yellow-300)", "inline-block mt-[-3px]")}
       {/if}
       {@html hili}
-      <span class="ml-0.5 mr-0.5 text-xs text-gray-400 whitespace-nowrap">{noteShortcut(item)}</span>
+      <span class="ml-0.5 mr-0.5 text-xs text-gray-400 whitespace-nowrap">{noteShortcutStr(item)}</span>
     {/snippet}
-  </ListBox2>
+  </ListBox>
 
   <div
     class="flex flex-row items-baseline justify-between mt-2 text-xs max-w-full bg-gray-100 dark:bg-gray-700 rounded-lg py-1 px-2"

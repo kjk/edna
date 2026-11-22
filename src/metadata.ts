@@ -156,6 +156,7 @@ export async function reassignNoteShortcut(name: string, altShortcut: string) {
       // same note: just remove shortcut
       delete o.altShortcut;
       let res = await saveNotesMetadata();
+      updateAfterNoteStateChange();
       return res;
     } else {
       // a different note: remove shortcut and then assign to the new note

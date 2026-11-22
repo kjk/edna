@@ -6,7 +6,7 @@
   import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
-  import { buildNoteInfo, buildNoteInfos } from "./NoteSelector.svelte";
+  import { buildNoteInfo, buildNoteInfos, noteShortcutStr } from "./NoteSelector.svelte";
   import type { NoteInfo } from "./NoteSelector.svelte";
 
   interface Props {
@@ -55,13 +55,6 @@
     buildQuickAccessNotes(appState.starredNotes, appState.withShortcuts, appState.history),
   );
 
-  function getNoteShortcut(note: NoteInfo): string {
-    if (note.altShortcut) {
-      return `${altChar} + ${note.altShortcut}`;
-    }
-    return "";
-  }
-
   function onkeydown(ev: KeyboardEvent) {
     // '0' ... '9' picks an item
     let idx = getKeyEventNumber(ev);
@@ -77,16 +70,8 @@
   }
 
   async function toggleStarred(noteInfo: NoteInfo) {
-    // there's a noticeable UI lag when we do the obvious:
-    // item.isStarred = toggleNoteStarred(item.name);
-    // because we wait until metadata file is saved
-    // this version makes an optimistic change to reflect in UI
-    // and, just to be extra sure, reflects the state after saving
-    noteInfo.isStarred = !noteInfo.isStarred;
-    toggleNoteStarred(noteInfo.name).then((isStarred) => {
-      // not really necessary, should be in-sync
-      noteInfo.isStarred = isStarred;
-    });
+    // note: UI is updated via updateAfterNoteStateChange() after metadata is saved
+    await toggleNoteStarred(noteInfo.name);
   }
   // if forHistory, showing in absolute position inside overlay
   // otherwise is absolute child of relative parent
@@ -118,7 +103,7 @@
     compact={true}
   >
     {#snippet renderItem(noteInfo, idx)}
-      {@const shortcut = getNoteShortcut(noteInfo)}
+      {@const shortcut = noteShortcutStr(noteInfo)}
       {@const cls = firstInHistoryIdx == idx ? "border-t-not-good-enough" : ""}
       {@const historyTrigger = idx - firstInHistoryIdx}
       {#if historyTrigger >= 0 && historyTrigger <= 9}
