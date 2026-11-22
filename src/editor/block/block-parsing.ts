@@ -1,6 +1,7 @@
 import { syntaxTree } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { IterMode } from "@lezer/common";
+import { DELIMITER_PREFIX, parseDelimiterLine } from "../new-parser/node-types";
 
 export interface NoteBlock {
   index: number;
@@ -68,6 +69,22 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
   return blocks;
 }
 
+// returns position of the next valid delimiter ("\n∞∞∞lang\n") at or after pos, -1 if none
+function findNextDelimiter(s: string, pos: number): number {
+  const delim = "\n" + DELIMITER_PREFIX;
+  while (true) {
+    const idx = s.indexOf(delim, pos);
+    if (idx < 0) {
+      return -1;
+    }
+    const lineEnd = s.indexOf("\n", idx + 1);
+    if (lineEnd >= 0 && parseDelimiterLine(s.substring(idx + 1, lineEnd))) {
+      return idx;
+    }
+    pos = idx + 1;
+  }
+}
+
 /**
  * Parse blocks from document's string contents using String.indexOf()
  */
@@ -75,29 +92,17 @@ export function getBlocksFromString(s: string): NoteBlock[] {
   //const timer = startTimer()
   const blocks: NoteBlock[] = [];
   const sLen = s.length;
-  const delim = "\n∞∞∞";
   let pos = 0;
   while (pos < sLen) {
-    const blockStart = s.indexOf(delim, pos);
+    const blockStart = findNextDelimiter(s, pos);
     if (blockStart != pos) {
       console.error("Error parsing blocks, expected delimiter at", pos);
       break;
     }
-    const langStart = blockStart + delim.length;
-    const delimiterEnd = s.indexOf("\n", langStart);
-    if (delimiterEnd < 0) {
-      console.error("Error parsing blocks. Delimiter didn't end with newline");
-      break;
-    }
-    const langFull = s.substring(langStart, delimiterEnd);
-    let auto = false;
-    let lang = langFull;
-    if (langFull.endsWith("-a")) {
-      auto = true;
-      lang = langFull.substring(0, langFull.length - 2);
-    }
+    const delimiterEnd = s.indexOf("\n", blockStart + 1);
+    const { language: lang, autoDetect: auto } = parseDelimiterLine(s.substring(blockStart + 1, delimiterEnd))!;
     const contentFrom = delimiterEnd + 1;
-    let blockEnd = s.indexOf(delim, contentFrom);
+    let blockEnd = findNextDelimiter(s, contentFrom);
     if (blockEnd < 0) {
       blockEnd = sLen;
     }

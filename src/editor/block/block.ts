@@ -28,7 +28,6 @@ import { firstBlockDelimiterSize, getBlocksFromString, getBlocksFromSyntaxTree }
 import { mathBlock } from "./math";
 import { emptyBlockSelected } from "./select-all";
 
-export const delimiterRegexWithoutNewline = /^∞∞∞[a-z]+?(-a)?$/;
 
 /**
  * Get the blocks from the document state.

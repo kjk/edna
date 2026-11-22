@@ -9,6 +9,7 @@ import {
   MOVE_BLOCK,
 } from "../annotation";
 import type { MultiBlockEditor } from "../editor";
+import { parseDelimiterLine } from "../new-parser/node-types";
 import {
   blockState,
   getActiveNoteBlock,
@@ -175,8 +176,8 @@ export function changeLanguageTo(
   auto: boolean,
 ): void {
   if (state.readOnly) return;
-  const delimRegex = /^\n∞∞∞[a-z]+?(-a)?\n/g;
-  if (state.doc.sliceString(block.from, block.contentFrom).match(delimRegex)) {
+  const delimText = state.doc.sliceString(block.from, block.contentFrom);
+  if (parseDelimiterLine(delimText.replace(/^\n/, "").replace(/\n$/, ""))) {
     dispatch(
       state.update({
         changes: {

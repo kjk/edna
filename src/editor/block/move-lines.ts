@@ -1,11 +1,8 @@
 import { EditorSelection, EditorState, SelectionRange, type ChangeSpec } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import { kLanguages } from "../languages";
+import { delimiterLineRegex } from "../new-parser/node-types";
 import type { LineBlock } from "../types";
 import { blockState } from "./block";
-
-const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
-const tokenRegEx = new RegExp(`^∞∞∞(${languageTokensMatcher})(-a)?$`, "g");
 
 function selectedLineBlocks(state: EditorState): LineBlock[] {
   let blocks: LineBlock[] = [],
@@ -42,9 +39,9 @@ function moveLine(state: EditorState, dispatch: EditorView["dispatch"], forward:
     // if the whole selection is a block (surrounded by separators) we need to add an extra line break between the separators that'll
     // get stacked on top of each other, since we'll otherwise create two separators with only a single line break between them which
     // the syntax parser won't be able to parse (since a valid separator needs one line break on each side)
-    let nextLineIsSeparator = nextLine.text.match(tokenRegEx);
+    let nextLineIsSeparator = delimiterLineRegex.test(nextLine.text);
     let blockSurroundedBySeparators =
-      previousLine !== null && previousLine.text.match(tokenRegEx) && nextLineIsSeparator;
+      previousLine !== null && delimiterLineRegex.test(previousLine.text) && nextLineIsSeparator;
     let size = nextLine.length + 1;
     if (forward) {
       if (blockSurroundedBySeparators) {

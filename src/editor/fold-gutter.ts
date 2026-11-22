@@ -9,7 +9,8 @@ import {
   transactionsHasAnnotationsAny,
   transactionsHasHistoryEvent,
 } from "./annotation";
-import { delimiterRegexWithoutNewline, getBlocks, getNoteBlocksFromRangeSet } from "./block/block";
+import { getBlocks, getNoteBlocksFromRangeSet } from "./block/block";
+import { delimiterLineRegex } from "./new-parser/node-types";
 import { FOLD_LABEL_LENGTH } from "./constants";
 import type { MultiBlockEditor } from "./editor";
 import type { SimpleRange } from "./types";
@@ -62,7 +63,7 @@ const autoUnfoldOnEdit = () => {
         if (
           fromB === toB &&
           fromB === lineFrom &&
-          (state.doc.length === 0 || state.doc.lineAt(lineFrom - 1).text.match(delimiterRegexWithoutNewline))
+          (state.doc.length === 0 || state.doc.lineAt(lineFrom - 1).text.match(delimiterLineRegex))
         ) {
           // if the change is the beginning of the folded line, we'll check if a block separator is
           // immediately before the folded range (or beginning of document), and we if so, we don't unfold it
@@ -72,7 +73,7 @@ const autoUnfoldOnEdit = () => {
         if (
           fromB === toB &&
           fromB === lineTo &&
-          (state.doc.length === toB || state.doc.lineAt(toB + 1).text.match(delimiterRegexWithoutNewline))
+          (state.doc.length === toB || state.doc.lineAt(toB + 1).text.match(delimiterLineRegex))
         ) {
           // If the change is at the end of the folded line, we'll check what comes after the folded range,
           // and if it's a new block, or the end of the document, we don't unfold it

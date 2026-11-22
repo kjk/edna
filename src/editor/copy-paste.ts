@@ -2,10 +2,9 @@ import { EditorSelection, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import type { MultiBlockEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
-import { kLanguages } from "./languages";
+import { delimiterRegexGlobal } from "./new-parser/node-types";
 
-const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
-const blockSeparatorRegex = new RegExp(`\\n∞∞∞(${languageTokensMatcher})(-a)?\\n`, "g");
+const blockSeparatorRegex = delimiterRegexGlobal();
 
 // ranges are what gets deleted on cut
 function copiedRange(state: EditorState): { text: string; ranges: { from: number; to: number }[] } {
