@@ -353,7 +353,6 @@
   <div
     class="flex justify-between text-gray-700 text-xs max-w-full dark:text-white dark:text-opacity-50 bg-gray-100 rounded-lg px-2 pt-1 pb-1.5 mt-2"
   >
-    {@render showArchived()}
     <button
       onclick={(ev) => {
         ev.preventDefault();

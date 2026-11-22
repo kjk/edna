@@ -430,9 +430,22 @@ export function makeHilightRegExp(filter: string): RegExp {
   return new RegExp(`(${s})`, "gi");
 }
 
+export function escapeHTML(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+// returns HTML: s is escaped and matches of regexp are wrapped in <span class="hili">
 export function hilightText(s: string, regexp: RegExp): string {
-  // console.log("hilightText:", s, regexp);
-  return s.replace(regexp, '<span class="hili">$1</span>');
+  let res = "";
+  let last = 0;
+  for (const m of s.matchAll(regexp)) {
+    if (m[0].length === 0) {
+      continue;
+    }
+    res += escapeHTML(s.slice(last, m.index)) + '<span class="hili">' + escapeHTML(m[0]) + "</span>";
+    last = m.index + m[0].length;
+  }
+  return res + escapeHTML(s.slice(last));
 }
 
 export function copyObj(src: Record<string, unknown>, keys: string[]): Record<string, unknown> {

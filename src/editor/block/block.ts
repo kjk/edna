@@ -28,7 +28,6 @@ import { firstBlockDelimiterSize, getBlocksFromString, getBlocksFromSyntaxTree, 
 import { mathBlock } from "./math";
 import { emptyBlockSelected } from "./select-all";
 
-export const delimiterRegex = /^\n∞∞∞[a-z]+?(-a)?\n$/;
 export const delimiterRegexWithoutNewline = /^∞∞∞[a-z]+?(-a)?$/;
 
 /**
@@ -104,14 +103,8 @@ export interface Block {
   autoDetect: boolean;
 }
 
-export function blockDelimiter(b: Block): SimpleRange {
-  return { from: b.from, to: b.contentFrom };
-}
 export function blockContent(b: Block): SimpleRange {
   return { from: b.contentFrom, to: b.to };
-}
-export function blockRange(b: Block): SimpleRange {
-  return { from: b.from, to: b.to };
 }
 
 export interface BlocksInfo {
@@ -284,6 +277,7 @@ const blockLayer = layer({
       const fromCoords = view.coordsAtPos(Math.max(block.contentFrom, firstVisibleRange.from));
       if (!fromCoords) {
         // this often fires during refresh in vite
+        idx++;
         return;
       }
       const fromCoordsTop = fromCoords.top;

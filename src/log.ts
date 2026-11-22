@@ -36,7 +36,7 @@ export function logAppOpen() {
 export function logAppExit() {
   let e = {
     name: "appExit",
-    notesCount: getNotesCount,
+    notesCount: getNotesCount(),
     sessionDurMs: getSessionDurationInMs(),
     stats: getStats(),
   };
@@ -63,7 +63,6 @@ const validOps = [
   "runBlockWithClipboard",
   "runFunction",
   "runFunctionWithSelection",
-  ,
 ];
 
 function validateNoteOp(op: string) {

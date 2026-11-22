@@ -24,14 +24,14 @@ class MathResult extends WidgetType {
     wrap.className = "heynote-math-result";
     const inner = document.createElement("span");
     inner.className = "inner";
-    inner.innerHTML = this.displayResult;
+    inner.textContent = this.displayResult;
     wrap.appendChild(inner);
     inner.addEventListener("click", (e) => {
       e.preventDefault();
       navigator.clipboard.writeText(this.copyResult);
       const copyElement = document.createElement("i");
       copyElement.className = "heynote-math-result-copied";
-      copyElement.innerHTML = "Copied!";
+      copyElement.textContent = "Copied!";
       wrap.appendChild(copyElement);
       copyElement.offsetWidth; // trigger reflow so that the animation is shown
       copyElement.className = "heynote-math-result-copied fade-out";

@@ -92,7 +92,12 @@ async function evalWithConsoleCapture(code: string): Promise<CapturingEval> {
     }
     consoleLogs.push(all);
   }
-  const originalConsole = console;
+  const originalConsole = {
+    log: console.log,
+    debug: console.debug,
+    warn: console.warn,
+    error: console.error,
+  };
   console.log = logFn;
   console.debug = logFn;
   console.warn = logFn;

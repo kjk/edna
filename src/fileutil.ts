@@ -259,7 +259,7 @@ export async function fsFileHandleWriteText(fh: FileSystemFileHandle, content: s
 export async function fsWriteTextFile(dh: FileSystemDirectoryHandle, fileName: string, content: string) {
   console.log("writing to file:", fileName, content.length);
   let fh = await dh.getFileHandle(fileName, { create: true });
-  fsFileHandleWriteText(fh, content);
+  await fsFileHandleWriteText(fh, content);
 }
 
 export async function fsFileHandleWriteBlob(fh: FileSystemFileHandle, blob: Blob) {

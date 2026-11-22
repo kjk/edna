@@ -527,29 +527,3 @@ export const deleteBlock =
     );
     return true;
   };
-
-export const deleteBlockSetCursorPreviousBlock =
-  (editor: MultiBlockEditor) =>
-  ({ state, dispatch }: EditorView): boolean => {
-    const block = getActiveNoteBlock(state);
-    if (!block) return false;
-    const blocks = state.field(blockState);
-    let replace = "";
-    let newSelection = block.from;
-    if (blocks.length == 1) {
-      replace = getBlockDelimiter(editor.defaultBlockToken, editor.defaultBlockAutoDetect);
-      newSelection = replace.length;
-    }
-    dispatch(
-      state.update({
-        changes: {
-          from: block.from,
-          to: block.to,
-          insert: replace,
-        },
-        selection: EditorSelection.cursor(newSelection),
-        annotations: [heynoteEvent.of(DELETE_BLOCK)],
-      }),
-    );
-    return true;
-  };

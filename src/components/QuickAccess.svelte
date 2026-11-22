@@ -65,7 +65,7 @@
   function onkeydown(ev: KeyboardEvent) {
     // '0' ... '9' picks an item
     let idx = getKeyEventNumber(ev);
-    let lastIdx = len(history) - 1;
+    let lastIdx = len(quickAccessNotes) - firstInHistoryIdx - 1;
     if (idx >= 0 && idx <= lastIdx) {
       ev.preventDefault();
       let item = quickAccessNotes[firstInHistoryIdx + idx];

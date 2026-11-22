@@ -203,7 +203,7 @@
 
   function handleClicked(ev: MouseEvent) {
     let mi = findMenuItem(ev);
-    if (!mi || mi.cmdId <= 0) {
+    if (!mi || mi.cmdId <= 0 || mi.isDisabled) {
       return;
     }
     executeCommand(mi.cmdId, mi.arg);

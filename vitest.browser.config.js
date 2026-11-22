@@ -7,7 +7,6 @@ export default defineConfig({
   publicDir: "./src/public",
   test: {
     include: ["tests/browser/**/*.test.ts"],
-    exclude: ["tests/**/*.spec.ts"],
     browser: {
       enabled: true,
       instances: [

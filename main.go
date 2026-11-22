@@ -15,5 +15,6 @@ var (
 
 func main() {
 	server.DistFS = distFS
+	server.GitCommitHash = GitCommitHash
 	server.Main()
 }

@@ -5,14 +5,14 @@ import markdownItAnchor from "markdown-it-anchor";
 import { keyHelpStr } from "./key-helper.js";
 
 console.log(
-  "Generating html-win.html and html-mac.html from note-help.edna.txt",
+  "Generating help-win.html and help-mac.html from note-help.edna.txt",
 );
 
-export function getModChar(platform: string): string {
+function getModChar(platform: string): string {
   return platform === "darwin" ? "⌘" : "Ctrl";
 }
 
-export function getAltChar(platform: string): string {
+function getAltChar(platform: string): string {
   return platform === "darwin" ? "⌥" : "Alt";
 }
 

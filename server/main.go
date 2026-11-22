@@ -45,8 +45,6 @@ func rebuildFrontend(c *deploy.Config) {
 	logf("deleted frontend dist dir '%s'\n", c.FrontEndBuildDir)
 	{
 		must(os.RemoveAll("node_modules"))
-		os.Remove("yarn.lock")
-		os.Remove("package-lock.json")
 		u.RunLoggedInDirMust(".", "bun", "install")
 	}
 	u.RunLoggedInDirMust(".", "bun", "run", "build")
@@ -107,16 +105,8 @@ func Main() {
 		flag.Parse()
 	}
 
-	if false { // ad-hoc code
-		if true {
-		} else {
-			// make it reachable for compilation
-		}
-		return
-	}
-
 	if flgGen {
-		path := filepath.Join("src", "gen.t")
+		path := filepath.Join("src", "gen.ts")
 		u.RunLoggedInDirMust(".", "bun", "run", path)
 		return
 	}

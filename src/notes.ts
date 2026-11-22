@@ -551,7 +551,7 @@ export async function appendToNote(name: string, content: string) {
   let newContent = content;
   if (noteExists(name)) {
     let oldContent = await loadNote(name);
-    newContent = oldContent + content;
+    newContent = (oldContent ?? "") + content;
     incNoteSaveCount();
   } else {
     incNoteCreateCount();
@@ -646,7 +646,7 @@ async function readEncryptedFS(dh: FileSystemDirectoryHandle, fileName: string):
     if (!pwd) {
       msg = "Please enter password to decrypt files";
     } else {
-      msg = `Password '${pwd}' is not correct. Please enter valid password.`;
+      msg = "Password is not correct. Please enter valid password.";
     }
     // password was likely incorrect so remove it so that getPasswordHashMust()
     // asks the user
@@ -786,7 +786,7 @@ async function migrateNote(noteName: string, diskNoteNames: string[], dh: FileSy
   }
   // if the content is different, create a new note with a different name
   let newName = pickUniqueName(name, diskNoteNames);
-  let fileName = notePathFromName(newName);
+  let fileName = notePathFromNameFS(newName);
   await fsWriteTextFile(dh, fileName, content);
   console.log("migrateNote: created new note", fileName, "because of different content with", name);
 }
@@ -834,7 +834,7 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle) 
     if (openedNote) {
       continue;
     }
-    migrateNote(name, diskNoteNames, dh);
+    await migrateNote(name, diskNoteNames, dh);
   }
   // remove migrated notes
   for (let name of latestNoteNames) {
@@ -941,7 +941,7 @@ function saltPassword(pwd: string): string {
 
 export async function encryptAllNotes(pwd: string) {
   let dh = getStorageFS();
-  throwIf(!db, "no encryption for local storage notes");
+  throwIf(!dh, "no encryption for local storage notes");
   if (!dh) {
     return;
   }
@@ -963,7 +963,7 @@ export async function encryptAllNotes(pwd: string) {
 
 export async function decryptAllNotes() {
   let dh = getStorageFS();
-  throwIf(!db, "no decryption for local storage notes");
+  throwIf(!dh, "no decryption for local storage notes");
   if (!dh) {
     return;
   }

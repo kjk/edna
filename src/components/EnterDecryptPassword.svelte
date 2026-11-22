@@ -13,18 +13,15 @@
   let validPassword = $derived.by(() => {
     return len(password.trim()) >= 8;
   });
-  let pwdError = $derived.by(() => {
-    if (len(password.trim()) > 8) {
-      return "";
-    }
-    return "password must be at least 8 characters long";
-  });
+  let pwdError = $derived(validPassword ? "" : "password must be at least 8 characters long");
 
   function onkeydown(ev: KeyboardEvent) {
     let key = ev.key;
 
     if (key === "Enter") {
-      emitGotPassword();
+      if (validPassword) {
+        emitGotPassword();
+      }
       ev.preventDefault();
       ev.stopPropagation();
       return;

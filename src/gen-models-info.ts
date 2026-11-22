@@ -143,7 +143,7 @@ function genShort(models: Model[]) {
     a.push([id, providerID, name, pricePrompt, priceCompletion]);
   }
   let js = JSON.stringify(a, null, 2);
-  let fpath = "./src/models-short.js";
+  let fpath = "./src/models-short.ts";
   let s = `
 export const kProviderOpenAI = 0;
 export const kProviderAnthropic = 1;

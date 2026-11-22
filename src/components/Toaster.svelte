@@ -9,7 +9,7 @@
   export let defaultTimeout = 4000;
   const kToastRegular = 0;
   const kToastWarning = 1;
-  const kToastError = 1;
+  const kToastError = 2;
 
   let toasts: Toast[] = $state([]);
 

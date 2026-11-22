@@ -1,5 +1,4 @@
 import * as child from "child_process";
-import path from "path";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
@@ -94,8 +93,6 @@ export default defineConfig({
       },
     },
   },
-
-  // resolve: { alias: { "@": path.resolve(__dirname, "..") } },
 
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),

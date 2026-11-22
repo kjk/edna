@@ -33,7 +33,6 @@ export function updateAfterNoteStateChange() {
 
 export async function getPasswordFromUser(msg: string): Promise<string> {
   let pwd = await globalFunctions.getPasswordFromUser(msg);
-  console.log("got password:", pwd);
   return pwd;
 }
 

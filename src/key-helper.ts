@@ -3,8 +3,8 @@ import { getAltChar, getModChar, platformName } from "./util.js";
 export function fixUpShortcuts(s: string, platform = platformName): string {
   let modChar = getModChar(platform);
   let altChar = getAltChar(platform);
-  s = s.replace(/Alt/g, altChar);
-  s = s.replace(/Mod/g, modChar);
+  s = s.replace(/\bAlt\b/g, altChar);
+  s = s.replace(/\bMod\b/g, modChar);
   return s;
 }
 

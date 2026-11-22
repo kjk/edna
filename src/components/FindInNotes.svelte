@@ -189,7 +189,6 @@
   }
 </script>
 
-// svelte-ignore non_reactive_update
 {#snippet InsideInput()}
   <div class="absolute right-1 top-1.5 flex">
     <button class="btn-icon {matchCaseCls}" onclick={matchCase} title="Match Case"

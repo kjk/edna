@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
 
@@ -24,10 +23,6 @@ func ctx() context.Context {
 	return context.Background()
 }
 
-// func push[S ~[]E, E any](s *S, els ...E) {
-// 	*s = append(*s, els...)
-// }
-
 func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {
 	cmd := exec.Command(exe, args...)
 	cmd.Dir = dir
@@ -41,19 +36,6 @@ func startLoggedInDir(dir string, exe string, args ...string) (func(), error) {
 	return func() {
 		cmd.Process.Kill()
 	}, nil
-}
-
-func printFS(fsys fs.FS) {
-	logf("printFS('%v')\n", fsys)
-	dfs := fsys.(fs.ReadDirFS)
-	nFiles := 0
-	u.IterReadDirFS(dfs, ".", func(filePath string, d fs.DirEntry) error {
-		logf("%s\n", filePath)
-		nFiles++
-		return nil
-	})
-	logf("%d files\n", nFiles)
-	panicIf(nFiles == 0)
 }
 
 func runLoggedInDir(dir string, exe string, args ...string) error {

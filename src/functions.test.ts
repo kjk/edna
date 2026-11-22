@@ -1,4 +1,5 @@
-import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { expect, test } from "vitest";
 import { parseBoopFunction, parseBuiltInFunctions, parseUserFunctions } from "./functions";
 import { len } from "./util";
 
@@ -28,14 +29,14 @@ async function main(input) {
   expect(meta.icon).toBe("snake");
 });
 
-test("parseBuiltInFunctiosn", async () => {
-  let jsRaw = await Bun.file("./src/note-built-in-functions.js").text();
+test("parseBuiltInFunctions", async () => {
+  let jsRaw = readFileSync("src/notes/note-built-in-functions.js", "utf8");
   let res = parseBuiltInFunctions(jsRaw);
-  expect(len(res)).toBe(64);
+  expect(len(res)).toBe(66);
 });
 
 test("parseCustomFunctions", async () => {
-  let jsRaw = await Bun.file("./src/notes/note-custom-functions.edna.txt").text();
+  let jsRaw = readFileSync("./src/notes/note-custom-functions.edna.txt", "utf8");
   let res = parseUserFunctions(jsRaw);
   expect(len(res)).toBe(1);
   expect(res[0].name).toBe("My Camel Case");

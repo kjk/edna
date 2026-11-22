@@ -7,16 +7,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: latest
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version-file: go.mod
       - uses: oven-sh/setup-bun@v2
       - name: install dependencies
         run: bun ci
-      - name: run go tests
-        run: go test ./...
-      - name: run vitest tests
+      - name: type check
+        run: bun run check
+      - name: build frontend
+        run: bun run build
+      - name: go vet and build
+        run: go vet ./... && go build ./...
+      - name: run node tests
         run: bun run test:node
+      - name: install playwright chromium
+        run: bunx playwright install --with-deps chromium
+      - name: run browser tests
+        run: bun run test:browser

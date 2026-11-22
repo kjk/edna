@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { fromFileName, isValidFileName, toFileName } from "./filenamify";
 
 const toTest = [
@@ -43,16 +43,16 @@ test("encode", () => {
 test("isValidFileName", () => {
   let notValid = ["con", "✨", ".", "..", "fo%ga", "%", "a%", "%20"];
   for (let s of notValid) {
-    expect(isValidFileName(s)).toBeFalse();
+    expect(isValidFileName(s)).toBe(false);
   }
   let valid = ["foo", "..."];
   for (let s of valid) {
-    expect(isValidFileName(s)).toBeTrue();
+    expect(isValidFileName(s)).toBe(true);
   }
   let n = toTest.length;
   for (let i = 0; i < n; i += 2) {
     let s = toTest[i + 1];
     console.log("s:", s);
-    expect(isValidFileName(s)).toBeTrue();
+    expect(isValidFileName(s)).toBe(true);
   }
 });

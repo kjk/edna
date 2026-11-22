@@ -13,7 +13,6 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
-	"slices"
 	"strings"
 	"sync"
 	"syscall"
@@ -139,12 +138,6 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		case "/.well-known/appspecific/com.chrome.devtools.json":
 			serveChromeDevToolsJSON(w, r)
 			return
-			// case "/auth/ghlogin":
-			// 	handleLoginGitHub(w, r)
-			// 	return
-			// case "/auth/githubcb":
-			// 	handleGithubCallback(w, r)
-			// 	return
 		}
 
 		if strings.HasPrefix(uri, "/api/goplay/") {
@@ -178,20 +171,6 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		}
 
 		if proxyHandler != nil {
-			transformRequestForProxy := func() {
-				uris := []string{}
-				shouldProxyURI := slices.Contains(uris, uri)
-				if !shouldProxyURI {
-					return
-				}
-				newPath := uri + ".html"
-				newURI := strings.Replace(r.URL.String(), uri, newPath, 1)
-				var err error
-				r.URL, err = url.Parse(newURI)
-				must(err)
-			}
-
-			transformRequestForProxy()
 			proxyHandler.ServeHTTP(w, r)
 			return
 		}
@@ -247,7 +226,7 @@ func serverListenAndWait(httpSrv *http.Server) func() {
 	}()
 
 	return func() {
-		sctx, stop := signal.NotifyContext(ctx(), os.Interrupt /*SIGINT*/, os.Kill /* SIGKILL */, syscall.SIGTERM)
+		sctx, stop := signal.NotifyContext(ctx(), os.Interrupt /*SIGINT*/, syscall.SIGTERM)
 		defer stop()
 
 		select {

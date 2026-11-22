@@ -475,7 +475,7 @@ function main(input) {
 {
   "api":1,
   "name":"Format JSON",
-  "description":ns and format JSON documents.",
+  "description":"Cleans and format JSON documents.",
   "author":"Ivan",
   "icon":"broom",
   "tags":"json,prettify,clean,indent"
@@ -1756,7 +1756,7 @@ This line was added on Fri, 19 Jun 2020 01:01:30 GMT
   "description":"Trims leading and trailing whitespace.",
   "author":"Joshua Nozzi",
   "icon":"scissors",
-  "tags":"trim,whitespace,empty,space",
+  "tags":"trim,whitespace,empty,space"
 }
 **/
 

@@ -188,7 +188,8 @@
       appState.showingFindInNotes ||
       appState.showingDecryptPassword ||
       appState.showingEncryptPassword ||
-      appState.showingAskFileWritePermissions
+      appState.showingAskFileWritePermissions ||
+      appState.showingAskAI
     );
   });
 
@@ -286,7 +287,7 @@
     // capture: true so that we get those before codemirror can process it
     window.addEventListener("keydown", onKeyDown, { capture: true });
 
-    window.addEventListener("beforeunload", async (ev) => {
+    const onBeforeUnload = (ev: BeforeUnloadEvent) => {
       if (appState.isDirty) {
         // show a dialog that the content might be lost
         ev.preventDefault();
@@ -295,9 +296,10 @@
       } else {
         logAppExit();
       }
-    });
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
 
-    window.addEventListener("popstate", function (ev) {
+    const onPopState = (ev: PopStateEvent) => {
       let state = ev.state;
       if (!state || !state.noteName) {
         console.log("popstate: state is null or has no 'noteName' field:", state);
@@ -306,7 +308,7 @@
       let name = state.noteName;
       console.log("popstate:", name, state);
       if (name === noteName) {
-        console.log("smae as noteName, nothing to do");
+        console.log("same as noteName, nothing to do");
         return;
       }
       if (!noteExists(name)) {
@@ -314,12 +316,15 @@
         return;
       }
       openNote(name, false /* skip save */, true /* noPushHistory */);
-    });
+    };
+    window.addEventListener("popstate", onPopState);
 
     logAppOpen();
 
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, { capture: true });
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("popstate", onPopState);
     };
   });
 
@@ -329,17 +334,19 @@
     // we bind Mod-h in CodeMirror which only works if CodeMirror has
     // focus. We have to prevent it here to disable the default
     // behavior of hiding a window
-    if (ev.key == "h") {
-      if (mod) {
-        if (isShowingDialog) {
-          ev.preventDefault();
-          if (appState.showingQuickAccess) {
-            appState.showingQuickAccess = false;
-            focusEditor();
-          }
+    if (ev.key == "h" && mod) {
+      if (isShowingDialog) {
+        ev.preventDefault();
+        if (appState.showingQuickAccess) {
+          appState.showingQuickAccess = false;
+          focusEditor();
         }
         return;
       }
+      if (editorComp) {
+        return;
+      }
+      // no editor (e.g. Home tab): handled below
     }
     if (ev.key === "Escape") {
       // console.log("Esc");
@@ -497,7 +504,6 @@
   }
 
   function onEncryptPassword(pwd: string) {
-    console.log("got encryption password:", pwd);
     closeEncryptPassword();
     encryptAllNotes(pwd);
   }
@@ -2058,10 +2064,7 @@
     }
 
     let settings = getSettings();
-    let noteTabIdx = settings.tabs.indexOf(name);
-    if (noteTabIdx >= 0) {
-      settings.tabs.splice(noteTabIdx);
-    }
+    settingsRemoveTab(settings, name);
     // if deleting current note, first switch to scratch note
     // TODO: maybe switch to the most recently opened
     if (name === settings.currentTab || len(settings.tabs) == 0) {

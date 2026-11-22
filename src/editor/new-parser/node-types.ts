@@ -31,17 +31,6 @@ const nodeTypes = [
 // Export the node set
 export const nodeSet = new NodeSet(nodeTypes);
 
-// Helper to get node type by ID
-export function getNodeType(id: number): NodeType {
-  return nodeSet.types[id] || NodeType.none;
-}
-
 // Delimiter pattern: ∞∞∞ (three infinity symbols)
 export const DELIMITER_PREFIX = "\u221e\u221e\u221e";
 
-// Full delimiter pattern for regex matching
-// Matches: newline + ∞∞∞ + language + optional -a + newline
-export const DELIMITER_REGEX = /\n(\u221e\u221e\u221e)([a-z]+)(-a)?\n/g;
-
-// Pattern to match delimiter at start of document (no leading newline)
-export const DELIMITER_START_REGEX = /^(\u221e\u221e\u221e)([a-z]+)(-a)?\n/;

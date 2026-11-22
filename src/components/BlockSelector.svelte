@@ -55,11 +55,11 @@
     // TODO: extend it to `a` .. `z` ?
     if (ev.ctrlKey) {
       let idx = getKeyEventNumber(ev);
-      let lastIdx = len(blocks) - 1;
+      let lastIdx = Math.min(len(itemsFiltered), 10) - 1;
       if (idx >= 0 && idx <= lastIdx) {
         ev.preventDefault();
-        let item = blocks[idx];
-        selectBlock(item.block);
+        let item = itemsFiltered[idx];
+        selectBlock(item.item.block);
         return;
       }
     }
@@ -86,7 +86,7 @@
   <ListBox
     bind:this={listboxRef}
     items={itemsFiltered}
-    onclick={(item, metaPressed) => selectBlock(item.item)}
+    onclick={(item, metaPressed) => selectBlock(item.item.block)}
     {initialSelection}
   >
     {#snippet renderItem(item, idx)}

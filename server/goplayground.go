@@ -212,7 +212,7 @@ func loadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := http.Get("https://play.golang.org/p/" + r.URL.RawQuery + ".go")
+	response, err := http.Get("https://play.golang.org/p/" + url.PathEscape(r.URL.RawQuery) + ".go")
 	if err != nil {
 		http.Error(w, "Failed to load snippet", http.StatusInternalServerError)
 		return
@@ -222,6 +222,7 @@ func loadHandler(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		http.Error(w, "Failed to read data", http.StatusInternalServerError)
+		return
 	}
 
 	if response.StatusCode != http.StatusOK {

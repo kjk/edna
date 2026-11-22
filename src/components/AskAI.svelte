@@ -206,7 +206,7 @@
     }
 
     let modelID = settings.aiModelID;
-    if (apiProvider == kApiProviderOpenRouter) {
+    if (apiProviderToUse == kApiProviderOpenRouter) {
       let providerIdx = aiModel[kModelProviderIdx];
       let prefix = providersInfo[providerIdx]![0];
       modelID = prefix + "/" + modelID;

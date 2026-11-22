@@ -1,14 +1,9 @@
 node_modules/
-/test-results/
-/playwright-report/
-/playwright/.cache/
 secrets.env
 edna-*
 data/
-dist/gitkeep.txt
 dist/
 .claude/settings.local.json
 .DS_Store
 ailog.txt
-dist/gitkeep.txt
 tsconfig.tsbuildinfo
