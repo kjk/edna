@@ -66,6 +66,7 @@
   import { setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
+  import { hasOtherInstances, startInstanceDetection } from "../instances";
   import { boot } from "../main";
   import {
     archiveNote,
@@ -329,6 +330,16 @@
 
     logAppOpen();
 
+    startInstanceDetection();
+    hasOtherInstances().then((yes) => {
+      if (yes) {
+        showWarning(
+          "Edna is already open in another tab or window. Editing notes in more than one place can overwrite changes.",
+          0,
+        );
+      }
+    });
+
     return () => {
       window.removeEventListener("keydown", onKeyDown, { capture: true });
       window.removeEventListener("beforeunload", onBeforeUnload);
@@ -437,6 +448,9 @@
   }
 
   async function storeNotesOnDisk() {
+    if (!(await checkSingleInstance())) {
+      return;
+    }
     let dh = await openDirPicker(true);
     if (!dh) {
       return;
@@ -455,6 +469,16 @@
     }
   }
 
+  // other Edna tabs / windows don't know about changes to how notes are stored
+  // (issue 13 in docs/state-machines.md)
+  async function checkSingleInstance(): Promise<boolean> {
+    if (await hasOtherInstances()) {
+      showWarning("Edna is open in another tab or window. Close it first.");
+      return false;
+    }
+    return true;
+  }
+
   // pending edits and selection / folds of the current note must be saved to
   // the current storage before switching storage (S-I4)
   async function saveBeforeStorageSwitch(): Promise<boolean> {
@@ -471,7 +495,7 @@
   }
 
   async function pickAnotherDirectory2() {
-    if (!(await saveBeforeStorageSwitch())) {
+    if (!(await checkSingleInstance()) || !(await saveBeforeStorageSwitch())) {
       return;
     }
     let ok = await pickAnotherDirectory();
@@ -556,6 +580,9 @@
   // decrypt, move to directory). The current note is saved first and the
   // editor is read-only while it runs so that edits can't race with it.
   async function runStorageOp(fn: () => Promise<unknown>) {
+    if (!(await checkSingleInstance())) {
+      return;
+    }
     let editor = editorComp ? getEditor() : undefined;
     if (editor) {
       try {
@@ -683,7 +710,7 @@
   }
 
   async function switchToBrowserStorage() {
-    if (!(await saveBeforeStorageSwitch())) {
+    if (!(await checkSingleInstance()) || !(await saveBeforeStorageSwitch())) {
       return;
     }
     await dbDelDirHandle();

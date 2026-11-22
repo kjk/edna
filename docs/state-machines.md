@@ -373,5 +373,5 @@ other tabs are open.
 | 10 Tabs / navigation | fixed (10a, 10b); `tests/browser/app.test.ts` covers 10b (passes on old code too: the old timer happened to be long enough in localStorage mode) |
 | 11 Find in notes | fixed (11a–11c), `tests/browser/app.test.ts` (11a) |
 | 12 Ask AI | fixed (12a–12c), `tests/browser/askai.test.ts` |
-| 13 Multiple browser tabs | open |
+| 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent editing of the same note in two tabs is still last-writer-wins |
 | 14 Low impact | open |
