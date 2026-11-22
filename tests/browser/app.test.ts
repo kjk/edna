@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { appState } from "../../src/appstate.svelte";
-import { dbDelDirHandle } from "../../src/notes";
+import { EditorView } from "@codemirror/view";
+import { dbDelDirHandle, loadNote } from "../../src/notes";
 
 // Integration tests: boot the whole app (docs/state-machines.md M8 dialogs)
 
@@ -72,5 +73,24 @@ describe("app", () => {
     await expect.poll(() => appState.showingCommandPalette).toBe(true);
     expect(appState.forceNewTab).toBe(false);
     appState.showingCommandPalette = false;
+  });
+
+  it("output of a run goes to the note it was started in", async () => {
+    await openWithShortcut(1, "scratch");
+    const view = EditorView.findFromDOM(document.querySelector(".cm-editor") as HTMLElement)!;
+    const code = "new Promise((resolve) => setTimeout(() => resolve('run-output-' + 6 * 7), 300))";
+    const end = view.state.doc.length;
+    view.dispatch({
+      changes: { from: end, insert: "\n\u221E\u221E\u221Ejavascript\n" + code },
+      selection: { anchor: end + "\n\u221E\u221E\u221Ejavascript\n".length + 2 },
+    });
+    const isMac = /Mac/.test(navigator.platform);
+    view.contentDOM.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "e", code: "KeyE", keyCode: 69, metaKey: isMac, ctrlKey: !isMac, bubbles: true, cancelable: true }),
+    );
+    // switch notes while the code runs
+    await openWithShortcut(3, "inbox");
+    await expect.poll(async () => await loadNote("scratch"), { timeout: 3000 }).toContain("run-output-42");
+    expect(await loadNote("inbox")).not.toContain("run-output-42");
   });
 });

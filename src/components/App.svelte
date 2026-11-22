@@ -822,6 +822,63 @@
     appState.showingFunctionSelector = true;
   }
 
+  // state machine M9 in docs/state-machines.md: at most one run at a time (R-I1),
+  // output goes to the note the run started in (R-I2), a run always ends (R-I3)
+  let runInProgress = false;
+
+  interface RunContext {
+    editor: MultiBlockEditor;
+    contentGen: number; // identifies the document shown in the editor
+    note: string;
+    wasReadOnly: boolean;
+  }
+
+  // runs fn with the editor read-only (so the document doesn't change while
+  // code runs). Returns undefined if a run is already in progress
+  async function withRun<T>(editor: MultiBlockEditor, fn: (run: RunContext) => Promise<T>): Promise<T | undefined> {
+    if (runInProgress) {
+      showWarning("Code is already running");
+      return;
+    }
+    runInProgress = true;
+    let run: RunContext = {
+      editor,
+      contentGen: editor.contentGen,
+      note: noteName!,
+      wasReadOnly: isReadOnly(editor.view),
+    };
+    editor.setReadOnly(true);
+    try {
+      return await fn(run);
+    } catch (e) {
+      showError(`Error running code: ${e}`);
+      return;
+    } finally {
+      runInProgress = false;
+      clearModalMessage();
+      if (isSameDocument(run)) {
+        editor.setReadOnly(run.wasReadOnly);
+      }
+    }
+  }
+
+  // true if the editor still shows the document the run started in
+  function isSameDocument(run: RunContext): boolean {
+    return !!editorComp && getEditor() === run.editor && run.editor.contentGen === run.contentGen;
+  }
+
+  // inserts output (starting with a block header) after the active block, or
+  // appends it to the note the run started in if the user switched notes
+  async function insertRunOutput(run: RunContext, text: string) {
+    if (isSameDocument(run)) {
+      run.editor.setReadOnly(run.wasReadOnly);
+      insertAfterActiveBlock(run.editor.view, text);
+      return;
+    }
+    await appendToNote(run.note, text);
+    showToast(`Output added to the end of note '${run.note}'`);
+  }
+
   export async function runBoopFunctionWithText(f: BoopFunction, txt: string): Promise<BoopFunctionArg> {
     let input = {
       text: txt,
@@ -840,66 +897,43 @@
     return input;
   }
 
-  async function runBoopFunctionWithSelection(
-    view: EditorView,
-    fdef: BoopFunction,
-    replace: boolean,
-  ): Promise<boolean> {
-    // TOOD: selection can cross blocks so for now not implementing replace
-    replace = false;
-
-    const { state } = view;
-    if (state.readOnly) return false;
-    let { selectedText } = getCurrentSelection(state);
+  // note: replace is not supported because selection can cross blocks
+  async function runBoopFunctionWithSelection(run: RunContext, fdef: BoopFunction): Promise<boolean> {
+    let { selectedText } = getCurrentSelection(run.editor.view.state);
     const content = selectedText;
     let res = "";
-    let input = null;
     try {
-      input = await runBoopFunctionWithText(fdef, content);
-      res = "";
+      let input = await runBoopFunctionWithText(fdef, content);
       if (input.text != content) {
         res = input.text;
       }
       if (input.fullText != content) {
         res = input.fullText;
       }
-      console.log("res:", res);
     } catch (e) {
-      console.log(e);
       res = `error running ${fdef.name}: ${e}`;
     }
-
-    if (replace) {
-      throwIf(true, "not yet implemented");
-    } else {
-      // TODO: be more intelligent
-      if (res === "") {
-        return false;
-      }
-      let text = res;
-      if (!res.startsWith("\n∞∞∞")) {
-        text = "\n∞∞∞text-a\n" + res;
-      }
-      insertAfterActiveBlock(view, text);
+    // TODO: be more intelligent
+    if (res === "") {
+      return false;
     }
+    let text = res;
+    if (!res.startsWith("\n∞∞∞")) {
+      text = "\n∞∞∞text-a\n" + res;
+    }
+    await insertRunOutput(run, text);
     return true;
   }
 
-  async function runBoopFunctionWithBlockContent(
-    view: EditorView,
-    fdef: BoopFunction,
-    replace: boolean,
-  ): Promise<boolean> {
+  async function runBoopFunctionWithBlockContent(run: RunContext, fdef: BoopFunction, replace: boolean): Promise<boolean> {
+    const view = run.editor.view;
     const { state } = view;
-    if (state.readOnly) return false;
     const block = getActiveNoteBlock(state)!;
-    console.log("editorRunBlockFunction:", block);
-    const cursorPos = state.selection.asSingle().ranges[0].head;
+    const cursorPos = state.selection.asSingle().ranges[0]!.head;
     const content = state.sliceDoc(block.contentFrom, block.to);
     let res = "";
-    let input = null;
     try {
-      input = await runBoopFunctionWithText(fdef, content);
+      let input = await runBoopFunctionWithText(fdef, content);
       res = content;
       if (input.text != content) {
         res = input.text;
@@ -907,13 +941,14 @@
       if (input.fullText != content) {
         res = input.fullText;
       }
-      console.log("res:", res);
     } catch (e) {
-      console.log(e);
       res = `error running ${fdef.name}: ${e}`;
     }
 
-    if (replace) {
+    // block offsets are only valid if it's still the same document (the editor
+    // is read-only while running so it can't be edited)
+    if (replace && isSameDocument(run)) {
+      run.editor.setReadOnly(run.wasReadOnly);
       let cursorOffset = cursorPos - block.contentFrom;
       const tr = view.state.update(
         {
@@ -930,37 +965,36 @@
         },
       );
       view.dispatch(tr);
-    } else {
-      // TODO: be more intelligent
-      let text = res;
-      if (!res.startsWith("\n∞∞∞")) {
-        text = "\n∞∞∞text-a\n" + res;
-      }
-      insertAfterActiveBlock(view, text);
+      return true;
     }
+    let text = res;
+    if (!res.startsWith("\n∞∞∞")) {
+      text = "\n∞∞∞text-a\n" + res;
+    }
+    await insertRunOutput(run, text);
     return true;
   }
 
   async function runFunction(fdef: BoopFunction, replace: boolean) {
-    console.log("runFunction");
     appState.showingFunctionSelector = false;
     let view = getEditorView();
     if (isReadOnly(view)) {
       view.focus();
       return;
     }
-    let name = fdef.name;
-    let msg = `Running <span class="font-bold">${name}</span>...`;
-    showModalMessageHTML(msg, 300);
-    if (runFunctionOnSelection) {
-      await runBoopFunctionWithSelection(view, fdef, replace);
-      logNoteOp("runFunctionWithSelection");
-    } else {
-      await runBoopFunctionWithBlockContent(view, fdef, replace);
-      logNoteOp("runFunction");
-    }
-    clearModalMessage();
-    view.focus();
+    let onSelection = runFunctionOnSelection;
+    await withRun(getEditor(), async (run) => {
+      let msg = `Running <span class="font-bold">${fdef.name}</span>...`;
+      showModalMessageHTML(msg, 300);
+      if (onSelection) {
+        await runBoopFunctionWithSelection(run, fdef);
+        logNoteOp("runFunctionWithSelection");
+      } else {
+        await runBoopFunctionWithBlockContent(run, fdef, replace);
+        logNoteOp("runFunction");
+      }
+    });
+    focusEditor();
   }
 
   function openLanguageSelector() {
@@ -1897,43 +1931,31 @@
     }
     const block = getActiveNoteBlock(state)!;
     const lang = getLanguage(block.language)!;
-    // console.log("runBlockContent: lang:", lang);
     if (!langSupportsRun(lang)) {
       return false;
     }
-
     const content = state.sliceDoc(block.contentFrom, block.to);
-
-    showModalMessageHTML("running code", 300);
-    editor.setReadOnly(true);
-    let output = "";
-    let token = lang.token;
-    let res: CapturingEval | undefined;
-    if (token === "golang") {
-      res = await runGo(content);
-    } else if (token === "javascript") {
-      res = await runJS(content);
-    } else {
-      output = `Error: invalid block lang ${lang.token}`;
-    }
-    editor.setReadOnly(false);
-    clearModalMessage();
-    if (!res) return false;
-
-    output = evalResultToString(res);
-    if (!output) {
-      output = "executed code returned empty output";
-    }
-
-    console.log("output of running code:", output);
-    // const block = getActiveNoteBlock(state)
-    let text = output;
-    if (!output.startsWith("\n∞∞∞")) {
-      // text = "\n∞∞∞text-a\n" + "output of running the code:\n" + output;
-      text = "\n∞∞∞text-a\n" + output;
-    }
-    insertAfterActiveBlock(view, text);
-    return true;
+    let res = await withRun(editor, async (run) => {
+      showModalMessageHTML("running code", 300);
+      let token = lang.token;
+      let res: CapturingEval;
+      if (token === "golang") {
+        res = await runGo(content);
+      } else {
+        res = await runJS(content);
+      }
+      let output = evalResultToString(res);
+      if (!output) {
+        output = "executed code returned empty output";
+      }
+      let text = output;
+      if (!output.startsWith("\n∞∞∞")) {
+        text = "\n∞∞∞text-a\n" + output;
+      }
+      await insertRunOutput(run, text);
+      return true;
+    });
+    return !!res;
   }
 
   export async function runBlockContentWithArg(editor: MultiBlockEditor, arg: string): Promise<boolean> {
@@ -1944,47 +1966,35 @@
     }
     const block = getActiveNoteBlock(state)!;
     const lang = getLanguage(block.language)!;
-    // console.log("runBlockContent: lang:", lang);
     if (!langSupportsRun(lang)) {
       return false;
     }
-
-    let from = block.contentFrom,
-      to = block.to;
-    const content = state.sliceDoc(from, to);
-
-    showModalMessageHTML("running code", 300);
-    editor.setReadOnly(true);
-
-    let res: CapturingEval | undefined;
-    let token = lang.token;
-
-    if (token === "javascript") {
-      res = await runJSWithArg(content, arg);
-    } else {
-      res = {
-        output: "",
-        consoleLogs: [],
-        exception: `Error: unspported language '${token}'`,
-      };
-    }
-    editor.setReadOnly(false);
-    clearModalMessage();
-
-    let output = evalResultToString(res);
-    if (!output) {
-      output = "executed code returned empty output";
-    }
-
-    console.log("output of running code:", res);
-    // const block = getActiveNoteBlock(state)
-    let text = output;
-    if (!output.startsWith("\n∞∞∞")) {
-      // text = "\n∞∞∞text-a\n" + "output of running the code:\n" + output;
-      text = "\n∞∞∞text-a\n" + output;
-    }
-    insertAfterActiveBlock(view, text);
-    return true;
+    const content = state.sliceDoc(block.contentFrom, block.to);
+    let res = await withRun(editor, async (run) => {
+      showModalMessageHTML("running code", 300);
+      let res: CapturingEval;
+      let token = lang.token;
+      if (token === "javascript") {
+        res = await runJSWithArg(content, arg);
+      } else {
+        res = {
+          output: "",
+          consoleLogs: [],
+          exception: `Error: unspported language '${token}'`,
+        };
+      }
+      let output = evalResultToString(res);
+      if (!output) {
+        output = "executed code returned empty output";
+      }
+      let text = output;
+      if (!output.startsWith("\n∞∞∞")) {
+        text = "\n∞∞∞text-a\n" + output;
+      }
+      await insertRunOutput(run, text);
+      return true;
+    });
+    return !!res;
   }
 
   function runCurrentBlock() {

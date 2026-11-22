@@ -14,7 +14,7 @@ interface GoEvalEvent {
 
 interface GoEvalResult {
   Body: string;
-  Events: GoEvalEvent[];
+  Events: GoEvalEvent[] | null;
   Error?: string;
   Errors?: string;
 }
@@ -53,8 +53,13 @@ export async function runGo(code: string): Promise<CapturingEval> {
     res.exception = `Error: bad HTTP status ${rsp.status} ${rsp.statusText}`;
     return res;
   }
-  const rspJSON: GoEvalResult = await rsp.json();
-  console.log("rspJSON:", rspJSON);
+  let rspJSON: GoEvalResult;
+  try {
+    rspJSON = await rsp.json();
+  } catch (e: unknown) {
+    res.exception = `Error: invalid response: ${e instanceof Error ? e.message : String(e)}`;
+    return res;
+  }
   const err = getError(rspJSON);
   if (err != "") {
     res.exception = err;
@@ -62,7 +67,8 @@ export async function runGo(code: string): Promise<CapturingEval> {
   }
   let stdout = [];
   let stderr = [];
-  for (const ev of rspJSON.Events) {
+  // note: Events is null when the program produced no output
+  for (const ev of rspJSON.Events || []) {
     if (ev.Kind === "stderr") {
       stderr.push(ev.Message);
       continue;
