@@ -245,4 +245,22 @@ describe("app", () => {
     await expect.poll(() => menuText()).not.toBe("");
     appState.showingContextMenu = false;
   });
+
+  it("command palette has no duplicate commands (U25)", async () => {
+    await openWithShortcut(1, "scratch");
+    const errors: string[] = [];
+    const orig = console.error;
+    console.error = (...args: unknown[]) => {
+      errors.push(args.join(" "));
+      orig(...args);
+    };
+    try {
+      appState.showingCommandPalette = true;
+      await expect.poll(() => document.querySelectorAll('[role="listbox"] [role="option"], .listbox-item, li').length).toBeGreaterThan(5);
+      expect(errors.filter((e) => e.includes("duplicate command id"))).toEqual([]);
+    } finally {
+      console.error = orig;
+      appState.showingCommandPalette = false;
+    }
+  });
 });

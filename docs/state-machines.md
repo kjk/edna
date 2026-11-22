@@ -531,6 +531,9 @@ to state machines). Ordered by impact.
 - **U24. A model id sent to the OpenAI / xAI API exists there.** Model ids are OpenRouter ids;
   `:free` / `:extended` variants, `o4-mini-high`, `gpt-oss-*` were sent to api.openai.com.
   **Fixed**: `isOpenRouterOnlyModel` routes them to OpenRouter.
+- **U25. Command palette ids are unique.** The list is keyed by id; uniqueness was only checked
+  (and only logged) in dev builds. **Fixed**: duplicates are dropped (and logged) in all builds;
+  a test checks there are none.
 
 ## Status
 

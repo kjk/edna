@@ -1,7 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
   import { extractShortcut } from "../keys";
-  import { findMatchingItems, hilightText, isDev, len, makeHilightRegExp, splitMax, trimPrefix } from "../util";
+  import { findMatchingItems, hilightText, len, makeHilightRegExp, splitMax, trimPrefix } from "../util";
   import ListBox from "./ListBox.svelte";
   import { getCommandArg, type Command } from "./Menu.svelte";
 
@@ -20,29 +20,12 @@
     shortcut: string;
   }
 
-  function verifyCommandsAreUnique() {
-    let m = new Map();
-    for (let i = 0; i < len(commandsDef); i++) {
-      let cmd = commandsDef[i];
-      if (!cmd) {
-        continue;
-      }
-      let s = cmd[0];
-      let id = cmd[1];
-      if (m.has(id)) {
-        console.log(`Duplicate items with id ${id}: '${s}' and '${m.get(id)}'`);
-      }
-      m.set(id, s);
-    }
-  }
-
   function buildCommands(): Item[] {
-    if (isDev()) {
-      verifyCommandsAreUnique();
-    }
-
     // console.log("rebuildCommands:", commands);
-    let res: Item[] = Array(len(commandsDef));
+    let res: Item[] = [];
+    // the list is keyed by command id: ids must be unique (U25). A duplicate
+    // (e.g. a command in a menu and in commandPaletteAdditions) is dropped
+    let seen = new Map<number, string>();
     for (let i = 0; i < len(commandsDef); i++) {
       let cmd = commandsDef[i];
       if (!cmd) {
@@ -50,6 +33,11 @@
       }
       let s = cmd[0];
       let id = cmd[1] as number;
+      if (seen.has(id)) {
+        console.error(`CommandPalette: duplicate command id ${id}: '${s}' and '${seen.get(id)}'`);
+        continue;
+      }
+      seen.set(id, s);
       let parts = splitMax(s, "\t", 2);
       let name = parts[0] as string;
       let shortcut = "";
@@ -64,7 +52,7 @@
         nameLC: name.toLowerCase(),
         shortcut: shortcut,
       };
-      res[i] = item;
+      res.push(item);
     }
     // -1 if a < b
     // 0 if a = b
