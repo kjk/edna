@@ -26,6 +26,27 @@ describe("Block folding (browser tests)", () => {
     "\n",
   ].join("");
 
+  // on Mac, Option + . produces "≥" as event.key. CodeMirror must map it back
+  // to "." using keyCode. @codemirror/view 6.38.1 broke this for a while
+  it("Mod-Alt-. toggles block fold when Alt changes event.key (Mac)", async () => {
+    const view = te.editor.view;
+    te.editor.setCursorPosition(20);
+    const opts = {
+      key: isMac ? "\u2265" : ".",
+      code: "Period",
+      keyCode: 190,
+      altKey: true,
+      metaKey: isMac,
+      ctrlKey: !isMac,
+      bubbles: true,
+      cancelable: true,
+    };
+    view.contentDOM.dispatchEvent(new KeyboardEvent("keydown", opts));
+    await expect.poll(() => foldPlaceholderCount()).toBe(1);
+    view.contentDOM.dispatchEvent(new KeyboardEvent("keydown", opts));
+    await expect.poll(() => foldPlaceholderCount()).toBe(0);
+  });
+
   function foldPlaceholderCount(): number {
     return te.container.querySelectorAll(".cm-foldPlaceholder").length;
   }
