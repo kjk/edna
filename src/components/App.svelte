@@ -2014,40 +2014,32 @@
       newTab = true;
     }
 
-    function maybeReplaceCurrentTab() {
-      if (newTab || settings.tabs.includes(name)) {
-        return;
-      }
-      // don't replace the Home tab
-      if (isTabHome(settings.currentTab)) {
-        return;
-      }
-      // replace current tab with new note
-      let idx = settings.tabs.indexOf(settings.currentTab);
-      if (idx >= 0) {
-        // openNote() will change settings.currentTab to name
-        settings.tabs[idx] = name;
-      }
-    }
-    maybeReplaceCurrentTab();
-    await openNote(name);
+    // current tab is replaced when the note is shown (in didLoadNote), so that
+    // a load that fails or is superseded doesn't change tabs
+    await openNote(name, false, false, !newTab);
   }
 
-  async function openNote(name: string, skipSave = false, noPushHistory = false) {
+  // returns true if the note was loaded and shown
+  async function openNote(name: string, skipSave = false, noPushHistory = false, replaceTab = false) {
     console.log("App.openNote:", name);
     if (!editorComp) {
       // Editor not mounted (e.g. coming from Home tab).
       // Setting currentTab mounts the Editor, whose onMount loads the note.
       settings.currentTab = name;
       settingsAddTab(settings, name);
-      return;
+      return true;
     }
     let msg = `Loading <span class="font-bold">${name}</span>...`;
     showModalMessageHTML(msg, 300);
-    let editor = getEditorComp();
-    await editor.openNote(name, skipSave, noPushHistory);
-    clearModalMessage();
-    getEditorComp().focus();
+    let ok = false;
+    try {
+      ok = await getEditorComp().openNote(name, skipSave, noPushHistory, replaceTab);
+    } finally {
+      clearModalMessage();
+    }
+    // note: editor might have been unmounted (e.g. switched to Home tab) while loading
+    editorComp?.focus();
+    return ok;
   }
 
   function openNoteFromFind(name: string, pos: number) {
@@ -2158,9 +2150,17 @@
     );
   }
 
-  function didLoadNote(name: string, noPushHistory = false) {
+  // called when note `name` was loaded and shown in the editor
+  function didLoadNote(name: string, noPushHistory = false, replaceTab = false) {
     console.log("didLoadNote:", name);
     throwIf(!name);
+    if (replaceTab && !settings.tabs.includes(name) && !isTabHome(settings.currentTab)) {
+      // replace current tab with the new note
+      let idx = settings.tabs.indexOf(settings.currentTab);
+      if (idx >= 0) {
+        settings.tabs[idx] = name;
+      }
+    }
     let editor = editorComp.getEditor();
     let readOnly = isSystemNoteName(name);
     editor.setReadOnly(readOnly);

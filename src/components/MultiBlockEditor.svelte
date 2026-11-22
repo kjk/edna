@@ -4,6 +4,7 @@
   import { appState } from "../appstate.svelte";
   import { startCurrencyRefresh } from "../currency";
   import { MultiBlockEditor } from "../editor/editor";
+  import { NoteLoader } from "../editor/note-loader";
   import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
@@ -41,14 +42,16 @@
     extraKeymap?: KeymapSpec;
     cursorChange: (e: SelectionChangeEvent) => void;
     docDidChange: () => void;
-    didLoadNote: (name: string, noPushHistory: boolean) => void;
+    didLoadNote: (name: string, noPushHistory: boolean, replaceTab: boolean) => void;
   }
   let { class: klass = "", extraKeymap, cursorChange, docDidChange, didLoadNote }: Props = $props();
 
   let settings = getSettings();
 
   let editor: MultiBlockEditor;
-  let currentNoteName: string;
+  // loads notes; loader.current is the note shown in the editor (saves go there)
+  let loader: NoteLoader;
+  let destroyed = false;
 
   let editorRef: HTMLElement;
 
@@ -95,7 +98,12 @@
   }
 
   async function saveEditorState() {
-    let meta = getNoteMeta(currentNoteName, true)!;
+    // don't save state that wasn't restored for this note (O-I4)
+    let name = loader?.current;
+    if (!editorStateRestored || !name) {
+      return;
+    }
+    let meta = getNoteMeta(name, true)!;
     let didChange = false;
     let foldedRanges = editor.getFoldedRanges();
     if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
@@ -150,12 +158,17 @@
     let fontFamily = settings.fontFamily!;
     let fontSize = settings.fontSize!;
 
-    currentNoteName = appState.currentNoteName!;
+    let noteToLoad = appState.currentNoteName!;
     let useTabs = settings.indentType == "tabs";
     let tabSize = settings.tabSize;
 
-    async function saveCurrentNote(content: string) {
-      await saveNote(currentNoteName, content);
+    // note: must capture loader.current synchronously (see NoteLoader)
+    function saveCurrentNote(content: string): Promise<void> {
+      let name = loader.current;
+      if (!name) {
+        return Promise.reject(new Error("no note loaded"));
+      }
+      return saveNote(name, content);
     }
 
     function setIsDirty(dirty: boolean) {
@@ -184,17 +197,27 @@
       defaultBlockAutoDetect: true,
     });
 
-    let destroyed = false;
-    loadNote(currentNoteName).then((content) => {
-      if (destroyed) {
-        return;
-      }
-      editor.setContent(content || "");
-      // Use requestAnimationFrame to avoid race condition with scrollIntoView
-      requestAnimationFrame(() => {
-        restoreEditorState(currentNoteName);
-        didLoadNote(currentNoteName, false);
-      });
+    loader = new NoteLoader({
+      editor,
+      loadNote,
+      willShow: () => {
+        editorStateRestored = false;
+      },
+      loadFailed: (name, e) => {
+        showError(`Failed to load note '${name}': ${e}`);
+        if (loader.current === undefined) {
+          // nothing loaded: don't let the user type into an empty editor
+          editor.setReadOnly(true);
+        }
+      },
+      saveFailed: (name, e) => {
+        showError(`Failed to save note '${name}': ${e}`);
+      },
+      isDestroyed: () => destroyed,
+    });
+    loader.load(noteToLoad, false, () => {
+      restoreEditorState(noteToLoad);
+      didLoadNote(noteToLoad, false, false);
     });
 
     startCurrencyRefresh();
@@ -203,9 +226,7 @@
       destroyed = true;
       // save selection and folds when switching to Home tab, closing the tab etc.
       // note: reads editor state synchronously, before the editor is destroyed
-      if (editorStateRestored) {
-        saveEditorState();
-      }
+      saveEditorState();
       document.removeEventListener("keydown", onKeyDown);
       window.document.removeEventListener("currenciesLoaded", didLoadCurrencies);
       editorRef.removeEventListener("selectionChange", onSelChange);
@@ -241,21 +262,24 @@
     editor.focus();
   }
 
-  export async function openNote(name: string, skipSave = false, noPushHistory = false) {
+  // returns true if the note was loaded and shown
+  export async function openNote(name: string, skipSave = false, noPushHistory = false, replaceTab = false) {
     console.log("openNote:", name);
     if (!skipSave) {
-      await editor.save();
+      try {
+        await editor.save();
+      } catch (e) {
+        // don't switch away from a note with edits we couldn't save
+        showError(`Failed to save note '${loader.current}': ${e}`);
+        return false;
+      }
       await saveEditorState();
     }
-    editorStateRestored = false;
-    currentNoteName = name;
-    const content = (await loadNote(name)) || "";
-    editor.setContent(content);
-    // Use requestAnimationFrame to avoid race condition with scrollIntoView
-    requestAnimationFrame(() => {
+    let res = await loader.load(name, !skipSave, () => {
       restoreEditorState(name);
-      didLoadNote(name, noPushHistory);
+      didLoadNote(name, noPushHistory, replaceTab);
     });
+    return res === "shown";
   }
 </script>
 
