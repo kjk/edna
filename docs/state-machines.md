@@ -513,6 +513,8 @@ to state machines). Ordered by impact.
 - **U18.** Ask AI stream chunks have `choices` (in-stream `{"error": …}` was swallowed).
   **Fixed**: `parseChatStreamData` throws on an error payload; the request fails with it.
 - **U19.** Deleting the current note: the switch to scratch succeeded before deleting.
+  **Fixed**: if the switch failed and the note is still shown, it isn't deleted (no automated
+  test).
 - **U20.** Menu shortcut labels match real bindings ("Insert time Alt-Shift-t" was unbound).
 - **U21.** Currency API response has the expected shape.
 - **U22.** Math blocks: evaluation starts at the block start, not the viewport start.

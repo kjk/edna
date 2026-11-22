@@ -2278,7 +2278,13 @@
     // if deleting current note, first switch to scratch note
     // TODO: maybe switch to the most recently opened
     if (name === settings.currentTab || len(settings.tabs) == 0) {
-      await openNote(kScratchNoteName);
+      let ok = await openNote(kScratchNoteName);
+      if (!ok && appState.currentNoteName === name) {
+        // still showing the note: its next save would re-create it (U19)
+        settingsAddTab(settings, name);
+        showError(`Can't delete note '${name}': failed to switch to '${kScratchNoteName}'`);
+        return;
+      }
     }
 
     console.log("deleted note", name);
