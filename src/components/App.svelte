@@ -483,7 +483,17 @@
   let fileWritePermissionsFileHandle: FileSystemFileHandle | undefined = $state();
   let askFileWritePermissionsClose: (ok: boolean) => void = $state(noOpBool);
 
-  async function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
+  // one permission dialog at a time: a second request waits for the first
+  // instead of replacing its resolver (which would never resolve the first)
+  let permissionQueue: Promise<unknown> = Promise.resolve();
+
+  function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
+    let p = permissionQueue.then(() => requestFileWritePermissionNow(fh));
+    permissionQueue = p.catch(() => {});
+    return p;
+  }
+
+  async function requestFileWritePermissionNow(fh: FileSystemFileHandle): Promise<boolean> {
     if (await hasHandlePermission(fh, true)) {
       console.log("requestFileWritePermission: already have write permissions to", fh);
       return true;

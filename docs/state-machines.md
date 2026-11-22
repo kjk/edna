@@ -365,7 +365,7 @@ other tabs are open.
 | 2 Save bookkeeping | fixed (2a–2c), `tests/browser/save.test.ts` |
 | 3 Create / move overwrites | fixed (3a–3c), `tests/browser/notes.test.ts` |
 | 4 Dialog invariants | fixed (4a–4e), `tests/browser/app.test.ts` (4a, 4b, 4d) |
-| 5 Password handling | open |
+| 5 Password handling | fixed (5a–5c), `tests/browser/password.test.ts` |
 | 6 Encrypt / decrypt all | open |
 | 7 Migration | open |
 | 8 Storage switch / boot | open |

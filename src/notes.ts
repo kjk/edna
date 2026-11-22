@@ -96,19 +96,67 @@ function getPasswordHash(): string | undefined {
   return pwdHash;
 }
 
+// thrown when the user cancels the password dialog
+export class PasswordCancelledError extends Error {
+  constructor() {
+    super("password not provided");
+    this.name = "PasswordCancelledError";
+  }
+}
+
+// returns true if pwdHash decrypts encrypted notes in the directory
+// (checks one note); true if there are no encrypted notes
+async function passwordHashDecryptsNotes(dh: FileSystemDirectoryHandle, pwdHash: string): Promise<boolean> {
+  let encrFileName: string | undefined;
+  await forEachNoteFileFS(dh, async (fileName, noteName, isEncr) => {
+    if (isEncr && !encrFileName) {
+      encrFileName = fileName;
+    }
+  });
+  if (!encrFileName) {
+    return true;
+  }
+  let d = await fsReadBinaryFile(dh, encrFileName);
+  try {
+    decryptBlobAsString({ key: pwdHash, cipherblob: d });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// asks the user for a password until it decrypts existing notes (P-I1).
+// throws PasswordCancelledError if the user cancels (P-I2)
+async function askForPasswordHash(msg: string): Promise<string> {
+  while (true) {
+    let pwd = await getPasswordFromUser(msg);
+    if (!pwd) {
+      throw new PasswordCancelledError();
+    }
+    let pwdHash = saltPassword(pwd);
+    let dh = getStorageFS();
+    if (!dh || (await passwordHashDecryptsNotes(dh, pwdHash))) {
+      rememberPassword(pwd);
+      return pwdHash;
+    }
+    msg = "Password is not correct. Please enter valid password.";
+  }
+}
+
+// concurrent requests for a password share one dialog (P-I3)
+let pendingPasswordHash: Promise<string> | undefined;
+
 async function getPasswordHashMust(msg: string): Promise<string> {
   let pwdHash = getPasswordHash();
-  let simulateNoPassword = false;
-  if (simulateNoPassword) {
-    pwdHash = undefined;
-  }
   if (pwdHash) {
     return pwdHash;
   }
-  let pwd = await getPasswordFromUser(msg);
-  // TODO: we don't know yet if password is correct, maybe move this somewhere else
-  rememberPassword(pwd);
-  return saltPassword(pwd);
+  if (!pendingPasswordHash) {
+    pendingPasswordHash = askForPasswordHash(msg).finally(() => {
+      pendingPasswordHash = undefined;
+    });
+  }
+  return pendingPasswordHash;
 }
 
 export async function dbGetDirHandle(): Promise<FileSystemDirectoryHandle | undefined> {
@@ -670,7 +718,6 @@ async function writeMaybeEncryptedFS(dh: FileSystemDirectoryHandle, name: string
     return;
   }
   let pwdHash = await getPasswordHashMust("");
-  throwIf(!pwdHash, "needs password");
   await writeEncryptedFS(dh, pwdHash, path, content);
 }
 
