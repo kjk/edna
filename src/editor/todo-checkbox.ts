@@ -29,10 +29,10 @@ class CheckboxWidget extends WidgetType {
     box.style.padding = "0";
 
     if (this.monospace) {
-      // if the font is monospaced, we'll set the content of the wrapper to "   " and the
-      // position of the checkbox to absolute, since three spaces will be the same width
-      // as "[ ]" and "[x]" so that characters on different lines will line up
-      wrap.appendChild(document.createTextNode("   "));
+      // if the font is monospaced, we'll set the content of the wrapper to "    " and the
+      // position of the checkbox to absolute, since four spaces will be the same width
+      // as the replaced "[ ] " / "[x] " so that characters on different lines will line up
+      wrap.appendChild(document.createTextNode("    "));
       wrap.style.position = "relative";
       box.style.position = "absolute";
       box.style.top = "0";
