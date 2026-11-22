@@ -85,11 +85,8 @@ describe("Math mode (browser tests)", () => {
     await expect.poll(() => getBlockContent(editor, 0)).toBe("3");
   });
 
-  // Note: In Edna, the foldBlock keeps the first line visible (as a fold label),
-  // and math result widgets remain attached to their line positions even when folded.
-  // The Heynote test expects all math results to be hidden, which may require
-  // different fold behavior or CSS-level hiding.
-  it.skip("folded math block hides math results", async () => {
+  // Edna's fold keeps the first line visible (as a fold label) so its result is shown
+  it("folded math block hides math results of folded lines", async () => {
     te = createEditor(
       "\n\u221E\u221E\u221Emath\n1 + 1\n2 + 2\n\u221E\u221E\u221Etext\nAfter block\n",
     );
@@ -107,20 +104,7 @@ describe("Math mode (browser tests)", () => {
 
     await expect.poll(() => container.querySelectorAll(".cm-foldPlaceholder").length).toBeGreaterThan(0);
 
-    // In Edna, the fold keeps the first line visible (with its math result),
-    // but the second line's result should be hidden. So we expect at most 1 visible.
-    // (Heynote expected 0, but Edna's fold shows the first line as a label.)
-    await expect
-      .poll(() => {
-        const results = container.querySelectorAll(".heynote-math-result");
-        let visibleCount = 0;
-        results.forEach((el) => {
-          const rect = (el as HTMLElement).getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) visibleCount++;
-        });
-        return visibleCount;
-      })
-      .toBeLessThan(2);
+    await expect.poll(() => container.querySelectorAll(".heynote-math-result").length).toBe(1);
   });
 
   // Note: "each row of math blocks are processed even if outside visible ranges" test

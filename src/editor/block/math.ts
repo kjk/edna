@@ -1,3 +1,4 @@
+import { foldedRanges } from "@codemirror/language";
 import { RangeSetBuilder } from "@codemirror/state";
 import { Decoration, EditorView, ViewPlugin, ViewUpdate, WidgetType, type DecorationSet } from "@codemirror/view";
 import { CURRENCIES_LOADED, transactionsHasAnnotation } from "../annotation";
@@ -51,6 +52,20 @@ interface MathParser {
   prev: unknown;
 }
 
+// is the end of the line inside a folded range? The result widget is placed
+// at the end of the line so it would be shown after the fold placeholder
+// for the last line of a folded block
+function isLineEndFolded(view: EditorView, lineEnd: number): boolean {
+  let folded = false;
+  foldedRanges(view.state).between(lineEnd, lineEnd, (from, to) => {
+    if (from < lineEnd && lineEnd <= to) {
+      folded = true;
+      return false;
+    }
+  });
+  return folded;
+}
+
 function mathDeco(view: EditorView): DecorationSet {
   let mathParsers = new WeakMap<object, MathParser>();
   let builder = new RangeSetBuilder<Decoration>();
@@ -82,7 +97,8 @@ function mathDeco(view: EditorView): DecorationSet {
         }
 
         // if we got a result from math.js, add the result decoration
-        if (result !== undefined) {
+        // note: lines are still evaluated when folded because of prev variable
+        if (result !== undefined && !isLineEndFolded(view, line.to)) {
           let format = parser.get("format");
 
           let resultWidget;
@@ -138,6 +154,7 @@ export const mathBlock = ViewPlugin.fromClass(
       if (
         update.docChanged ||
         update.viewportChanged ||
+        foldedRanges(update.startState) !== foldedRanges(update.state) ||
         transactionsHasAnnotation(update.transactions, CURRENCIES_LOADED)
       ) {
         this.decorations = mathDeco(update.view);
