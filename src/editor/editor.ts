@@ -150,7 +150,7 @@ export class MultiBlockEditor {
         }),
         multiBlock(),
         noteBlockExtension(this),
-        languageDetection(() => this.view),
+        languageDetection,
 
         // set cursor blink rate to 1 second
         drawSelection({ cursorBlinkRate: 1000 }),
@@ -180,6 +180,12 @@ export class MultiBlockEditor {
     if (focus) {
       this.view.focus();
     }
+  }
+
+  // destroys the view and its plugins (saves pending changes,
+  // terminates language detection worker)
+  destroy() {
+    this.view.destroy();
   }
 
   async save() {

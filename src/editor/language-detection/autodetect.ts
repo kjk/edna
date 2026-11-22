@@ -1,6 +1,6 @@
 import { redoDepth } from "@codemirror/commands";
 import { EditorState } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { blockState, getActiveNoteBlock } from "../block/block";
 import { changeLanguageTo } from "../block/commands";
 import { kLanguages } from "../languages";
@@ -26,7 +26,7 @@ function cancelIdleCallbackCompat(id: number): void {
   }
 }
 
-export function languageDetection(getView: () => EditorView) {
+function createLanguageDetection(view: EditorView) {
   const previousBlockContent: Record<number, string> = {};
   let idleCallbackId: number | null = null;
 
@@ -36,7 +36,6 @@ export function languageDetection(getView: () => EditorView) {
     if (!event.data.guesslang.language) {
       return;
     }
-    const view = getView();
     const state = view.state;
     const block = getActiveNoteBlock(state);
     if (!block) return;
@@ -59,7 +58,7 @@ export function languageDetection(getView: () => EditorView) {
     }
   };
 
-  const plugin = EditorView.updateListener.of((update) => {
+  const update = (update: ViewUpdate) => {
     if (update.docChanged) {
       if (idleCallbackId !== null) {
         cancelIdleCallbackCompat(idleCallbackId);
@@ -93,7 +92,6 @@ export function languageDetection(getView: () => EditorView) {
         const content = update.state.doc.sliceString(block.contentFrom, block.to);
         if (content === "" && redoDepth(update.state) === 0) {
           // if content is cleared, set language to plaintext
-          const view = getView();
           const activeBlock = getActiveNoteBlock(view.state);
           if (activeBlock && activeBlock.language !== "text") {
             changeLanguageTo(view.state, view.dispatch, activeBlock, "text", true);
@@ -116,7 +114,18 @@ export function languageDetection(getView: () => EditorView) {
         }
       });
     }
-  });
+  };
 
-  return plugin;
+  const destroy = () => {
+    if (idleCallbackId !== null) {
+      cancelIdleCallbackCompat(idleCallbackId);
+      idleCallbackId = null;
+    }
+    detectionWorker.terminate();
+  };
+
+  return { update, destroy };
 }
+
+// detects language of auto-detect blocks in a web worker
+export const languageDetection = ViewPlugin.define(createLanguageDetection);

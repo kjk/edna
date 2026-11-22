@@ -30,12 +30,11 @@ export function createEditor(content: string): TestEditor {
 }
 
 /**
- * Remove the editor container from the DOM.
+ * Destroy the editor and remove its container from the DOM.
  */
 export function cleanup(te: TestEditor | undefined) {
-  if (te?.container) {
-    te.container.remove();
-  }
+  te?.editor.destroy();
+  te?.container.remove();
 }
 
 /**

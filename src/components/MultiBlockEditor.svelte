@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { mount, onMount } from "svelte";
+  import { mount, onMount, unmount } from "svelte";
   import { syntaxTree } from "@codemirror/language";
   import { EditorView, type ViewUpdate } from "@codemirror/view";
   import { appState } from "../appstate.svelte";
@@ -21,15 +21,18 @@
         view,
       },
     };
-    // TODO: this leaks, I don't see unmounting anywhere
     let comp = mount(Find, args);
     const update = (update: ViewUpdate) => {
       comp.update(update);
+    };
+    const destroy = () => {
+      unmount(comp);
     };
     return {
       dom,
       top: true,
       update,
+      destroy,
     };
   }
 
@@ -106,8 +109,7 @@
   onMount(didMount);
 
   function didMount() {
-    document.addEventListener("keydown", (e) => {
-      // console.log(e);
+    function onKeyDown(e: KeyboardEvent) {
       // prevent the default Save dialog from opening and save if dirty
       let isCtrlS = e.ctrlKey && e.key === "s";
       isCtrlS = isCtrlS || (e.metaKey && e.key === "s");
@@ -118,7 +120,8 @@
         }
         saveEditorState();
       }
-    });
+    }
+    document.addEventListener("keydown", onKeyDown);
 
     window.document.addEventListener("currenciesLoaded", didLoadCurrencies);
     // forward events dispatched from editor.js
@@ -126,10 +129,11 @@
     function onSelChange(ev: Event) {
       cursorChange(ev as SelectionChangeEvent);
     }
-    editorRef.addEventListener("selectionChange", onSelChange);
-    editorRef.addEventListener("docChanged", (e) => {
+    function onDocChanged() {
       docDidChange();
-    });
+    }
+    editorRef.addEventListener("selectionChange", onSelChange);
+    editorRef.addEventListener("docChanged", onDocChanged);
 
     throwIf(!settings);
     let showLineNumberGutter = settings.showLineNumberGutter;
@@ -173,7 +177,11 @@
       defaultBlockAutoDetect: true,
     });
 
+    let destroyed = false;
     loadNote(currentNoteName).then((content) => {
+      if (destroyed) {
+        return;
+      }
       editor.setContent(content || "");
       // Use requestAnimationFrame to avoid race condition with scrollIntoView
       requestAnimationFrame(() => {
@@ -185,7 +193,12 @@
     startCurrencyRefresh();
 
     return () => {
+      destroyed = true;
+      document.removeEventListener("keydown", onKeyDown);
       window.document.removeEventListener("currenciesLoaded", didLoadCurrencies);
+      editorRef.removeEventListener("selectionChange", onSelChange);
+      editorRef.removeEventListener("docChanged", onDocChanged);
+      editor.destroy();
     };
   }
 
