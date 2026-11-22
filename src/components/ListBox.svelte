@@ -2,7 +2,7 @@
   import type { Snippet } from "svelte";
   import { len } from "../util";
   import "overlayscrollbars/overlayscrollbars.css";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { OverlayScrollbars } from "overlayscrollbars";
   import { getOverlayScrollbarOptions } from "../settings.svelte";
 
@@ -33,7 +33,8 @@
 
   let n = 0;
   let refs = $state(new Array(n));
-  let prevItemsLen = n;
+  let prevItems: any[] | undefined;
+  let prevItemsLen = 0;
 
   onMount(() => {
     n = len(items);
@@ -51,28 +52,24 @@
     };
   });
 
+  // reset selection when items change (e.g. filtering or re-sorting).
+  // checking only the count would leave selectedItem pointing to a different
+  // item than the highlighted row when the count doesn't change.
+  // also check the count for arrays mutated in place (e.g. search results)
   $effect(() => {
-    let n = len(items);
-    if (n > len(refs)) {
-      // console.log("expanding refs to:", n);
-      refs.length = n;
-    }
-
-    // TODO: this check shouldn't be necessary but
-    // this effect gets re-run after changing selection
-    if (n === prevItemsLen) {
-      return;
-    }
-    // console.log(`re-runinng effect: ${len(items)} items`);
-    prevItemsLen = n;
-    // reset selection if changing items
-    if (n > 0) {
-      select(0);
-      selectedItem = items[0];
-    } else {
-      select(-1);
-      selectedItem = null;
-    }
+    let curr = items;
+    let n = len(curr);
+    untrack(() => {
+      if (n > len(refs)) {
+        refs.length = n;
+      }
+      if (curr === prevItems && n === prevItemsLen) {
+        return;
+      }
+      prevItems = curr;
+      prevItemsLen = n;
+      select(n > 0 ? 0 : -1);
+    });
   });
 
   export function select(n: number) {
