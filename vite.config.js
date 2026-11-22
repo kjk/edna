@@ -1,4 +1,5 @@
 import * as child from "child_process";
+import * as fs from "fs";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
@@ -56,11 +57,23 @@ function manualChunksFn(id) {
   }
 }
 
+// dist/ is emptied before each build but dist/gitkeep.txt must exist because
+// it's checked into git (go:embed dist/* fails if dist/ is empty)
+function keepDistGitkeep() {
+  return {
+    name: "keep-dist-gitkeep",
+    apply: "build",
+    closeBundle() {
+      fs.writeFileSync("./dist/gitkeep.txt", "don't delete this folder\n");
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   publicDir: "./src/public",
 
-  plugins: [svelte(), tailwindcss()],
+  plugins: [svelte(), tailwindcss(), keepDistGitkeep()],
 
   build: {
     outDir: "./dist",
@@ -71,7 +84,7 @@ export default defineConfig({
         return [];
       },
     },
-    emptyOutDir: false,
+    emptyOutDir: true,
     sourcemap: true,
     minify: "terser",
     terserOptions: {
