@@ -216,4 +216,33 @@ describe("app", () => {
     expect(await loadNote("scratch")).toContain("second change in other tab");
     expect(await loadNote("scratch-conflict")).toContain("my edit");
   });
+  function openContextMenu() {
+    const target = document.querySelector(".cm-content") || document.querySelector("#app > div") || document.body;
+    target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 100, clientY: 100 }));
+  }
+  function menuText(): string {
+    return document.querySelector('[role="menu"]')?.textContent || "";
+  }
+
+  it("Home tab context menu has the storage, encryption and help submenus (U15)", async () => {
+    await openWithShortcut(1, "scratch");
+    getSettings().currentTab = kTabHome;
+    await expect.poll(() => document.querySelector(".cm-editor")).toBeNull();
+    openContextMenu();
+    await expect.poll(() => menuText()).toContain("Notes storage");
+    expect(menuText()).toContain("Help");
+    appState.showingContextMenu = false;
+  });
+
+  it("context menu works in a block with an unknown language (U12)", async () => {
+    await openWithShortcut(1, "scratch");
+    const view = EditorView.findFromDOM(document.querySelector(".cm-editor") as HTMLElement)!;
+    const end = view.state.doc.length;
+    const delim = "\n\u221E\u221E\u221Efoo\n";
+    view.dispatch({ changes: { from: end, insert: delim + "x" }, selection: { anchor: end + delim.length } });
+    openContextMenu();
+    await expect.poll(() => appState.showingContextMenu).toBe(true);
+    await expect.poll(() => menuText()).not.toBe("");
+    appState.showingContextMenu = false;
+  });
 });

@@ -472,12 +472,14 @@ to state machines). Ordered by impact.
 - **U12. Every block language is known.** The delimiter grammar accepts any `[a-z]+`;
   `menuItemStatus` did `getLanguage(language)!` and crashed the menu / command palette.
   `changeLanguageTo` didn't validate the token.
+  **Fixed**: `menuItemStatus` handles an unknown language; `getLanguage` uses a `Map` (token
+  `constructor` found `Object.prototype.constructor`); `changeLanguageTo` rejects invalid tokens.
 - **U13. Restored folds / selections fit the document.** Stored as offsets; not checked
   against the current document length (note changed elsewhere).
 - **U14. `moveCurrentBlock`: the selection anchor is in the current block.** A selection
   spanning two blocks produced positions outside the document.
 - **U15. Menu entries are commands.** `menuItemStatus` treated a submenu as a command id; on the
-  Home tab every submenu (Notes storage, Encryption, Help) was removed.
+  Home tab every submenu (Notes storage, Encryption, Help) was removed. **Fixed**.
 - **U16. A selection is never inside a delimiter (after the first block).** Atomic ranges only
   constrain cursor motion; programmatic selections (find, restored selection) could land
   inside, and typing changed the language or broke the delimiter.

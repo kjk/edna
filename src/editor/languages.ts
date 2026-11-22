@@ -264,18 +264,22 @@ export function extForLang(lang: string): string {
   return "txt";
 }
 
-function buildTokenToLanguage(): Record<string, Language> {
-  let res: Record<string, Language> = {};
+// a Map, not an object: block tokens come from note text, so "constructor"
+// must not find Object.prototype.constructor
+function buildTokenToLanguage(): Map<string, Language> {
+  let res = new Map<string, Language>();
   for (let l of kLanguages) {
-    res[l.token] = l;
+    res.set(l.token, l);
   }
   return res;
 }
 
 const tokenToLanguage = buildTokenToLanguage();
 
+// block languages can be any [a-z]+ token, e.g. from a pasted or Heynote note:
+// callers must handle undefined (U12)
 export function getLanguage(token: string): Language | undefined {
-  return tokenToLanguage[token];
+  return tokenToLanguage.get(token);
 }
 
 export function getLanguageNameFromToken(token: string): string {
@@ -283,7 +287,7 @@ export function getLanguageNameFromToken(token: string): string {
   return lang ? lang.name : "Unknown";
 }
 
-export function langSupportsRun(lang: Language | undefined): boolean {
+export function langSupportsRun(lang: Language | undefined): lang is Language {
   // console.log("langSupportsRun:", lang);
   let token = lang ? lang.token : "";
   switch (token) {

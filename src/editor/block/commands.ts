@@ -9,7 +9,7 @@ import {
   MOVE_BLOCK,
 } from "../annotation";
 import type { MultiBlockEditor } from "../editor";
-import { parseDelimiterLine } from "../new-parser/node-types";
+import { DELIMITER_PREFIX, parseDelimiterLine } from "../new-parser/node-types";
 import {
   blockState,
   getActiveNoteBlock,
@@ -194,6 +194,11 @@ export function changeLanguageTo(
   auto: boolean,
 ): void {
   if (state.readOnly) return;
+  // a token that isn't [a-z]+ would write an invalid delimiter and merge the
+  // block into the previous one (U12)
+  if (!parseDelimiterLine(DELIMITER_PREFIX + language)) {
+    throw new Error(`invalid language '${language}'`);
+  }
   const delimText = state.doc.sliceString(block.from, block.contentFrom);
   if (parseDelimiterLine(delimText.replace(/^\n/, "").replace(/\n$/, ""))) {
     dispatch(

@@ -1401,7 +1401,11 @@
   ];
 
   function menuItemStatus(mi: Command): number {
-    let mid = mi[1] as number;
+    if (Array.isArray(mi[1])) {
+      // submenu: its items have their own status (U15)
+      return kMenuStatusNormal;
+    }
+    let mid = mi[1];
     if (mid === kMenuIdJustText) {
       return kMenuStatusDisabled;
     }
@@ -1412,7 +1416,8 @@
     // console.log("menuItemStatus:", mi);
     // console.log("s:", s, "mid:", mid);
     // note: this is called for each menu item so should be fast
-    let lang = getLanguage(language)!;
+    // undefined for an unknown block language (U12)
+    let lang = getLanguage(language);
     let dh = getStorageFS();
     // console.log("dh:", dh);
     let hasFS = supportsFileSystem();
@@ -1470,11 +1475,11 @@
         return kMenuStatusDisabled;
       }
     } else if (mid === kCmdRunBlockWithAnotherBlock) {
-      if (lang.token !== "javascript") {
+      if (lang?.token !== "javascript") {
         return kMenuStatusDisabled;
       }
     } else if (mid === kCmdRunBlockWithClipboard) {
-      if (lang.token !== "javascript") {
+      if (lang?.token !== "javascript") {
         return kMenuStatusDisabled;
       }
       // it would be nice to check clipboard for empty text but that triggers clipboard
@@ -1982,7 +1987,7 @@
       return false;
     }
     const block = getActiveNoteBlock(state)!;
-    const lang = getLanguage(block.language)!;
+    const lang = getLanguage(block.language);
     if (!langSupportsRun(lang)) {
       return false;
     }
@@ -2017,7 +2022,7 @@
       return false;
     }
     const block = getActiveNoteBlock(state)!;
-    const lang = getLanguage(block.language)!;
+    const lang = getLanguage(block.language);
     if (!langSupportsRun(lang)) {
       return false;
     }
