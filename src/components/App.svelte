@@ -61,7 +61,7 @@
   import { toFileName } from "../filenamify";
   import { fsFileHandleWriteBlob, hasHandlePermission, openDirPicker, supportsFileSystem } from "../fileutil";
   import { formatBlockContent } from "../format-code";
-  import { parseUserFunctions, runBoopFunction } from "../functions";
+  import { boopFunctionResult, parseUserFunctions, runBoopFunction } from "../functions";
   import type { BoopFunction, BoopFunctionArg } from "../functions";
   import { clearGlobalFuncs, setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
@@ -956,11 +956,9 @@
     let res = "";
     try {
       let input = await runBoopFunctionWithText(fdef, content);
-      if (input.text != content) {
-        res = input.text;
-      }
-      if (input.fullText != content) {
-        res = input.fullText;
+      res = boopFunctionResult(input, content);
+      if (res === content) {
+        res = "";
       }
     } catch (e) {
       res = `error running ${fdef.name}: ${e}`;
@@ -986,13 +984,7 @@
     let res = "";
     try {
       let input = await runBoopFunctionWithText(fdef, content);
-      res = content;
-      if (input.text != content) {
-        res = input.text;
-      }
-      if (input.fullText != content) {
-        res = input.fullText;
-      }
+      res = boopFunctionResult(input, content);
     } catch (e) {
       res = `error running ${fdef.name}: ${e}`;
     }

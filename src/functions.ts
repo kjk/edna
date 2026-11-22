@@ -23,7 +23,7 @@ export interface BoopFunctionArg {
 export function parseBoopFunction(s: string): BoopFunction | null {
   let metaStart = s.indexOf("/**");
   let metaEnd = s.indexOf("**/");
-  if (metaStart < 0 && metaEnd < 0) {
+  if (metaStart < 0 || metaEnd < metaStart) {
     return null;
   }
   let metaStr = s.substring(metaStart + 3, metaEnd);
@@ -33,11 +33,34 @@ export function parseBoopFunction(s: string): BoopFunction | null {
   } catch (e) {
     return null;
   }
-  if (!meta.name || typeof meta.name !== "string") {
+  // user-editable: e.g. /**null**/ or a non-string description (U17)
+  if (!meta || typeof meta !== "object" || !meta.name || typeof meta.name !== "string") {
     return null;
+  }
+  for (let k of ["author", "description", "icon", "tags"]) {
+    if (k in meta && typeof meta[k] !== "string") {
+      meta[k] = String(meta[k]);
+    }
   }
   meta.code = s.substring(metaEnd + 3).trim();
   return meta;
+}
+
+/**
+ * Result of running a function on `content`: the text it changed, or content
+ * if nothing changed. Functions are user code: throws if they set text /
+ * fullText to something that isn't a string (U17).
+ */
+export function boopFunctionResult(input: { text: unknown; fullText: unknown }, content: string): string {
+  for (let k of ["text", "fullText"] as const) {
+    if (typeof input[k] !== "string") {
+      throw new Error(`input.${k} must be a string, is ${input[k] === null ? "null" : typeof input[k]}`);
+    }
+  }
+  if (input.fullText !== content) {
+    return input.fullText as string;
+  }
+  return input.text as string;
 }
 
 export function parseBuiltInFunctions(s: string): BoopFunction[] {

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
-import { parseBoopFunction, parseBuiltInFunctions, parseUserFunctions } from "./functions";
+import { boopFunctionResult, parseBoopFunction, parseBuiltInFunctions, parseUserFunctions } from "./functions";
 import { len } from "./util";
 
 test("parseFunction", async () => {
@@ -40,4 +40,21 @@ test("parseCustomFunctions", async () => {
   let res = parseUserFunctions(jsRaw);
   expect(len(res)).toBe(1);
   expect(res[0].name).toBe("My Camel Case");
+});
+
+// functions and their metadata are user code (U17)
+test("parseBoopFunction: invalid metadata", () => {
+  expect(parseBoopFunction("/**null**/ x")).toBeNull();
+  expect(parseBoopFunction("/**5**/ x")).toBeNull();
+  expect(parseBoopFunction('**/ /**{"name":"x"}')).toBeNull();
+  expect(parseBoopFunction('/**{"name":"x"} no end')).toBeNull();
+  expect(parseBoopFunction('/**{"name":"x","description":{"a":1}}**/ code')!.description).toBe("[object Object]");
+});
+
+test("boopFunctionResult", () => {
+  expect(boopFunctionResult({ text: "a", fullText: "a" }, "a")).toBe("a");
+  expect(boopFunctionResult({ text: "b", fullText: "a" }, "a")).toBe("b");
+  expect(boopFunctionResult({ text: "b", fullText: "c" }, "a")).toBe("c");
+  expect(() => boopFunctionResult({ text: 42, fullText: "a" }, "a")).toThrow("input.text must be a string, is number");
+  expect(() => boopFunctionResult({ text: "a", fullText: undefined }, "a")).toThrow("input.fullText");
 });

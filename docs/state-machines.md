@@ -508,7 +508,8 @@ to state machines). Ordered by impact.
   (`preventSelectionInsideDelimiters`).
 
 ### Low impact
-- **U17.** User function results are strings; function metadata JSON is an object.
+- **U17.** User function results are strings; function metadata JSON is an object. **Fixed**:
+  `boopFunctionResult` reports a non-string result as an error; invalid metadata is skipped.
 - **U18.** Ask AI stream chunks have `choices` (in-stream `{"error": …}` was swallowed).
 - **U19.** Deleting the current note: the switch to scratch succeeded before deleting.
 - **U20.** Menu shortcut labels match real bindings ("Insert time Alt-Shift-t" was unbound).
