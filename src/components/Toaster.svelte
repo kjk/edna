@@ -30,6 +30,11 @@
     toasts.splice(idx, 1);
   }
 
+  // messages of toasts currently shown (for tests)
+  export function getToastMessages(): string[] {
+    return toasts.map((t) => t.msg);
+  }
+
   export function showWarning(msg: string, timeoutMs: number = -1) {
     showToastEx(msg, kToastWarning, timeoutMs);
   }

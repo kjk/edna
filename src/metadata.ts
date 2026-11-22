@@ -1,3 +1,4 @@
+import { showError } from "./components/Toaster.svelte";
 import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
 import { getStorageFS } from "./notes";
@@ -96,7 +97,10 @@ export async function saveNotesMetadata(m: Metadata = metadata!) {
       try {
         await fsWriteTextFile(dh, kMetadataName, s);
       } catch (e) {
-        console.log("fsWriteTextFile failed with:", e);
+        // in-memory metadata is ahead of the file until the next successful
+        // save (which writes all metadata); tell the user
+        console.error("saveNotesMetadata failed:", e);
+        showError(`Failed to save notes metadata (favorites, shortcuts, folds): ${e}`);
       }
     } else {
       localStorage.setItem(kMetadataName, s);

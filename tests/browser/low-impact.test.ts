@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { fsReadTextFile } from "../../src/fileutil";
 import { kMetadataName, saveNotesMetadata } from "../../src/metadata";
 import { isMoving } from "../../src/mouse-track.svelte";
+import { getToastMessages } from "../../src/components/Toaster.svelte";
+import { setStorageFS } from "../../src/notes";
 import { setupFSStorage } from "./fs-utils";
 
 // issue 14 in docs/state-machines.md
@@ -24,5 +26,16 @@ describe("low impact fixes", () => {
     await Promise.all(writes);
     const m = JSON.parse(await fsReadTextFile(dh, kMetadataName));
     expect(m.notes[0].name).toBe("n9");
+  });
+});
+
+describe("metadata write failure", () => {
+  it("is shown to the user", async () => {
+    const { dh } = await setupFSStorage();
+    const sub = await dh.getDirectoryHandle("gone", { create: true });
+    setStorageFS(sub);
+    await dh.removeEntry("gone", { recursive: true });
+    await saveNotesMetadata({ ver: 1, notes: [], functions: [] });
+    expect(getToastMessages().some((m) => m.includes("Failed to save notes metadata"))).toBe(true);
   });
 });
