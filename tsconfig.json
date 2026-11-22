@@ -32,6 +32,7 @@
     // tsconfig.node.json
     "composite": true,
     "allowSyntheticDefaultImports": true,
+    "types": ["bun", "node", "vite/client", "svelte"],
   },
   /**
    * Use global.d.ts instead of compilerOptions.types

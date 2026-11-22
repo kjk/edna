@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import markdownIt from "markdown-it";
+import markdownIt, { type MarkdownIt } from "markdown-it";
 import markdownItAnchor from "markdown-it-anchor";
 import { keyHelpStr } from "./key-helper.js";
 
@@ -150,7 +150,7 @@ let htmlEnd = `
 </html>
 `;
 
-function addTargetBlank(md: markdownIt) {
+function addTargetBlank(md: MarkdownIt) {
   // Remember old renderer, if overridden, or proxy to default renderer
   var defaultRender =
     md.renderer.rules.link_open ||
@@ -167,7 +167,7 @@ function addTargetBlank(md: markdownIt) {
     // console.log("token:", token);
     // console.log("token.attrs:", token.attrs);
     let aidx = token.attrIndex("href");
-    let uri = token.attrs![aidx]![1];
+    let uri = String(token.attrs![aidx]![1]);
     if (uri.startsWith("#")) {
       // console.log("skipping uri: ", uri);
       return defaultRender(tokens, idx, options, env, self);

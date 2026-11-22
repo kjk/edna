@@ -1,8 +1,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import hljs from "highlight.js";
-  import markdownIt from "markdown-it";
-  import MarkdownIt from "markdown-it";
+  import markdownIt, { type MarkdownIt } from "markdown-it";
   import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";
@@ -280,7 +279,7 @@
     }
   }
 
-  function addTargetBlank(md: markdownIt) {
+  function addTargetBlank(md: MarkdownIt) {
     // Remember old renderer, if overridden, or proxy to default renderer
     var defaultRender =
       md.renderer.rules.link_open ||
@@ -297,7 +296,7 @@
       // console.log("token:", token);
       // console.log("token.attrs:", token.attrs);
       let aidx = token.attrIndex("href");
-      let uri = token.attrs![aidx]![1];
+      let uri = String(token.attrs![aidx]![1]);
       if (uri.startsWith("#")) {
         // console.log("skipping uri: ", uri);
         return defaultRender(tokens, idx, options, env, self);
