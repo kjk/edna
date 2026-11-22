@@ -116,12 +116,6 @@ export async function boot() {
   const target = document.getElementById("app");
   if (!target) return;
   appSvelte = mount(App, { target });
-  // app.use(Toast, {
-  //   // transition: "Vue-Toastification__bounce",
-  //   transition: "none",
-  //   maxToasts: 20,
-  //   newestOnTop: true,
-  // });
 }
 
 boot().then(() => {

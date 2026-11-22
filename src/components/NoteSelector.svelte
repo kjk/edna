@@ -6,7 +6,6 @@
     isStarred: boolean;
     isArchived: boolean;
     altShortcut?: number; // if present, 1 to 9 for Alt-1 to Alt-9
-    ref: HTMLElement | null;
   }
 
   /**
@@ -71,7 +70,6 @@
       nameLC: name.toLowerCase(),
       isStarred: isStarred,
       isArchived: isArchived,
-      ref: null,
     };
     lastKey++;
     let n = parseInt(m?.altShortcut || "0");

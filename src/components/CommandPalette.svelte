@@ -18,7 +18,6 @@
     name: string;
     nameLC: string;
     shortcut: string;
-    ref?: HTMLElement;
   }
 
   function verifyCommandsAreUnique() {

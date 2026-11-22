@@ -494,7 +494,7 @@
     {/if}
     {#if reqInProgress}
       <div class="ml-2 font-bold">thinking...</div>
-    {:else}{/if}
+    {/if}
     <div class="grow"></div>
     <button bind:this={btnInsertRef} onclick={insertRsp} class="button-outline {reqFinished ? 'visible' : 'invisible'}"
       >Insert response as block</button

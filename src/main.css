@@ -55,28 +55,9 @@ html.dark body {
   height: 100%;
 }
 
-#syntaxTree {
-  height: 20%;
-  overflow-y: auto;
-}
-
-.center-with-translate {
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
 .center-x-with-translate {
   left: 50%;
   transform: translate(-50%);
-}
-
-/* .no-border-outline:selected, */
-.no-border-outlineactive,
-.no-border-outline:focus,
-.no-border-outline:focus-visible {
-  border: none;
-  outline: none;
 }
 
 input {

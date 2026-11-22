@@ -210,10 +210,6 @@
     };
   }
 
-  export function getBlocks() {
-    return editor.getBlocks();
-  }
-
   export function setSpellChecking(value: boolean) {
     // console.log("setSpellChecking:", value)
     let ce = document.querySelector('[contenteditable="true"]');
@@ -227,14 +223,6 @@
     } else {
       ce.setAttribute("spellcheck", "false");
     }
-  }
-
-  export function isSpellChecking() {
-    let ce = document.querySelector('[contenteditable="true"]');
-    if (!ce) {
-      return false;
-    }
-    return ce.getAttribute("spellcheck") === "true";
   }
 
   export function getEditorView(): EditorView {

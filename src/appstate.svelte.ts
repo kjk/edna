@@ -21,7 +21,6 @@ class AppState {
   searchMatchCase = $state(false);
   searchMatchWholeWord = $state(false);
 
-  searchNotesRegex = $state(false);
   searchNotesMatchCase = $state(false);
   searchNotesMatchWholeWord = $state(false);
 

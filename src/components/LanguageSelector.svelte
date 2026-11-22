@@ -22,7 +22,6 @@
         token: l.token,
         name: l.name,
         nameLC: l.name.toLowerCase(),
-        ref: null,
       };
       res[i++] = item;
     }
@@ -34,7 +33,6 @@
       token: "auto",
       name: "Auto-detect",
       nameLC: "auto-detect",
-      ref: null,
     });
     return res;
   }

@@ -908,7 +908,6 @@
   const kCmdCommandPalette = nmid();
   const kCmdOpenNote = nmid();
   const kCmdOpenNoteInNewTab = nmid();
-  const kCmdOpenFind = nmid();
   const kCmdCreateNewNote = nmid();
   const kCmdCloseCurrentTab = nmid();
   const kCmdRenameCurrentNote = nmid();
@@ -1095,7 +1094,6 @@
       ["Open note\tMod + K", kCmdOpenNote],
       ["New note", kCmdCreateNewNote],
       ["Ask AI", kCmdAskAI],
-      // ["Find\tMod + Q", kCmdOpenFind],
       ["This note", menuNote],
       ["Block", menuBlock],
       ["Run code", menuRun],
@@ -1412,8 +1410,6 @@
     } else if (cmdId === kCmdOpenNoteInNewTab) {
       appState.forceNewTab = true;
       openNoteSelector();
-    } else if (cmdId === kCmdOpenFind) {
-      // TODO: open search panel
     } else if (cmdId === kCmdCreateNewNote) {
       openCreateNewNote();
     } else if (cmdId === kCmdCloseCurrentTab) {

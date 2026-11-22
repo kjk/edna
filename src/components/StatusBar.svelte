@@ -114,7 +114,7 @@
   <CurrentTime class="ml-1 mr-1"></CurrentTime>
 </div>
 
-<style scoped>
+<style>
   .clickable,
   .clickable-icon {
     cursor: pointer;

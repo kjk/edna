@@ -73,15 +73,6 @@
     let dx = getScrollbarWidth();
     style = `right: ${dx}px`;
   });
-  if (false) {
-    showToast("hello");
-    showWarning("what is my purpose", 500);
-    showError("this is my ever-lasting love");
-    // showToast(
-    //   "this is a vary, vyer, very, very long toast of london and munification so why are we even considering this as if this is not concernings on every level",
-    //   0,
-    // );
-  }
   function bgClass(type: number) {
     let res = "bg-white dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500";
     if (type === kToastWarning) {

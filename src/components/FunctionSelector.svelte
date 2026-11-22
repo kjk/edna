@@ -20,7 +20,6 @@
     name: string;
     nameLC: string;
     isStarred: boolean;
-    ref: HTMLElement | null;
   }
 
   let altChar = getAltChar();
@@ -28,7 +27,6 @@
   function mkItem(fdef: BoopFunction, key: number): Item {
     let name = fdef.name;
     let nameLC = name.toLowerCase();
-    let ref = null;
     let meta = getFunctionMeta(name);
     let isStarred = meta ? !!meta.isStarred : false;
     let res = {
@@ -37,7 +35,6 @@
       name,
       nameLC,
       isStarred,
-      ref,
     };
     return res;
   }
