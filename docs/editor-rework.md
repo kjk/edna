@@ -60,7 +60,7 @@ These are compatibility names. Internals may be grouped differently.
 - `color-preview` — `colorPreviewExtension`.
 - `copy-paste` — `removeDelimitersFromPastedText`, `heynoteCopyCut`, `copyCommand`, `cutCommand`, `pasteCommand`.
 - `date-time` — `insertDateAndTime`, `insertTime`.
-- `editor` — `KeymapSpec`, `MultiBlockEditor`.
+- `editor` — `KeymapSpec`, `MultiBlockEditor`. The facade exposes `destroy`, `save`, `getContent`, `setContent`, `getSelectionJSON`, `setSelection`, `getFoldedRanges`, `setFoldedRanges`, `getBlocks`, `getCursorPosition`, `setCursorPosition`, `focus`, `isReadOnly`, `setReadOnly`, `setFont`, `setTheme`, `setKeymap`, `setLineNumberGutter`, `setFoldGutter`, `setColorPreview`, `setDefaultBlockLanguage`, `didLoadCurrencies`, `setBracketClosing` and `setTabsState`.
 - `emacs` — `setEmacsMarkMode`, `emacsKeymap`.
 - `event` — `SelectionChangeEvent`.
 - `extensions` — `createDynamicCloseBracketsExtension`.
@@ -100,3 +100,5 @@ These are compatibility names. Internals may be grouped differently.
 | Mod + Shift + Z | Redo, including on Windows |
 
 Emacs mode layers familiar bindings over these. Ctrl+B/F, P/N and A/E move by character, line and line boundary. Ctrl+Left/Right moves by word. Ctrl+Space toggles the mark, Ctrl+G cancels, and movement extends while marking. Ctrl+D/H delete a character, Ctrl+K kills to end of line, Ctrl+O splits, Ctrl+T transposes grapheme clusters within block boundaries, Ctrl+V pages down, Ctrl+Y/W paste/cut and configured Meta+W copies. Ctrl+Shift+minus and Ctrl+period undo and redo.
+
+The executable detection adapter in `src/public/langdetect-worker.js` also has a Heynote counterpart. Replace it along with the client. Preserve the separate bundled GuessLang dependency. Requests contain content and idx. Object/array JSON gets a certain JSON result. For model guesses accept a supported first candidate above 0.15 confidence or the first supported alternative above 0.5. The reply echoes content and idx and includes the guessed language ID and confidence.
