@@ -1,4 +1,4 @@
-import { EditorSelection, EditorState, SelectionRange } from "@codemirror/state";
+import { EditorSelection, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import type { MultiBlockEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
@@ -7,9 +7,10 @@ import { kLanguages } from "./languages";
 const languageTokensMatcher = kLanguages.map((l) => l.token).join("|");
 const blockSeparatorRegex = new RegExp(`\\n∞∞∞(${languageTokensMatcher})(-a)?\\n`, "g");
 
-function copiedRange(state: EditorState): { text: string; ranges: SelectionRange[] } {
+// ranges are what gets deleted on cut
+function copiedRange(state: EditorState): { text: string; ranges: { from: number; to: number }[] } {
   let content: string[] = [],
-    ranges: SelectionRange[] = [];
+    ranges: { from: number; to: number }[] = [];
   for (let range of state.selection.ranges) {
     if (!range.empty) {
       content.push(state.sliceDoc(range.from, range.to));
@@ -25,7 +26,8 @@ function copiedRange(state: EditorState): { text: string; ranges: SelectionRange
         const lineContent = state.sliceDoc(line.from, line.to);
         if (!copiedLines.includes(line.from)) {
           content.push(lineContent);
-          ranges.push(range);
+          // cut removes the whole line, including the line break
+          ranges.push({ from: line.from, to: Math.min(line.to + 1, state.doc.length) });
           copiedLines.push(line.from);
         }
       }
@@ -83,7 +85,9 @@ export const heynoteCopyCut = (editor: MultiBlockEditor) => {
 const copyCut = (view: EditorView, cut: boolean, editor: MultiBlockEditor): boolean => {
   let { text, ranges } = copiedRange(view.state);
   text = text.replaceAll(blockSeparatorRegex, "\n\n");
-  navigator.clipboard.writeText(text);
+  navigator.clipboard.writeText(text).catch((e) => {
+    console.log("navigator.clipboard.writeText failed:", e);
+  });
 
   if (cut && !view.state.readOnly) {
     view.dispatch({
