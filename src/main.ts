@@ -127,9 +127,13 @@ export async function boot() {
 
 boot().then(() => {
   console.log("finished booting");
-  preLoadAllNotes().then((n) => {
-    console.log(`finished pre-loading ${n} notes`);
-  });
+  preLoadAllNotes()
+    .then((n) => {
+      console.log(`finished pre-loading ${n} notes`);
+    })
+    .catch((e) => {
+      console.log("preLoadAllNotes failed:", e);
+    });
 });
 
 if (isDev()) {

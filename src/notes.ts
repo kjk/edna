@@ -824,10 +824,13 @@ export async function preLoadAllNotes(): Promise<number | undefined> {
     return;
   }
   let n = 0;
-  forEachNoteFileFS(dh, async (fileName, noteName, isEncr) => {
-    n++;
-    // no need to await, the read can happen whenever
-    fsReadBinaryFile(dh, fileName);
+  await forEachNoteFileFS(dh, async (fileName, noteName, isEncr) => {
+    try {
+      await fsReadBinaryFile(dh, fileName);
+      n++;
+    } catch (e) {
+      console.log(`preLoadAllNotes: failed to read '${fileName}'`, e);
+    }
   });
   return n;
 }
