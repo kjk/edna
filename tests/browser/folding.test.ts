@@ -1,24 +1,23 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
+import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
 import { createEditor, cleanup, type TestEditor } from "./utils";
-import { foldBlock, unfoldBlock, toggleBlockFold } from "../../src/editor/fold-gutter";
 
 describe("Block folding (browser tests)", () => {
   let te: TestEditor;
-  const isMac = /Mac/.test(navigator.platform);
 
   const fourBlockContent = [
-    "\n\u221E\u221E\u221Etext",
+    "\n∞∞∞text",
     "\nBlock A",
     "\nLine 2 of Block A",
     "\nLine 3 of Block A",
-    "\n\u221E\u221E\u221Ejavascript",
+    "\n∞∞∞javascript",
     '\nconsole.log("Block B")',
     "\nlet x = 42",
     "\nreturn x * 2",
-    "\n\u221E\u221E\u221Etext",
+    "\n∞∞∞text",
     "\nBlock C single line",
-    "\n\u221E\u221E\u221Emarkdown",
+    "\n∞∞∞markdown",
     "\n# Block D",
     "\nThis is a markdown block",
     "\n- Item 1",
@@ -26,365 +25,246 @@ describe("Block folding (browser tests)", () => {
     "\n",
   ].join("");
 
-  // on Mac, Option + . produces "≥" as event.key. CodeMirror must map it back
-  // to "." using keyCode. @codemirror/view 6.38.1 broke this for a while
-  it("Mod-Alt-. toggles block fold when Alt changes event.key (Mac)", async () => {
-    const view = te.editor.view;
-    te.editor.setCursorPosition(20);
-    const opts = {
-      key: isMac ? "\u2265" : ".",
-      code: "Period",
-      keyCode: 190,
-      altKey: true,
-      metaKey: isMac,
-      ctrlKey: !isMac,
-      bubbles: true,
-      cancelable: true,
-    };
-    view.contentDOM.dispatchEvent(new KeyboardEvent("keydown", opts));
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
-    view.contentDOM.dispatchEvent(new KeyboardEvent("keydown", opts));
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
-  });
+  const firstBlock = "\n∞∞∞text\nBlock A line 1\nBlock A line 2\nBlock A line 3";
 
-  function foldPlaceholderCount(): number {
+  async function openEditor(content = fourBlockContent) {
+    te = createEditor(content);
+    await press("Home", modKey);
+    await press("ArrowRight");
+  }
+
+  function foldPlaceholderCount() {
     return te.container.querySelectorAll(".cm-foldPlaceholder").length;
   }
 
-  /** Select all content in the buffer (two Mod+A presses) */
-  async function selectEntireBuffer() {
-    const modKey = isMac ? "Meta" : "Control";
-    await userEvent.keyboard(`{${modKey}>}a{/${modKey}}`);
-    await userEvent.keyboard(`{${modKey}>}a{/${modKey}}`);
+  function blockCount() {
+    return te.container.querySelectorAll(".heynote-block-start").length;
   }
 
-  beforeEach(async () => {
-    te = createEditor(fourBlockContent);
-    await expect.poll(() => te.editor.getBlocks().length).toBe(4);
-  });
+  function fold() {
+    return press("[", modKey, "Alt");
+  }
+
+  function unfold() {
+    return press("]", modKey, "Alt");
+  }
+
+  function toggleFold() {
+    return press(".", modKey, "Alt");
+  }
+
+  async function selectEntireBuffer() {
+    await press("a", modKey);
+    await press("a", modKey);
+  }
 
   afterEach(() => {
     cleanup(te);
   });
 
-  // first .cm-gutterElement in a gutter is an invisible spacer
-  function visibleGutterElement(gutterSelector: string): HTMLElement {
-    const els = te.container.querySelectorAll<HTMLElement>(`${gutterSelector} .cm-gutterElement`);
-    const el = Array.from(els).find((e) => e.style.visibility !== "hidden" && e.offsetHeight > 0);
-    expect(el).toBeDefined();
-    return el!;
-  }
-
-  it("fold gutter doesn't lose editor focus when clicked", async () => {
-    const { editor } = te;
-    editor.setCursorPosition(20);
-    expect(editor.view.hasFocus).toBe(true);
-
-    // real pointer events (mousedown etc.), unlike HTMLElement.click()
-    await userEvent.click(visibleGutterElement(".cm-foldGutter"));
-    expect(editor.view.hasFocus).toBe(true);
-
-    await userEvent.keyboard("xyz yay");
-    expect(editor.getContent()).toContain("xyz yay");
+  // On Mac, Option+Period produces "≥". This event exercises CodeMirror's keyCode fallback.
+  it("Mod-Alt-. toggles block fold when Alt changes event.key (Mac)", async () => {
+    await openEditor();
+    const editor = te.container.querySelector(".cm-content")!;
+    const opts = {
+      key: modKey === "Meta" ? "≥" : ".",
+      code: "Period",
+      keyCode: 190,
+      altKey: true,
+      metaKey: modKey === "Meta",
+      ctrlKey: modKey === "Control",
+      bubbles: true,
+      cancelable: true,
+    };
+    editor.dispatchEvent(new KeyboardEvent("keydown", opts));
+    await expect.poll(foldPlaceholderCount).toBe(1);
+    editor.dispatchEvent(new KeyboardEvent("keydown", opts));
+    await expect.poll(foldPlaceholderCount).toBe(0);
   });
 
-  it("line number gutter doesn't lose editor focus when clicked", async () => {
-    const { editor } = te;
-    editor.setCursorPosition(20);
-    expect(editor.view.hasFocus).toBe(true);
+  function visibleGutterElement(gutterSelector: string): HTMLElement {
+    const elements = te.container.querySelectorAll<HTMLElement>(`${gutterSelector} .cm-gutterElement`);
+    const element = [...elements].find((el) => el.style.visibility !== "hidden" && el.offsetHeight > 0);
+    expect(element).toBeDefined();
+    return element!;
+  }
 
-    await userEvent.click(visibleGutterElement(".cm-lineNumbers"));
-    expect(editor.view.hasFocus).toBe(true);
+  it.each([
+    ["fold", ".cm-foldGutter"],
+    ["line number", ".cm-lineNumbers"],
+  ])("%s gutter preserves editor focus when clicked", async (_, selector) => {
+    await openEditor();
+    const editor = te.container.querySelector(".cm-content");
+    expect(document.activeElement).toBe(editor);
 
-    await userEvent.keyboard("abc test");
-    expect(editor.getContent()).toContain("abc test");
+    await userEvent.click(visibleGutterElement(selector));
+    expect(document.activeElement).toBe(editor);
+
+    await userEvent.keyboard("xyz yay");
+    expect(visibleBlocks(te.container).join("\n")).toContain("xyz yay");
   });
 
   it("block can be folded", async () => {
-    const { editor } = te;
-    editor.setCursorPosition(20);
-
+    await openEditor();
     expect(foldPlaceholderCount()).toBe(0);
-
-    // Fold block using command
-    foldBlock(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBeGreaterThan(0);
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
   });
 
   it("multiple blocks can be folded and unfolded when selection overlaps multiple blocks", async () => {
-    const { editor } = te;
-    // Select all content
+    await openEditor();
     await selectEntireBuffer();
-
     expect(foldPlaceholderCount()).toBe(0);
 
-    // Fold all selected blocks
-    foldBlock(editor)(editor.view);
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(3);
 
-    // Block A, B, and D should be folded (C is single line so won't fold)
-    await expect.poll(() => foldPlaceholderCount()).toBe(3);
-
-    // Unfold all
     await selectEntireBuffer();
-    unfoldBlock(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
+    await unfold();
+    await expect.poll(foldPlaceholderCount).toBe(0);
   });
 
   it("toggleBlockFold works on single block", async () => {
-    const { editor } = te;
-    editor.setCursorPosition(20);
-
+    await openEditor();
     expect(foldPlaceholderCount()).toBe(0);
 
-    // Toggle fold to fold the block
-    toggleBlockFold(editor)(editor.view);
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
 
-    await expect.poll(() => foldPlaceholderCount()).toBeGreaterThan(0);
-
-    // Toggle fold again to unfold the block
-    toggleBlockFold(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(0);
   });
 
   it("toggleBlockFold works on multiple blocks", async () => {
-    const { editor } = te;
+    await openEditor();
     await selectEntireBuffer();
-
     expect(foldPlaceholderCount()).toBe(0);
 
-    toggleBlockFold(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(3);
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(3);
 
     await selectEntireBuffer();
-    toggleBlockFold(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(0);
   });
 
   it("toggleBlockFold with mixed folded/unfolded state", async () => {
-    const { editor } = te;
-    // Fold Block A first
-    editor.setCursorPosition(20);
-    foldBlock(editor)(editor.view);
+    await openEditor();
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
 
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
-
-    // Select all blocks
     await selectEntireBuffer();
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(3);
 
-    // Toggle fold on mixed state - should fold all (more unfolded than folded)
-    toggleBlockFold(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(3);
-
-    // Toggle again - should unfold all
     await selectEntireBuffer();
-    toggleBlockFold(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(0);
   });
 
   it("toggleBlockFold with mixed state with many single line blocks", async () => {
-    const { editor } = te;
-    editor.setContent(
-      "\n\u221E\u221E\u221Etext\nhej" +
-        "\n\u221E\u221E\u221Etext\nBlock A\nLine 2 of Block A\nLine 3 of Block A" +
-        "\n\u221E\u221E\u221Ejavascript\nconsole.log(\"Block B\")\nlet x = 42\nreturn x * 2" +
-        "\n\u221E\u221E\u221Etext\nBlock C single line" +
-        "\n\u221E\u221E\u221Etext\nBlock C single line",
+    await openEditor(
+      "\n∞∞∞text\nhej" +
+        "\n∞∞∞text\nBlock A\nLine 2 of Block A\nLine 3 of Block A" +
+        '\n∞∞∞javascript\nconsole.log("Block B")\nlet x = 42\nreturn x * 2' +
+        "\n∞∞∞text\nBlock C single line" +
+        "\n∞∞∞text\nBlock C single line",
     );
+    await selectEntireBuffer();
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(2);
 
     await selectEntireBuffer();
-
-    toggleBlockFold(editor)(editor.view);
-
-    // Block A and B should be folded (other blocks are single line)
-    await expect.poll(() => foldPlaceholderCount()).toBe(2);
-
-    await selectEntireBuffer();
-    toggleBlockFold(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(0);
   });
 
   it("typing at the beginning of a folded block unfolds it", async () => {
-    const { editor, container } = te;
-    editor.setContent(
-      "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3",
-    );
+    await openEditor(firstBlock);
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
 
-    // Fold the block
-    const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].contentFrom + 5);
-    foldBlock(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
-
-    // Position cursor at the very beginning of the folded block
-    const blocksAfterFold = editor.getBlocks();
-    editor.setCursorPosition(blocksAfterFold[0].contentFrom);
-
-    // Type a character
+    await press("Home", modKey);
     await userEvent.keyboard("X");
 
-    // Block should be unfolded
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
-
-    const content = editor.getContent();
-    expect(content).toContain("XBlock A line 1");
+    await expect.poll(foldPlaceholderCount).toBe(0);
+    expect(visibleBlocks(te.container)).toEqual(["XBlock A line 1\nBlock A line 2\nBlock A line 3"]);
   });
 
   it("typing at the end of a folded block unfolds it", async () => {
-    const { editor } = te;
-    editor.setContent(
-      "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3",
-    );
+    await openEditor(firstBlock);
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
 
-    const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].contentFrom + 5);
-    foldBlock(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
-
-    // Position cursor at the very end of the folded block
-    const blocksAfterFold = editor.getBlocks();
-    editor.setCursorPosition(blocksAfterFold[0].to);
-
+    await press("End", modKey);
     await userEvent.keyboard("Y");
 
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
-
-    const content = editor.getContent();
-    expect(content).toContain("Block A line 3Y");
+    await expect.poll(foldPlaceholderCount).toBe(0);
+    expect(visibleBlocks(te.container)).toEqual(["Block A line 1\nBlock A line 2\nBlock A line 3Y"]);
   });
 
   it("typing in empty block does not unfold previous folded block", async () => {
-    const { editor } = te;
-    editor.setContent(
-      "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3" +
-        "\n\u221E\u221E\u221Etext\n",
-    );
+    await openEditor(firstBlock + "\n∞∞∞text\n");
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
+    expect(blockCount()).toBe(2);
 
-    // Fold the first block
-    const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].contentFrom + 5);
-    foldBlock(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
-
-    const blocks2 = editor.getBlocks();
-    expect(blocks2.length).toBe(2);
-
-    // Type into the empty second block
-    editor.setCursorPosition(blocks2[1].contentFrom);
+    await press("End", modKey);
     await userEvent.keyboard("a");
 
-    // The folded block should remain folded
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
+    await expect.poll(foldPlaceholderCount).toBe(1);
+    expect(visibleBlocks(te.container)[1]).toBe("a");
   });
 
   it("folded block does not unfold when new block created after it and backspace pressed immediately", async () => {
-    const { editor } = te;
-    editor.setContent(
-      "\n\u221E\u221E\u221Etext\nBlock A line 1\nBlock A line 2\nBlock A line 3\n",
-    );
+    await openEditor(firstBlock + "\n");
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
 
-    // Fold the first block
-    editor.setCursorPosition(20);
-    foldBlock(editor)(editor.view);
+    await press("Home", modKey);
+    await press("Enter", modKey);
+    await expect.poll(blockCount).toBe(2);
 
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
-
-    // Position cursor at beginning of block and create new block after
-    const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].contentFrom);
-    const modKey = isMac ? "Meta" : "Control";
-    await userEvent.keyboard(`{${modKey}>}{Enter}{/${modKey}}`);
-
-    await expect.poll(() => editor.getBlocks().length).toBe(2);
-
-    // Immediately press backspace
-    await userEvent.keyboard("{Backspace}");
-
-    // The folded block should NOT unfold
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
-    await expect.poll(() => editor.getBlocks().length).toBe(1);
+    await press("Backspace");
+    await expect.poll(blockCount).toBe(1);
+    expect(foldPlaceholderCount()).toBe(1);
   });
 
   it("folded block does not unfold when new block created before it and delete pressed immediately", async () => {
-    const { editor } = te;
-    editor.setContent(
-      "\n\u221E\u221E\u221Etext\nBlock B line 1\nBlock B line 2\nBlock B line 3\n",
-    );
+    await openEditor(firstBlock + "\n");
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
 
-    // Fold the block
-    let blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].contentFrom + 10);
-    foldBlock(editor)(editor.view);
-
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
-
-    // Re-query blocks after fold, then create a new block before the folded block
-    blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].contentFrom);
-    await userEvent.keyboard("{Alt>}{Enter}{/Alt}");
-
-    await expect.poll(() => editor.getBlocks().length).toBe(2);
-
-    // Verify fold is maintained after block creation
+    await press("Home", modKey);
+    await press("Enter", "Alt");
+    await expect.poll(blockCount).toBe(2);
     expect(foldPlaceholderCount()).toBe(1);
 
-    // Immediately press delete
-    await userEvent.keyboard("{Delete}");
-
-    // After deleting the empty block, we should be back to 1 block
-    await expect.poll(() => editor.getBlocks().length).toBe(1);
-    // The folded block should NOT unfold
-    await expect.poll(() => foldPlaceholderCount()).toBe(1);
+    await press("Delete");
+    await expect.poll(blockCount).toBe(1);
+    expect(foldPlaceholderCount()).toBe(1);
   });
 
   it("markdown block with trailing empty lines can be fully folded", async () => {
-    const { editor, container } = te;
-    editor.setContent(
-      "\n\u221E\u221E\u221Emarkdown\n# Markdown Header\nThis is some markdown content\n- List item 1\n- List item 2\n\nAnother paragraph here\n\n\n\n",
+    await openEditor(
+      "\n∞∞∞markdown\n# Markdown Header\nThis is some markdown content\n- List item 1\n- List item 2\n\nAnother paragraph here\n\n\n\n",
     );
-
-    expect(editor.getBlocks().length).toBe(1);
-
-    // Count visible lines before folding
-    const linesBeforeFold = container.querySelectorAll(".cm-line").length;
+    expect(blockCount()).toBe(1);
+    const linesBeforeFold = editorLines(te.container).length;
     expect(linesBeforeFold).toBeGreaterThan(1);
 
-    // Fold the block
-    editor.setCursorPosition(30);
-    foldBlock(editor)(editor.view);
+    await fold();
 
-    await expect.poll(() => foldPlaceholderCount()).toBeGreaterThan(0);
-
-    // After folding, should have only 1 visible line
-    await expect.poll(() => container.querySelectorAll(".cm-line").length).toBe(1);
-
-    // The visible text should contain the header and fold indicator but not other content
-    const visibleText = container.querySelector(".cm-content")?.textContent || "";
+    await expect.poll(foldPlaceholderCount).toBe(1);
+    await expect.poll(() => editorLines(te.container).length).toBe(1);
+    const visibleText = te.container.querySelector(".cm-content")?.textContent ?? "";
     expect(visibleText).toContain("# Markdown Header");
     expect(visibleText).not.toContain("This is some markdown content");
     expect(visibleText).not.toContain("List item 1");
 
-    // Unfold
-    unfoldBlock(editor)(editor.view);
+    await unfold();
 
-    await expect.poll(() => foldPlaceholderCount()).toBe(0);
-    await expect
-      .poll(() => container.querySelectorAll(".cm-line").length)
-      .toBe(linesBeforeFold);
+    await expect.poll(foldPlaceholderCount).toBe(0);
+    await expect.poll(() => editorLines(te.container).length).toBe(linesBeforeFold);
   });
-
-  // Note: Tests that require page reloads, NoteFormat metadata, or language selector UI
-  // (folded blocks persist across reloads, folded blocks stored in metadata,
-  // folded block doesn't unfold on language change, creation time display)
-  // are skipped because they require the full app environment.
 });

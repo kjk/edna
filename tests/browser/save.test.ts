@@ -1,76 +1,94 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { MultiBlockEditor } from "../../src/editor/editor";
+import { modKey, press } from "./editor-ui";
 
-// tests for save bookkeeping: diskContent / dirty state (docs/state-machines.md M6)
+// Tests observe the storage callback and the dirty indicator at the editor's
+// integration boundary. Saving explicitly lets each test control the in-flight write.
 describe("Editor save", () => {
   let container: HTMLDivElement | undefined;
-  let editor: MultiBlockEditor | undefined;
+  let editor: MultiBlockEditor;
+  const hello = "\n∞∞∞text\nhello";
+  const other = "\n∞∞∞text\nother note";
 
   afterEach(() => {
     editor?.destroy();
     container?.remove();
   });
 
-  function create(save: (content: string) => Promise<void>) {
+  async function create(save: (content: string) => Promise<void>) {
     const state = { dirty: false };
     container = document.createElement("div");
     document.body.appendChild(container);
     editor = new MultiBlockEditor({
       element: container,
       save,
-      setIsDirty: (d) => (state.dirty = d),
+      setIsDirty: (dirty) => (state.dirty = dirty),
       createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-      focus: false,
+      focus: true,
       useTabs: false,
       tabSize: 4,
     });
-    editor.setContent("\n∞∞∞text\nhello");
+    editor.setContent(hello);
+    await press("ArrowRight");
+    await press("ArrowDown", modKey);
     return state;
   }
 
-  function type(text: string) {
-    const view = editor!.view;
-    view.dispatch({ changes: { from: view.state.doc.length, insert: text } });
-  }
-
   it("failed save is retried by the next save", async () => {
-    let fail = true;
-    const saved: string[] = [];
-    const state = create(async (c) => {
-      if (fail) throw new Error("disk full");
-      saved.push(c);
-    });
-    type("!");
+    const save = vi
+      .fn<(content: string) => Promise<void>>()
+      .mockRejectedValueOnce(new Error("disk full"))
+      .mockResolvedValue(undefined);
+    const state = await create(save);
+    await userEvent.keyboard("!");
+
     expect(state.dirty).toBe(true);
-    await expect(editor!.save()).rejects.toThrow("disk full");
+    await expect(editor.save()).rejects.toThrow("disk full");
     expect(state.dirty).toBe(true);
-    fail = false;
-    await editor!.save();
-    expect(saved).toEqual(["\n∞∞∞text\nhello!"]);
+
+    await editor.save();
+
+    expect(save.mock.calls).toEqual([[hello + "!"], [hello + "!"]]);
     expect(state.dirty).toBe(false);
   });
 
   it("stays dirty if edited while saving", async () => {
-    let finishSave: () => void = () => {};
-    const state = create(() => new Promise<void>((resolve) => (finishSave = resolve)));
-    type("1");
-    const p = editor!.save();
-    type("2");
-    finishSave();
-    await p;
+    const write = Promise.withResolvers<void>();
+    const save = vi
+      .fn<(content: string) => Promise<void>>()
+      .mockReturnValueOnce(write.promise)
+      .mockResolvedValue(undefined);
+    const state = await create(save);
+    await userEvent.keyboard("1");
+    const pending = editor.save();
+
+    await userEvent.keyboard("2");
+    write.resolve();
+    await pending;
+
     expect(state.dirty).toBe(true);
-    expect(editor!.diskContent).toBe("\n∞∞∞text\nhello1");
+    await editor.save();
+    expect(save.mock.calls).toEqual([[hello + "1"], [hello + "12"]]);
+    expect(state.dirty).toBe(false);
   });
 
   it("save of previous document doesn't affect newly loaded document", async () => {
-    let finishSave: () => void = () => {};
-    const state = create(() => new Promise<void>((resolve) => (finishSave = resolve)));
-    type("1");
-    const p = editor!.save();
-    editor!.setContent("\n∞∞∞text\nother note");
-    finishSave();
-    await p;
-    expect(editor!.diskContent).toBe("\n∞∞∞text\nother note");
+    const write = Promise.withResolvers<void>();
+    const save = vi
+      .fn<(content: string) => Promise<void>>()
+      .mockReturnValueOnce(write.promise)
+      .mockResolvedValue(undefined);
+    const state = await create(save);
+    await userEvent.keyboard("1");
+    const pending = editor.save();
+
+    editor.setContent(other);
+    write.resolve();
+    await pending;
+    await editor.save();
+
+    expect(save.mock.calls).toEqual([[hello + "1"]]);
     expect(state.dirty).toBe(false);
   });
 });

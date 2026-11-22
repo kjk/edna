@@ -1,125 +1,65 @@
 import { describe, expect, it, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
-import { EditorSelection } from "@codemirror/state";
 import { newCursorBelow } from "../../src/editor/block/commands";
+import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
 import { createEditor, cleanup, type TestEditor } from "./utils";
 
 describe("Multiple cursors (browser tests)", () => {
   let te: TestEditor;
 
+  function cursorCount() {
+    return te.container.querySelectorAll(".cm-cursor").length;
+  }
+
+  function openEditor(content: string) {
+    te = createEditor(content);
+    te.container.querySelector<HTMLElement>(".cm-editor")!.style.height = "240px";
+  }
+
+  async function placeCursors(lineCount: number) {
+    const [first, ...remaining] = editorLines(te.container).slice(0, lineCount);
+    const position = { x: 5, y: 5 };
+    await userEvent.click(first, { position });
+    for (const line of remaining) {
+      await userEvent.click(line, { position, modifiers: ["Alt"] });
+    }
+  }
+
   afterEach(() => {
     cleanup(te);
   });
 
-  function getCursorCount(): number {
-    return te.editor.view.state.selection.ranges.length;
-  }
+  it("newCursorBelow adds one cursor per invocation", async () => {
+    openEditor("\n∞∞∞text\nFirst line\nSecond line\nThird line\nFourth line");
+    await press("Home", modKey);
+    await expect.poll(cursorCount).toBe(1);
 
-  it("newCursorBelow creates additional cursors", async () => {
-    te = createEditor(
-      "\n\u221E\u221E\u221Etext\nFirst line of content\nSecond line of content\nThird line of content\n",
-    );
-    const { editor } = te;
-
-    // Position cursor at first content line
-    const blocks = editor.getBlocks();
-    editor.setCursorPosition(blocks[0].contentFrom);
-
-    expect(getCursorCount()).toBe(1);
-
-    // Add cursor below using command directly
-    newCursorBelow(editor.view);
-    expect(getCursorCount()).toBe(2);
-
-    newCursorBelow(editor.view);
-    expect(getCursorCount()).toBe(3);
+    // The shortcut also runs CodeMirror's secondary binding for the same key.
+    newCursorBelow(te.editor.view);
+    await expect.poll(cursorCount).toBe(2);
+    newCursorBelow(te.editor.view);
+    await expect.poll(cursorCount).toBe(3);
   });
 
-  it("programmatic multiple cursors via dispatch", async () => {
-    te = createEditor(
-      "\n\u221E\u221E\u221Etext\nFirst line\nSecond line\nThird line\nFourth line\n",
-    );
-    const { editor } = te;
-
-    // Find content lines (skip the delimiter line)
-    const blocks = editor.getBlocks();
-    const contentFrom = blocks[0].contentFrom;
-    const doc = editor.view.state.doc;
-    const contentLine = doc.lineAt(contentFrom);
-
-    const positions: number[] = [];
-    for (let i = 0; i < 4; i++) {
-      positions.push(doc.line(contentLine.number + i).from);
-    }
-
-    editor.view.dispatch({
-      selection: EditorSelection.create(
-        positions.map((pos) => EditorSelection.cursor(pos)),
-        0,
-      ),
-    });
-
-    expect(getCursorCount()).toBe(4);
+  it("Alt+Click can add cursors on three more lines", async () => {
+    openEditor("\n∞∞∞text\nFirst line\nSecond line\nThird line\nFourth line");
+    await placeCursors(4);
+    await expect.poll(cursorCount).toBe(4);
   });
 
-  it("multiple cursors typing behavior", async () => {
-    te = createEditor("\n\u221E\u221E\u221Etext\nLine 1\nLine 2\nLine 3\n");
-    const { editor } = te;
-
-    // Find the content lines using block boundaries
-    const blocks = editor.getBlocks();
-    const doc = editor.view.state.doc;
-    const firstContentLine = doc.lineAt(blocks[0].contentFrom);
-
-    const line1 = doc.line(firstContentLine.number);     // "Line 1"
-    const line2 = doc.line(firstContentLine.number + 1);  // "Line 2"
-    const line3 = doc.line(firstContentLine.number + 2);  // "Line 3"
-
-    editor.view.dispatch({
-      selection: EditorSelection.create(
-        [EditorSelection.cursor(line1.to), EditorSelection.cursor(line2.to), EditorSelection.cursor(line3.to)],
-        0,
-      ),
-    });
-
-    expect(getCursorCount()).toBe(3);
-
-    // Type some text at all cursor positions
+  it("typing inserts text at every cursor", async () => {
+    openEditor("\n∞∞∞text\nLine 1\nLine 2\nLine 3\n");
+    await placeCursors(3);
+    await press("End");
+    await expect.poll(cursorCount).toBe(3);
     await userEvent.keyboard(">> ");
 
-    // Check that text was added at all cursor positions
-    const content = editor.getContent();
-    expect(content).toContain("Line 1>> ");
-    expect(content).toContain("Line 2>> ");
-    expect(content).toContain("Line 3>> ");
+    expect(visibleBlocks(te.container)).toEqual(["Line 1>> \nLine 2>> \nLine 3>> \n"]);
   });
 
-  it("Alt+Click creates additional cursor via mouse event", async () => {
-    te = createEditor(
-      "\n\u221E\u221E\u221Etext\nFirst line of content\nSecond line of content\nThird line of content\n",
-    );
-    const { container } = te;
-
-    // Click on first line to position cursor
-    const lines = container.querySelectorAll(".cm-line");
-    expect(lines.length).toBeGreaterThanOrEqual(3);
-
-    (lines[0] as HTMLElement).click();
-
-    // Alt+Click on second line to add cursor using MouseEvent
-    const rect = (lines[1] as HTMLElement).getBoundingClientRect();
-    const altClick = new MouseEvent("mousedown", {
-      altKey: true,
-      bubbles: true,
-      clientX: rect.left + 5,
-      clientY: rect.top + 5,
-    });
-    (lines[1] as HTMLElement).dispatchEvent(altClick);
-
-    expect(getCursorCount()).toBe(2);
+  it("Alt+Click creates an additional cursor", async () => {
+    openEditor("\n∞∞∞text\nFirst line of content\nSecond line of content\nThird line of content\n");
+    await placeCursors(2);
+    await expect.poll(cursorCount).toBe(2);
   });
-
-  // Note: Heynote's "Alt+Click removes existing cursor" and "Alt+Click works with text selection"
-  // tests rely on precise mouse interaction that's hard to replicate in vitest browser mode.
-  // The command-based and programmatic tests above cover the core multiple-cursor functionality.
 });

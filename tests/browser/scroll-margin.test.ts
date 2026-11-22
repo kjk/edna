@@ -1,6 +1,6 @@
-import { EditorView } from "@codemirror/view";
 import { afterEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
+import { editorLines, modKey, press } from "./editor-ui";
 import { cleanup, createEditor, type TestEditor } from "./utils";
 
 describe("Scroll margin", () => {
@@ -11,46 +11,44 @@ describe("Scroll margin", () => {
     te = undefined;
   });
 
-  function topMargin(): number {
-    const view = te!.editor.view;
-    let top = 0;
-    for (const provider of view.state.facet(EditorView.scrollMargins)) {
-      top += provider(view).top ?? 0;
-    }
-    return top;
+  function constrainEditorHeight(height: number) {
+    te!.container.querySelector<HTMLElement>(".cm-editor")!.style.height = `${height}px`;
+    return te!.container.querySelector<HTMLElement>(".cm-scroller")!;
   }
 
-  it("top margin is reduced in the first lines of the last block", () => {
-    const lines = ["Line 1", "Line 2", "Line 3", "Line 4", "Line 5", "Line 6", "Line 7"];
-    te = createEditor("\n∞∞∞text\nFirst block line 1\nFirst block line 2\n∞∞∞text\n" + lines.join("\n"));
-    const { editor } = te;
-    const lineHeight = editor.view.defaultLineHeight;
-    const [first, last] = editor.getBlocks();
-    const lineStart = (n: number) => last!.contentFrom + lines.slice(0, n - 1).join("\n").length + (n > 1 ? 1 : 0);
+  it.each([
+    { line: "First line 8", margin: 5 },
+    { line: "Last line 1", margin: 0 },
+    { line: "Last line 3", margin: 2 },
+    { line: "Last line 7", margin: 5 },
+  ])("keeps $margin lines above the cursor at $line", async ({ line, margin }) => {
+    const makeLines = (prefix: string) => Array.from({ length: 24 }, (_, i) => `${prefix} line ${i + 1}`).join("\n");
+    te = createEditor(`\n∞∞∞text\n${makeLines("First")}\n∞∞∞text\n${makeLines("Last")}`);
+    const scroller = constrainEditorHeight(260);
+    const target = editorLines(te.container).find((element) => element.textContent === line)!;
+    await userEvent.click(target, { position: { x: 20, y: 5 } });
 
-    editor.setCursorPosition(first!.contentFrom);
-    expect(topMargin()).toBe(lineHeight * 5);
+    const distanceFromTop = () => target.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    const lineHeight = target.getBoundingClientRect().height;
+    scroller.scrollTop += distanceFromTop() + 5;
+    await press("ArrowRight");
 
-    editor.setCursorPosition(lineStart(1));
-    expect(topMargin()).toBe(0);
-
-    editor.setCursorPosition(lineStart(3));
-    expect(topMargin()).toBe(lineHeight * 2);
-
-    editor.setCursorPosition(lineStart(7));
-    expect(topMargin()).toBe(lineHeight * 5);
+    await expect.poll(() => Math.round(distanceFromTop() / lineHeight)).toBe(margin);
   });
 
-  it("Mod-Shift-Enter adds a block at the end and scrolls down", async () => {
+  it("Mod-Shift-Enter scrolls down and focuses a new block at the end", async () => {
     const lines = Array.from({ length: 50 }, (_, i) => `line ${i}`);
     te = createEditor("\n∞∞∞text\n" + lines.join("\n"));
-    const { editor } = te;
-    editor.view.dom.style.height = "200px";
-    editor.setCursorPosition(editor.getBlocks()[0]!.contentFrom);
-    editor.view.scrollDOM.scrollTop = 0;
-    const modKey = /Mac/.test(navigator.platform) ? "Meta" : "Control";
-    await userEvent.keyboard(`{${modKey}>}{Shift>}{Enter}{/Shift}{/${modKey}}`);
-    expect(editor.getBlocks().length).toBe(2);
-    await expect.poll(() => editor.view.scrollDOM.scrollTop).toBeGreaterThan(500);
+    const scroller = constrainEditorHeight(200);
+    await press("ArrowRight");
+    expect(scroller.scrollTop).toBeLessThan(100);
+
+    await press("Enter", modKey, "Shift");
+    await userEvent.keyboard("new block");
+
+    await expect.poll(() => scroller.scrollTop).toBeGreaterThan(500);
+    const rendered = editorLines(te.container);
+    expect(rendered.slice(-2).map((line) => line.textContent)).toEqual(["line 49", "new block"]);
+    expect(rendered.at(-1)?.previousElementSibling?.classList.contains("heynote-block-start")).toBe(true);
   });
 });

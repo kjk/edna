@@ -1,0 +1,53 @@
+import { expect, vi } from "vitest";
+import { userEvent } from "vitest/browser";
+import { kMetadataName } from "../../src/metadata";
+import { dbDelDirHandle } from "../../src/notes";
+
+const modKey = /Mac/.test(navigator.platform) ? "Meta" : "Control";
+
+export async function mountApp(notes?: Record<string, string>) {
+  // The app's Vite config normally defines these for the Settings dialog.
+  vi.stubGlobal("__APP_VERSION__", "test");
+  vi.stubGlobal("__GIT_HASH__", "test");
+  localStorage.clear();
+  await dbDelDirHandle();
+  if (notes) {
+    for (const [name, text] of Object.entries(notes)) {
+      localStorage.setItem(`note:${name}`, text);
+    }
+    const shortcuts = ["scratch", "daily journal", "inbox"]
+      .map((name, index) => ({ name, altShortcut: String(index + 1) }))
+      .filter(({ name }) => Object.hasOwn(notes, name));
+    localStorage.setItem(kMetadataName, JSON.stringify({ ver: 1, notes: shortcuts, functions: [] }));
+  }
+
+  const root = document.createElement("div");
+  root.id = "app";
+  document.body.appendChild(root);
+  await import("../../src/main");
+  await vi.waitFor(() => expect(root.firstElementChild).not.toBeNull());
+}
+
+export function editorElement() {
+  return document.querySelector<HTMLElement>("#app [contenteditable]");
+}
+
+export function editorInput() {
+  const input = editorElement();
+  expect(input).not.toBeNull();
+  return input!;
+}
+
+export function editorText() {
+  return editorElement()?.innerText ?? "";
+}
+
+export async function pressMod(key: string, shift = false) {
+  await userEvent.keyboard(`{${modKey}>}${shift ? "{Shift>}" : ""}{${key}}${shift ? "{/Shift}" : ""}{/${modKey}}`);
+}
+
+export async function openNoteShortcut(shortcut: number, name: string) {
+  await userEvent.keyboard(`{Alt>}${shortcut}{/Alt}`);
+  await expect.poll(() => document.title).toBe(name);
+  await expect.poll(editorElement).not.toBeNull();
+}

@@ -1,4 +1,3 @@
-import { ensureSyntaxTree } from "@codemirror/language";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, createEditor, type TestEditor } from "./utils";
 
@@ -10,29 +9,25 @@ describe("Languages", () => {
     te = undefined;
   });
 
-  // returns name of the innermost syntax node at pos (inside nested language parsers)
-  function nodeAt(pos: number): string {
-    const state = te!.editor.view.state;
-    const tree = ensureSyntaxTree(state, state.doc.length, 5000)!;
-    return tree.resolveInner(pos, 1).name;
+  function highlightedTokens() {
+    return Array.from(te!.container.querySelectorAll(".cm-line span[class]"), (span) => span.textContent);
   }
 
-  it("mermaid blocks are parsed with mermaid parser", () => {
-    const content = "\n∞∞∞mermaid\ngraph TD\n  A --> B\n";
-    te = createEditor(content);
-    const pos = content.indexOf("graph");
-    expect(nodeAt(pos)).not.toBe("NoteContent");
+  it("highlights Mermaid diagram syntax", async () => {
+    te = createEditor("\n∞∞∞mermaid\ngraph TD\n  A --> B\n");
+
+    await expect.poll(highlightedTokens).toContain("graph");
   });
 
-  it("math blocks are parsed with math.js parser", () => {
-    const content = "\n\u221E\u221E\u221Emath\nx = 1 + 2\n";
-    te = createEditor(content);
-    expect(nodeAt(content.indexOf("x ="))).not.toBe("NoteContent");
+  it("highlights numbers in math expressions", async () => {
+    te = createEditor("\n∞∞∞math\nx = 1 + 2\n");
+
+    await expect.poll(highlightedTokens).toContain("2");
   });
 
-  it("text blocks have no nested parser", () => {
-    const content = "\n∞∞∞text\ngraph TD\n";
-    te = createEditor(content);
-    expect(nodeAt(content.indexOf("graph"))).toBe("NoteContent");
+  it("leaves diagram syntax and math expressions unhighlighted in text blocks", () => {
+    te = createEditor("\n∞∞∞text\ngraph TD\nx = 1 + 2\n");
+
+    expect(highlightedTokens()).toEqual([]);
   });
 });

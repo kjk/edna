@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { EditorSelection } from "@codemirror/state";
-import { cutCommand, removeDelimitersFromPastedText } from "../../src/editor/copy-paste";
-import { cleanup, createEditor, getBlockContent, type TestEditor } from "./utils";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
+import { modKey, pasteText, press, visibleBlocks } from "./editor-ui";
+import { cleanup, createEditor, type TestEditor } from "./utils";
 
-describe("Cut", () => {
+describe("Clipboard", () => {
   let te: TestEditor | undefined;
 
   afterEach(() => {
@@ -11,80 +11,89 @@ describe("Cut", () => {
     te = undefined;
   });
 
-  it("cut with empty selection removes the current line", () => {
-    te = createEditor("\n∞∞∞text\nline 1\nline 2\nline 3");
-    const view = te.editor.view;
-    const pos = view.state.doc.toString().indexOf("line 2") + 2;
-    view.dispatch({ selection: EditorSelection.cursor(pos) });
-
-    cutCommand(te.editor)(view);
-
-    expect(getBlockContent(te.editor, 0)).toBe("line 1\nline 3");
-  });
-
-  it("cut with selection removes only the selection", () => {
-    te = createEditor("\n∞∞∞text\nline 1\nline 2");
-    const view = te.editor.view;
-    const from = view.state.doc.toString().indexOf("line 2");
-    view.dispatch({ selection: EditorSelection.range(from, from + 4) });
-
-    cutCommand(te.editor)(view);
-
-    expect(getBlockContent(te.editor, 0)).toBe("line 1\n 2");
-  });
-
-  // cutting the last line of a block keeps the next block's delimiter intact (U10)
-  for (let [doc, at, want] of [
-    ["\n∞∞∞text\nonly\n∞∞∞markdown\nx", "only", ["", "x"]],
-    ["\n∞∞∞text\na\nlast\n∞∞∞markdown\nx", "last", ["a", "x"]],
-    ["\n∞∞∞text\n\n∞∞∞markdown\nx", "", ["", "x"]],
-  ] as [string, string, string[]][]) {
-    it(`cut line '${at}' before a delimiter doesn't merge blocks`, () => {
-      te = createEditor(doc);
-      const view = te.editor.view;
-      const pos = at ? doc.indexOf(at) : doc.indexOf("\n\n") + 1;
-      view.dispatch({ selection: EditorSelection.cursor(pos) });
-      cutCommand(te.editor)(view);
-      expect(te.editor.getBlocks().length).toBe(2);
-      expect(getBlockContent(te.editor, 0)).toBe(want[0]);
-      expect(getBlockContent(te.editor, 1)).toBe(want[1]);
-    });
+  function blocks() {
+    return visibleBlocks(te!.container);
   }
 
-  // pasted text doesn't create blocks (U27)
-  it("removeDelimitersFromPastedText", () => {
-    expect(removeDelimitersFromPastedText("a\n∞∞∞js\nb")).toBe("a\n\nb");
-    expect(removeDelimitersFromPastedText("∞∞∞text-a\nb")).toBe("\nb");
-    expect(removeDelimitersFromPastedText("a\n∞∞∞Text\nb")).toBe("a\n∞∞∞Text\nb");
-    expect(removeDelimitersFromPastedText("plain")).toBe("plain");
+  async function cut() {
+    const write = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue(undefined);
+    try {
+      await press("x", modKey);
+      expect(write).toHaveBeenCalledTimes(1);
+      return write.mock.calls[0][0];
+    } finally {
+      write.mockRestore();
+    }
+  }
+
+  it("cut with empty selection removes the current line", async () => {
+    te = createEditor("\n∞∞∞text\nline 1\nline 2\nline 3");
+    await userEvent.keyboard("{ArrowRight}{ArrowDown}{ArrowRight}{ArrowRight}");
+
+    expect(await cut()).toBe("line 2");
+    expect(blocks()).toEqual(["line 1\nline 3"]);
   });
 
-  it("pasting a note's raw text doesn't add blocks", () => {
+  it("cut with selection removes only the selection", async () => {
+    te = createEditor("\n∞∞∞text\nline 1\nline 2");
+    await userEvent.keyboard("{ArrowRight}{ArrowDown}{Home}{Shift>}{ArrowRight>4/}{/Shift}");
+
+    expect(await cut()).toBe("line");
+    expect(blocks()).toEqual(["line 1\n 2"]);
+  });
+
+  // Cutting the last line of a block keeps the next block's delimiter intact (U10).
+  it.each([
+    { before: "only", kept: "", keys: "{ArrowRight}", removed: "only" },
+    { before: "a\nlast", kept: "a", keys: "{ArrowRight}{ArrowDown}", removed: "last" },
+    { before: "", kept: "", keys: "{ArrowRight}", removed: "" },
+  ])("cut before a block boundary preserves both blocks ($before)", async ({ before, kept, keys, removed }) => {
+    te = createEditor(`\n∞∞∞text\n${before}\n∞∞∞markdown\nx`);
+    await userEvent.keyboard(keys);
+
+    expect(await cut()).toBe(removed);
+    expect(blocks()).toEqual([kept, "x"]);
+  });
+
+  // Pasted text doesn't create blocks (U27).
+  it.each([
+    { input: "a\n∞∞∞js\nb", expected: ["a", "", "b"] },
+    { input: "∞∞∞text-a\nb", expected: ["", "b"] },
+    { input: "a\n∞∞∞Text\nb", expected: ["a", "∞∞∞Text", "b"] },
+    { input: "plain", expected: ["plain"] },
+    { input: "∞∞∞js", expected: [""] },
+  ])("pasting $input on an empty line preserves text and strips delimiters", async ({ input, expected }) => {
+    te = createEditor("\n∞∞∞text\n");
+    await userEvent.keyboard("{ArrowRight}");
+
+    pasteText(te.container, input);
+
+    expect(blocks()).toEqual([expected.join("\n")]);
+  });
+
+  it("pasting a note's raw text doesn't add blocks", async () => {
     te = createEditor("\n∞∞∞text\nhello\n");
-    const view = te.editor.view;
-    view.dispatch({ selection: EditorSelection.cursor(view.state.doc.length) });
-    const dt = new DataTransfer();
-    dt.setData("text/plain", "\n∞∞∞js\nlet x\n∞∞∞markdown\n# hi");
-    view.contentDOM.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
-    expect(view.state.doc.toString()).toContain("let x");
-    expect(te.editor.getBlocks().length).toBe(1);
+    await userEvent.keyboard("{ArrowRight}{ArrowDown}");
+
+    pasteText(te.container, "\n∞∞∞js\nlet x\n∞∞∞markdown\n# hi");
+
+    expect(blocks()).toEqual(["hello\n\n\nlet x\n\n# hi"]);
   });
 
-  it("removeDelimitersFromPastedText: first / last line only if pasted at a line start / end", () => {
-    expect(removeDelimitersFromPastedText("∞∞∞js", false, false)).toBe("∞∞∞js");
-    expect(removeDelimitersFromPastedText("∞∞∞js", true, false)).toBe("∞∞∞js");
-    expect(removeDelimitersFromPastedText("∞∞∞js", true, true)).toBe("");
-    expect(removeDelimitersFromPastedText("∞∞∞js\na\n∞∞∞md\nb\n∞∞∞py", false, false)).toBe("∞∞∞js\na\n\nb\n∞∞∞py");
-  });
+  it.each([
+    { input: "∞∞∞markdown", keys: "{ArrowRight}{ArrowRight}", expected: ["a∞∞∞markdownb"] },
+    { input: "∞∞∞js", keys: "{ArrowRight}", expected: ["∞∞∞jsab"] },
+    {
+      input: "∞∞∞js\na\n∞∞∞md\nb\n∞∞∞py",
+      keys: "{ArrowRight}{ArrowRight}",
+      expected: ["a∞∞∞js", "a", "", "b", "∞∞∞pyb"],
+    },
+  ])("pasting $input next to existing text preserves partial delimiter lines", async ({ input, keys, expected }) => {
+    te = createEditor("\n∞∞∞text\nab");
+    await userEvent.keyboard(keys);
 
-  it("pasting a delimiter-like word in the middle of a line keeps it", () => {
-    te = createEditor("\n∞∞∞text\nab\n");
-    const view = te.editor.view;
-    const pos = view.state.doc.toString().indexOf("ab") + 1;
-    view.dispatch({ selection: EditorSelection.cursor(pos) });
-    const dt = new DataTransfer();
-    dt.setData("text/plain", "∞∞∞markdown");
-    view.contentDOM.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
-    expect(getBlockContent(te.editor, 0)).toBe("a∞∞∞markdownb\n");
+    pasteText(te.container, input);
+
+    expect(blocks()).toEqual([expected.join("\n")]);
   });
 });

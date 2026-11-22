@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { page, userEvent } from "vitest/browser";
+import { editorInput, mountApp, openNoteShortcut, pressMod } from "./app-ui";
+import { press } from "./editor-ui";
 import { cleanup, createEditor, type TestEditor } from "./utils";
 
 describe("Color preview", () => {
@@ -9,8 +12,8 @@ describe("Color preview", () => {
     te = undefined;
   });
 
-  function swatches(): string[] {
-    return Array.from(te!.container.querySelectorAll<HTMLElement>(".edna-color-preview")).map((e) => e.title);
+  function swatches(container: HTMLElement = te!.container): string[] {
+    return Array.from(container.querySelectorAll<HTMLElement>(".edna-color-preview"), (element) => element.title);
   }
 
   it("shows swatches for valid colors in css blocks", async () => {
@@ -30,10 +33,23 @@ describe("Color preview", () => {
     expect(swatches()).toEqual([]);
   });
 
-  it("can be turned off", async () => {
-    te = createEditor("\n∞∞∞css\na { color: #f00; }\n");
-    await expect.poll(() => swatches().length).toBe(1);
-    te.editor.setColorPreview(false);
-    await expect.poll(() => swatches().length).toBe(0);
+  it("can be turned off and back on in Settings", async () => {
+    await mountApp({ scratch: "\n∞∞∞css\na { color: #f00; }\n" });
+    await openNoteShortcut(1, "scratch");
+    const input = editorInput();
+    await expect.poll(() => swatches(input)).toEqual(["#f00"]);
+    input.focus();
+
+    await pressMod("p", true);
+    await expect.poll(() => document.activeElement?.matches("form input")).toBe(true);
+    await userEvent.keyboard("Settings");
+    await page.getByRole("option", { name: "Settings", exact: true }).click();
+    const setting = page.getByRole("checkbox", { name: /^Show color previews/ });
+    await setting.click();
+    await expect.poll(() => swatches(input)).toEqual([]);
+
+    await setting.click();
+    await expect.poll(() => swatches(input)).toEqual(["#f00"]);
+    await press("Escape");
   });
 });

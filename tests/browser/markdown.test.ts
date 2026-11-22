@@ -1,98 +1,108 @@
-import { describe, expect, it, afterEach } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
-import { toggleCheckbox } from "../../src/editor/todo-checkbox";
-import { createEditor, cleanup, getBlockContent, type TestEditor } from "./utils";
+import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
+import { cleanup, createEditor, type TestEditor } from "./utils";
 
-describe("Markdown (browser tests)", () => {
+describe("Markdown", () => {
   let te: TestEditor;
 
   afterEach(() => {
     cleanup(te);
   });
 
-  it("checkbox toggle", async () => {
-    te = createEditor("\n\u221E\u221E\u221Emarkdown\n- [ ] todo\n");
-    const { editor, container } = te;
+  function boxes() {
+    return [...te.container.querySelectorAll<HTMLInputElement>(".cm-content input[type=checkbox]")];
+  }
 
-    // Wait for checkbox to be rendered by the decorator plugin
-    await expect
-      .poll(() => container.querySelectorAll(".cm-content input[type=checkbox]").length)
-      .toBe(1);
+  function checked() {
+    return boxes().map((checkbox) => checkbox.checked);
+  }
 
-    const checkbox = () => container.querySelector<HTMLInputElement>(".cm-content input[type=checkbox]")!;
+  async function copyBlock() {
+    await press("a", modKey);
+    const clipboard = new DataTransfer();
+    te.container
+      .querySelector(".cm-content")!
+      .dispatchEvent(new ClipboardEvent("copy", { clipboardData: clipboard, bubbles: true, cancelable: true }));
+    return clipboard.getData("text/plain");
+  }
 
-    // Check → [x] (the plugin's mousedown handler toggles the text)
-    await userEvent.click(checkbox());
-    await expect.poll(() => getBlockContent(editor, 0)).toBe("- [x] todo\n");
-    await expect.poll(() => checkbox().checked).toBe(true);
+  function toggleWithShortcut() {
+    return press(" ", modKey, "Shift");
+  }
 
-    // Uncheck → [ ]
-    await userEvent.click(checkbox());
-    await expect.poll(() => getBlockContent(editor, 0)).toBe("- [ ] todo\n");
-    await expect.poll(() => checkbox().checked).toBe(false);
+  it("clicking a task checkbox toggles its state", async () => {
+    te = createEditor("\n∞∞∞markdown\n- [ ] todo\n");
+    await expect.poll(checked).toEqual([false]);
+
+    await userEvent.click(boxes()[0]!);
+    await expect.poll(checked).toEqual([true]);
+    expect(await copyBlock()).toBe("- [x] todo\n");
+
+    await userEvent.click(boxes()[0]!);
+    await expect.poll(checked).toEqual([false]);
+    expect(await copyBlock()).toBe("- [ ] todo\n");
   });
 
-  it("clicking a checkbox doesn't change a read-only note", async () => {
-    te = createEditor("\n\u221E\u221E\u221Emarkdown\n- [ ] todo\n");
-    const { editor, container } = te;
-    await expect.poll(() => container.querySelectorAll(".cm-content input[type=checkbox]").length).toBe(1);
-    editor.setReadOnly(true);
-    container.querySelector<HTMLInputElement>(".cm-content input[type=checkbox]")!.dispatchEvent(
-      new MouseEvent("mousedown", { bubbles: true, cancelable: true }),
-    );
-    expect(getBlockContent(editor, 0)).toBe("- [ ] todo\n");
+  it("pressing a checkbox doesn't change a read-only note", async () => {
+    te = createEditor("\n∞∞∞markdown\n- [ ] todo\n");
+    te.editor.setReadOnly(true);
+    await expect.poll(checked).toEqual([false]);
+
+    boxes()[0]!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+
+    expect(checked()).toEqual([false]);
+    expect(await copyBlock()).toBe("- [ ] todo\n");
   });
 
-  it("todo list continue on enter", async () => {
-    const content = "\n\u221E\u221E\u221Emarkdown\n- [ ] todo";
-    te = createEditor(content);
-    const { editor } = te;
+  it("continues a task list when Enter is pressed", async () => {
+    te = createEditor("\n∞∞∞markdown\n- [ ] todo");
+    await press("ArrowRight");
+    await press("ArrowDown", modKey);
 
-    editor.setCursorPosition(editor.getContent().length);
-    editor.view.focus();
+    await press("Enter");
+    await userEvent.keyboard("next");
 
-    await userEvent.keyboard("{Enter}");
-    expect(getBlockContent(editor, 0)).toBe("- [ ] todo\n- [ ] ");
+    await expect.poll(checked).toEqual([false, false]);
+    expect(editorLines(te.container).map((line) => line.textContent?.trim().split(/\s+/).at(-1))).toEqual([
+      "todo",
+      "next",
+    ]);
   });
 
-  // Note: "test markdown mode" is skipped because it checks Edna's status bar UI
-  // Note: "toggle checkbox command" tests are skipped because Edna doesn't have
-  // a toggleCheckbox command — checkboxes can only be toggled by clicking them
+  it("Mod-Shift-Space toggles the checkbox on the current line", async () => {
+    te = createEditor("\n∞∞∞markdown\n- [ ] todo\n");
+    await press("ArrowRight");
 
-  it("toggle checkbox command", async () => {
-    const content = "\n\u221E\u221E\u221Emarkdown\n- [ ] todo\n";
-    te = createEditor(content);
-    const { editor } = te;
-    editor.setCursorPosition(content.indexOf("- [ ] todo") + "- [ ] ".length);
-    toggleCheckbox(editor.view);
-    expect(getBlockContent(editor, 0)).toBe("- [x] todo\n");
-    // also bound to Mod-Shift-Space
-    const modKey = /Mac/.test(navigator.platform) ? "Meta" : "Control";
-    await userEvent.keyboard(`{${modKey}>}{Shift>}{ }{/Shift}{/${modKey}}`);
-    expect(getBlockContent(editor, 0)).toBe("- [ ] todo\n");
+    await toggleWithShortcut();
+    await expect.poll(checked).toEqual([true]);
+
+    await toggleWithShortcut();
+    await expect.poll(checked).toEqual([false]);
   });
 
-  it("toggle checkbox command with selection sets all to the same state", () => {
-    const content = "\n\u221E\u221E\u221Emarkdown\n- [ ] one\n- [x] two\n- [x] three\n- note\n";
-    te = createEditor(content);
-    const { editor } = te;
-    const from = content.indexOf("- [ ] one");
-    const to = content.indexOf("- [x] three") + "- [x] three".length;
-    editor.view.dispatch({ selection: { anchor: from, head: to } });
-    toggleCheckbox(editor.view);
-    // most were checked so all get unchecked
-    expect(getBlockContent(editor, 0)).toBe("- [ ] one\n- [ ] two\n- [ ] three\n- note\n");
+  it("toggling with a selection sets all checkboxes to the same state", async () => {
+    te = createEditor("\n∞∞∞markdown\n- [ ] one\n- [x] two\n- [x] three\n- note\n");
+    await expect.poll(checked).toEqual([false, true, true]);
+    await press("ArrowRight");
+    await userEvent.keyboard("{Shift>}{ArrowDown>3/}{/Shift}");
+
+    await toggleWithShortcut();
+
+    expect(checked()).toEqual([false, false, false]);
+    expect(editorLines(te.container)[3]?.textContent).toBe("- note");
   });
 
-  it("toggle checkbox command only changes markdown blocks", () => {
-    const content = "\n\u221E\u221E\u221Emarkdown\n- [x] one\n- [x] two\n\u221E\u221E\u221Etext\n- [x] three\n- [ ] four\n";
-    te = createEditor(content);
-    const { editor } = te;
-    const from = content.indexOf("- [x] one");
-    const to = content.indexOf("- [ ] four") + "- [ ] four".length;
-    editor.view.dispatch({ selection: { anchor: from, head: to } });
-    toggleCheckbox(editor.view);
-    expect(getBlockContent(editor, 0)).toBe("- [ ] one\n- [ ] two");
-    expect(getBlockContent(editor, 1)).toBe("- [x] three\n- [ ] four\n");
+  it("toggling across blocks only changes markdown checkboxes", async () => {
+    te = createEditor("\n∞∞∞markdown\n- [x] one\n- [x] two\n∞∞∞text\n- [x] three\n- [ ] four\n");
+    await expect.poll(checked).toEqual([true, true]);
+    await press("ArrowRight");
+    await press("a", modKey);
+    await press("a", modKey);
+
+    await toggleWithShortcut();
+
+    expect(checked()).toEqual([false, false]);
+    expect(visibleBlocks(te.container)[1]).toBe("- [x] three\n- [ ] four\n");
   });
 });
