@@ -384,6 +384,13 @@ export function getBlockLineFromPos(state: EditorState, pos: number) {
 }
 
 export const blockLineNumbers = lineNumbers({
+  domEventHandlers: {
+    mousedown(view, line, event) {
+      // editor should not lose focus when clicking on the line number gutter
+      event.preventDefault();
+      return false;
+    },
+  },
   formatNumber(lineNo: number, state: EditorState) {
     if (state.doc.lines >= lineNo) {
       const lineInfo = getBlockLineFromPos(state, state.doc.line(lineNo).from);

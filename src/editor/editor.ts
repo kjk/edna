@@ -9,7 +9,7 @@ import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs";
 import { createDynamicCloseBracketsExtension } from "./extensions";
-import { foldGutterExtension, unfoldEverything } from "./fold-gutter";
+import { foldGutterExtension, moveSelectionOutOfNewFolds, unfoldEverything } from "./fold-gutter";
 import { ednaKeymap, keymapFromSpec } from "./keymap";
 import { multiBlock } from "./new-parser/language";
 import { languageDetection } from "./language-detection/autodetect";
@@ -135,9 +135,10 @@ export class MultiBlockEditor {
         heynoteCopyCut(this),
 
         //minimalSetup,
-        this.lineNumberCompartment.of(showLineNumberGutter ? [lineNumbers(), blockLineNumbers] : []),
+        this.lineNumberCompartment.of(showLineNumberGutter ? [blockLineNumbers] : []),
         customSetup(createFindPanel),
         this.foldGutterCompartment.of(showFoldGutter ? [foldGutterExtension()] : []),
+        moveSelectionOutOfNewFolds,
 
         this.closeBracketsCompartment.of(bracketClosing ? createDynamicCloseBracketsExtension() : []),
 
@@ -315,7 +316,7 @@ export class MultiBlockEditor {
 
   setLineNumberGutter(show: boolean) {
     this.view.dispatch({
-      effects: this.lineNumberCompartment.reconfigure(show ? [lineNumbers(), blockLineNumbers] : []),
+      effects: this.lineNumberCompartment.reconfigure(show ? [blockLineNumbers] : []),
     });
   }
 

@@ -1,5 +1,5 @@
 import { codeFolding, foldedRanges, foldEffect, foldGutter, foldState, unfoldEffect } from "@codemirror/language";
-import { RangeSet, StateEffect } from "@codemirror/state";
+import { EditorSelection, EditorState, RangeSet, StateEffect } from "@codemirror/state";
 import { BlockInfo, EditorView } from "@codemirror/view";
 import {
   ADD_NEW_BLOCK,
@@ -93,13 +93,38 @@ const autoUnfoldOnEdit = () => {
   });
 };
 
+// When a range containing the cursor is folded, the cursor would stay hidden inside
+// the fold and the browser would insert the next typed character at the end of the
+// folded range (where it shows the caret). Move cursors out of newly folded ranges.
+export const moveSelectionOutOfNewFolds = EditorState.transactionFilter.of((tr) => {
+  const folds = tr.effects.filter((e) => e.is(foldEffect)).map((e) => e.value);
+  if (folds.length === 0) {
+    return tr;
+  }
+  const sel = tr.selection ?? tr.startState.selection.map(tr.changes);
+  let moved = false;
+  const ranges = sel.ranges.map((r) => {
+    for (const f of folds) {
+      if (r.head > f.from && r.head <= f.to) {
+        moved = true;
+        return EditorSelection.cursor(f.from);
+      }
+    }
+    return r;
+  });
+  if (!moved) {
+    return tr;
+  }
+  return [tr, { selection: EditorSelection.create(ranges, sel.mainIndex), sequential: true }];
+});
+
 export function foldGutterExtension() {
   return [
     foldGutter({
       domEventHandlers: {
-        click(view: EditorView, line: BlockInfo, event: Event) {
-          // editor should not loose focus when clicking on the fold gutter
-          view.contentDOM.focus();
+        mousedown(view: EditorView, line: BlockInfo, event: Event) {
+          // editor should not lose focus when clicking on the fold gutter
+          event.preventDefault();
           return false;
         },
       },

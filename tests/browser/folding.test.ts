@@ -70,40 +70,37 @@ describe("Block folding (browser tests)", () => {
     cleanup(te);
   });
 
+  // first .cm-gutterElement in a gutter is an invisible spacer
+  function visibleGutterElement(gutterSelector: string): HTMLElement {
+    const els = te.container.querySelectorAll<HTMLElement>(`${gutterSelector} .cm-gutterElement`);
+    const el = Array.from(els).find((e) => e.style.visibility !== "hidden" && e.offsetHeight > 0);
+    expect(el).toBeDefined();
+    return el!;
+  }
+
   it("fold gutter doesn't lose editor focus when clicked", async () => {
-    const { editor, container } = te;
+    const { editor } = te;
     editor.setCursorPosition(20);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(editor.view.hasFocus).toBe(true);
 
-    // Click on fold gutter
-    const foldGutter = container.querySelector(".cm-foldGutter .cm-gutterElement");
-    if (foldGutter) {
-      (foldGutter as HTMLElement).click();
-      await new Promise((resolve) => setTimeout(resolve, 50));
+    // real pointer events (mousedown etc.), unlike HTMLElement.click()
+    await userEvent.click(visibleGutterElement(".cm-foldGutter"));
+    expect(editor.view.hasFocus).toBe(true);
 
-      // Type a character - should work if editor maintained focus
-      await userEvent.keyboard("xyz yay");
-
-      const content = editor.getContent();
-      expect(content).toContain("xyz yay");
-    }
+    await userEvent.keyboard("xyz yay");
+    expect(editor.getContent()).toContain("xyz yay");
   });
 
   it("line number gutter doesn't lose editor focus when clicked", async () => {
-    const { editor, container } = te;
+    const { editor } = te;
     editor.setCursorPosition(20);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(editor.view.hasFocus).toBe(true);
 
-    const lineNumEl = container.querySelector(".cm-lineNumbers .cm-gutterElement");
-    if (lineNumEl) {
-      (lineNumEl as HTMLElement).click();
-      await new Promise((resolve) => setTimeout(resolve, 50));
+    await userEvent.click(visibleGutterElement(".cm-lineNumbers"));
+    expect(editor.view.hasFocus).toBe(true);
 
-      await userEvent.keyboard("abc test");
-
-      const content = editor.getContent();
-      expect(content).toContain("abc test");
-    }
+    await userEvent.keyboard("abc test");
+    expect(editor.getContent()).toContain("abc test");
   });
 
   it("block can be folded", async () => {
