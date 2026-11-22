@@ -38,8 +38,6 @@ function removeDelimitersForState(text: string, state: EditorState): string {
   const atLineEnd = to === state.doc.length || state.sliceDoc(to, to + 1) === "\n";
   return removeDelimitersFromPastedText(text, atLineStart, atLineEnd);
 }
-  return text.replace(reDelimiterLineInText, "$1");
-}
 
 function isDelimiterLine(state: EditorState, lineNo: number): boolean {
   if (lineNo < 1 || lineNo > state.doc.lines) return false;
