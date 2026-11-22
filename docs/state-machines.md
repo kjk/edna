@@ -253,8 +253,9 @@ Invariants:
   request (**A-I1**, `AbortController`); the inserted header names the model that produced the
   response (**A-I2**, `responseModelName`); a response that can't be inserted keeps the dialog
   open with an error.
-- **Language auto-detection**: request posted per block; reply applied only if still
-  relevant (Levenshtein check).
+- **Language auto-detection**: request posted per block index; the reply is applied to that
+  block if the editor still shows the same note (`docGen`) and the block's content is similar
+  (Levenshtein).
 - **Currency rates**: `NOT_LOADED` → `LOADED`; refreshed every 4 h.
 
 ---
@@ -400,7 +401,9 @@ other tabs are open.
   (`tests/browser/modal-message.test.ts`).
 - 15d. Language auto-detect worker replies were applied to the active block if its content
   was similar (Levenshtein), not by block identity; could change another block or a block in
-  another note.
+  another note. **Fixed**: the reply is applied to the block it was requested
+  for (by index), only if the content is still similar and no other note was loaded since
+  (`applyDetectionResult`, `tests/browser/autodetect.test.ts`).
 - 15e. Metadata write failures in a directory were logged but not shown; in-memory metadata
   and the file could diverge.
 - 15f. A password prompt needed while booting from the permissions screen (before `App` is
@@ -425,4 +428,4 @@ other tabs are open.
 | 12 Ask AI | fixed (12a–12c), `tests/browser/askai.test.ts` |
 | 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent editing of the same note in two tabs is still last-writer-wins |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
-| 15 Previously open items | 15a–15c fixed; 15d–15g open |
+| 15 Previously open items | 15a–15d fixed; 15e–15g open |

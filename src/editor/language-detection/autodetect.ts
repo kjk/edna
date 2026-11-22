@@ -3,6 +3,7 @@ import { EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { blockState, getActiveNoteBlock } from "../block/block";
 import { changeLanguageTo } from "../block/commands";
 import { kLanguages } from "../languages";
+import { SET_CONTENT, transactionsHasAnnotation } from "../annotation";
 import { levenshtein_distance } from "./levenshtein";
 
 const GUESSLANG_TO_TOKEN: Record<string, string> = Object.fromEntries(
@@ -25,39 +26,61 @@ function cancelIdleCallbackCompat(id: number): void {
   }
 }
 
+// Applies a detection result to the block it was requested for (by index),
+// only if the editor still shows the same document and the block's content
+// hasn't changed significantly (issue 15d in docs/state-machines.md)
+export function applyDetectionResult(
+  view: EditorView,
+  result: { guesslang: { language: string; confidence: number }; content: string; idx: number },
+): boolean {
+  const state = view.state;
+  const block = state.field(blockState)[result.idx];
+  if (!block) return false;
+  const newLang = GUESSLANG_TO_TOKEN[result.guesslang.language];
+  if (!newLang || block.autoDetect !== true || block.language === newLang) {
+    return false;
+  }
+  let content = state.doc.sliceString(block.contentFrom, block.to);
+  const threshold = content.length * 0.1;
+  if (levenshtein_distance(content, result.content) > threshold) {
+    // the content has changed significantly
+    return false;
+  }
+  if (redoDepth(state) !== 0) {
+    // the user has undo:ed and has redo history
+    return false;
+  }
+  changeLanguageTo(state, view.dispatch, block, newLang, true);
+  return true;
+}
+
 function createLanguageDetection(view: EditorView) {
-  const previousBlockContent: Record<number, string> = {};
+  let previousBlockContent: Record<number, string> = {};
   let idleCallbackId: number | null = null;
+  // incremented when another document (note) is loaded into the editor;
+  // requestDocGen[idx] is docGen when detection for block idx was requested
+  let docGen = 0;
+  let requestDocGen: Record<number, number> = {};
 
   const detectionWorker = new Worker("langdetect-worker.js?worker");
   detectionWorker.onmessage = (event) => {
-    //console.log("event:", event.data)
     if (!event.data.guesslang.language) {
       return;
     }
-    const state = view.state;
-    const block = getActiveNoteBlock(state);
-    if (!block) return;
-    const newLang = GUESSLANG_TO_TOKEN[event.data.guesslang.language];
-    if (newLang && block.autoDetect === true && block.language !== newLang) {
-      console.log("New auto detected language:", newLang, "Confidence:", event.data.guesslang.confidence);
-      let content = state.doc.sliceString(block.contentFrom, block.to);
-      const threshold = content.length * 0.1;
-      if (levenshtein_distance(content, event.data.content) <= threshold) {
-        // the content has not changed significantly so it's safe to change the language
-        if (redoDepth(state) === 0) {
-          console.log("Changing language to", newLang);
-          changeLanguageTo(state, view.dispatch, block, newLang, true);
-        } else {
-          console.log("Not changing language because the user has undo:ed and has redo history");
-        }
-      } else {
-        console.log("Content has changed significantly, not setting new language");
-      }
+    if (requestDocGen[event.data.idx] !== docGen) {
+      // requested for a different note
+      return;
     }
+    applyDetectionResult(view, event.data);
   };
 
   const update = (update: ViewUpdate) => {
+    if (transactionsHasAnnotation(update.transactions, SET_CONTENT)) {
+      // a different note was loaded
+      docGen++;
+      previousBlockContent = {};
+      requestDocGen = {};
+    }
     if (update.docChanged) {
       if (idleCallbackId !== null) {
         cancelIdleCallbackCompat(idleCallbackId);
@@ -113,6 +136,7 @@ function createLanguageDetection(view: EditorView) {
         if (!prevContent || levenshtein_distance(prevContent, content) >= threshold) {
           // the content has changed significantly, so schedule a language detection
           //console.log("Scheduling language detection for block", idx, "with threshold", threshold)
+          requestDocGen[idx] = docGen;
           detectionWorker.postMessage({
             content: content,
             idx: idx,
