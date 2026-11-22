@@ -20,6 +20,7 @@ import { erlang } from "@codemirror/legacy-modes/mode/erlang";
 import { go } from "@codemirror/legacy-modes/mode/go";
 import { groovy } from "@codemirror/legacy-modes/mode/groovy";
 import { lua } from "@codemirror/legacy-modes/mode/lua";
+import { mermaidLanguage } from "codemirror-lang-mermaid";
 import { powerShell } from "@codemirror/legacy-modes/mode/powershell";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
@@ -235,6 +236,12 @@ export const kLanguages: Language[] = [
     name: "Lua",
     guesslang: "lua",
   },
+  {
+    token: "mermaid",
+    name: "Mermaid",
+    guesslang: null, // not supported by guesslang
+    ext: "mmd",
+  },
 ];
 
 export const LANGUAGES = kLanguages;
@@ -391,6 +398,9 @@ export function langGetParser(lang: Language | undefined): any {
   }
   if (token === "powershell") {
     return StreamLanguage.define(powerShell).parser;
+  }
+  if (token === "mermaid") {
+    return mermaidLanguage.parser;
   }
   if (token === "lua") {
     return StreamLanguage.define(lua).parser;
