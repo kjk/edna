@@ -36,10 +36,12 @@ import { removeNoteFromHistory, renameNoteInHistory } from "./history.js";
 import {
   kMetadataName,
   loadNotesMetadata,
+  readMetadataFileFS,
   reassignNoteShortcut,
   removeNoteFromMetadata,
   renameNoteInMetadata,
 } from "./metadata";
+import { mergeMetadata, normalizeMetadata } from "./metadata-merge";
 import { getSettings } from "./settings.svelte";
 import { getStats, incNoteCreateCount, incNoteDeleteCount, incNoteSaveCount } from "./state";
 import {
@@ -820,14 +822,22 @@ export async function preLoadAllNotes(): Promise<number | undefined> {
   return n;
 }
 
-async function moveLSToFS(lsKeyName: string, dh: FileSystemDirectoryHandle, fileName: string) {
-  console.log("moveLSToFS:", lsKeyName, fileName, dh.name);
-  let s = localStorage.getItem(lsKeyName);
+// merge metadata from localStorage into metadata in the directory
+// (which might already exist, e.g. if the user previously used this directory)
+async function moveMetadataLSToFS(dh: FileSystemDirectoryHandle) {
+  let s = localStorage.getItem(kMetadataName);
   if (s === null) {
     return;
   }
-  await fsWriteTextFile(dh, fileName, s);
-  localStorage.removeItem(lsKeyName);
+  let lsMeta = normalizeMetadata(JSON.parse(s));
+  let diskRaw = await readMetadataFileFS(dh);
+  let merged = lsMeta;
+  if (diskRaw !== null) {
+    let diskMeta = normalizeMetadata(JSON.parse(diskRaw));
+    merged = mergeMetadata(diskMeta, lsMeta);
+  }
+  await fsWriteTextFile(dh, kMetadataName, JSON.stringify(merged, null, 2));
+  localStorage.removeItem(kMetadataName);
 }
 
 export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle) {
@@ -860,7 +870,7 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle) 
     localStorage.removeItem(key);
   }
 
-  await moveLSToFS(kMetadataName, dh, kMetadataName);
+  await moveMetadataLSToFS(dh);
 
   storageFS = dh;
   // save in indexedDb so that it persists across sessions

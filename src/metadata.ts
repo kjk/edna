@@ -41,6 +41,37 @@ function getFunctionsMetadata(): FunctionMetadata[] {
   return metadata!.functions;
 }
 
+// reads metadata file. Returns null if the file doesn't exist.
+// Other read errors are re-thrown so that we don't over-write metadata
+// with empty data because of a transient error.
+export async function readMetadataFileFS(dh: FileSystemDirectoryHandle): Promise<string | null> {
+  try {
+    return await fsReadTextFile(dh, kMetadataName);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "NotFoundError") {
+      return null;
+    }
+    throw e;
+  }
+}
+
+// parses metadata. On corrupted JSON, saves a backup copy of the raw data
+// and returns null
+async function parseMetadata(s: string, dh: FileSystemDirectoryHandle | undefined): Promise<unknown> {
+  try {
+    return JSON.parse(s);
+  } catch (e) {
+    let backupName = kMetadataName + ".corrupted-" + Date.now();
+    console.error(`metadata is not valid JSON, saving a copy as '${backupName}'`, e);
+    if (dh) {
+      await fsWriteTextFile(dh, backupName, s);
+    } else {
+      localStorage.setItem(backupName, s);
+    }
+    return null;
+  }
+}
+
 export async function loadNotesMetadata(): Promise<Metadata> {
   console.log("loadNotesMetadata: started");
   let dh = getStorageFS();
@@ -48,16 +79,11 @@ export async function loadNotesMetadata(): Promise<Metadata> {
   if (!dh) {
     s = localStorage.getItem(kMetadataName);
   } else {
-    try {
-      s = await fsReadTextFile(dh, kMetadataName);
-    } catch (e) {
-      // it's ok if doesn't exist
-      console.log("loadNotesMetadata: no metadata file", e);
-      s = "[]";
-    }
+    s = await readMetadataFileFS(dh);
   }
-  s = s || "[]";
-  metadata = JSON.parse(s);
+  let v = s ? await parseMetadata(s, dh) : null;
+  // note: "[]" is the old format, upgraded by upgradeMetadata()
+  metadata = (v ?? []) as Metadata;
   console.log("loadNotesMetadata: finished", metadata);
   return metadata!;
 }
