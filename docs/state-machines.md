@@ -545,6 +545,8 @@ to state machines). Ordered by impact.
   were identified by block index, which changes when a block is inserted or deleted before it.
   **Fixed**: a request remembers the block's start position, mapped through later edits (dropped
   if the block was deleted, or another note loaded).
+- **U29. Edits respect read-only.** Clicking a todo checkbox changed the note while code was
+  running (the run's output then overwrote it). **Fixed**: the toggle checks `readOnly`.
 
 ## Status
 

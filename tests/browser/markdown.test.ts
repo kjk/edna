@@ -32,6 +32,17 @@ describe("Markdown (browser tests)", () => {
     await expect.poll(() => checkbox().checked).toBe(false);
   });
 
+  it("clicking a checkbox doesn't change a read-only note", async () => {
+    te = createEditor("\n\u221E\u221E\u221Emarkdown\n- [ ] todo\n");
+    const { editor, container } = te;
+    await expect.poll(() => container.querySelectorAll(".cm-content input[type=checkbox]").length).toBe(1);
+    editor.setReadOnly(true);
+    container.querySelector<HTMLInputElement>(".cm-content input[type=checkbox]")!.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true, cancelable: true }),
+    );
+    expect(getBlockContent(editor, 0)).toBe("- [ ] todo\n");
+  });
+
   it("todo list continue on enter", async () => {
     const content = "\n\u221E\u221E\u221Emarkdown\n- [ ] todo";
     te = createEditor(content);

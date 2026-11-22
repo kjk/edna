@@ -77,6 +77,10 @@ function checkboxes(view: EditorView) {
 
 // pos is the start of "[ ] " / "[x] " (view.posAtDOM() of the widget returns its start)
 function toggleBoolean(view: EditorView, pos: number) {
+  // e.g. while code runs: the run's output would overwrite the change
+  if (view.state.readOnly) {
+    return false;
+  }
   let s = view.state.doc.sliceString(pos, pos + 4).toLowerCase();
   let change: ChangeSpec;
   if (s === "[x] ") {
