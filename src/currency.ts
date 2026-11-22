@@ -14,6 +14,34 @@ const kRefreshIntervalMs = 1000 * 3600 * 4;
 let currencyData: CurrencyData | undefined;
 let currencyDataFetchedAt = 0;
 
+// returns data with valid rates or undefined if the response doesn't have the
+// expected shape (U21): bad data must not be cached for hours
+export function parseCurrencyData(s: string): CurrencyData | undefined {
+  let v: any;
+  try {
+    v = JSON.parse(s);
+  } catch {
+    return undefined;
+  }
+  if (!v || typeof v !== "object" || typeof v.base_code !== "string" || !/^[A-Z]+$/.test(v.base_code)) {
+    return undefined;
+  }
+  if (!v.rates || typeof v.rates !== "object") {
+    return undefined;
+  }
+  let rates: Record<string, number> = {};
+  for (let [code, rate] of Object.entries(v.rates)) {
+    // a rate of 0 would define a unit worth Infinity
+    if (/^[A-Z]+$/.test(code) && typeof rate === "number" && Number.isFinite(rate) && rate > 0) {
+      rates[code] = rate;
+    }
+  }
+  if (Object.keys(rates).length === 0) {
+    return undefined;
+  }
+  return { base: v.base_code, base_code: v.base_code, rates };
+}
+
 // returns cached data if fresh, otherwise re-fetches.
 // on fetch failure returns stale data (if any)
 async function getCurrencyData() {
@@ -25,7 +53,12 @@ async function getCurrencyData() {
       cache: "no-cache",
     });
     if (!response.ok) return currencyData;
-    currencyData = JSON.parse(await response.text());
+    let data = parseCurrencyData(await response.text());
+    if (!data) {
+      console.error("getCurrencyData: unexpected response");
+      return currencyData;
+    }
+    currencyData = data;
     currencyDataFetchedAt = Date.now();
   } catch (e) {
     console.log("getCurrencyData: error:", e);
@@ -48,7 +81,6 @@ export function startCurrencyRefresh() {
 export async function loadCurrencies(): Promise<boolean> {
   const data = await getCurrencyData();
   if (!data) return false;
-  data.base = data.base_code; // our api returns base_code, the code expects base
   try {
     // override: units might exist from a previous (possibly partial) load
     math.createUnit(data.base, { aliases: [data.base.toLowerCase()] }, { override: true });

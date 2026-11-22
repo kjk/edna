@@ -517,7 +517,9 @@ to state machines). Ordered by impact.
   test).
 - **U20.** Menu shortcut labels match real bindings ("Insert time Alt-Shift-t" was unbound).
   **Fixed**: bound in `keymap.ts`; the other labels were checked against the keymaps.
-- **U21.** Currency API response has the expected shape.
+- **U21.** Currency API response has the expected shape. **Fixed**: `parseCurrencyData` rejects
+  a response without a base / rates (kept stale data instead) and drops invalid rates (0 gave
+  a unit worth Infinity).
 - **U22.** Math blocks: evaluation starts at the block start, not the viewport start.
 
 ## Status
