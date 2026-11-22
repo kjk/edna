@@ -5,6 +5,7 @@ import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf }
 
 const settingsKeys = [
   "bracketClosing",
+  "showColorPreview",
   "currentTab",
   "tabs",
   "emacsMetaKey",
@@ -28,6 +29,7 @@ const settingsKeys = [
 
 export interface Settings {
   bracketClosing: boolean;
+  showColorPreview: boolean;
   currentTab: string;
   tabs: string[];
   emacsMetaKey: string;
@@ -51,6 +53,7 @@ export interface Settings {
 
 export const defaultSettings: Settings = {
   bracketClosing: true,
+  showColorPreview: true,
   currentTab: kTabHome,
   tabs: [],
   emacsMetaKey: "alt",

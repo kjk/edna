@@ -68,6 +68,8 @@
     editor?.setKeymap(keymap, emacsMetaKey);
     let bracketClosing = settings.bracketClosing;
     editor?.setBracketClosing(bracketClosing);
+    let showColorPreview = settings.showColorPreview;
+    editor?.setColorPreview(showColorPreview);
     let fontFamily = settings.fontFamily!;
     let fontSize = settings.fontSize!;
     editor?.setFont(fontFamily, fontSize);
@@ -171,6 +173,7 @@
       showLineNumberGutter: showLineNumberGutter,
       showFoldGutter: showFoldGutter,
       bracketClosing: bracketClosing,
+      showColorPreview: settings.showColorPreview,
       fontFamily: fontFamily,
       fontSize: fontSize,
       tabSize: tabSize,

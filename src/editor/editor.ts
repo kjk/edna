@@ -6,6 +6,7 @@ import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
 import { blockLineNumbers, blockState, noteBlockExtension } from "./block/block";
 import { defaultBlockDelimiter, getBlockDelimiter, triggerCurrenciesLoaded } from "./block/commands";
 import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
+import { colorPreviewExtension } from "./color-preview";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs";
 import { createDynamicCloseBracketsExtension } from "./extensions";
@@ -48,6 +49,7 @@ interface MultiBlockEditorConfig {
   showLineNumberGutter?: boolean;
   showFoldGutter?: boolean;
   bracketClosing?: boolean;
+  showColorPreview?: boolean;
   useTabs: boolean;
   tabSize: number;
   defaultBlockToken?: string;
@@ -65,6 +67,7 @@ export class MultiBlockEditor {
   foldGutterCompartment: Compartment;
   readOnlyCompartment: Compartment;
   defaultBlockCompartment: Compartment;
+  colorPreviewCompartment: Compartment;
   closeBracketsCompartment: Compartment;
   tabsCompartment: Compartment;
   deselectOnCopy: boolean;
@@ -90,6 +93,7 @@ export class MultiBlockEditor {
     showLineNumberGutter = true,
     showFoldGutter = true,
     bracketClosing = false,
+    showColorPreview = true,
     useTabs,
     tabSize,
     defaultBlockToken,
@@ -107,6 +111,7 @@ export class MultiBlockEditor {
     this.foldGutterCompartment = new Compartment();
     this.readOnlyCompartment = new Compartment();
     this.defaultBlockCompartment = new Compartment();
+    this.colorPreviewCompartment = new Compartment();
     this.closeBracketsCompartment = new Compartment();
     this.tabsCompartment = new Compartment();
     this.deselectOnCopy = keymap === "emacs";
@@ -140,6 +145,7 @@ export class MultiBlockEditor {
         moveSelectionOutOfNewFolds,
 
         this.closeBracketsCompartment.of(bracketClosing ? createDynamicCloseBracketsExtension() : []),
+        this.colorPreviewCompartment.of(showColorPreview ? colorPreviewExtension : []),
 
         this.readOnlyCompartment.of([]),
         this.defaultBlockCompartment.of(
@@ -316,6 +322,12 @@ export class MultiBlockEditor {
   setLineNumberGutter(show: boolean) {
     this.view.dispatch({
       effects: this.lineNumberCompartment.reconfigure(show ? [blockLineNumbers] : []),
+    });
+  }
+
+  setColorPreview(show: boolean) {
+    this.view.dispatch({
+      effects: this.colorPreviewCompartment.reconfigure(show ? colorPreviewExtension : []),
     });
   }
 

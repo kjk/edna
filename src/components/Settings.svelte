@@ -117,6 +117,10 @@
       <input type="checkbox" bind:checked={settings.showFoldGutter} />
       Show fold gutter
     </label>
+    <label>
+      <input type="checkbox" bind:checked={settings.showColorPreview} />
+      Show color previews (CSS, HTML, JavaScript, TypeScript, Vue, Svelte)
+    </label>
   </div>
 
   <div class="mt-2 flex items-center">
