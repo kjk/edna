@@ -90,6 +90,10 @@ describe("Ask AI", () => {
       settings.aiModelID = "gpt-4o";
       const calls: { url: string; model: string }[] = [];
       window.fetch = vi.fn(async (url: unknown, init?: RequestInit) => {
+        if (!String(url).includes("/chat/completions")) {
+          // e.g. usage logging
+          return new Response("{}", { status: 200 });
+        }
         const model = JSON.parse(init!.body as string).model;
         calls.push({ url: String(url), model });
         if (String(url).includes("api.openai.com")) {
