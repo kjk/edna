@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { appState } from "../../src/appstate.svelte";
 import { blockHdrMarkdown } from "../../src/constants";
-import { loadNotesMetadata, upgradeMetadata } from "../../src/metadata";
+import { getNoteMeta, getNotesMetadata, loadNotesMetadata, toggleNoteStarred, upgradeMetadata } from "../../src/metadata";
 import {
   appendToNote,
   createDefaultNotes,
@@ -93,5 +93,25 @@ describe("notes (localStorage)", () => {
     await loadNoteNames();
     expect(appState.allNotes).toEqual(["foo"]);
     await root.removeEntry("Foo.edna.txt");
+  });
+
+  it("a new note doesn't inherit metadata of a deleted note with that name (U7)", async () => {
+    await createNoteWithName("old", blockHdrMarkdown + "old");
+    await toggleNoteStarred("old");
+    expect(getNoteMeta("old")?.isStarred).toBe(true);
+    // deleted outside of Edna (e.g. another tab, or the file was removed)
+    localStorage.removeItem("note:old");
+    await loadNoteNames();
+    await createNoteWithName("old", blockHdrMarkdown + "new");
+    expect(getNoteMeta("old")?.isStarred).toBeFalsy();
+
+    await createNoteWithName("a", blockHdrMarkdown + "a");
+    await toggleNoteStarred("a");
+    await createNoteWithName("b", blockHdrMarkdown + "b");
+    // stale entry for "c"
+    getNoteMeta("c", true)!.isArchived = true;
+    await renameNote("b", "c", blockHdrMarkdown + "b");
+    expect(getNoteMeta("c")?.isArchived).toBeFalsy();
+    expect(getNotesMetadata().filter((m) => m.name === "c").length).toBeLessThanOrEqual(1);
   });
 });

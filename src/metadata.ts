@@ -27,6 +27,8 @@ export interface Metadata {
 }
 
 let metadata: Metadata | null = null;
+// storage metadata was loaded from (undefined: localStorage)
+let metadataStorage: FileSystemDirectoryHandle | undefined | null = null;
 
 export function getNotesMetadata(): NoteMetadata[] {
   metadata!.notes = metadata!.notes || [];
@@ -81,6 +83,7 @@ export async function loadNotesMetadata(): Promise<Metadata> {
   let v = s ? await parseMetadata(s, dh) : null;
   // note: "[]" is the old format, upgraded by upgradeMetadata()
   metadata = (v ?? []) as Metadata;
+  metadataStorage = dh;
   console.log("loadNotesMetadata: finished", metadata);
   return metadata!;
 }
@@ -143,14 +146,31 @@ export async function removeNoteFromMetadata(name: string) {
 }
 
 export async function renameNoteInMetadata(oldName: string, newName: string) {
-  let notes = getNotesMetadata();
+  // an entry left by a note that no longer exists must not win over the
+  // renamed note's entry (U7)
+  let notes = getNotesMetadata().filter((m) => m.name !== newName || m.name === oldName);
+  metadata!.notes = notes;
   for (let o of notes) {
     if (o.name === oldName) {
       o.name = newName;
-      break;
     }
   }
   await saveNotesMetadata();
+}
+
+// called when creating note `name`: removes metadata left by a deleted note
+// with that name (e.g. deleted outside of Edna), so the new note doesn't
+// inherit its archived / starred state, shortcut, folds (U7).
+// No-op if metadata of the current storage isn't loaded (e.g. while booting)
+export async function removeStaleNoteMeta(name: string) {
+  if (!metadata || metadataStorage !== getStorageFS()) {
+    return;
+  }
+  if (!getNotesMetadata().some((m) => m.name === name)) {
+    return;
+  }
+  console.log(`removeStaleNoteMeta: removing metadata of deleted note '${name}'`);
+  await removeNoteFromMetadata(name);
 }
 
 export async function reassignNoteShortcut(name: string, altShortcut: string) {

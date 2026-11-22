@@ -464,6 +464,8 @@ to state machines). Ordered by impact.
   `dbSetDirHandle` / `dbDelDirHandle`; their names are unique ignoring case.
 - **U7. Metadata entries belong to existing notes.** Entries of deleted (outside Edna) notes
   were inherited by a new note with that name (archived, starred, shortcut, folds).
+  **Fixed**: creating a note removes a leftover entry (`removeStaleNoteMeta`, only when the
+  current storage's metadata is loaded); rename drops a leftover entry of the new name.
 - **U8. Stored data and the URL parse.** Unguarded `JSON.parse` of settings / stats, metadata
   cast instead of normalized, `decodeURIComponent` of the URL hash: corrupt data or a URL like
   `#50%off` left the app blank.

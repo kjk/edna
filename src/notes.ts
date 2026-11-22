@@ -40,6 +40,7 @@ import {
   readMetadataFileFS,
   reassignNoteShortcut,
   removeNoteFromMetadata,
+  removeStaleNoteMeta,
   renameNoteInMetadata,
 } from "./metadata";
 import { mergeMetadata, normalizeMetadata } from "./metadata-merge";
@@ -642,6 +643,7 @@ export async function createNoteWithName(name: string, content: string | null = 
   if (existing) {
     throw new Error(`note '${existing}' already exists`);
   }
+  await removeStaleNoteMeta(name);
   let dh = getStorageFS();
   content = fixUpNoteContent(content);
   if (!dh) {
@@ -668,6 +670,7 @@ export async function appendToNote(name: string, content: string) {
     if (nameErr) {
       throw new Error(`invalid note name '${name}': ${nameErr}`);
     }
+    await removeStaleNoteMeta(name);
   }
 
   let dh = getStorageFS();
