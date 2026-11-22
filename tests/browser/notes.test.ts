@@ -114,4 +114,11 @@ describe("notes (localStorage)", () => {
     expect(getNoteMeta("c")?.isArchived).toBeFalsy();
     expect(getNotesMetadata().filter((m) => m.name === "c").length).toBeLessThanOrEqual(1);
   });
+
+  it("opening a file that isn't a .edna.txt note is refused, not a crash", async () => {
+    const root = await navigator.storage.getDirectory();
+    const fh = await root.getFileHandle("notes.txt", { create: true });
+    expect(rememberOpenedNote(fh)).toBeNull();
+    await root.removeEntry("notes.txt");
+  });
 });

@@ -400,6 +400,11 @@ export function rememberOpenedNote(fh: FileSystemFileHandle): string | null {
     // we don't support encrypted notes
     return null;
   }
+  if (!isEdnaFile(fh.name)) {
+    // the file picker's type filter isn't a guarantee: trimEdnaExt() would
+    // throw for other files
+    return null;
+  }
   let noteName = noteNameFromFileNameFS(fh.name);
   if (!noteName || noteNameError(noteName)) {
     return null;

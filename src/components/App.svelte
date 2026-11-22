@@ -663,16 +663,21 @@
       return;
     }
     let noteToOpen = null;
+    let skipped: string[] = [];
     for (let fh of fileHandles) {
       console.log("fh:", fh);
       let noteName = rememberOpenedNote(fh);
       if (noteName === null || noteName === "") {
+        skipped.push(fh.name);
         continue;
       }
       // will open the first selected note
       if (noteToOpen === null) {
         noteToOpen = noteName;
       }
+    }
+    if (skipped.length > 0) {
+      showWarning(`Can't open ${skipped.join(", ")}: only unencrypted .edna.txt notes with a valid name can be opened`);
     }
     if (noteToOpen) {
       openNote(noteToOpen);

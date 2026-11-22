@@ -551,6 +551,8 @@ to state machines). Ordered by impact.
   A note created by another tab or a sync tool since the list was read was overwritten by
   create / move-block-to-note. **Fixed**: `createNoteWithName` and `appendToNote` re-read the
   names first (a narrow race remains: the File System Access API has no exclusive create).
+- **U31. A file opened from disk is a `.edna.txt` note.** The picker's type filter was trusted;
+  `trimEdnaExt` threw for other files. **Fixed**: other files are skipped with a warning.
 
 ## Status
 
