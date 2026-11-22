@@ -49,11 +49,9 @@ describe("editor in the app", () => {
     const autoClose = page.getByRole("checkbox", { name: "Auto-close brackets and quotation marks" });
     await expect.element(showLineNumbers).toBeChecked();
     await expect.element(autoClose).toBeChecked();
-    (showLineNumbers.element() as HTMLInputElement).focus();
-    await userEvent.keyboard(" ");
+    (showLineNumbers.element() as HTMLInputElement).click();
     await expect.element(showLineNumbers).not.toBeChecked();
-    (autoClose.element() as HTMLInputElement).focus();
-    await userEvent.keyboard(" ");
+    (autoClose.element() as HTMLInputElement).click();
     await expect.element(autoClose).not.toBeChecked();
     await userEvent.keyboard("{Escape}");
 
