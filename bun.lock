@@ -33,6 +33,7 @@
         "@zip.js/zip.js": "^2.25.0",
         "codemirror-lang-mermaid": "^0.5.0",
         "debounce": "^4.0.0",
+        "heynote-lang-mathjs": "^1.0.1",
         "highlight.js": "^11.12.0",
         "idb": "^8.0.4",
         "kiss-crypto": "^0.3.4",
@@ -360,6 +361,8 @@
     "graceful-fs": ["graceful-fs@4.2.12", "", {}, "sha512-iuyGF2E4oafQfPsRrG2wtY2ILupMhvtdrhzrxB+0VcjsPpSPttpfYdjnGFGsTi5MaJFjI1jOKHPQ6UTbTj9TAw=="],
 
     "hash-wasm": ["hash-wasm@4.11.0", "", {}, "sha512-HVusNXlVqHe0fzIzdQOGolnFN6mX/fqcrSAOcTBXdvzrXVHwTz11vXeKRmkR5gTuwVpvHZEIyKoePDvuAR+XwQ=="],
+
+    "heynote-lang-mathjs": ["heynote-lang-mathjs@1.0.1", "", { "dependencies": { "@codemirror/language": "^6.0.0" }, "peerDependencies": { "@codemirror/state": "^6.0.0", "@codemirror/view": "^6.0.0", "@lezer/common": "^1.0.0", "@lezer/highlight": "^1.0.0", "@lezer/lr": "^1.0.0" } }, "sha512-l+5SPpKeImt2RhlYNdF1sXmCrHzotH2b2oOAcAUQweAqgbEsvWl4bDkaD450AL7iJLiZPz8SXDZD3IHrnYOzlA=="],
 
     "highlight.js": ["highlight.js@11.12.0", "", {}, "sha512-nbfWpyRMcMrPMmDwJB+dhX/eiaPKtc2RB+0QZskqJ3WjRA/FDS0e9hZrx8EC/lbEv8gXy98FcDbNa/dspAaJMg=="],
 

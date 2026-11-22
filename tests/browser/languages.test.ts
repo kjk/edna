@@ -24,6 +24,12 @@ describe("Languages", () => {
     expect(nodeAt(pos)).not.toBe("NoteContent");
   });
 
+  it("math blocks are parsed with math.js parser", () => {
+    const content = "\n\u221E\u221E\u221Emath\nx = 1 + 2\n";
+    te = createEditor(content);
+    expect(nodeAt(content.indexOf("x ="))).not.toBe("NoteContent");
+  });
+
   it("text blocks have no nested parser", () => {
     const content = "\n∞∞∞text\ngraph TD\n";
     te = createEditor(content);

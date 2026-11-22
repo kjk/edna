@@ -21,6 +21,7 @@ import { go } from "@codemirror/legacy-modes/mode/go";
 import { groovy } from "@codemirror/legacy-modes/mode/groovy";
 import { lua } from "@codemirror/legacy-modes/mode/lua";
 import { mermaidLanguage } from "codemirror-lang-mermaid";
+import { mathjsLanguage } from "heynote-lang-mathjs";
 import { powerShell } from "@codemirror/legacy-modes/mode/powershell";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
@@ -300,6 +301,9 @@ export function langGetParser(lang: Language | undefined): any {
     return null;
   }
   let token = lang.token;
+  if (token === "math") {
+    return mathjsLanguage.parser;
+  }
   if (token === "json") {
     return jsonLanguage.parser;
   }
