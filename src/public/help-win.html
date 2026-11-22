@@ -42,11 +42,12 @@ Ctrl + Alt + .         Toggle block fold
 Ctrl + A               Select all text in a note block
                        Press again to select the whole buffer
 Ctrl + Alt + Up/Down   Add additional cursor above/below
+Ctrl + Shift + Space   Toggle todo checkbox in markdown block
 Alt + Shift + F        Format block content
                        Supports Go, JSON, JavaScript, HTML, CSS and Markdown
 Ctrl + E               Smart Code Run
-Alt + Shift + R        Run function with block content
                        Supports Go
+Alt + Shift + R        Run function with block content
 Ctrl + F               Search / replace within a note
 Ctrl + Shift + F       Search in all notes
 </code></pre>
@@ -171,7 +172,7 @@ Ctrl + Shift + F       Search in all notes
 </ul>
 <p>Or: context menu: <code>Create New note</code>.</p>
 <h2 id="create-a-new-scratch-note" tabindex="-1"><a class="header-anchor" href="#create-a-new-scratch-note">Create a new scratch note</a></h2>
-<p><code>Alt + N</code> to create temporary scratch note. We'll pick a unique name <code>scratch-&lt;n&gt;</code></p>
+<p><code>Alt + N</code> (not on Mac) to create temporary scratch note. We'll pick a unique name <code>scratch-&lt;n&gt;</code></p>
 <h2 id="archive-and-unarchive-note" tabindex="-1"><a class="header-anchor" href="#archive-and-unarchive-note">Archive and unarchive note</a></h2>
 <p>To keep the note but put it aside, archive it.</p>
 <p>Context menu: <code>This note</code> / <code>Archive</code>.</p>
@@ -255,21 +256,23 @@ Ctrl + Shift + F       Search in all notes
 <p><img src="/help-ask-ai-api-key.png" alt="Ask AI enter key"></p>
 <p>We support:</p>
 <ul>
-<li><a href="openai.com" target="_blank">OpenAI</a> for ChatGPT etc. Read how to <a href="#getting-openai-api-key">get OpenAI key</a></li>
+<li><a href="https://openai.com" target="_blank">OpenAI</a> for ChatGPT etc. Read how to <a href="#getting-openai-api-key">get OpenAI key</a></li>
+<li><a href="https://anthropic.com" target="_blank">Anthropic</a> for Claude. Read how to <a href="#getting-anthropic-api-key">get Anthropic key</a></li>
 <li><a href="https://x.ai/" target="_blank">xAI</a> for Grok. Read how to <a href="#getting-xai-(grok)-api-key">get xAI key</a></li>
-<li><a href="https://openrouter.ai/" target="_blank">OpenRouter</a> for all models (including OpenAI / xAI models). Read how to <a href="#getting-openrouter-api-key">get OpenRouter key</a></li>
+<li><a href="https://openrouter.ai/" target="_blank">OpenRouter</a> for models from many providers (including OpenAI, Anthropic and xAI models). Read how to <a href="#getting-openrouter-api-key">get OpenRouter key</a></li>
 </ul>
 <p>We recommend creating a unique API key for Edna.</p>
-<p>If you provide both xAI/OpenAI API key and OpenRouter API key, we'll use xAI/OpenAI.</p>
+<p>You can provide keys for several providers. The model picker shows models available with each key; the same model can be listed for its provider and for OpenRouter.</p>
 <h2 id="ai-model-picker" tabindex="-1"><a class="header-anchor" href="#ai-model-picker">AI Model Picker</a></h2>
-<p>We support 169 AI models. You can pick the model using picker in upper right corner.</p>
+<p>You can pick the model using picker in upper right corner.</p>
+<p>The list of models is downloaded from each provider for which you entered an API key, and refreshed once a day, so new models show up automatically. If the model you used is no longer available, we pick the closest available model.</p>
 <p><img src="/help-ask-ai-pick-model.png" alt="Ask AI models"></p>
 <p>We don't charge for AI but AI providers do.</p>
 <p>Different models have different prices charged by API providers.</p>
 <p>They charge per usage, not as a subscription. If you don't use the API, you are not charged.</p>
 <p>There's a fee for the size of your question (input tokens) and size of the response (output tokens).</p>
 <p>Token is pretty much a word so think &quot;number of words in the question or response&quot;.</p>
-<p>We show the prices per million input tokens and million output tokens on the right side of the model picker.</p>
+<p>For OpenRouter models we show the prices per million input tokens and million output tokens on the right side of the model picker. Other providers don't tell us their prices: see their websites.</p>
 <h2 id="free-models" tabindex="-1"><a class="header-anchor" href="#free-models">Free models</a></h2>
 <p>Some OpenRouter models are free. They show 0 for the price. You can also type <strong>free</strong> in model picker to see free models.</p>
 <p><img src="/help-ask-ai-free-models.png" alt="Ask AI free models"></p>
@@ -278,14 +281,17 @@ Ctrl + Shift + F       Search in all notes
 <p>To use OpenAI models you need to obtain API key from <a href="https://platform.openai.com/settings/organization/api-keys" target="_blank">OpenAI</a>.</p>
 <p>You need to create an account and setup billing. OpenAI charges for usage of API calls so you don't pay if you don't use the API.</p>
 <p>They charge per input tokens and output tokens. A token is more or less a word.</p>
-<p>To make it easier to compare prices, we show the price for million input tokens and a million output tokens in <a href="#ai-model-picker">AI model picker</a>.</p>
 <p>API keys are separate from ChatGPT subscription. Confusing, I know, but I didn't make the rules.</p>
 <p>You can also use OpenRouter API key (they charge ~5% on top of OpenAI prices).</p>
+<h2 id="getting-anthropic-api-key" tabindex="-1"><a class="header-anchor" href="#getting-anthropic-api-key">Getting Anthropic API key</a></h2>
+<p>To use Anthropic (Claude) models you need to obtain API key from <a href="https://console.anthropic.com/settings/keys" target="_blank">Anthropic Console</a>.</p>
+<p>You need to create an account and setup billing. Anthropic charges for usage of API calls so you don't pay if you don't use the API.</p>
+<p>API keys are separate from Claude subscription.</p>
+<p>You can also use OpenRouter API key.</p>
 <h2 id="getting-xai-(grok)-api-key" tabindex="-1"><a class="header-anchor" href="#getting-xai-(grok)-api-key">Getting xAI (Grok) API Key</a></h2>
 <p>To use xAI models you need to obtain API key from <a href="https://console.x.ai/" target="_blank">xAI</a>, click <code>API Keys</code> section in left sidebar</p>
 <p>You need to create an account and setup billing. xAI charges for usage of API calls so you don't pay if you don't use the API.</p>
 <p>They charge per input tokens and output tokens. A token is more or less a word.</p>
-<p>To make it easier to compare prices, we show the price for million input tokens and a million output tokens in <a href="#ai-model-picker">AI model picker</a>.</p>
 <p>API keys are separate from Grok subscription. Confusing, I know, but I didn't make the rules.</p>
 <p>You can also use OpenRouter API key (they charge ~5% on top of xAI prices).</p>
 <h2 id="getting-openrouter-api-key" tabindex="-1"><a class="header-anchor" href="#getting-openrouter-api-key">Getting OpenRouter API Key</a></h2>

@@ -41,11 +41,12 @@
 ⌘ + A               Select all text in a note block
                     Press again to select the whole buffer
 ⌘ + ⌥ + Up/Down     Add additional cursor above/below
+⌘ + Shift + Space   Toggle todo checkbox in markdown block
 ⌥ + Shift + F       Format block content
                     Supports Go, JSON, JavaScript, HTML, CSS and Markdown
 ⌘ + E               Smart Code Run
-⌥ + Shift + R       Run function with block content
                     Supports Go
+⌥ + Shift + R       Run function with block content
 ⌘ + F               Search / replace within a note
 ⌘ + Shift + F       Search in all notes
 </code></pre>
@@ -166,11 +167,11 @@
 <li><code>⌘ + K</code> to open note switcher</li>
 <li>type name of the note to create</li>
 <li><code>Enter</code> to create if the name doesn't match any existing note</li>
-<li><code>⌘ + Enter</code> to create if the name partially matches an existing note</li>
+<li><code>Ctrl + Enter</code> to create if the name partially matches an existing note</li>
 </ul>
 <p>Or: context menu: <code>Create New note</code>.</p>
 <h2 id="create-a-new-scratch-note" tabindex="-1"><a class="header-anchor" href="#create-a-new-scratch-note">Create a new scratch note</a></h2>
-<p><code>⌥ + N</code> to create temporary scratch note. We'll pick a unique name <code>scratch-&lt;n&gt;</code></p>
+<p><code>⌥ + N</code> (not on Mac) to create temporary scratch note. We'll pick a unique name <code>scratch-&lt;n&gt;</code></p>
 <h2 id="archive-and-unarchive-note" tabindex="-1"><a class="header-anchor" href="#archive-and-unarchive-note">Archive and unarchive note</a></h2>
 <p>To keep the note but put it aside, archive it.</p>
 <p>Context menu: <code>This note</code> / <code>Archive</code>.</p>
@@ -185,7 +186,7 @@
 <ul>
 <li><code>⌘ + K</code> for note switcher</li>
 <li>select a note with arrow key or by typing a partial name match</li>
-<li><code>⌘ + Delete</code> or <code>⌘ + Backspace</code> to delete selected note</li>
+<li><code>Ctrl + Delete</code> or <code>Ctrl + Backspace</code> to delete selected note</li>
 </ul>
 <p>A <code>scratch</code> note cannot be deleted.</p>
 <h2 id="rename-a-note" tabindex="-1"><a class="header-anchor" href="#rename-a-note">Rename a note</a></h2>
@@ -254,21 +255,23 @@
 <p><img src="/help-ask-ai-api-key.png" alt="Ask AI enter key"></p>
 <p>We support:</p>
 <ul>
-<li><a href="openai.com" target="_blank">OpenAI</a> for ChatGPT etc. Read how to <a href="#getting-openai-api-key">get OpenAI key</a></li>
+<li><a href="https://openai.com" target="_blank">OpenAI</a> for ChatGPT etc. Read how to <a href="#getting-openai-api-key">get OpenAI key</a></li>
+<li><a href="https://anthropic.com" target="_blank">Anthropic</a> for Claude. Read how to <a href="#getting-anthropic-api-key">get Anthropic key</a></li>
 <li><a href="https://x.ai/" target="_blank">xAI</a> for Grok. Read how to <a href="#getting-xai-(grok)-api-key">get xAI key</a></li>
-<li><a href="https://openrouter.ai/" target="_blank">OpenRouter</a> for all models (including OpenAI / xAI models). Read how to <a href="#getting-openrouter-api-key">get OpenRouter key</a></li>
+<li><a href="https://openrouter.ai/" target="_blank">OpenRouter</a> for models from many providers (including OpenAI, Anthropic and xAI models). Read how to <a href="#getting-openrouter-api-key">get OpenRouter key</a></li>
 </ul>
 <p>We recommend creating a unique API key for Edna.</p>
-<p>If you provide both xAI/OpenAI API key and OpenRouter API key, we'll use xAI/OpenAI.</p>
+<p>You can provide keys for several providers. The model picker shows models available with each key; the same model can be listed for its provider and for OpenRouter.</p>
 <h2 id="ai-model-picker" tabindex="-1"><a class="header-anchor" href="#ai-model-picker">AI Model Picker</a></h2>
-<p>We support 169 AI models. You can pick the model using picker in upper right corner.</p>
+<p>You can pick the model using picker in upper right corner.</p>
+<p>The list of models is downloaded from each provider for which you entered an API key, and refreshed once a day, so new models show up automatically. If the model you used is no longer available, we pick the closest available model.</p>
 <p><img src="/help-ask-ai-pick-model.png" alt="Ask AI models"></p>
 <p>We don't charge for AI but AI providers do.</p>
 <p>Different models have different prices charged by API providers.</p>
 <p>They charge per usage, not as a subscription. If you don't use the API, you are not charged.</p>
 <p>There's a fee for the size of your question (input tokens) and size of the response (output tokens).</p>
 <p>Token is pretty much a word so think &quot;number of words in the question or response&quot;.</p>
-<p>We show the prices per million input tokens and million output tokens on the right side of the model picker.</p>
+<p>For OpenRouter models we show the prices per million input tokens and million output tokens on the right side of the model picker. Other providers don't tell us their prices: see their websites.</p>
 <h2 id="free-models" tabindex="-1"><a class="header-anchor" href="#free-models">Free models</a></h2>
 <p>Some OpenRouter models are free. They show 0 for the price. You can also type <strong>free</strong> in model picker to see free models.</p>
 <p><img src="/help-ask-ai-free-models.png" alt="Ask AI free models"></p>
@@ -277,14 +280,17 @@
 <p>To use OpenAI models you need to obtain API key from <a href="https://platform.openai.com/settings/organization/api-keys" target="_blank">OpenAI</a>.</p>
 <p>You need to create an account and setup billing. OpenAI charges for usage of API calls so you don't pay if you don't use the API.</p>
 <p>They charge per input tokens and output tokens. A token is more or less a word.</p>
-<p>To make it easier to compare prices, we show the price for million input tokens and a million output tokens in <a href="#ai-model-picker">AI model picker</a>.</p>
 <p>API keys are separate from ChatGPT subscription. Confusing, I know, but I didn't make the rules.</p>
 <p>You can also use OpenRouter API key (they charge ~5% on top of OpenAI prices).</p>
+<h2 id="getting-anthropic-api-key" tabindex="-1"><a class="header-anchor" href="#getting-anthropic-api-key">Getting Anthropic API key</a></h2>
+<p>To use Anthropic (Claude) models you need to obtain API key from <a href="https://console.anthropic.com/settings/keys" target="_blank">Anthropic Console</a>.</p>
+<p>You need to create an account and setup billing. Anthropic charges for usage of API calls so you don't pay if you don't use the API.</p>
+<p>API keys are separate from Claude subscription.</p>
+<p>You can also use OpenRouter API key.</p>
 <h2 id="getting-xai-(grok)-api-key" tabindex="-1"><a class="header-anchor" href="#getting-xai-(grok)-api-key">Getting xAI (Grok) API Key</a></h2>
 <p>To use xAI models you need to obtain API key from <a href="https://console.x.ai/" target="_blank">xAI</a>, click <code>API Keys</code> section in left sidebar</p>
 <p>You need to create an account and setup billing. xAI charges for usage of API calls so you don't pay if you don't use the API.</p>
 <p>They charge per input tokens and output tokens. A token is more or less a word.</p>
-<p>To make it easier to compare prices, we show the price for million input tokens and a million output tokens in <a href="#ai-model-picker">AI model picker</a>.</p>
 <p>API keys are separate from Grok subscription. Confusing, I know, but I didn't make the rules.</p>
 <p>You can also use OpenRouter API key (they charge ~5% on top of xAI prices).</p>
 <h2 id="getting-openrouter-api-key" tabindex="-1"><a class="header-anchor" href="#getting-openrouter-api-key">Getting OpenRouter API Key</a></h2>
@@ -547,7 +553,7 @@ console.log(&quot;x is&quot;, x)
 <p>Notes can be sub-divided into blocks.</p>
 <p>Each block has a type (markdown, text, JavaScript and 40+ programming languages) which dictates syntax highlighting.</p>
 <p>Blocks can be folded so that you an focus on the block you're currently editing.</p>
-<p>You can quickly navigate between blocks with <code>Ctrl + B</code>.</p>
+<p>You can quickly navigate between blocks with <code>⌘ + B</code>.</p>
 <h2 id="scratch-note" tabindex="-1"><a class="header-anchor" href="#scratch-note">Scratch note</a></h2>
 <p>Scratch note is one of 3 special notes.</p>
 <p>It's meant for things that are not permanent.</p>
@@ -557,7 +563,7 @@ console.log(&quot;x is&quot;, x)
 <p>At the same time Edna is packed with functionality accessible via several paths:</p>
 <ul>
 <li>context menu</li>
-<li><a href="#command-palette">command palette</a> (<code>Ctrl + Shift + K</code>)</li>
+<li><a href="#command-palette">command palette</a> (<code>⌘ + Shift + K</code>)</li>
 <li>navigation bar at the top
 <ul>
 <li>toggling sidebar</li>
@@ -586,7 +592,7 @@ console.log(&quot;x is&quot;, x)
 <h3 id="keyboard-shortcuts-1" tabindex="-1"><a class="header-anchor" href="#keyboard-shortcuts-1">Keyboard shortcuts</a></h3>
 <p>Lots of <a href="#keyboard-shortcuts">keyboard shortcuts</a>.</p>
 <h3 id="command-palette-1" tabindex="-1"><a class="header-anchor" href="#command-palette-1">Command Palette</a></h3>
-<p><a href="#command-palette">Command palette</a> allows quick access to all functionality (<code>Ctrl + Shift + K</code>).</p>
+<p><a href="#command-palette">Command palette</a> allows quick access to all functionality (<code>⌘ + Shift + K</code>).</p>
 <h2 id="ai-chat-built-in" tabindex="-1"><a class="header-anchor" href="#ai-chat-built-in">AI chat built in</a></h2>
 <p>You're already in the editor. It's silly to switch to a different app just to send a question to AI.</p>
 <p><a href="#ask-ai">Ask AI</a> chat UI pre-populates question from selection or current block and allows to insert the response as a new block.</p>

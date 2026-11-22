@@ -181,7 +181,12 @@
   </label>
 
   <label class="flex-col mt-2">
-    <h2 class="font-bold text-left">Grok API Key</h2>
+    <h2 class="font-bold text-left">Anthropic API Key</h2>
+    <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.anthropicKey} />
+  </label>
+
+  <label class="flex-col mt-2">
+    <h2 class="font-bold text-left">xAI (Grok) API Key</h2>
     <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.xAIKey} />
   </label>
 

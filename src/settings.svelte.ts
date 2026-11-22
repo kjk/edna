@@ -1,6 +1,5 @@
 import { appState } from "./appstate.svelte";
 import { kSettingsPath, kTabHome } from "./constants";
-import { kModelIDIdx, modelsShort } from "./models-short";
 import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf } from "./util";
 
 const settingsKeys = [
@@ -23,6 +22,7 @@ const settingsKeys = [
   "openAIKey",
   "xAIKey",
   "openRouterKey",
+  "anthropicKey",
   "aiModelID",
   "starredModels",
 ];
@@ -47,6 +47,9 @@ export interface Settings {
   openAIKey: string;
   xAIKey: string;
   openRouterKey: string;
+  anthropicKey: string;
+  // "provider/model id" (see modelKey() in ai-models.ts). Validated against
+  // downloaded lists of models (validateAiModelSettings)
   aiModelID: string;
   starredModels: string[];
 }
@@ -71,8 +74,9 @@ export const defaultSettings: Settings = {
   openAIKey: "",
   xAIKey: "",
   openRouterKey: "",
-  aiModelID: "chatgpt-4o-latest",
-  starredModels: ["grok-3", "chatgpt-4o-latest"],
+  anthropicKey: "",
+  aiModelID: "",
+  starredModels: [],
 };
 
 export function createSettings(raw?: any): Settings {
@@ -147,64 +151,6 @@ function validateTabSize(tabSize: number): number {
   return tabSize;
 }
 
-export function findModelByID(modelID: string): any[] | undefined {
-  for (let m of modelsShort) {
-    if (m[kModelIDIdx] == modelID) {
-      return m;
-    }
-  }
-}
-
-function validateAiModelID(modelID: string): string | undefined {
-  let model = findModelByID(modelID);
-  if (model) {
-    return modelID;
-  }
-  console.warn(`validateAiModelID: model not found for id: ${modelID}`);
-  let freeModelID = getFreeModelID();
-  return freeModelID;
-}
-
-// in order of preference. Must exist in modelsShort (re-check after re-generating it)
-const freeModelsToTry = [
-  "kimi-k2:free",
-  "gpt-oss-120b:free",
-  "gpt-oss-20b:free",
-  "qwen3-coder:free",
-  "gemma-3n-e2b-it:free",
-  "gemma-3n-e4b-it:free",
-  "qwen3-4b:free",
-  "qwen3-235b-a22b:free",
-  "mistral-small-3.1-24b-instruct:free",
-  "gemma-3-4b-it:free",
-  "gemma-3-12b-it:free",
-  "gemma-3-27b-it:free",
-  "gemini-2.0-flash-exp:free",
-  "llama-3.3-70b-instruct:free",
-];
-
-function getFreeModelID() {
-  for (let modelID of freeModelsToTry) {
-    let model = findModelByID(modelID);
-    if (model) {
-      return modelID;
-    }
-  }
-}
-
-function removeUnknownAiModels(modelIDs: string[]): string[] {
-  let validModels = [];
-  for (let modelID of modelIDs) {
-    let model = findModelByID(modelID);
-    if (model) {
-      validModels.push(modelID);
-    } else {
-      console.warn(`removeUnknownAiModels: model not found for id: ${modelID}`);
-    }
-  }
-  return validModels;
-}
-
 const mediaMatch = window.matchMedia("(prefers-color-scheme: dark)");
 // OS dark mode, for "system" theme
 // note: can't be in appState because appstate.svelte.ts imports this module
@@ -217,11 +163,6 @@ export function getSettings(): Settings {
   if (settingsLoaded) {
     // console.log("getSettings: already loaded");
     // logSettings(appState.settings);
-    let m = appState.settings.aiModelID;
-    let nm = validateAiModelID(m);
-    if (nm && m !== nm) {
-      appState.settings.aiModelID = nm;
-    }
     return appState.settings;
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
@@ -236,18 +177,8 @@ export function getSettings(): Settings {
   }
   let settings = createSettings(settingsRaw);
   settings.tabSize = validateTabSize(settings.tabSize || 2);
-  let m = settings.aiModelID;
-  if (!findModelByID(m)) {
-    console.warn(`getSettings: model not found for id: ${m}, fixing`);
-    let mid = getFreeModelID();
-    if (mid) {
-      settings.aiModelID = mid;
-    }
-  }
-  settings.aiModelID = validateAiModelID(settings.aiModelID) || "";
   settings.fontSize = validateFontSize(settings.fontSize || kDefaultFontSize);
   settings.fontFamily = settings.fontFamily || kDefaultFontFamily;
-  settings.starredModels = removeUnknownAiModels(settings.starredModels || []);
 
   // console.log("getSettings: settings:", app
   // backward compat: migrate currentNoteName -> currentTab

@@ -2,20 +2,13 @@
   import { clickOutside, focus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { arrayRemove, findMatchingItemsFn, hilightText, humanPrice, len, makeHilightRegExp } from "../util";
-  import {
-    kModelIDIdx,
-    kModelNameIdx,
-    kModelPriceCompletionIdx,
-    kModelPricePromptIdx,
-    kModelProviderIdx,
-    modelsShort,
-    providersInfo,
-  } from "./../models-short";
+  import { getAiProvider, modelKey, type AiModel } from "../ai-models";
+  import { aiModelsState } from "../ai-models-state.svelte";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
-    selectModel: (model: any) => void;
+    selectModel: (model: AiModel) => void;
     close: () => void;
   }
   let { close, selectModel }: Props = $props();
@@ -27,21 +20,21 @@
   let forceUpdate = $state(0);
   let hiliRegExp = $derived(makeHilightRegExp(filter));
   let sanitizedFilter = $derived(filter.trim());
-  let models = $derived(buildModels(modelsShort, sanitizedFilter, forceUpdate));
+  let models = $derived(buildModels(aiModelsState.models, sanitizedFilter, forceUpdate));
 
-  function buildModels(items: any[], filter: string, ignore: any): any[] {
-    function modelNameFn(model: any) {
-      let name = model[kModelNameIdx];
-      let providerIdx = model[kModelProviderIdx];
-      let providerInfo = providersInfo[providerIdx]!;
-      let providerName = providerInfo[1];
-      return (providerName + " " + name).toLowerCase();
+  function providerName(model: AiModel): string {
+    return getAiProvider(model.provider)?.name ?? model.provider;
+  }
+
+  function buildModels(items: AiModel[], filter: string, ignore: any): AiModel[] {
+    function modelNameFn(model: AiModel) {
+      return (providerName(model) + " " + model.name + " " + model.id).toLowerCase();
     }
 
     let res = findMatchingItemsFn(items, filter, modelNameFn);
     res.sort((a, b) => {
-      const aStarred = appState.settings.starredModels.includes(a[kModelIDIdx]);
-      const bStarred = appState.settings.starredModels.includes(b[kModelIDIdx]);
+      const aStarred = appState.settings.starredModels.includes(modelKey(a));
+      const bStarred = appState.settings.starredModels.includes(modelKey(b));
       if (aStarred !== bStarred) {
         return aStarred ? -1 : 1;
       }
@@ -70,8 +63,8 @@
     listboxComp.onkeydown(ev, true);
   }
 
-  async function toggleStarred(model: any) {
-    let modelID = model[kModelIDIdx];
+  async function toggleStarred(model: AiModel) {
+    let modelID = modelKey(model);
     if (appState.settings.starredModels.includes(modelID)) {
       arrayRemove(appState.settings.starredModels, modelID);
     } else {
@@ -80,8 +73,13 @@
     forceUpdate++;
   }
 
-  function itemKey(item: any) {
-    return item[kModelIDIdx];
+  function itemKey(item: AiModel) {
+    return modelKey(item);
+  }
+
+  // price per token => price per million tokens; "" if not known
+  function priceStr(price: number | undefined): string {
+    return price === undefined ? "" : humanPrice(price);
   }
 
   let modelsCountMsg = $derived.by(() => {
@@ -89,7 +87,7 @@
     if (n === 0) {
       return ""; // don't obscure user entering new, long note name
     }
-    let nItems = len(modelsShort);
+    let nItems = len(aiModelsState.models);
     if (n === nItems) {
       return `${nItems} models`;
     }
@@ -110,6 +108,15 @@
       {modelsCountMsg}
     </div>
   </div>
+  {#if len(aiModelsState.models) === 0}
+    <div class="px-1 py-2 text-gray-500">
+      {#if aiModelsState.loading}
+        Loading models...
+      {:else}
+        No models: enter an API key
+      {/if}
+    </div>
+  {/if}
   <ListBox
     bind:this={listboxComp}
     items={models}
@@ -121,15 +128,9 @@
     compact={true}
   >
     {#snippet renderItem(model, idx)}
-      {@const modelID = model[kModelIDIdx]}
-      {@const name = model[kModelNameIdx]}
-      {@const providerID = model[kModelProviderIdx]}
-      {@const providerName = providersInfo[providerID]![1]}
-      {@const pricePrompt = humanPrice(model[kModelPricePromptIdx])}
-      {@const priceCompletion = humanPrice(model[kModelPriceCompletionIdx])}
-      {@const isStarred = appState.settings.starredModels.includes(modelID)}
-      {@const nameHili = hilightText(name, hiliRegExp)}
-      {@const providerHili = hilightText(providerName, hiliRegExp)}
+      {@const isStarred = appState.settings.starredModels.includes(modelKey(model))}
+      {@const nameHili = hilightText(model.name, hiliRegExp)}
+      {@const providerHili = hilightText(providerName(model), hiliRegExp)}
 
       <button
         tabindex="-1"
@@ -149,8 +150,8 @@
       <div class="px-1 ml-4 grow truncate text-left min-w-[32ch]">
         {@html nameHili}
       </div>
-      <div class="w-[6ch] text-right">{pricePrompt}</div>
-      <div class="w-[6ch] text-right mr-2">{priceCompletion}</div>
+      <div class="w-[6ch] text-right">{priceStr(model.pricePrompt)}</div>
+      <div class="w-[6ch] text-right mr-2">{priceStr(model.priceCompletion)}</div>
     {/snippet}
   </ListBox>
 </form>

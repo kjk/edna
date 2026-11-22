@@ -313,17 +313,20 @@ We don't charge for AI but AI providers do.
 ![Ask AI enter key](/help-ask-ai-api-key.png)
 
 We support:
-- [OpenAI](openai.com) for ChatGPT etc. Read how to [get OpenAI key](#getting-openai-api-key)
+- [OpenAI](https://openai.com) for ChatGPT etc. Read how to [get OpenAI key](#getting-openai-api-key)
+- [Anthropic](https://anthropic.com) for Claude. Read how to [get Anthropic key](#getting-anthropic-api-key)
 - [xAI](https://x.ai/) for Grok. Read how to [get xAI key](#getting-xai-(grok)-api-key)
-- [OpenRouter](https://openrouter.ai/) for all models (including OpenAI / xAI models). Read how to [get OpenRouter key](#getting-openrouter-api-key)
+- [OpenRouter](https://openrouter.ai/) for models from many providers (including OpenAI, Anthropic and xAI models). Read how to [get OpenRouter key](#getting-openrouter-api-key)
 
 We recommend creating a unique API key for Edna.
 
-If you provide both xAI/OpenAI API key and OpenRouter API key, we'll use xAI/OpenAI.
+You can provide keys for several providers. The model picker shows models available with each key; the same model can be listed for its provider and for OpenRouter.
 
 ## AI Model Picker
 
-We support over 200 AI models. You can pick the model using picker in upper right corner.
+You can pick the model using picker in upper right corner.
+
+The list of models is downloaded from each provider for which you entered an API key, and refreshed once a day, so new models show up automatically. If the model you used is no longer available, we pick the closest available model.
 
 ![Ask AI models](/help-ask-ai-pick-model.png)
 
@@ -337,7 +340,7 @@ There's a fee for the size of your question (input tokens) and size of the respo
 
 Token is pretty much a word so think "number of words in the question or response".
 
-We show the prices per million input tokens and million output tokens on the right side of the model picker.
+For OpenRouter models we show the prices per million input tokens and million output tokens on the right side of the model picker. Other providers don't tell us their prices: see their websites.
 
 ## Free models
 
@@ -355,11 +358,19 @@ You need to create an account and setup billing. OpenAI charges for usage of API
 
 They charge per input tokens and output tokens. A token is more or less a word.
 
-To make it easier to compare prices, we show the price for million input tokens and a million output tokens in [AI model picker](#ai-model-picker).
-
 API keys are separate from ChatGPT subscription. Confusing, I know, but I didn't make the rules.
 
 You can also use OpenRouter API key (they charge ~5% on top of OpenAI prices).
+
+## Getting Anthropic API key
+
+To use Anthropic (Claude) models you need to obtain API key from [Anthropic Console](https://console.anthropic.com/settings/keys).
+
+You need to create an account and setup billing. Anthropic charges for usage of API calls so you don't pay if you don't use the API.
+
+API keys are separate from Claude subscription.
+
+You can also use OpenRouter API key.
 
 ## Getting xAI (Grok) API Key
 
@@ -368,8 +379,6 @@ To use xAI models you need to obtain API key from [xAI](https://console.x.ai/), 
 You need to create an account and setup billing. xAI charges for usage of API calls so you don't pay if you don't use the API.
 
 They charge per input tokens and output tokens. A token is more or less a word.
-
-To make it easier to compare prices, we show the price for million input tokens and a million output tokens in [AI model picker](#ai-model-picker).
 
 API keys are separate from Grok subscription. Confusing, I know, but I didn't make the rules.
 
