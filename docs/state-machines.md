@@ -35,8 +35,12 @@ the mounted root component (`appSvelte` in `main.ts`: `App` or `AskFSPermissions
 | `LS` | no dir handle in IndexedDB; `storageFS` undefined |
 | `DIR_OK` | handle stored, read-write permission granted, `storageFS` = handle |
 | `DIR_NOPERM` | handle stored, permission not granted; `AskFSPermissions` mounted |
-| `DIR_ERROR` | handle stored but directory can't be read (deleted, unmounted) |
-| `MIGRATING` | LS → FS migration in progress (`switchToStoringNotesOnDisk`) |
+| `DIR_ERROR` | handle stored but directory can't be read (deleted, unmounted); `AskFSPermissions` mounted with `error` |
+| `MIGRATING` | LS → FS migration in progress (`switchToStoringNotesOnDisk`, holds the storage-op lock `storageOpInProgress`) |
+
+`boot()` calls are serialized (`bootQueue` in `main.ts`) and always unmount the previous root
+component (`mountRoot`). Storage operations are refused while another Edna instance is open
+(`instances.ts`, `App checkSingleInstance`).
 
 Invariants:
 - **S-I1** while `App` is mounted, `storageFS` is the store `App` loaded its notes from.
@@ -51,10 +55,15 @@ Invariants:
 | boot | handle, dir unreadable | – | `DIR_ERROR` | `main.ts boot` |
 | boot | no handle | – | `LS` | `main.ts boot` |
 | `DIR_NOPERM` | Allow | granted | `DIR_OK` (re-boot) | `AskFSPermissions` |
+| `DIR_ERROR` | Try again | – | re-boot | `AskFSPermissions` |
 | `DIR_NOPERM`/`DIR_ERROR` | Pick another directory | picked | re-boot | `AskFSPermissions`, `pickAnotherDirectory` |
-| `DIR_*` | Switch to browser storage | – | `LS` (re-boot) | `App switchToBrowserStorage` |
-| `LS` | Move notes to directory | picked, no other op | `MIGRATING` → `DIR_OK` | `App storeNotesOnDisk`, `notes.ts switchToStoringNotesOnDisk` |
-| any | Switch to notes in directory | picked | `DIR_OK` (re-boot) | `App pickAnotherDirectory2` |
+| `DIR_*` | Switch to browser storage | single instance; current note saved | `LS` (re-boot) | `App switchToBrowserStorage` |
+| `LS` | Move notes to directory | single instance, no other op, picked | `MIGRATING` → `DIR_OK` (re-boot); LS notes removed only after all were written | `App storeNotesOnDisk`, `notes.ts switchToStoringNotesOnDisk` |
+| `MIGRATING` | failure | – | `LS` (LS notes untouched) | `switchToStoringNotesOnDisk` |
+| any | Switch to notes in directory | single instance; current note saved; picked | `DIR_OK` (re-boot) | `App pickAnotherDirectory2` |
+
+The editor refuses to save a note to a storage other than the one it was loaded from
+(`MultiBlockEditor storageChanged`), which enforces S-I4 when storage changes under it.
 
 ## M2. Workspace encryption (FS only)
 
@@ -91,7 +100,7 @@ Prompt: `getPasswordFromUser` (`App.svelte`) shows `EnterDecryptPassword`.
 | State | Meaning |
 |---|---|
 | `NONE` | nothing remembered |
-| `PROMPTING` | password dialog open, one shared pending request |
+| `PROMPTING` | password dialog open, one shared pending request (`pendingPasswordHash`) |
 | `VERIFIED` | remembered; decrypts the directory's `.encr` notes |
 
 Invariants:
@@ -130,7 +139,8 @@ Invariants:
 ## M5. Open note: editor vs app state
 
 Five pieces of state must agree:
-- **E** `currentNoteName` in `MultiBlockEditor.svelte` — the note saves go to
+- **E** `loader.current` (`NoteLoader` in `editor/note-loader.ts`, owned by
+  `MultiBlockEditor.svelte`) — the note saves go to
 - **C** the text in the editor
 - **T** `settings.currentTab` (and derived `appState.currentNoteName`)
 - **U** URL hash / browser history entry
@@ -140,7 +150,7 @@ Five pieces of state must agree:
 |---|---|
 | `HOME` | `T` = home tab, editor unmounted |
 | `SHOWING(A)` | E = T = A, C = content of A |
-| `LOADING(A→B)` | editor still shows A (E = A), load of B in flight |
+| `LOADING(A→B)` | editor still shows A (E = A), load of B in flight; `NoteLoader.gen` identifies the latest load |
 
 Invariants:
 - **O-I1** E is always the note whose content is in the editor (C). E changes only together
@@ -216,8 +226,16 @@ Invariants:
 
 ## M9. Code / function run
 
-States: `IDLE`, `RUNNING(note, block)`. Representation: `runInProgress` flag in `App.svelte`
-(plus a modal message).
+States: `IDLE`, `RUNNING(note, document)`. Representation: `runInProgress` and
+`RunContext` (`withRun` in `App.svelte`): the editor, its `contentGen` (identifies the shown
+document) and the note name. The editor is read-only while code runs.
+
+| From | Event | Guard | To |
+|---|---|---|---|
+| `IDLE` | run block / function | not read-only, no run in progress | `RUNNING` |
+| `RUNNING` | done, same document | – | output inserted after active block → `IDLE` |
+| `RUNNING` | done, user switched notes | – | output appended to the run's note via storage → `IDLE` |
+| `RUNNING` | error | – | error shown → `IDLE` |
 
 Invariants:
 - **R-I1** at most one run at a time.
@@ -227,10 +245,13 @@ Invariants:
 
 ## M10. Async dialogs
 
-- **Find in notes**: `IDLE` → `SEARCHING(run id)` → `DONE`. Invariants: only the latest search
-  writes results (**F-I1**); closing the dialog stops the search (**F-I2**).
+- **Find in notes**: `IDLE` → `SEARCHING(searchId)` → `DONE`. Invariants: only the latest search
+  writes results (**F-I1**); closing the dialog stops the search (**F-I2**). A new search
+  increments `searchId`; loops of older searches stop at their next await.
 - **Ask AI**: `IDLE` → `REQUESTING` → `FINISHED` / `ERROR`. Invariants: closing aborts the
-  request (**A-I1**); the inserted header names the model that produced the response (**A-I2**).
+  request (**A-I1**, `AbortController`); the inserted header names the model that produced the
+  response (**A-I2**, `responseModelName`); a response that can't be inserted keeps the dialog
+  open with an error.
 - **Language auto-detection**: request posted per block; reply applied only if still
   relevant (Levenshtein check).
 - **Currency rates**: `NOT_LOADED` → `LOADED`; refreshed every 4 h.
@@ -254,6 +275,8 @@ Breaks O-I1..O-I4.
 - 1e. `saveEditorState` before restore wrote the shown note's selection/folds into another
   note's metadata.
 - 1f. Going Home during a load: `didLoadNote` called on an unmounted editor (TypeError).
+- 1g. Rename with a pending auto-save: the save could fire during the rename and re-create
+  the old note (needs a slow file system).
 
 ### Issue 2 — Save bookkeeping loses edits
 Breaks D-I1..D-I3.
@@ -357,11 +380,29 @@ other tabs are open.
 - 14c. Editor find panel's mouse-tracking suppression overwritten by dialog close.
 - 14d. Concurrent metadata writes can complete out of order *(suspected)*.
 
+## Open (not fixed)
+
+Lower impact or suspected; not fixed yet:
+- Deleting a note (from the note selector) while that note is loading: the load still
+  shows it and edits re-create it.
+- URL / history: the Home tab doesn't update the URL (reloading on Home re-opens the note
+  from the hash); Back/Forward through notes adds tabs.
+- One shared modal message for overlapping operations (e.g. "Loading..." clears
+  "running code").
+- Language auto-detect worker replies are applied to the active block if its content is
+  similar (Levenshtein), not by block identity; can rarely change another block.
+- Metadata write failures in a directory are logged but not shown; in-memory metadata and
+  the file can diverge.
+- A password prompt needed during boot from the permissions screen (before `App` is
+  mounted) has no UI to show it (suspected; e.g. creating default notes in an encrypted
+  directory).
+- Two Edna tabs editing the same note: last writer wins (mitigated by the warning, issue 13).
+
 ## Status
 
 | Issue | Status |
 |---|---|
-| 1 Note switching | fixed (1a–1f): `NoteLoader` (`editor/note-loader.ts`), `tests/browser/note-loader.test.ts` |
+| 1 Note switching | fixed (1a–1g): `NoteLoader` (`editor/note-loader.ts`), `tests/browser/note-loader.test.ts` |
 | 2 Save bookkeeping | fixed (2a–2c), `tests/browser/save.test.ts` |
 | 3 Create / move overwrites | fixed (3a–3c), `tests/browser/notes.test.ts` |
 | 4 Dialog invariants | fixed (4a–4e), `tests/browser/app.test.ts` (4a, 4b, 4d) |
