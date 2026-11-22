@@ -186,13 +186,13 @@ or:
 - `Mod + K` to open note switcher
 - type name of the note to create
 - `Enter` to create if the name doesn't match any existing note
-- `Mod + Enter` to create if the name partially matches an existing note
+- `Ctrl + Enter` to create if the name partially matches an existing note
 
 Or: context menu: `Create New note`.
 
 ## Create a new scratch note
 
-`Alt + N` to create temporary scratch note. We'll pick a unique name `scratch-<n>`
+`Alt + N` (not on Mac) to create temporary scratch note. We'll pick a unique name `scratch-<n>`
 
 ## Archive and unarchive note
 
@@ -218,7 +218,7 @@ Context menu: `This Note / Delete` or:
 
 - `Mod + K` for note switcher
 - select a note with arrow key or by typing a partial name match
-- `Mod + Delete` or `Mod + Backspace` to delete selected note
+- `Ctrl + Delete` or `Ctrl + Backspace` to delete selected note
 
 A `scratch` note cannot be deleted.
 
@@ -323,7 +323,7 @@ If you provide both xAI/OpenAI API key and OpenRouter API key, we'll use xAI/Ope
 
 ## AI Model Picker
 
-We support 169 AI models. You can pick the model using picker in upper right corner.
+We support over 200 AI models. You can pick the model using picker in upper right corner.
 
 ![Ask AI models](/help-ask-ai-pick-model.png)
 
@@ -778,7 +778,7 @@ Each block has a type (markdown, text, JavaScript and 40+ programming languages)
 
 Blocks can be folded so that you an focus on the block you're currently editing.
 
-You can quickly navigate between blocks with `Ctrl + B`.
+You can quickly navigate between blocks with `Mod + B`.
 
 ## Scratch note
 
@@ -794,7 +794,7 @@ Writing is Edna's core functionality so I strive to use maxium of screen space f
 
 At the same time Edna is packed with functionality accessible via several paths:
 * context menu
-* [command palette](#command-palette) (`Ctrl + Shift + K`)
+* [command palette](#command-palette) (`Mod + Shift + K`)
 * navigation bar at the top
   * toggling sidebar
   * menu drop-down
@@ -825,7 +825,7 @@ Lots of [keyboard shortcuts](#keyboard-shortcuts).
 
 ### Command Palette
 
-[Command palette](#command-palette) allows quick access to all functionality (`Ctrl + Shift + K`).
+[Command palette](#command-palette) allows quick access to all functionality (`Mod + Shift + K`).
 
 ## AI chat built in
 

@@ -43,8 +43,8 @@ function getKeyHelp(platform = platformName): string[][] {
     [`Alt + Shift + F`, "Format block content"],
     [``, "Supports Go, JSON, JavaScript, HTML, CSS and Markdown"],
     [`Mod + E`, "Smart Code Run"],
-    [`Alt + Shift + R`, "Run function with block content"],
     [``, "Supports Go"],
+    [`Alt + Shift + R`, "Run function with block content"],
     [`Mod + F`, "Search / replace within a note"],
     [`Mod + Shift + F`, "Search in all notes"],
   ];
