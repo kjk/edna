@@ -11,7 +11,6 @@ import {
   clearStorageFS,
   createDefaultNotes,
   dbGetDirHandle,
-  ensureValidNoteNamesFS,
   isSystemNoteName,
   loadNoteNames,
   preLoadAllNotes,
@@ -45,10 +44,6 @@ export async function boot() {
     console.log("storing data in localStorage");
   }
 
-  if (dh) {
-    // TODO: can probably remove
-    await ensureValidNoteNamesFS(dh);
-  }
   await upgradeMetadata();
 
   let noteNames = await loadNoteNames();

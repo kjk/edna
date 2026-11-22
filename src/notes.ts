@@ -26,7 +26,6 @@ import {
   fsFileHandleWriteText,
   fsReadBinaryFile,
   fsReadTextFile,
-  fsRenameFile,
   fsWriteBlob,
   fsWriteTextFile,
   openDirPicker,
@@ -340,26 +339,6 @@ export function noteNameFromFileNameFS(fileName: string): string | null {
   let encodedName = trimEdnaExt(fileName);
   let name = fromFileName(encodedName);
   return name;
-}
-
-export async function ensureValidNoteNamesFS(dh: FileSystemDirectoryHandle): Promise<void> {
-  let fsEntries = await readDir(dh);
-  for (let e of fsEntries.dirEntries) {
-    if (e.isDir) {
-      continue;
-    }
-    let oldName = e.name;
-    if (!isEdnaFile(oldName)) {
-      continue;
-    }
-    if (isValidFileName(oldName)) {
-      continue;
-    }
-    let newName = toFileName(oldName);
-    // note: if newName already exists, it'll be over-written
-    fsRenameFile(dh, newName, oldName);
-    console.log(`renamed '${oldName}' => '${newName}`);
-  }
 }
 
 export async function forEachNoteFileFS(
