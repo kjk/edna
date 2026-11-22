@@ -4,7 +4,6 @@ import { appState } from "./appstate.svelte";
 // @ts-ignore
 import { clearModalMessage, showModalMessageHTML } from "./components/ModalMessage.svelte";
 import {
-  blockHdrMarkdown,
   isTabHome,
   kBuiltInFunctionsNoteName,
   kDailyJournalNoteName,
@@ -44,6 +43,7 @@ import {
   renameNoteInMetadata,
 } from "./metadata";
 import { mergeMetadata, normalizeMetadata } from "./metadata-merge";
+import { fixUpNoteContent } from "./note-content";
 import { noteNameError } from "./note-name";
 import { getSettings } from "./settings.svelte";
 import { incNoteCreateCount, incNoteDeleteCount, incNoteSaveCount } from "./state";
@@ -497,19 +497,7 @@ export function startsWithBlockHeader(s: string): boolean {
   return s.startsWith("\n∞∞∞");
 }
 
-// in case somehow a note doesn't start with the block header, fix it up
-export function fixUpNoteContent(s: string | null): string {
-  // console.log("fixUpNote:", content)
-  if (s === null) {
-    // console.log("fixUpNote: null content")
-    return blockHdrMarkdown;
-  }
-  if (!s.startsWith("\n∞∞∞")) {
-    // console.log("fixUpNote: added header to content", s.substring(0, 80));
-    s = blockHdrMarkdown + s;
-  }
-  return s;
-}
+export { fixUpNoteContent };
 
 function getSystemNoteContent(name: string): string {
   console.log("getSystemNoteContent:", name);
@@ -724,7 +712,7 @@ function loadNoteLS(name: string): string | undefined {
     key = kLSKeyEncrPrefix + name;
   }
   let res = localStorage.getItem(key);
-  return res ? res : undefined;
+  return res ?? undefined;
 }
 
 // file names are case-insensitive on macOS and Windows so "Foo" and "foo"
@@ -764,9 +752,10 @@ export async function loadNote(name: string): Promise<string | undefined> {
       }
     }
   }
-  if (!res) {
+  if (res === undefined || res === null) {
     return;
   }
+  // also an empty note: it must be a valid document (U9)
   return fixUpNoteContent(res);
 }
 

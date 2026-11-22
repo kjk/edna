@@ -476,7 +476,10 @@ to state machines). Ordered by impact.
 - **U9. Note content starts with a valid delimiter.** `fixUpNoteContent` only checked the
   `\n∞∞∞` prefix; `\n∞∞∞Text\n`, Heynote `;created=` headers, a missing trailing newline, an
   empty file or CRLF line endings produced a document with zero blocks (no delimiter
-  protection, `getActiveNoteBlock()!` crashes) or an extra block.
+  protection, `getActiveNoteBlock()!` crashes) or an extra block. **Fixed**: `fixUpNoteContent`
+  (`note-content.ts`) normalizes line endings, repairs delimiter-like lines (upper case,
+  Heynote metadata, missing leading / trailing newline) and validates the first delimiter
+  with the real grammar; empty notes get a header.
 - **U10. Adjacent delimiters are separated by a newline.** Cut-line (Mod-X without selection)
   cut `line.to + 1`, eating the next delimiter's leading `\n`; the next block merged and its
   delimiter became visible text.
