@@ -1913,13 +1913,14 @@
     getEditor().focus();
   }
 
-  function insertAskAIResponse(s: string) {
+  // returns false if the response couldn't be inserted
+  function insertAskAIResponse(s: string): boolean {
     let view = getEditorView();
-    if (isReadOnly(view)) {
+    if (!view || isReadOnly(view)) {
       return false;
     }
     let text = blockHdrMarkdown + s;
-    insertAfterActiveBlock(view, text);
+    return insertAfterActiveBlock(view, text);
   }
 
   export async function runBlockContent(editor: MultiBlockEditor): Promise<boolean> {

@@ -21,7 +21,7 @@
   interface Props {
     close: () => void;
     startText: string;
-    insertResponse: (s: string) => void;
+    insertResponse: (s: string) => boolean;
   }
   let { close, startText, insertResponse }: Props = $props();
 
@@ -120,17 +120,35 @@
     return "";
   }
 
+  // aborted when the dialog closes (A-I1)
+  let abortController: AbortController | undefined;
+  $effect(() => {
+    return () => {
+      abortController?.abort();
+    };
+  });
+
+  // name of the model that produced responseText (A-I2)
+  let responseModelName = "";
+
   async function askai() {
     err = "";
     responseText = "";
+    responseModelName = aiModelName;
     let baseURL = getApiProviderBaseURL(apiProviderToUse);
+    abortController?.abort();
+    abortController = new AbortController();
+    let signal = abortController.signal;
     try {
       reqFinished = false;
       reqInProgress = true;
-      await streamChatGPTResponse(questionText, maybeValidApiKey, baseURL);
+      await streamChatGPTResponse(questionText, maybeValidApiKey, baseURL, signal);
       // looks like a valid key, remember it
       reqFinished = true;
     } catch (e: any) {
+      if (signal.aborted) {
+        return;
+      }
       console.error(e);
       console.error(e.cause ? e.cause : "");
       err = e.toString();
@@ -193,12 +211,15 @@
   let askAIDisabled = $derived(!hasAPIKey || reqInProgress);
 
   function insertRsp() {
-    let s = "# Response from " + aiModelName + "\n\n" + responseText + "\n";
-    insertResponse(s);
+    let s = "# Response from " + responseModelName + "\n\n" + responseText + "\n";
+    if (!insertResponse(s)) {
+      err = "Can't insert the response: the note is read-only";
+      return;
+    }
     close();
   }
 
-  async function streamChatGPTResponse(prompt: string, apiKey: string, baseURL: string) {
+  async function streamChatGPTResponse(prompt: string, apiKey: string, baseURL: string, signal: AbortSignal) {
     // console.warn("streamChatGPTResponse");
 
     if (forceBadApiKey) {
@@ -234,6 +255,7 @@
     }
 
     const response = await fetch(baseURL, {
+      signal,
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
