@@ -1,7 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import { appState } from "../appstate.svelte";
-  import { isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { escapeHTML } from "../util";
+  import { findNoteIgnoreCase, isSystemNoteName, sanitizeNoteName } from "../notes";
 
   interface Props {
     onclose: () => void;
@@ -25,8 +25,8 @@
     if (isSystemNoteName(name)) {
       return false;
     }
-    let noteNames = appState.allNotes;
-    return !noteNames.includes(name);
+    let existing = findNoteIgnoreCase(name);
+    return !existing || existing === oldName;
   });
 
   let renameError = $derived.by(() => {
@@ -34,9 +34,9 @@
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = appState.allNotes;
-    if (noteNames.includes(name)) {
-      return `note <span class="font-bold">${name}</span> already exists`;
+    let existing = findNoteIgnoreCase(name);
+    if (existing && existing !== oldName) {
+      return `note <span class="font-bold">${escapeHTML(existing)}</span> already exists`;
     }
     return "";
   });

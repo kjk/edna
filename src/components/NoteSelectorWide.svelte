@@ -92,7 +92,7 @@
     let name = sanitizeNoteName(filter);
     canCreate = len(name) > 0;
     for (let i of itemsFiltered) {
-      if (i.name === name) {
+      if (i.name.toLowerCase() === name.toLowerCase()) {
         canCreate = false;
         break;
       }

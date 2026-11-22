@@ -201,7 +201,7 @@
     canCreateWithEnter = !(len(name) == 0) && !canOpenSelected;
     canCreate = len(name) > 0;
     for (let i of filteredNoteInfos) {
-      if (i.name === name) {
+      if (i.name.toLowerCase() === name.toLowerCase()) {
         canCreate = false;
         canCreateWithEnter = false;
         break;

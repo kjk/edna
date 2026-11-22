@@ -1,7 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import { appState } from "../appstate.svelte";
-  import { sanitizeNoteName } from "../notes";
+  import { findNoteIgnoreCase, sanitizeNoteName } from "../notes";
+  import { escapeHTML } from "../util";
 
   interface Props {
     onclose: () => void;
@@ -16,20 +16,17 @@
     if (name === "") {
       return false;
     }
-    let noteNames = appState.allNotes;
-    return !noteNames.includes(name);
+    return !findNoteIgnoreCase(name);
   });
 
-  let renameError = $derived.by(() => {
+  let createError = $derived.by(() => {
     let name = sanitizeNoteName(newName);
-    console.log(`renameError: newName: '${newName}', name: '${name}`);
     if (name === "") {
       return "name cannot be empty";
     }
-    let noteNames = appState.allNotes;
-    if (noteNames.includes(name)) {
-      console.log("already exists");
-      return `note <span class="font-bold">${name}</span> already exists`;
+    let existing = findNoteIgnoreCase(name);
+    if (existing) {
+      return `note <span class="font-bold">${escapeHTML(existing)}</span> already exists`;
     }
     return "";
   });
@@ -64,7 +61,7 @@
     {#if canCreate}
       &nbsp;
     {:else}
-      <span class="text-red-500">{@html renameError}</span>
+      <span class="text-red-500">{@html createError}</span>
     {/if}
   </div>
   <div class="flex justify-end mt-2">

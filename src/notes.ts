@@ -581,6 +581,13 @@ function loadNoteLS(name: string): string | undefined {
   return res ? res : undefined;
 }
 
+// file names are case-insensitive on macOS and Windows so "Foo" and "foo"
+// would be the same file. Returns existing note whose name differs only by case
+export function findNoteIgnoreCase(name: string): string | undefined {
+  let nameLC = name.toLowerCase();
+  return appState.allNotes.find((n) => n.toLowerCase() === nameLC);
+}
+
 export function noteExists(name: string): boolean {
   let notes = appState.allNotes;
   return notes.includes(name) || isSystemNoteName(name);
@@ -748,6 +755,11 @@ export async function deleteNote(name: string) {
 }
 
 export async function renameNote(oldName: string, newName: string, content: string) {
+  let dh = getStorageFS();
+  if (dh && oldName !== newName && oldName.toLowerCase() === newName.toLowerCase()) {
+    await renameNoteCaseOnlyFS(dh, oldName, newName, content);
+    return;
+  }
   await createNoteWithName(newName, content);
   // update metadata and history before deleteNote() because it'll
   // remove from history and metadata
@@ -759,6 +771,26 @@ export async function renameNote(oldName: string, newName: string, content: stri
     settings.tabs[idx] = newName;
   }
   await deleteNote(oldName);
+}
+
+// on case-insensitive file systems (macOS, Windows) "Foo" and "foo" are the same
+// file, so creating the new note and deleting the old one would delete the note
+async function renameNoteCaseOnlyFS(dh: FileSystemDirectoryHandle, oldName: string, newName: string, content: string) {
+  await fsDeleteFile(dh, notePathFromNameFS(oldName));
+  try {
+    await writeNoteFS(dh, newName, content);
+  } catch (e) {
+    await writeNoteFS(dh, oldName, content);
+    throw e;
+  }
+  await renameNoteInMetadata(oldName, newName);
+  renameNoteInHistory(oldName, newName);
+  let settings = getSettings();
+  let idx = settings.tabs.indexOf(oldName);
+  if (idx >= 0) {
+    settings.tabs[idx] = newName;
+  }
+  await loadNoteNames();
 }
 
 async function migrateNote(noteName: string, diskNoteNames: string[], dh: FileSystemDirectoryHandle) {
