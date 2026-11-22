@@ -2,6 +2,7 @@
   import { tick } from "svelte";
   import hljs from "highlight.js";
   import markdownIt, { type MarkdownIt } from "markdown-it";
+  import { parseChatStreamData } from "../ai-stream";
   import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";
@@ -288,17 +289,8 @@
           const data = line.slice(6);
           if (data === "[DONE]") return;
 
-          try {
-            const parsed = JSON.parse(data);
-            const content = parsed.choices[0]?.delta?.content;
-            if (content) {
-              responseText += content;
-              // console.log(content);
-            }
-          } catch (e) {
-            // Skip invalid JSON
-            console.error(e);
-          }
+          // throws on an error sent in the stream
+          responseText += parseChatStreamData(data);
         }
       }
     }
