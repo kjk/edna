@@ -79,3 +79,24 @@ These are compatibility names. Internals may be grouped differently.
 - `theme/font-theme` — `setDefaultFontFamilyAndSize`, `isMonospaceFont`, `getFontTheme`.
 - `theme/light` — `heynoteLight`.
 - `todo-checkbox` — `todoCheckboxPlugin`, `toggleCheckbox`.
+
+## Input compatibility
+
+| Gesture | Action |
+| --- | --- |
+| Mod + C/X/V/A | Copy, cut, paste, select active block then entire note |
+| Tab / Shift + Tab | Insert indentation or indent/outdent selection |
+| Alt / Mod + Enter | Add before / after active block |
+| Alt / Mod + Shift + Enter | Add before first / after last and scroll down |
+| Mod + Alt + Enter | Split at cursor |
+| Mod + Shift + Space | Toggle Markdown tasks |
+| Alt + Up/Down | Move selected lines |
+| Mod + Alt + Up/Down | Add cursor above/below |
+| Mod + Alt + Shift + Up/Down | Move block |
+| Alt + Shift + D/T | Insert localized date and time / 24-hour time followed by a space |
+| Mod + Up/Down, Ctrl + Up/Down | Block and paragraph motion, also support Shift to extend |
+| Mod + Shift + [ or ] | Fold/unfold code |
+| Mod + Alt + [, ] or period | Fold, unfold, toggle block |
+| Mod + Shift + Z | Redo, including on Windows |
+
+Emacs mode layers familiar bindings over these. Ctrl+B/F, P/N and A/E move by character, line and line boundary. Ctrl+Left/Right moves by word. Ctrl+Space toggles the mark, Ctrl+G cancels, and movement extends while marking. Ctrl+D/H delete a character, Ctrl+K kills to end of line, Ctrl+O splits, Ctrl+T transposes grapheme clusters within block boundaries, Ctrl+V pages down, Ctrl+Y/W paste/cut and configured Meta+W copies. Ctrl+Shift+minus and Ctrl+period undo and redo.
