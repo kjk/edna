@@ -1,5 +1,5 @@
 import { markdown, markdownKeymap } from "@codemirror/lang-markdown";
-import { ensureSyntaxTree, foldEffect, indentUnit } from "@codemirror/language";
+import { ensureSyntaxTree, foldEffect } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, Prec, Transaction } from "@codemirror/state";
 import { keymap as cmKeymap, drawSelection, EditorView, lineNumbers } from "@codemirror/view";
 import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
@@ -9,6 +9,7 @@ import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs";
 import { createDynamicCloseBracketsExtension } from "./extensions";
+import { indentationExtension } from "./indentation";
 import { foldGutterExtension, moveSelectionOutOfNewFolds, unfoldEverything } from "./fold-gutter";
 import { ednaKeymap, keymapFromSpec } from "./keymap";
 import { multiBlock } from "./new-parser/language";
@@ -115,9 +116,7 @@ export class MultiBlockEditor {
     this.setDefaultBlockLanguage(defaultBlockToken || "text", defaultBlockAutoDetect);
 
     const makeTabState = (useTabs: boolean, tabSize: number) => {
-      const indentChar = useTabs ? "\t" : " ".repeat(tabSize);
-      const v = indentUnit.of(indentChar);
-      return this.tabsCompartment.of(v);
+      return this.tabsCompartment.of(indentationExtension(useTabs, tabSize));
     };
 
     let updateListenerExtension = EditorView.updateListener.of((update) => {
@@ -349,10 +348,8 @@ export class MultiBlockEditor {
 
   setTabsState(useTabs: boolean, tabSpaces: number) {
     if (!this.view) return;
-    const indentChar = useTabs ? "\t" : " ".repeat(tabSpaces);
-    const v = indentUnit.of(indentChar);
     this.view.dispatch({
-      effects: this.tabsCompartment.reconfigure(v),
+      effects: this.tabsCompartment.reconfigure(indentationExtension(useTabs, tabSpaces)),
     });
   }
 }

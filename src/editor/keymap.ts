@@ -1,4 +1,5 @@
-import { indentLess, indentMore, redo } from "@codemirror/commands";
+import { indentLess, redo } from "@codemirror/commands";
+import { insertIndentation } from "./indentation";
 import { foldCode, unfoldCode } from "@codemirror/language";
 import { keymap } from "@codemirror/view";
 import {
@@ -55,7 +56,7 @@ export function ednaKeymap(editor: MultiBlockEditor) {
     ["Mod-c", copyCommand(editor)],
     ["Mod-v", pasteCommand],
     ["Mod-x", cutCommand(editor)],
-    ["Tab", indentMore],
+    ["Tab", insertIndentation],
     ["Shift-Tab", indentLess],
     ["Alt-Shift-Enter", addNewBlockBeforeFirst],
     ["Mod-Shift-Enter", addNewBlockAfterLast],

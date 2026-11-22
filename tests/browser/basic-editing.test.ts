@@ -72,7 +72,8 @@ describe("Basic editing (browser tests)", () => {
     await userEvent.keyboard("ello");
     await userEvent.keyboard("{Enter}");
     await userEvent.keyboard("{Tab}");
-    expect(getBlockContent(editor, 0)).toBe("    Hello\n    ");
+    // Tab inserts indentation at the cursor (aligned to tab stop), not at line start
+    expect(getBlockContent(editor, 0)).toBe("H   ello\n    ");
   });
 
   it("indentation is preserved on enter in plain text block", async () => {
@@ -90,5 +91,23 @@ describe("Basic editing (browser tests)", () => {
     editor.view.focus();
     await userEvent.keyboard("{Enter}");
     expect(getBlockContent(editor, 0)).toBe("def func():\n    ");
+  });
+
+  it("Tab inserts spaces up to the next tab stop at the cursor", async () => {
+    const { editor } = te;
+    await userEvent.keyboard("ab");
+    await userEvent.keyboard("{Tab}");
+    await userEvent.keyboard("c");
+    // tabSize is 4: "ab" is at column 2 so 2 spaces are inserted
+    expect(getBlockContent(editor, 0)).toBe("ab  c");
+  });
+
+  it("Tab with a selection indents selected lines", async () => {
+    const { editor } = te;
+    await userEvent.keyboard("ab");
+    const from = editor.getBlocks()[0]!.contentFrom;
+    editor.view.dispatch({ selection: { anchor: from, head: from + 2 } });
+    await userEvent.keyboard("{Tab}");
+    expect(getBlockContent(editor, 0)).toBe("    ab");
   });
 });
