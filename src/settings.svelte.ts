@@ -188,6 +188,11 @@ function removeUnknownAiModels(modelIDs: string[]): string[] {
   return validModels;
 }
 
+const mediaMatch = window.matchMedia("(prefers-color-scheme: dark)");
+// OS dark mode, for "system" theme
+// note: can't be in appState because appstate.svelte.ts imports this module
+let systemTheme = $state({ isDark: mediaMatch.matches });
+
 let lastSettingsRaw: any;
 let settingsLoaded = false;
 
@@ -237,13 +242,10 @@ export function getSettings(): Settings {
   return appState.settings;
 }
 
-const mediaMatch = window.matchMedia("(prefers-color-scheme: dark)");
-appState.systemThemeIsDark = mediaMatch.matches;
-
 // resolves "system" theme to "light" or "dark"
 export function resolveTheme(theme: string | undefined): "light" | "dark" {
   if (!theme || theme === "system") {
-    return appState.systemThemeIsDark ? "dark" : "light";
+    return systemTheme.isDark ? "dark" : "light";
   }
   return theme === "dark" ? "dark" : "light";
 }
@@ -313,7 +315,7 @@ export function getOverlayScrollbarOptions() {
 }
 
 mediaMatch.addEventListener("change", () => {
-  appState.systemThemeIsDark = mediaMatch.matches;
+  systemTheme.isDark = mediaMatch.matches;
   if (appState.settings.theme === "system") {
     updateWebsiteTheme();
   }
