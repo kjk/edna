@@ -368,7 +368,7 @@ other tabs are open.
 | 5 Password handling | fixed (5a–5c), `tests/browser/password.test.ts` |
 | 6 Encrypt / decrypt all | fixed (6a–6c), `tests/browser/encryption.test.ts` (6a, 6c); 6b by `App runStorageOp` (save + read-only editor), no automated test |
 | 7 Migration | fixed (7a–7f), `tests/browser/migration.test.ts`; 7b by `App runStorageOp` + editor refuses to save to a different storage (no automated test) |
-| 8 Storage switch / boot | open |
+| 8 Storage switch / boot | fixed (8a–8c), `tests/browser/boot.test.ts` (8b), `tests/browser/encryption.test.ts` (8c); 8a by saving before switching + editor refuses to save to a different storage |
 | 9 Code runs | open |
 | 10 Tabs / navigation | open |
 | 11 Find in notes | open |

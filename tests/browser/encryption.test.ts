@@ -9,6 +9,7 @@ import {
   hasUnencryptedNotes,
   loadNote,
   loadNoteNames,
+  setStorageFS,
 } from "../../src/notes";
 import { listFiles, setupFSStorage } from "./fs-utils";
 
@@ -54,5 +55,23 @@ describe("encrypt / decrypt all notes", () => {
     expect(hasEncryptedNotes()).toBe(false);
     expect(await listFiles(dh)).toEqual(["__metadata.edna.json", "a.edna.txt", "b.edna.txt"]);
     expect(localStorage.getItem("edna-password")).toBeNull();
+  });
+});
+
+describe("encryption is a property of the directory", () => {
+  it("a password remembered for another directory doesn't encrypt new notes", async () => {
+    const { dh } = await setupFSStorage();
+    const a = await dh.getDirectoryHandle("a", { create: true });
+    const b = await dh.getDirectoryHandle("b", { create: true });
+    setStorageFS(a);
+    await loadNoteNames();
+    await createNoteWithName("x", blockHdrMarkdown + "x");
+    await encryptAllNotes("goodpassword");
+    expect(localStorage.getItem("edna-password")).toBe("goodpassword");
+
+    setStorageFS(b);
+    await loadNoteNames();
+    await createNoteWithName("y", blockHdrMarkdown + "y");
+    expect(await listFiles(b)).toEqual(["y.edna.txt"]);
   });
 });

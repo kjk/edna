@@ -996,17 +996,10 @@ export function getNotesCount(): number {
   return len(appState.allNotes);
 }
 
+// new notes are encrypted if the directory has encrypted notes. Note: not
+// based on a remembered password, which might be for a different directory (E-I5)
 export function isUsingEncryption(): boolean {
-  let dh = getStorageFS();
-  if (!dh) {
-    // no encryption for local storage
-    return false;
-  }
-  let pwdHash = getPasswordHash();
-  if (pwdHash) {
-    return true;
-  }
-  return len(encryptedNoteNames) > 0;
+  return hasEncryptedNotes();
 }
 
 // salt for hashing the password. not sure if it helps security wise

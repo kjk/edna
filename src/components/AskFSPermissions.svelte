@@ -9,6 +9,12 @@
     preLoadAllNotes,
   } from "../notes";
 
+  interface Props {
+    // set if notes in the directory couldn't be read
+    error?: string;
+  }
+  let { error = "" }: Props = $props();
+
   let dirName = $state("");
 
   $effect(() => {
@@ -47,14 +53,22 @@
 <div class="fixed inset-0 overflow-hidden bg-gray-50">
   <div class="mt-8 mx-auto px-8 py-4 flex flex-col items-center shadow-2xl bg-white text-base w-fit">
     <div class="mt-2 self-center">
-      Your're storing notes on disk in directory <span class="font-bold">{dirName}</span>
+      You're storing notes on disk in directory <span class="font-bold">{dirName}</span>
     </div>
 
-    <div>We need permission to access files in that directory.</div>
+    {#if error}
+      <div class="text-red-600">Failed to read notes in that directory: {error}</div>
+    {:else}
+      <div>We need permission to access files in that directory.</div>
+    {/if}
     <div class="flex flex-col mt-4 mb-8 text-sm">
-      <button onclick={requestPermissions} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100"
-        >Allow Edna to access files in directory <span class="font-bold">{dirName}</span></button
-      >
+      {#if error}
+        <button onclick={() => boot()} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100">Try again</button>
+      {:else}
+        <button onclick={requestPermissions} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100"
+          >Allow Edna to access files in directory <span class="font-bold">{dirName}</span></button
+        >
+      {/if}
       <button onclick={pickAnotherDirectory2} class="mt-4 px-2 py-1 border border-black hover:bg-gray-100"
         >Pick another directory with notes</button
       >

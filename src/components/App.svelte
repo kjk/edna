@@ -455,7 +455,25 @@
     }
   }
 
+  // pending edits and selection / folds of the current note must be saved to
+  // the current storage before switching storage (S-I4)
+  async function saveBeforeStorageSwitch(): Promise<boolean> {
+    if (!editorComp) {
+      return true;
+    }
+    try {
+      await editorComp.saveAll();
+      return true;
+    } catch (e) {
+      showError(`Failed to save note: ${e}`);
+      return false;
+    }
+  }
+
   async function pickAnotherDirectory2() {
+    if (!(await saveBeforeStorageSwitch())) {
+      return;
+    }
     let ok = await pickAnotherDirectory();
     if (!ok) {
       return;
@@ -665,7 +683,9 @@
   }
 
   async function switchToBrowserStorage() {
-    console.log("switchToBrowserStorage(): deleting dir handle");
+    if (!(await saveBeforeStorageSwitch())) {
+      return;
+    }
     await dbDelDirHandle();
     await boot();
   }
@@ -1382,7 +1402,7 @@
         return kMenuStatusRemoved;
       }
     } else if (mid == kCmdSwitchToLocalStorage) {
-      if (dh === null) {
+      if (!dh) {
         // currently using local storage
         return kMenuStatusRemoved;
       }

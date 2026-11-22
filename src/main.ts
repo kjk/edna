@@ -22,7 +22,26 @@ import { isDev } from "./util";
 
 let appSvelte: ReturnType<typeof mount> | undefined;
 
-export async function boot() {
+// boots are serialized: e.g. double-clicking "Allow" doesn't run two boots at once
+let bootQueue: Promise<void> = Promise.resolve();
+
+export function boot(): Promise<void> {
+  let p = bootQueue.then(bootNow);
+  bootQueue = p.catch(() => {});
+  return p;
+}
+
+function mountRoot(component: any, props: Record<string, unknown> = {}) {
+  if (appSvelte) {
+    unmount(appSvelte);
+    appSvelte = undefined;
+  }
+  const target = document.getElementById("app");
+  if (!target) return;
+  appSvelte = mount(component, { target, props });
+}
+
+async function bootNow() {
   console.log("booting");
 
   getSettings();
@@ -34,20 +53,34 @@ export async function boot() {
     if (!ok) {
       console.log("no permission to write files in directory", dh.name);
       clearStorageFS();
-      const target = document.getElementById("app");
-      if (!target) return;
-      appSvelte = mount(AskFSPermissions, { target });
+      mountRoot(AskFSPermissions);
       return;
     }
   } else {
     console.log("storing data in localStorage");
   }
 
-  await upgradeMetadata();
-
-  let noteNames = await loadNoteNames();
-  let nCreated = await createDefaultNotes(noteNames);
-  await loadNotesMetadata(); // pre-load
+  let noteNames: string[];
+  try {
+    await upgradeMetadata();
+    noteNames = await loadNoteNames();
+    let nCreated = await createDefaultNotes(noteNames);
+    if (nCreated > 0) {
+      noteNames = await loadNoteNames();
+    }
+    await loadNotesMetadata(); // pre-load
+  } catch (e) {
+    if (!dh) {
+      throw e;
+    }
+    // e.g. directory was deleted or is on a disconnected drive. Show a screen
+    // where the user can retry, pick another directory or switch to browser
+    // storage, instead of a blank app
+    console.error("failed to load notes from directory:", e);
+    clearStorageFS();
+    mountRoot(AskFSPermissions, { error: String(e) });
+    return;
+  }
 
   let settings = getSettings();
   // console.log("settings:", settings);
@@ -60,11 +93,6 @@ export async function boot() {
   let nameFromURLHash = window.location.hash.slice(1);
   nameFromURLHash = decodeURIComponent(nameFromURLHash);
   let tabFromSettings = settings.currentTab;
-
-  // re-do because could have created default notes
-  if (nCreated > 0) {
-    noteNames = await loadNoteNames();
-  }
 
   function isValidNote(name: string): boolean {
     if (!name) {
@@ -110,12 +138,7 @@ export async function boot() {
   }
 
   console.log("mounting App");
-  if (appSvelte) {
-    unmount(appSvelte);
-  }
-  const target = document.getElementById("app");
-  if (!target) return;
-  appSvelte = mount(App, { target });
+  mountRoot(App);
 }
 
 boot().then(() => {

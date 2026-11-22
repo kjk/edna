@@ -262,6 +262,12 @@
     }
   }
 
+  // saves current note and its selection / folds
+  export async function saveAll() {
+    await editor.save();
+    await saveEditorState();
+  }
+
   export function getEditorView(): EditorView {
     return editor.view;
   }
