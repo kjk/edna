@@ -167,7 +167,6 @@
       fontFamily: fontFamily,
       fontSize: fontSize,
       tabSize: tabSize,
-      newParser: true,
       useTabs: useTabs,
       // TODO: add a setting for this
       defaultBlockToken: "text",

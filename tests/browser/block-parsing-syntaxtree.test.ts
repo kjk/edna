@@ -2,9 +2,9 @@ import { syntaxTreeAvailable } from "@codemirror/language";
 import type { EditorState } from "@codemirror/state";
 import { decode } from "@toon-format/toon";
 import { beforeAll, describe, expect, it } from "vitest";
-import { getBlocksFromString, getBlocksFromSyntaxTree, getBlocksFromSyntaxTreeNewParser } from "../../src/editor/block/block-parsing";
+import { getBlocksFromString, getBlocksFromSyntaxTree } from "../../src/editor/block/block-parsing";
 import type { NoteBlock } from "../../src/editor/block/block-parsing";
-import { MultiBlockEditor } from "../../src/editor/editor";
+import { cleanup, createEditor } from "./utils";
 
 // Golden data uses the old nested format
 interface OldNoteBlock {
@@ -57,64 +57,15 @@ describe("Block parsing with syntax tree (browser tests)", () => {
 
   // Helper to create editor and parse content
   async function parseWithSyntaxTree(content: string): Promise<NoteBlock[]> {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-
+    const te = createEditor(content);
     try {
-      const editor = new MultiBlockEditor({
-        element: container,
-        save: async () => {},
-        setIsDirty: () => {},
-        createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-        focus: false,
-        useTabs: false,
-        tabSize: 4,
-      });
-
-      editor.setContent(content);
-
-      // Wait for syntax tree to be available
-      const available = await waitForSyntaxTree(editor.view.state, 10000);
+      const available = await waitForSyntaxTree(te.editor.view.state, 10000);
       if (!available) {
         throw new Error("Syntax tree did not become available in time");
       }
-
-      const blocks = getBlocksFromSyntaxTree(editor.view.state);
-      return blocks;
+      return getBlocksFromSyntaxTree(te.editor.view.state);
     } finally {
-      container.remove();
-    }
-  }
-
-  // Helper to create editor with new parser and parse content
-  async function parseWithSyntaxTreeNewParser(content: string): Promise<NoteBlock[]> {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-
-    try {
-      const editor = new MultiBlockEditor({
-        element: container,
-        save: async () => {},
-        setIsDirty: () => {},
-        createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
-        focus: false,
-        useTabs: false,
-        tabSize: 4,
-        newParser: true,
-      });
-
-      editor.setContent(content);
-
-      // Wait for syntax tree to be available
-      const available = await waitForSyntaxTree(editor.view.state, 10000);
-      if (!available) {
-        throw new Error("Syntax tree did not become available in time");
-      }
-
-      const blocks = getBlocksFromSyntaxTreeNewParser(editor.view.state);
-      return blocks;
-    } finally {
-      container.remove();
+      cleanup(te);
     }
   }
 
@@ -140,29 +91,5 @@ describe("Block parsing with syntax tree (browser tests)", () => {
 
     expect(blocksFromSyntaxTree).toEqual(blocksFromString);
     expect(blocksFromSyntaxTree).toEqual(expectedBlocks);
-  }, 15000);
-
-  it("new parser: should parse note-scratch-dev.edna.txt same as getBlocksFromString", async () => {
-    const testData = goldenData[0];
-    if (!testData) throw new Error("Test data not found");
-
-    const expectedBlocks = testData.blocks.map(translateBlock);
-    const blocksFromString = getBlocksFromString(testData.content);
-    const blocksFromNewParser = await parseWithSyntaxTreeNewParser(testData.content);
-
-    expect(blocksFromNewParser).toEqual(blocksFromString);
-    expect(blocksFromNewParser).toEqual(expectedBlocks);
-  }, 15000);
-
-  it("new parser: should parse note-scratch.edna.txt same as getBlocksFromString", async () => {
-    const testData = goldenData[1];
-    if (!testData) throw new Error("Test data not found");
-
-    const expectedBlocks = testData.blocks.map(translateBlock);
-    const blocksFromString = getBlocksFromString(testData.content);
-    const blocksFromNewParser = await parseWithSyntaxTreeNewParser(testData.content);
-
-    expect(blocksFromNewParser).toEqual(blocksFromString);
-    expect(blocksFromNewParser).toEqual(expectedBlocks);
   }, 15000);
 });

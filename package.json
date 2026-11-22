@@ -8,7 +8,6 @@
   "type": "module",
   "keywords": [],
   "scripts": {
-    "build_grammar": "lezer-generator --typeScript src/editor/lang-heynote/heynote.grammar -o src/editor/lang-heynote/parser.ts",
     "dev": "vite",
     "build": "vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.json --noEmit",
@@ -19,7 +18,6 @@
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
-    "@lezer/generator": "^1.8.1",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tailwindcss/vite": "^4.3.5",
     "@toon-format/toon": "^4.4.0",
@@ -59,6 +57,7 @@
     "@codemirror/search": "^6.7.2",
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "6.43.15",
+    "@lezer/common": "^1.5.6",
     "@lezer/highlight": "^1.2.5",
     "@replit/codemirror-lang-csharp": "^6.2.0",
     "@replit/codemirror-lang-svelte": "^6.0.0",
