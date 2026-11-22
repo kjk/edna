@@ -150,7 +150,7 @@ Five pieces of state must agree:
 |---|---|
 | `HOME` | `T` = home tab, editor unmounted |
 | `SHOWING(A)` | E = T = A, C = content of A |
-| `LOADING(A→B)` | editor still shows A (E = A), load of B in flight; `NoteLoader.gen` identifies the latest load |
+| `LOADING(A→B)` | editor still shows A (E = A), load of B or the final save of A in flight; `NoteLoader.gen` identifies the latest load |
 
 Invariants:
 - **O-I1** E is always the note whose content is in the editor (C). E changes only together
@@ -166,7 +166,7 @@ Invariants:
 | `SHOWING(A)` | open note B | save A, save view state of A, `LOADING(A→B)` | `MultiBlockEditor openNote` |
 | `LOADING(A→B)` | load done, still latest | `SHOWING(B)`; restore view state; T, U, title = B | `MultiBlockEditor openNote`, `App didLoadNote` |
 | `LOADING(A→B)` | open note C | `LOADING(A→C)`; B's result discarded | `MultiBlockEditor openNote` |
-| `LOADING(A→B)` | load failed | `SHOWING(A)`, error shown | `MultiBlockEditor openNote` |
+| `LOADING(A→B)` | load or final save failed | `SHOWING(A)`, error shown | `MultiBlockEditor openNote` |
 | `SHOWING(A)` | Home tab | editor destroyed (pending save flushed to A) → `HOME` | `TopNav`, `MultiBlockEditor` cleanup |
 | any | popstate (Back/Forward) | dialogs closed; open note from history entry, replacing current tab; Home entry → `HOME` | `App onPopState` |
 | any | switch to `HOME` | history entry without note in URL, title "Edna" | `App` effect, `addHomeToBrowserHistory` |

@@ -1,0 +1,252 @@
+import { EditorSelection, Facet, type EditorState } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
+import { ADD_NEW_BLOCK, CURRENCIES_LOADED, DELETE_BLOCK, heynoteEvent, LANGUAGE_CHANGE, MOVE_BLOCK } from "../annotation";
+import type { MultiBlockEditor } from "../editor";
+import { DELIMITER_PREFIX } from "../new-parser/node-types";
+import {
+  getActiveNoteBlock,
+  getBlockN,
+  getFirstNoteBlock,
+  getLastNoteBlock,
+  getNoteBlockFromPos,
+  type Block,
+} from "./block";
+export { moveLineDown, moveLineUp } from "./move-lines";
+export { selectAll } from "./select-all";
+
+export function getBlockDelimiter(token: string, autoDetect: boolean): string {
+  return "\n" + DELIMITER_PREFIX + token + (autoDetect ? "-a" : "") + "\n";
+}
+
+export const defaultBlockDelimiter = Facet.define<string, string>({
+  combine: (values) => values[0] ?? getBlockDelimiter("text", true),
+});
+
+export function insertNewBlockAtCursor({ state, dispatch }: EditorView): boolean {
+  if (state.readOnly) return false;
+  const first = getFirstNoteBlock(state);
+  if (!first) return false;
+  const changes = state.changeByRange((range) => {
+    const block = getNoteBlockFromPos(state, range.head) ?? first;
+    const delimiter = getBlockDelimiter(block.language, block.autoDetect);
+    const from = Math.max(range.from, first.contentFrom);
+    const to = Math.max(range.to, from);
+    return { changes: { from, to, insert: delimiter }, range: EditorSelection.cursor(from + delimiter.length) };
+  });
+  dispatch(state.update(changes, {
+    annotations: heynoteEvent.of(ADD_NEW_BLOCK),
+    userEvent: "input.block",
+    scrollIntoView: true,
+  }));
+  return true;
+}
+
+function addBlock(view: EditorView, block: Block | undefined, before: boolean, consumeTrailingLine = false, scrollToTop = false): boolean {
+  const { state } = view;
+  if (state.readOnly || !block) return false;
+  const delimiter = state.facet(defaultBlockDelimiter);
+  const to = before ? block.from : block.to;
+  const cursorAtEnd = state.selection.ranges.length === 1 && state.selection.main.empty && state.selection.main.head === to;
+  const from = consumeTrailingLine && cursorAtEnd && to > block.contentFrom && state.sliceDoc(to - 1, to) === "\n"
+    ? to - 1
+    : to;
+  const needsSeparator = before && to === 0 && state.sliceDoc(0, 1) !== "\n";
+  const cursor = from + delimiter.length;
+  view.dispatch({
+    changes: { from, to, insert: delimiter + (needsSeparator ? "\n" : "") },
+    selection: EditorSelection.cursor(cursor),
+    annotations: heynoteEvent.of(ADD_NEW_BLOCK),
+    userEvent: "input.block",
+    effects: scrollToTop ? EditorView.scrollIntoView(cursor, { y: "start", yMargin: 0 }) : undefined,
+    scrollIntoView: !scrollToTop,
+  });
+  return true;
+}
+
+export function addNewBlockBeforeCurrent(view: EditorView): boolean {
+  return addBlock(view, getActiveNoteBlock(view.state), true);
+}
+
+export function addNewBlockAfterCurrent(view: EditorView): boolean {
+  return addBlock(view, getActiveNoteBlock(view.state), false, true);
+}
+
+export function addNewBlockBeforeFirst(view: EditorView): boolean {
+  return addBlock(view, getFirstNoteBlock(view.state), true);
+}
+
+export function addNewBlockAfterLast(view: EditorView): boolean {
+  return addBlock(view, getLastNoteBlock(view.state), false);
+}
+
+export function addNewBlockAfterLastAndScrollDown(view: EditorView): boolean {
+  return addBlock(view, getLastNoteBlock(view.state), false, false, true);
+}
+
+export function changeLanguageTo(
+  state: EditorState,
+  dispatch: EditorView["dispatch"],
+  block: Block,
+  language: string,
+  auto: boolean,
+): void {
+  if (!/^[a-z]+$/.test(language)) {
+    throw new Error(`Invalid block language: ${language}`);
+  }
+  if (state.readOnly || (block.language === language && block.autoDetect === auto)) return;
+  const from = state.sliceDoc(block.from, block.from + 1) === "\n" ? block.from + 1 : block.from;
+  dispatch(state.update({
+    changes: {
+      from: from + DELIMITER_PREFIX.length,
+      to: block.contentFrom - 1,
+      insert: language + (auto ? "-a" : ""),
+    },
+    annotations: heynoteEvent.of(LANGUAGE_CHANGE),
+  }));
+}
+
+export function changeCurrentBlockLanguage(view: EditorView, language: string, auto: boolean): void {
+  const block = getActiveNoteBlock(view.state);
+  if (block) changeLanguageTo(view.state, view.dispatch, block, language, auto);
+}
+
+export function gotoBlock(view: EditorView, n: number): boolean {
+  const block = getBlockN(view.state, n);
+  if (!block) return false;
+  const next = view.state.selection.main.head === block.to ? getBlockN(view.state, n + 1) : undefined;
+  view.dispatch({
+    selection: EditorSelection.cursor(next?.to ?? block.to),
+    scrollIntoView: true,
+    userEvent: "select.block",
+  });
+  return true;
+}
+
+function blockEdge(state: EditorState, block: Block, pos: number, forward: boolean): number {
+  if (forward) {
+    if (pos < block.to) return block.to;
+    return getBlockN(state, block.index + 1)?.to ?? block.to;
+  }
+  if (pos !== block.contentFrom) return block.contentFrom;
+  return getBlockN(state, block.index - 1)?.contentFrom ?? block.contentFrom;
+}
+
+function paragraphEdge(state: EditorState, block: Block, pos: number, forward: boolean): number {
+  const { doc } = state;
+  let target = block;
+  let first = doc.lineAt(target.contentFrom).number;
+  let last = doc.lineAt(target.to).number;
+  let current = doc.lineAt(Math.max(target.contentFrom, pos)).number;
+  if (forward ? current === last : current === first) {
+    const neighbor = getBlockN(state, target.index + (forward ? 1 : -1));
+    if (!neighbor) return forward ? target.to : target.contentFrom;
+    target = neighbor;
+    first = doc.lineAt(target.contentFrom).number;
+    last = doc.lineAt(target.to).number;
+    current = forward ? first : last;
+  }
+
+  const step = forward ? 1 : -1;
+  const inBlock = () => current >= first && current <= last;
+  while (inBlock() && !doc.line(current).text.trim()) current += step;
+  while (inBlock() && doc.line(current).text.trim()) current += step;
+  if (inBlock()) return doc.line(current).from;
+  return forward ? target.to : target.contentFrom;
+}
+
+function navigate(view: EditorView, forward: boolean, extend: boolean, paragraphs: boolean): boolean {
+  const { state } = view;
+  const first = getFirstNoteBlock(state);
+  if (!first) return false;
+  const move = paragraphs ? paragraphEdge : blockEdge;
+  const ranges = state.selection.ranges.map((range) => {
+    const block = getNoteBlockFromPos(state, range.head) ?? first;
+    const head = move(state, block, range.head, forward);
+    return extend ? EditorSelection.range(range.anchor, head) : EditorSelection.cursor(head);
+  });
+  view.dispatch({
+    selection: EditorSelection.create(ranges, state.selection.mainIndex),
+    scrollIntoView: true,
+    userEvent: paragraphs ? "select.paragraph" : "select.block",
+  });
+  return true;
+}
+
+export const gotoNextBlock = (view: EditorView): boolean => navigate(view, true, false, false);
+export const selectNextBlock = (view: EditorView): boolean => navigate(view, true, true, false);
+export const gotoPreviousBlock = (view: EditorView): boolean => navigate(view, false, false, false);
+export const selectPreviousBlock = (view: EditorView): boolean => navigate(view, false, true, false);
+export const gotoNextParagraph = (view: EditorView): boolean => navigate(view, true, false, true);
+export const selectNextParagraph = (view: EditorView): boolean => navigate(view, true, true, true);
+export const gotoPreviousParagraph = (view: EditorView): boolean => navigate(view, false, false, true);
+export const selectPreviousParagraph = (view: EditorView): boolean => navigate(view, false, true, true);
+
+function addVerticalCursor(view: EditorView, forward: boolean): void {
+  const { state } = view;
+  const ranges = state.selection.ranges;
+  const edge = forward ? ranges[ranges.length - 1] : ranges[0];
+  const first = getFirstNoteBlock(state);
+  const start = first && edge.head < first.contentFrom ? EditorSelection.cursor(first.contentFrom) : edge;
+  const cursor = view.moveVertically(start, forward);
+  if (cursor.head === start.head || (first && cursor.head < first.contentFrom)) return;
+  view.dispatch({
+    selection: EditorSelection.create([...ranges, cursor], ranges.length),
+    scrollIntoView: true,
+    userEvent: "select.cursor",
+  });
+}
+
+export const newCursorBelow = (view: EditorView): void => addVerticalCursor(view, true);
+export const newCursorAbove = (view: EditorView): void => addVerticalCursor(view, false);
+
+export function triggerCurrenciesLoaded(view: EditorView): void {
+  view.dispatch({ annotations: heynoteEvent.of(CURRENCIES_LOADED) });
+}
+
+function moveBlock(view: EditorView, direction: -1 | 1): boolean {
+  const { state } = view;
+  if (state.readOnly) return false;
+  const active = getActiveNoteBlock(state);
+  if (!active) return false;
+  const neighbor = getBlockN(state, active.index + direction);
+  if (!neighbor) return false;
+  const [before, after] = direction < 0 ? [neighbor, active] : [active, neighbor];
+  const beforeText = state.sliceDoc(before.from, before.to);
+  const afterText = state.sliceDoc(after.from, after.to);
+  const startsWithNewline = beforeText.startsWith("\n");
+  const replacement = startsWithNewline ? afterText + beforeText : afterText.slice(1) + "\n" + beforeText;
+  const destination = direction < 0
+    ? before.from + active.contentFrom - active.from - Number(!startsWithNewline)
+    : before.from + afterText.length + active.contentFrom - active.from;
+  const clamp = (pos: number) => destination + Math.min(active.to - active.contentFrom, Math.max(0, pos - active.contentFrom));
+  const ranges = state.selection.ranges.map((range) => EditorSelection.range(clamp(range.anchor), clamp(range.head)));
+  view.dispatch({
+    changes: { from: before.from, to: after.to, insert: replacement },
+    selection: EditorSelection.create(ranges, state.selection.mainIndex),
+    annotations: heynoteEvent.of(MOVE_BLOCK),
+    userEvent: "move.block",
+    scrollIntoView: true,
+  });
+  return true;
+}
+
+export const moveCurrentBlockUp = (view: EditorView): boolean => moveBlock(view, -1);
+export const moveCurrentBlockDown = (view: EditorView): boolean => moveBlock(view, 1);
+
+export const deleteBlock = (_editor: MultiBlockEditor) => (view: EditorView): boolean => {
+  const { state } = view;
+  const block = getActiveNoteBlock(state);
+  if (!block || state.readOnly) return false;
+  const next = getBlockN(state, block.index + 1);
+  const previous = getBlockN(state, block.index - 1);
+  const insert = next || previous ? "" : state.facet(defaultBlockDelimiter);
+  const cursor = next ? block.from + next.contentFrom - next.from : block.from + insert.length;
+  view.dispatch({
+    changes: { from: block.from, to: block.to, insert },
+    selection: EditorSelection.cursor(cursor),
+    annotations: heynoteEvent.of(DELETE_BLOCK),
+    userEvent: "delete.block",
+    scrollIntoView: true,
+  });
+  return true;
+};

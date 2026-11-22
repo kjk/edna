@@ -61,15 +61,29 @@ export class NoteLoader {
     if (gen !== this.gen || this.opts.isDestroyed()) {
       return "superseded";
     }
+    const prev = this.current;
+    if (saveCurrent && prev !== undefined && this.opts.noteExists(name)) {
+      try {
+        // The write uses current as its destination. Keep that note open
+        // until the write and any edits made during it are both saved.
+        do {
+          await editor.save();
+          if (gen !== this.gen || this.opts.isDestroyed()) {
+            return "superseded";
+          }
+        } while (editor.getContent() !== editor.diskContent);
+      } catch (e) {
+        if (gen !== this.gen || this.opts.isDestroyed()) {
+          return "superseded";
+        }
+        this.opts.saveFailed(prev, e);
+        return "failed";
+      }
+    }
     if (!this.opts.noteExists(name)) {
       // deleted while loading: showing it would let edits re-create it
       this.opts.loadFailed(name, new Error("note was deleted"));
       return "failed";
-    }
-    const prev = this.current;
-    if (saveCurrent && prev !== undefined) {
-      // note: save() captures the note it saves to synchronously, before we switch
-      editor.save().catch((e) => this.opts.saveFailed(prev, e));
     }
     this.opts.willShow(name);
     this.current = name;

@@ -81,6 +81,30 @@ describe("NoteLoader", () => {
     expect(editor.getContent()).toBe(doc("B"));
   });
 
+  it("saves edits to the old note while its previous write is still pending", async () => {
+    const { loader, pending, editor, saved } = setup();
+    const firstWrite = Promise.withResolvers<void>();
+    editor.saveCallback = async (content) => {
+      saved.push([loader.current!, content]);
+      if (saved.length === 1) await firstWrite.promise;
+    };
+    const switching = loader.load("B", true, () => {});
+    type(te!, " first");
+    const saving = editor.save();
+    pending.get("B")!.resolve(doc("B"));
+    await Promise.resolve();
+    type(te!, " second");
+    firstWrite.resolve();
+
+    await saving;
+    expect(await switching).toBe("shown");
+    expect(saved).toEqual([
+      ["A", doc("A first")],
+      ["A", doc("A first second")],
+    ]);
+    expect(editor.getContent()).toBe(doc("B"));
+  });
+
   it("didShow is not called for a superseded load", async () => {
     const { loader, pending } = setup();
     const shown: string[] = [];

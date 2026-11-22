@@ -5,6 +5,19 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [svelte()],
   publicDir: "./src/public",
+  // A late dependency optimization reloads the live test iframe.
+  optimizeDeps: {
+    include: [
+      "@lezer/highlight",
+      "prettier/plugins/babel",
+      "prettier/plugins/estree",
+      "prettier/plugins/html",
+      "prettier/plugins/markdown",
+      "prettier/plugins/postcss",
+      "prettier/plugins/typescript",
+      "prettier/plugins/yaml",
+    ],
+  },
   test: {
     include: ["tests/browser/**/*.test.ts"],
     // test files share localStorage, IndexedDB and the Origin Private File System

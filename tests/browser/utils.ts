@@ -1,4 +1,3 @@
-import { expect } from "vitest";
 import { MultiBlockEditor } from "../../src/editor/editor";
 
 export interface TestEditor {
@@ -35,15 +34,4 @@ export function createEditor(content: string): TestEditor {
 export function cleanup(te: TestEditor | undefined) {
   te?.editor.destroy();
   te?.container.remove();
-}
-
-/**
- * Get the text content of a block by index.
- */
-export function getBlockContent(editor: MultiBlockEditor, blockIndex: number): string {
-  const blocks = editor.getBlocks();
-  const content = editor.getContent();
-  expect(blocks.length).toBeGreaterThan(blockIndex);
-  const block = blocks[blockIndex];
-  return content.slice(block.contentFrom, block.to);
 }

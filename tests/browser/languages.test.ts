@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { userEvent } from "vitest/browser";
+import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
 import { cleanup, createEditor, type TestEditor } from "./utils";
 
 describe("Languages", () => {
@@ -30,4 +32,12 @@ describe("Languages", () => {
 
     expect(highlightedTokens()).toEqual([]);
   });
+  it("edits a saved block with an unknown language named constructor", async () => {
+    te = createEditor("\n∞∞∞constructor\nlegacy text\n∞∞∞text\nsecond");
+    await userEvent.click(editorLines(te.container)[0]);
+    await press("a", modKey);
+    await userEvent.keyboard("updated");
+    expect(visibleBlocks(te.container)).toEqual(["updated", "second"]);
+  });
+
 });

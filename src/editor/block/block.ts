@@ -1,0 +1,337 @@
+import { EditorSelection, EditorState, Prec, StateField, type Extension } from "@codemirror/state";
+import {
+  Decoration,
+  EditorView,
+  GutterMarker,
+  RectangleMarker,
+  WidgetType,
+  gutter,
+  layer,
+  type DecorationSet,
+} from "@codemirror/view";
+import { ADD_NEW_BLOCK, DELETE_BLOCK, heynoteEvent, LANGUAGE_CHANGE, MOVE_BLOCK, SET_CONTENT } from "../annotation";
+import type { MultiBlockEditor } from "../editor";
+import { SelectionChangeEvent } from "../event";
+import type { SimpleRange } from "../types";
+import { getBlocksFromSyntaxTree, type NoteBlock } from "./block-parsing";
+import { mathBlock } from "./math";
+import { emptyBlockSelected } from "./select-all";
+
+export interface Block extends NoteBlock {}
+
+export const blockState = StateField.define<Block[]>({
+  create: getBlocksFromSyntaxTree,
+  update(blocks, tr) {
+    return tr.docChanged ? getBlocksFromSyntaxTree(tr.state) : blocks;
+  },
+});
+
+export function getBlocks(state: EditorState): Block[] {
+  return state.field(blockState, false) ?? getBlocksFromSyntaxTree(state);
+}
+
+export function blockContent(block: Block): SimpleRange {
+  return { from: block.contentFrom, to: block.to };
+}
+
+export function getFirstNoteBlock(state: EditorState): Block {
+  return getBlockN(state, 0);
+}
+
+export function getLastNoteBlock(state: EditorState): Block {
+  return getBlocks(state).at(-1)!;
+}
+
+export function getBlockN(state: EditorState, n: number): Block {
+  return getBlocks(state)[n];
+}
+
+function findBlock(blocks: readonly Block[], pos: number): Block | undefined {
+  let low = 0;
+  let high = blocks.length;
+  while (low < high) {
+    const mid = (low + high) >>> 1;
+    if (blocks[mid].to < pos) low = mid + 1;
+    else high = mid;
+  }
+  // When two blocks share an endpoint, the lower bound keeps the preceding block.
+  const block = blocks[low];
+  return block && pos >= block.from ? block : undefined;
+}
+
+export function getNoteBlockFromPos(state: EditorState, pos: number): Block | undefined {
+  return findBlock(getBlocks(state), pos);
+}
+
+export function getActiveNoteBlock(state: EditorState): Block | undefined {
+  return getNoteBlockFromPos(state, state.selection.main.head);
+}
+
+export interface BlocksInfo {
+  blocks: Block[];
+  active: number;
+}
+
+export function getBlocksInfo(state: EditorState): BlocksInfo {
+  const blocks = getBlocks(state);
+  return { blocks, active: findBlock(blocks, state.selection.main.head)?.index ?? 0 };
+}
+
+export function getNoteBlocksBetween(state: EditorState, from: number, to: number): Block[] {
+  const blocks = getBlocks(state);
+  const first = findBlock(blocks, from) ?? (from < blocks[0]?.from ? blocks[0] : undefined);
+  const last = findBlock(blocks, to);
+  if (!first || !last) return [];
+  return blocks.slice(first.index, last.index + 1);
+}
+
+export function getNoteBlocksFromRangeSet(state: EditorState, ranges: Iterable<SimpleRange>): Block[] {
+  const matches = new Set<Block>();
+  for (const { from, to } of ranges) {
+    for (const block of getNoteBlocksBetween(state, from, to)) matches.add(block);
+  }
+  return [...matches].sort((a, b) => a.index - b.index);
+}
+
+export function getBlockLineFromPos(state: EditorState, pos: number): { line: number; col: number; length: number } | null {
+  const block = getNoteBlockFromPos(state, pos);
+  if (!block) return null;
+
+  const contentPos = Math.max(pos, block.contentFrom);
+  const line = state.doc.lineAt(contentPos);
+  const startLine = state.doc.lineAt(block.contentFrom);
+  return {
+    line: line.number - startLine.number + 1,
+    col: contentPos - line.from + 1,
+    length: line.length,
+  };
+}
+
+class LineNumber extends GutterMarker {
+  constructor(readonly label: string) {
+    super();
+  }
+
+  eq(other: LineNumber): boolean {
+    return this.label === other.label;
+  }
+
+  toDOM(): Text {
+    return document.createTextNode(this.label);
+  }
+}
+
+export const blockLineNumbers = gutter({
+  class: "cm-lineNumbers",
+  domEventHandlers: {
+    mousedown(view) {
+      view.focus();
+      return true;
+    },
+  },
+  lineMarker(view, line) {
+    const number = getBlockLineFromPos(view.state, line.from);
+    return number ? new LineNumber(String(number.line)) : null;
+  },
+  initialSpacer: () => new LineNumber("99"),
+  updateSpacer(spacer, update) {
+    if (!update.docChanged) return spacer;
+    let maxLines = 1;
+    for (const block of getBlocks(update.state)) {
+      maxLines = Math.max(
+        maxLines,
+        update.state.doc.lineAt(block.to).number - update.state.doc.lineAt(block.contentFrom).number + 1,
+      );
+    }
+    return new LineNumber("9".repeat(Math.max(2, String(maxLines).length)));
+  },
+});
+
+class BlockStart extends WidgetType {
+  constructor(readonly first: boolean, readonly selected: boolean) {
+    super();
+  }
+
+  eq(other: BlockStart): boolean {
+    return this.first === other.first && this.selected === other.selected;
+  }
+
+  get estimatedHeight(): number {
+    return this.first ? 0 : 12;
+  }
+
+  toDOM(): HTMLElement {
+    const element = document.createElement("div");
+    element.className = "heynote-block-start";
+    element.classList.toggle("first", this.first);
+    element.classList.toggle("heynote-empty-block-selected", this.selected);
+    return element;
+  }
+}
+
+function renderHeaders(state: EditorState): DecorationSet {
+  // Leave later leading newlines in the layout so the gutters see separate text lines.
+  const selected = state.field(emptyBlockSelected);
+  return Decoration.set(
+    getBlocks(state).map((block) =>
+      Decoration.replace({
+        block: true,
+        inclusiveStart: true,
+        inclusiveEnd: false,
+        widget: new BlockStart(block.index === 0, selected === block.index),
+      }).range(block.index === 0 ? block.from : block.from + 1, block.contentFrom),
+    ),
+  );
+}
+
+const headers = StateField.define<DecorationSet>({
+  create: renderHeaders,
+  update(previous, tr) {
+    if (!tr.docChanged && tr.startState.field(emptyBlockSelected) === tr.state.field(emptyBlockSelected)) return previous;
+    return renderHeaders(tr.state);
+  },
+  provide: (field) => EditorView.decorations.from(field),
+});
+
+const hiddenHeader = Decoration.mark({});
+const atomicHeaders = EditorView.atomicRanges.from(blockState, (blocks) => {
+  const ranges = Decoration.set(blocks.map((block) => hiddenHeader.range(block.from, block.contentFrom)));
+  return () => ranges;
+});
+
+const blockBackgrounds = Prec.low(layer({
+  above: false,
+  class: "heynote-blocks-layer",
+  update: (update) => update.docChanged || update.viewportChanged || update.geometryChanged,
+  markers(view) {
+    const blocks = getNoteBlocksBetween(view.state, view.viewport.from, view.viewport.to);
+    const { scrollDOM } = view;
+    const origin = view.documentTop - scrollDOM.getBoundingClientRect().top + scrollDOM.scrollTop * view.scaleY;
+    const width = scrollDOM.clientWidth * view.scaleX;
+    const height = view.contentHeight - view.documentPadding.top;
+    let top = blocks.length ? startHeight(view, blocks[0]) : 0;
+    return blocks.map((block) => {
+      const next = getBlockN(view.state, block.index + 1);
+      const bottom = next ? startHeight(view, next) : height;
+      const marker = new RectangleMarker(
+        block.index % 2 ? "heynote-block-background block-odd" : "heynote-block-background block-even",
+        0,
+        origin + top * view.scaleY,
+        width,
+        Math.max(0, bottom - top) * view.scaleY,
+      );
+      top = bottom;
+      return marker;
+    });
+  },
+}));
+
+function startHeight(view: EditorView, block: Block): number {
+  const line = view.lineBlockAt(block.contentFrom);
+  const content = Array.isArray(line.type) ? line.type.find((part) => part.from === block.contentFrom) : null;
+  return (content?.top ?? line.top) - 6;
+}
+
+const blockStyle = EditorView.baseTheme({
+  ".heynote-block-start": { height: "12px" },
+  ".heynote-block-start.first": { height: "0" },
+  ".heynote-empty-block-selected": { boxShadow: "0 0 0 1px currentColor" },
+});
+
+const protectDelimiters = EditorState.changeFilter.of((tr) => {
+  if (!tr.docChanged || tr.isUserEvent("undo") || tr.isUserEvent("redo")) return true;
+  const event = tr.annotation(heynoteEvent);
+  if (event === SET_CONTENT || event === LANGUAGE_CHANGE || event === ADD_NEW_BLOCK || event === MOVE_BLOCK || event === DELETE_BLOCK) {
+    return true;
+  }
+
+  const blocks = getBlocks(tr.startState);
+  if (!blocks.length) return true;
+  if (tr.isUserEvent("input.replace")) {
+    return blocks.flatMap((block) => [block.from, block.contentFrom]);
+  }
+  return [blocks[0].from, blocks[0].contentFrom];
+});
+
+const normalizeSelection = EditorState.transactionFilter.of((tr) => {
+  if (!tr.selection || tr.annotation(heynoteEvent) === SET_CONTENT) return tr;
+  const blocks = getBlocks(tr.state);
+  if (!blocks.length) return tr;
+
+  function normalize(pos: number): number {
+    if (pos < blocks[0].contentFrom) return blocks[0].contentFrom;
+    const block = findBlock(blocks, pos);
+    return block ? Math.max(pos, block.contentFrom) : pos;
+  }
+
+  let changed = false;
+  const ranges = tr.selection.ranges.map((range) => {
+    const anchor = normalize(range.anchor);
+    const head = normalize(range.head);
+    // A cursor next to a header belongs to the content side for vertical motion.
+    const startOfContent = range.empty && findBlock(blocks, head)?.contentFrom === head;
+    const assoc = startOfContent ? 1 : range.assoc;
+    if (anchor === range.anchor && head === range.head && assoc === range.assoc) return range;
+    changed = true;
+    if (anchor === head) return EditorSelection.cursor(head, assoc, range.bidiLevel ?? undefined, range.goalColumn);
+    return EditorSelection.range(anchor, head, range.goalColumn, range.bidiLevel ?? undefined, assoc);
+  });
+  return changed ? [tr, { selection: EditorSelection.create(ranges, tr.selection.mainIndex), sequential: true }] : tr;
+});
+
+const selectionEvents = EditorView.updateListener.of((update) => {
+  if (!update.docChanged && !update.selectionSet) return;
+  const { state, view } = update;
+  const head = state.selection.main.head;
+  const block = getActiveNoteBlock(state);
+  const cursorLine = getBlockLineFromPos(state, head);
+  if (!block || !cursorLine) return;
+
+  let selectionSize = 0;
+  for (const range of state.selection.ranges) {
+    if (range.empty) continue;
+    const blocks = getNoteBlocksBetween(state, range.from, range.to);
+    selectionSize += Math.max(0, blocks.length - 1) * 2;
+    for (const selected of blocks) {
+      selectionSize += Math.max(0, Math.min(range.to, selected.to) - Math.max(range.from, selected.contentFrom));
+    }
+  }
+  view.dom.parentElement?.dispatchEvent(
+    new SelectionChangeEvent({
+      cursorLine,
+      selectionSize,
+      language: block.language,
+      languageAuto: block.autoDetect,
+    }),
+  );
+});
+
+export function noteBlockExtension(_editor: MultiBlockEditor): Extension[] {
+  return [
+    blockState,
+    emptyBlockSelected,
+    headers,
+    atomicHeaders,
+    blockBackgrounds,
+    blockStyle,
+    protectDelimiters,
+    normalizeSelection,
+    selectionEvents,
+    mathBlock,
+  ];
+}
+
+export function insertAfterActiveBlock(view: EditorView, text: string): boolean {
+  const { state } = view;
+  if (state.readOnly) return false;
+  const active = getActiveNoteBlock(state);
+  if (!active) return false;
+  const insert = state.toText(text);
+  view.dispatch({
+    changes: { from: active.to, insert },
+    selection: { anchor: active.to + insert.length },
+    annotations: heynoteEvent.of(ADD_NEW_BLOCK),
+    scrollIntoView: true,
+  });
+  return true;
+}

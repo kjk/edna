@@ -1,0 +1,47 @@
+import { EditorView } from "@codemirror/view";
+
+export const heynoteBase = EditorView.theme({
+  "&.cm-focused": { outline: "none" },
+  ".cm-scroller": { lineHeight: "1.4" },
+  ".cm-line": { padding: "0 6px" },
+  ".cm-gutters": { paddingLeft: "4px" },
+  ".cm-lineNumbers .cm-gutterElement": {
+    boxSizing: "border-box",
+    minWidth: "20px",
+    padding: "0 1.5px",
+    textAlign: "right",
+  },
+  ".cm-foldGutter": { minWidth: "12px" },
+  ".cm-foldGutter .cm-gutterElement": { textAlign: "center", color: "var(--edna-fold-marker)" },
+  ".cm-foldPlaceholder": {
+    marginLeft: "0.65em",
+    padding: "0 0.35em",
+    border: "0",
+    borderRadius: "3px",
+    backgroundColor: "var(--edna-fold-background)",
+    color: "var(--edna-fold-text)",
+  },
+  ".cm-panels": { backgroundColor: "var(--edna-panel)", color: "inherit", borderColor: "var(--edna-divider)" },
+  ".heynote-block-start:not(.first)": { borderTop: "1px solid var(--edna-divider)" },
+  ".block-even": { backgroundColor: "var(--edna-block-even)" },
+  ".block-odd": { backgroundColor: "var(--edna-block-odd)" },
+  ".heynote-math-result": { marginLeft: "0.8em", whiteSpace: "nowrap" },
+  ".heynote-math-result .inner": {
+    padding: "0 4px",
+    borderRadius: "2px",
+    color: "var(--edna-result-text)",
+    backgroundColor: "var(--edna-result-background)",
+    cursor: "pointer",
+  },
+  ".heynote-math-result .inner.copied": { boxShadow: "0 0 0 2px currentColor" },
+  ".heynote-todo-checkbox": {
+    fontFamily: "ui-monospace",
+    width: "15px",
+    height: "15px",
+    margin: "0 6px 0 4px",
+    verticalAlign: "-2px",
+    cursor: "pointer",
+  },
+  '.heynote-todo-checkbox[aria-disabled="true"]': { cursor: "default" },
+  ".heynote-link": { color: "var(--edna-link)", textDecoration: "underline" },
+});
