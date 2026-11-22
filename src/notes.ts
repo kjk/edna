@@ -397,7 +397,12 @@ export async function loadNoteNames(): Promise<string[]> {
   // TODO: got a case where I had both foo.edna.txt and foo.encr.edna.txt which caused
   // duplicate names which cased note selector to fail due to duplicate key
   // don't quite know how this happened but it could be done maliciously
-  appState.allNotes = removeDuplicates(res[0] || []);
+  let names = res[0] || [];
+  // notes opened from disk (outside of the workspace) are part of all notes
+  for (let o of openedNotes) {
+    names.push(o.noteName);
+  }
+  appState.allNotes = removeDuplicates(names);
   encryptedNoteNames = removeDuplicates(res[1] || []);
   // console.log("loadNoteNames() res:", res);
   return appState.allNotes;
