@@ -2,7 +2,6 @@
   import { onMount, tick } from "svelte";
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import { isMoving } from "../mouse-track.svelte";
   import { loadNote } from "../notes";
   import { findMatchesInNote } from "../find-in-notes";
   import { hilightText, len, makeHilightRegExp, splitStringPreservingQuotes } from "../util";
@@ -119,10 +118,9 @@
   }
   onMount(() => {
     focusInput();
-    isMoving.disableMoveTracking = true;
+    // note: mouse tracking is disabled by App while a dialog is open
 
     return () => {
-      isMoving.disableMoveTracking = false;
       // stop the search in progress
       searchId++;
     };

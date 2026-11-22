@@ -1,6 +1,13 @@
 class MouseMoveTracker {
   moving = $state(false);
-  disableMoveTracking = false;
+  // tracking is disabled while a dialog or the editor's find panel is open.
+  // Separate flags so that closing a dialog doesn't re-enable tracking while
+  // the find panel is still open
+  dialogOpen = false;
+  findPanelOpen = false;
+  get disableMoveTracking(): boolean {
+    return this.dialogOpen || this.findPanelOpen;
+  }
 }
 
 export const isMoving = new MouseMoveTracker();

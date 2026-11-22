@@ -90,9 +90,17 @@ function createLanguageDetection(view: EditorView) {
 
         const content = update.state.doc.sliceString(block.contentFrom, block.to);
         if (content === "" && redoDepth(update.state) === 0) {
-          // if content is cleared, set language to plaintext
+          // if content is cleared, set language to plaintext.
+          // note: the cursor might have moved to another block since the
+          // change; only change the block that was cleared
           const activeBlock = getActiveNoteBlock(view.state);
-          if (activeBlock && activeBlock.language !== "text") {
+          if (
+            activeBlock &&
+            activeBlock.from === block.from &&
+            activeBlock.autoDetect &&
+            activeBlock.contentFrom === activeBlock.to &&
+            activeBlock.language !== "text"
+          ) {
             changeLanguageTo(view.state, view.dispatch, activeBlock, "text", true);
           }
           delete previousBlockContent[idx];

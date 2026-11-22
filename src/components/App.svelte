@@ -232,7 +232,7 @@
   let editorComp: Editor;
 
   $effect(() => {
-    isMoving.disableMoveTracking = isShowingDialog;
+    isMoving.dialogOpen = isShowingDialog;
   });
 
   function openFindInNotes() {
@@ -376,7 +376,7 @@
       let view = getEditorView();
       if (view && searchPanelOpen(view.state)) {
         console.log("closing search panel on ESC");
-        isMoving.disableMoveTracking = false;
+        isMoving.findPanelOpen = false;
         closeSearchPanel(view);
         return;
       }

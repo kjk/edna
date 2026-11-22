@@ -83,19 +83,27 @@ export async function loadNotesMetadata(): Promise<Metadata> {
   return metadata!;
 }
 
+// metadata writes are serialized so that an older snapshot can't be written
+// after a newer one
+let metadataWriteQueue: Promise<unknown> = Promise.resolve();
+
 export async function saveNotesMetadata(m: Metadata = metadata!) {
+  metadata = m;
   let s = JSON.stringify(m, null, 2);
   let dh = getStorageFS();
-  if (dh) {
-    try {
-      await fsWriteTextFile(dh, kMetadataName, s);
-    } catch (e) {
-      console.log("fsWriteTextFile failed with:", e);
+  let p = metadataWriteQueue.then(async () => {
+    if (dh) {
+      try {
+        await fsWriteTextFile(dh, kMetadataName, s);
+      } catch (e) {
+        console.log("fsWriteTextFile failed with:", e);
+      }
+    } else {
+      localStorage.setItem(kMetadataName, s);
     }
-  } else {
-    localStorage.setItem(kMetadataName, s);
-  }
-  metadata = m;
+  });
+  metadataWriteQueue = p;
+  await p;
   return m;
 }
 

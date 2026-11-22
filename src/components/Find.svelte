@@ -209,18 +209,18 @@
     tick().then(() => {
       searchInputREf.select();
     });
-    isMoving.disableMoveTracking = true;
+    isMoving.findPanelOpen = true;
 
     return () => {
       // note: unmounted when the panel is closed or the editor is destroyed,
       // so must not dispatch to the view
-      isMoving.disableMoveTracking = false;
+      isMoving.findPanelOpen = false;
       clearTimeout(countTimer);
     };
   });
 
   function close() {
-    isMoving.disableMoveTracking = false;
+    isMoving.findPanelOpen = false;
     closeSearchPanel(view);
   }
   function matchCase() {
