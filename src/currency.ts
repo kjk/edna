@@ -9,21 +9,39 @@ interface CurrencyData {
   rates: Record<string, number>;
 }
 
+const kRefreshIntervalMs = 1000 * 3600 * 4;
+
 let currencyData: CurrencyData | undefined;
+let currencyDataFetchedAt = 0;
+
+// returns cached data if fresh, otherwise re-fetches.
+// on fetch failure returns stale data (if any)
 async function getCurrencyData() {
-  if (currencyData !== undefined) {
+  if (currencyData !== undefined && Date.now() - currencyDataFetchedAt < kRefreshIntervalMs) {
     return currencyData;
   }
-  const response = await fetch("/api/currency_rates.json", {
-    cache: "no-cache",
-  });
-  if (!response.ok) return;
   try {
+    const response = await fetch("/api/currency_rates.json", {
+      cache: "no-cache",
+    });
+    if (!response.ok) return currencyData;
     currencyData = JSON.parse(await response.text());
-    return currencyData;
+    currencyDataFetchedAt = Date.now();
   } catch (e) {
     console.log("getCurrencyData: error:", e);
   }
+  return currencyData;
+}
+
+let refreshTimer: ReturnType<typeof setInterval> | undefined;
+
+// loads currencies and refreshes them periodically. Safe to call multiple times
+export function startCurrencyRefresh() {
+  if (refreshTimer !== undefined) {
+    return;
+  }
+  loadCurrencies();
+  refreshTimer = setInterval(loadCurrencies, kRefreshIntervalMs);
 }
 
 let currenciesLoaded = false;

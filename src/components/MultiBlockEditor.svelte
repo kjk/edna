@@ -3,7 +3,7 @@
   import { syntaxTree } from "@codemirror/language";
   import { EditorView, type ViewUpdate } from "@codemirror/view";
   import { appState } from "../appstate.svelte";
-  import { loadCurrencies } from "../currency";
+  import { startCurrencyRefresh } from "../currency";
   import { MultiBlockEditor } from "../editor/editor";
   import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
@@ -183,8 +183,7 @@
       });
     });
 
-    loadCurrencies();
-    setInterval(loadCurrencies, 1000 * 3600 * 4);
+    startCurrencyRefresh();
 
     return () => {
       window.document.removeEventListener("currenciesLoaded", didLoadCurrencies);
