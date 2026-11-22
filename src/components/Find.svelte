@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick, untrack } from "svelte";
+  import { onMount, tick } from "svelte";
   import {
     closeSearchPanel,
     findNext,
@@ -11,7 +11,7 @@
     selectMatches,
     setSearchQuery,
   } from "@codemirror/search";
-  import type { EditorView } from "@codemirror/view";
+  import type { EditorView, ViewUpdate } from "@codemirror/view";
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
@@ -69,8 +69,17 @@
     matchBuffer.length = 0;
   }
 
+  // counting matches scans the whole document so we debounce it
+  let countTimer: ReturnType<typeof setTimeout> | undefined;
+  function scheduleCountMatches(delayMs: number) {
+    clearTimeout(countTimer);
+    countTimer = setTimeout(() => {
+      calcTotalCountOfMatches();
+      updateCurrentMatchCount();
+    }, delayMs);
+  }
+
   $effect(() => {
-    console.log("new search query:", searchTerm, "replaceTerm:", replaceTerm);
     let q = new SearchQuery({
       search: searchTerm,
       replace: replaceTerm,
@@ -87,10 +96,7 @@
     view.dispatch({
       effects: setSearchQuery.of(query),
     });
-    setTimeout(() => {
-      calcTotalCountOfMatches();
-      updateCurrentMatchCount();
-    }, 500);
+    scheduleCountMatches(300);
   });
 
   let counter = $state({
@@ -99,51 +105,13 @@
     exceed: false,
   });
 
-  /**
-   * Compare equality of this query with the another one.
-   */
-  function _compare(other: SearchQuery) {
-    let res = untrack(() => query.eq(other) && query.literal == other.literal);
-    return res;
-  }
-
-  function _setQuery(q: SearchQuery, internal: boolean) {
-    console.log("_setQuery:", q);
-  }
-
-  export function update(update: any) {
-    // console.log("find update", update);
-    // let resetCounter = false;
-    // // Search any effect that brings query update.
-    // for (let tr of update.transactions)
-    //   for (let effect of tr.effects) {
-    //     if (effect.is(setSearchQuery) && !_compare(effect.value)) {
-    //       _setQuery(effect.value, false);
-    //       resetCounter = true;
-    //     }
-    //   }
-    // if (update.docChanged) {
-    //   resetCounter = true;
-    // }
-    // if (resetCounter) {
-    //   calcTotalCountOfMatches();
-    //   updateCurrentMatchCount();
-    // }
-    // // Listen for the user action/command that toggles this panel.
-    // if (
-    //   update.transactions.some((tr) => {
-    //     let config = tr.annotation(searchPanelChange);
-    //     if (config) {
-    //       this.searchField.inputEl.select();
-    //       if (config.showReplace == this.showReplace) return false;
-    //       this.showReplace = config.showReplace;
-    //       return true;
-    //     }
-    //     return false;
-    //   })
-    // ) {
-    //   this._toggleReplaceEl();
-    // }
+  export function update(update: ViewUpdate) {
+    if (update.docChanged) {
+      // positions of matches changed
+      scheduleCountMatches(300);
+    } else if (update.selectionSet) {
+      updateCurrentMatchCount();
+    }
   }
 
   function updateCurrentMatchCount() {
@@ -244,8 +212,10 @@
     isMoving.disableMoveTracking = true;
 
     return () => {
+      // note: unmounted when the panel is closed or the editor is destroyed,
+      // so must not dispatch to the view
       isMoving.disableMoveTracking = false;
-      closeSearchPanel(view);
+      clearTimeout(countTimer);
     };
   });
 

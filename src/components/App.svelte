@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from "svelte";
+  import debounce from "debounce";
   import { toggleBlockComment, toggleComment, toggleLineComment } from "@codemirror/commands";
   import { foldCode, unfoldCode } from "@codemirror/language";
   import { closeSearchPanel, openSearchPanel, searchPanelOpen } from "@codemirror/search";
@@ -2176,8 +2177,15 @@
     updateDocSize();
   }
 
+  // computing size in utf8 bytes is expensive for large documents so we don't do it on every keystroke
+  const updateDocSizeDebounced = debounce(() => {
+    if (editorComp) {
+      updateDocSize();
+    }
+  }, 300);
+
   function docDidChange() {
-    updateDocSize();
+    updateDocSizeDebounced();
   }
 
   // debug functions to be called from dev tools console as:
