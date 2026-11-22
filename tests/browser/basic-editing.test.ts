@@ -81,7 +81,7 @@ describe("Basic editing (browser tests)", () => {
     await userEvent.keyboard("    Indented line");
     await userEvent.keyboard("{Enter}");
     await userEvent.keyboard("Next line");
-    expect(getBlockContent(editor, 0)).toBe("    Indented line\nNext line");
+    expect(getBlockContent(editor, 0)).toBe("    Indented line\n    Next line");
   });
 
   it("python indentation increases after colon on enter", async () => {
@@ -109,5 +109,15 @@ describe("Basic editing (browser tests)", () => {
     editor.view.dispatch({ selection: { anchor: from, head: from + 2 } });
     await userEvent.keyboard("{Tab}");
     expect(getBlockContent(editor, 0)).toBe("    ab");
+  });
+
+  it("indentation is preserved on enter in math block", async () => {
+    const { editor } = te;
+    editor.setContent("\n\u221E\u221E\u221Emath\n");
+    editor.setCursorPosition(editor.getBlocks()[0]!.contentFrom);
+    await userEvent.keyboard("  x = 1");
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard("x");
+    expect(getBlockContent(editor, 0)).toBe("  x = 1\n  x");
   });
 });

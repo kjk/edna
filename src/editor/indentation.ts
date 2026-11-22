@@ -1,11 +1,28 @@
 import { indentMore } from "@codemirror/commands";
-import { indentUnit } from "@codemirror/language";
+import { indentService, indentUnit } from "@codemirror/language";
 import { countColumn, EditorSelection, EditorState } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
+import { getNoteBlockFromPos } from "./block/block";
+import { getLanguage } from "./languages";
 
-// indent unit (tab or spaces) and tab width
+// For blocks in languages with inheritIndentation, returning null tells
+// CodeMirror to use the indentation of the previous line on Enter.
+// undefined means: ask the language
+const inheritIndentationService = indentService.of((context, pos) => {
+  const block = getNoteBlockFromPos(context.state, pos);
+  if (block && getLanguage(block.language)?.inheritIndentation) {
+    return null;
+  }
+  return undefined;
+});
+
+// indent unit (tab or spaces), tab width and indentation service
 export function indentationExtension(useTabs: boolean, tabSize: number) {
-  return [indentUnit.of(useTabs ? "\t" : " ".repeat(tabSize)), EditorState.tabSize.of(tabSize)];
+  return [
+    indentUnit.of(useTabs ? "\t" : " ".repeat(tabSize)),
+    EditorState.tabSize.of(tabSize),
+    inheritIndentationService,
+  ];
 }
 
 /**

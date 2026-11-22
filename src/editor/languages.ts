@@ -44,6 +44,9 @@ export interface Language {
   name: string;
   guesslang: string | null;
   ext?: string;
+  // new lines keep indentation of the previous line (for languages that
+  // don't provide their own indentation logic)
+  inheritIndentation?: boolean;
 }
 
 export const kLanguages: Language[] = [
@@ -52,12 +55,14 @@ export const kLanguages: Language[] = [
     name: "Plain Text",
     guesslang: null,
     ext: "txt",
+    inheritIndentation: true,
   },
   {
     token: "math",
     name: "Math",
     guesslang: null,
     ext: "math.txt",
+    inheritIndentation: true,
   },
   {
     token: "json",
@@ -78,6 +83,7 @@ export const kLanguages: Language[] = [
     token: "sql",
     name: "SQL",
     guesslang: "sql",
+    inheritIndentation: true,
   },
   {
     token: "markdown",
