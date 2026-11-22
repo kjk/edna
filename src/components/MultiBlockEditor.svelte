@@ -8,7 +8,7 @@
   import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
-  import { getStorageFS, loadNote, saveNote } from "../notes";
+  import { getStorageFS, loadNote, noteExists, saveNote } from "../notes";
   import { getSettings, resolveTheme } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
   import Find from "./Find.svelte";
@@ -211,6 +211,7 @@
     loader = new NoteLoader({
       editor,
       loadNote,
+      noteExists,
       willShow: () => {
         editorStateRestored = false;
         storageAtLoad = getStorageFS();

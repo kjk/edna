@@ -384,23 +384,22 @@ other tabs are open.
 - 14c. Editor find panel's mouse-tracking suppression overwritten by dialog close.
 - 14d. Concurrent metadata writes can complete out of order *(suspected)*.
 
-## Open (not fixed)
-
-Lower impact or suspected; not fixed yet:
-- Deleting a note (from the note selector) while that note is loading: the load still
-  shows it and edits re-create it.
-- URL / history: the Home tab doesn't update the URL (reloading on Home re-opens the note
-  from the hash); Back/Forward through notes adds tabs.
-- One shared modal message for overlapping operations (e.g. "Loading..." clears
+### Issue 15 — Previously open items
+- 15a. Deleting a note (from the note selector) while that note is loading: the load still
+  showed it and edits re-created it. **Fixed**: `NoteLoader` checks the note still exists
+  before showing it (`tests/browser/note-loader.test.ts`).
+- 15b. URL / history: the Home tab didn't update the URL (reloading on Home re-opened the
+  note from the hash); Back/Forward through notes added tabs.
+- 15c. One shared modal message for overlapping operations (e.g. "Loading..." cleared
   "running code").
-- Language auto-detect worker replies are applied to the active block if its content is
-  similar (Levenshtein), not by block identity; can rarely change another block.
-- Metadata write failures in a directory are logged but not shown; in-memory metadata and
-  the file can diverge.
-- A password prompt needed during boot from the permissions screen (before `App` is
-  mounted) has no UI to show it (suspected; e.g. creating default notes in an encrypted
-  directory).
-- Two Edna tabs editing the same note: last writer wins (mitigated by the warning, issue 13).
+- 15d. Language auto-detect worker replies were applied to the active block if its content
+  was similar (Levenshtein), not by block identity; could change another block or a block in
+  another note.
+- 15e. Metadata write failures in a directory were logged but not shown; in-memory metadata
+  and the file could diverge.
+- 15f. A password prompt needed while booting from the permissions screen (before `App` is
+  mounted, or after it was unmounted) had no UI: boot failed or hung.
+- 15g. Two Edna tabs editing the same note: last writer won.
 
 ## Status
 
@@ -420,3 +419,4 @@ Lower impact or suspected; not fixed yet:
 | 12 Ask AI | fixed (12a–12c), `tests/browser/askai.test.ts` |
 | 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent editing of the same note in two tabs is still last-writer-wins |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
+| 15 Previously open items | 15a fixed; 15b–15g open |

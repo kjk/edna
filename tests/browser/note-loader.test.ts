@@ -18,6 +18,7 @@ describe("NoteLoader", () => {
     const saved: [string, string][] = [];
     const pending = new Map<string, { resolve: (s: string) => void; reject: (e: Error) => void }>();
     const failures: string[] = [];
+    const deleted = new Set<string>();
     let loader!: NoteLoader;
     // saves go to the note the loader says is current
     te.editor.saveCallback = async (content) => {
@@ -26,13 +27,14 @@ describe("NoteLoader", () => {
     loader = new NoteLoader({
       editor: te.editor,
       loadNote: (name) => new Promise((resolve, reject) => pending.set(name, { resolve, reject })),
+      noteExists: (name) => !deleted.has(name),
       willShow: () => {},
       loadFailed: (name) => failures.push(name),
       saveFailed: () => {},
       isDestroyed: () => false,
     });
     loader.current = "A";
-    return { loader, saved, pending, failures, editor: te.editor };
+    return { loader, saved, pending, failures, deleted, editor: te.editor };
   }
 
   function type(te: TestEditor, s: string) {
@@ -103,5 +105,16 @@ describe("NoteLoader", () => {
     expect(await loader.load("B", true, () => {}, reqB)).toBe("superseded");
     expect(editor.getContent()).toBe(doc("C"));
     expect(loader.current).toBe("C");
+  });
+
+  it("a note deleted while loading is not shown", async () => {
+    const { loader, pending, editor, failures, deleted } = setup();
+    const p = loader.load("B", true, () => {});
+    deleted.add("B");
+    pending.get("B")!.resolve(doc("B"));
+    expect(await p).toBe("failed");
+    expect(failures).toEqual(["B"]);
+    expect(loader.current).toBe("A");
+    expect(editor.getContent()).toBe(doc("A"));
   });
 });

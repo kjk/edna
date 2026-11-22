@@ -11,6 +11,8 @@ export type LoadResult = "shown" | "superseded" | "failed";
 export interface NoteLoaderOptions {
   editor: MultiBlockEditor;
   loadNote: (name: string) => Promise<string | undefined>;
+  // false if the note was deleted while it was loading
+  noteExists: (name: string) => boolean;
   // called right before the editor content is replaced with note `name`
   willShow: (name: string) => void;
   loadFailed: (name: string, err: unknown) => void;
@@ -58,6 +60,11 @@ export class NoteLoader {
     }
     if (gen !== this.gen || this.opts.isDestroyed()) {
       return "superseded";
+    }
+    if (!this.opts.noteExists(name)) {
+      // deleted while loading: showing it would let edits re-create it
+      this.opts.loadFailed(name, new Error("note was deleted"));
+      return "failed";
     }
     const prev = this.current;
     if (saveCurrent && prev !== undefined) {
