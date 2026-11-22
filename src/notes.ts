@@ -526,18 +526,23 @@ export async function appendToNote(name: string, content: string) {
     }
     let newContent = (v || "") + content;
     localStorage.setItem(path, newContent);
+    if (v === null) {
+      await loadNoteNames();
+    }
     return;
   }
 
-  let newContent = content;
   if (noteExists(name)) {
     let oldContent = await loadNote(name);
-    newContent = (oldContent ?? "") + content;
+    let newContent = (oldContent ?? "") + content;
     incNoteSaveCount();
-  } else {
-    incNoteCreateCount();
+    await writeMaybeEncryptedFS(dh, name, newContent);
+    return;
   }
-  await writeMaybeEncryptedFS(dh, name, newContent);
+  // new note: writeNoteFS() encrypts if we're using encryption
+  await writeNoteFS(dh, name, content);
+  incNoteCreateCount();
+  await loadNoteNames();
 }
 
 export async function createNewScratchNote(): Promise<string> {
