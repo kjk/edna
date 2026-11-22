@@ -45,7 +45,7 @@ class TaskCheckbox extends WidgetType {
   toDOM(view: EditorView) {
     const box = view.dom.ownerDocument.createElement("input");
     box.type = "checkbox";
-    box.className = "heynote-todo-checkbox";
+    box.className = "edna-todo-checkbox";
     box.checked = this.checked;
     box.setAttribute("aria-disabled", String(this.readOnly));
     box.tabIndex = -1;

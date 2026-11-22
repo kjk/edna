@@ -32,7 +32,7 @@ const nodeTypes = [
 export const nodeSet = new NodeSet(nodeTypes);
 
 // Delimiter pattern: ∞∞∞ (three infinity symbols)
-export const DELIMITER_PREFIX = "\u221e\u221e\u221e";
+export const kDelimiterPrefix = "\u221e\u221e\u221e";
 
 // This is the single definition of a valid block delimiter. A delimiter is a line
 // ∞∞∞{language}[-a] where language is lowercase ascii letters and -a means

@@ -22,7 +22,7 @@ describe("Math mode (browser tests)", () => {
   });
 
   function getMathResults(): string[] {
-    return Array.from(te.container.querySelectorAll(".heynote-math-result .inner")).map((el) => el.textContent || "");
+    return Array.from(te.container.querySelectorAll(".edna-math-result .inner")).map((el) => el.textContent || "");
   }
 
   afterEach(() => {
@@ -92,7 +92,7 @@ describe("Math mode (browser tests)", () => {
     // Wait for math results to appear
     await expect
       .poll(() => {
-        return container.querySelectorAll(".heynote-math-result").length;
+        return container.querySelectorAll(".edna-math-result").length;
       })
       .toBe(2);
 
@@ -102,7 +102,7 @@ describe("Math mode (browser tests)", () => {
 
     await expect.poll(() => container.querySelectorAll(".cm-foldPlaceholder").length).toBeGreaterThan(0);
 
-    await expect.poll(() => container.querySelectorAll(".heynote-math-result").length).toBe(1);
+    await expect.poll(() => container.querySelectorAll(".edna-math-result").length).toBe(1);
   });
 
   it("variables defined above the viewport are used (U22)", async () => {

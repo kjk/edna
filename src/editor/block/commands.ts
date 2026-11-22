@@ -1,8 +1,8 @@
 import { EditorSelection, Facet, type EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { ADD_NEW_BLOCK, CURRENCIES_LOADED, DELETE_BLOCK, heynoteEvent, LANGUAGE_CHANGE, MOVE_BLOCK } from "../annotation";
+import { kAddNewBlock, kCurrenciesLoaded, kDeleteBlock, ednaEvent, kLanguageChange, kMoveBlock } from "../annotation";
 import type { MultiBlockEditor } from "../editor";
-import { DELIMITER_PREFIX } from "../new-parser/node-types";
+import { kDelimiterPrefix } from "../new-parser/node-types";
 import {
   getActiveNoteBlock,
   getBlockN,
@@ -15,7 +15,7 @@ export { moveLineDown, moveLineUp } from "./move-lines";
 export { selectAll } from "./select-all";
 
 export function getBlockDelimiter(token: string, autoDetect: boolean): string {
-  return "\n" + DELIMITER_PREFIX + token + (autoDetect ? "-a" : "") + "\n";
+  return "\n" + kDelimiterPrefix + token + (autoDetect ? "-a" : "") + "\n";
 }
 
 export const defaultBlockDelimiter = Facet.define<string, string>({
@@ -34,7 +34,7 @@ export function insertNewBlockAtCursor({ state, dispatch }: EditorView): boolean
     return { changes: { from, to, insert: delimiter }, range: EditorSelection.cursor(from + delimiter.length) };
   });
   dispatch(state.update(changes, {
-    annotations: heynoteEvent.of(ADD_NEW_BLOCK),
+    annotations: ednaEvent.of(kAddNewBlock),
     userEvent: "input.block",
     scrollIntoView: true,
   }));
@@ -55,7 +55,7 @@ function addBlock(view: EditorView, block: Block | undefined, before: boolean, c
   view.dispatch({
     changes: { from, to, insert: delimiter + (needsSeparator ? "\n" : "") },
     selection: EditorSelection.cursor(cursor),
-    annotations: heynoteEvent.of(ADD_NEW_BLOCK),
+    annotations: ednaEvent.of(kAddNewBlock),
     userEvent: "input.block",
     effects: scrollToTop ? EditorView.scrollIntoView(cursor, { y: "start", yMargin: 0 }) : undefined,
     scrollIntoView: !scrollToTop,
@@ -97,11 +97,11 @@ export function changeLanguageTo(
   const from = state.sliceDoc(block.from, block.from + 1) === "\n" ? block.from + 1 : block.from;
   dispatch(state.update({
     changes: {
-      from: from + DELIMITER_PREFIX.length,
+      from: from + kDelimiterPrefix.length,
       to: block.contentFrom - 1,
       insert: language + (auto ? "-a" : ""),
     },
-    annotations: heynoteEvent.of(LANGUAGE_CHANGE),
+    annotations: ednaEvent.of(kLanguageChange),
   }));
 }
 
@@ -200,7 +200,7 @@ export const newCursorBelow = (view: EditorView): void => addVerticalCursor(view
 export const newCursorAbove = (view: EditorView): void => addVerticalCursor(view, false);
 
 export function triggerCurrenciesLoaded(view: EditorView): void {
-  view.dispatch({ annotations: heynoteEvent.of(CURRENCIES_LOADED) });
+  view.dispatch({ annotations: ednaEvent.of(kCurrenciesLoaded) });
 }
 
 function moveBlock(view: EditorView, direction: -1 | 1): boolean {
@@ -223,7 +223,7 @@ function moveBlock(view: EditorView, direction: -1 | 1): boolean {
   view.dispatch({
     changes: { from: before.from, to: after.to, insert: replacement },
     selection: EditorSelection.create(ranges, state.selection.mainIndex),
-    annotations: heynoteEvent.of(MOVE_BLOCK),
+    annotations: ednaEvent.of(kMoveBlock),
     userEvent: "move.block",
     scrollIntoView: true,
   });
@@ -244,7 +244,7 @@ export const deleteBlock = (_editor: MultiBlockEditor) => (view: EditorView): bo
   view.dispatch({
     changes: { from: block.from, to: block.to, insert },
     selection: EditorSelection.cursor(cursor),
-    annotations: heynoteEvent.of(DELETE_BLOCK),
+    annotations: ednaEvent.of(kDeleteBlock),
     userEvent: "delete.block",
     scrollIntoView: true,
   });

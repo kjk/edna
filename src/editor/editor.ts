@@ -2,12 +2,12 @@ import { history } from "@codemirror/commands";
 import { foldEffect, unfoldEffect } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, Prec, Transaction, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { heynoteEvent, SET_CONTENT, SET_FONT } from "./annotation";
+import { ednaEvent, kSetContent, kSetFont } from "./annotation";
 import { blockLineNumbers, getBlocks, getNoteBlockFromPos, noteBlockExtension } from "./block/block";
 import { defaultBlockDelimiter, getBlockDelimiter, triggerCurrenciesLoaded } from "./block/commands";
 import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
 import { colorPreviewExtension } from "./color-preview";
-import { heynoteCopyCut } from "./copy-paste";
+import { ednaCopyCut } from "./copy-paste";
 import { emacsKeymap, setEmacsMarkMode } from "./emacs";
 import { createDynamicCloseBracketsExtension, markdownSelectionWrapping } from "./extensions";
 import { foldGutterExtension, moveSelectionOutOfNewFolds } from "./fold-gutter";
@@ -19,10 +19,10 @@ import { multiBlock } from "./new-parser/language";
 import { autoSaveContent } from "./save";
 import { scrollMargin } from "./scroll-margin";
 import { customSetup, type CreateFindPanelFn } from "./setup";
-import { heynoteBase } from "./theme/base";
-import { heynoteDark } from "./theme/dark";
+import { ednaBase } from "./theme/base";
+import { ednaDark } from "./theme/dark";
 import { getFontTheme } from "./theme/font-theme";
-import { heynoteLight } from "./theme/light";
+import { ednaLight } from "./theme/light";
 import { todoCheckboxPlugin } from "./todo-checkbox";
 import type { SimpleRange } from "./types";
 
@@ -125,8 +125,8 @@ export class MultiBlockEditor {
         moveSelectionOutOfNewFolds,
         this.lineNumberCompartment.of(showLineNumberGutter ? blockLineNumbers : []),
         this.foldGutterCompartment.of(showFoldGutter ? foldGutterExtension() : []),
-        heynoteBase,
-        this.themeCompartment.of(theme === "dark" ? heynoteDark : heynoteLight),
+        ednaBase,
+        this.themeCompartment.of(theme === "dark" ? ednaDark : ednaLight),
         this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
         this.keymapCompartment.of(this.bindings(keymap)),
         this.readOnlyCompartment.of([]),
@@ -137,7 +137,7 @@ export class MultiBlockEditor {
         this.colorPreviewCompartment.of(showColorPreview ? colorPreviewExtension : []),
         this.tabsCompartment.of(indentationExtension(useTabs, tabSize)),
         markdownSelectionWrapping,
-        heynoteCopyCut(this),
+        ednaCopyCut(this),
         scrollMargin(),
         languageDetection,
         links,
@@ -224,7 +224,7 @@ export class MultiBlockEditor {
         ...this.getFoldedRanges().map((range) => unfoldEffect.of(range)),
         this.historyCompartment.reconfigure([]),
       ],
-      annotations: [heynoteEvent.of(SET_CONTENT), Transaction.addToHistory.of(false)],
+      annotations: [ednaEvent.of(kSetContent), Transaction.addToHistory.of(false)],
     });
     this.view.dispatch({ effects: this.historyCompartment.reconfigure(history()) });
     this.setIsDirtyCallback(false);
@@ -306,12 +306,12 @@ export class MultiBlockEditor {
   setFont(fontFamily: string, fontSize: number): void {
     this.view.dispatch({
       effects: this.fontTheme.reconfigure(getFontTheme(fontFamily, fontSize)),
-      annotations: heynoteEvent.of(SET_FONT),
+      annotations: ednaEvent.of(kSetFont),
     });
   }
 
   setTheme(theme: string): void {
-    this.reconfigure(this.themeCompartment, theme === "dark" ? heynoteDark : heynoteLight);
+    this.reconfigure(this.themeCompartment, theme === "dark" ? ednaDark : ednaLight);
   }
 
   setKeymap(keymap: string, emacsMetaKey: string): void {

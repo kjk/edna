@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view";
 
-export const heynoteBase = EditorView.theme({
+export const ednaBase = EditorView.theme({
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": { lineHeight: "1.4" },
   ".cm-line": { padding: "0 6px" },
@@ -22,19 +22,19 @@ export const heynoteBase = EditorView.theme({
     color: "var(--edna-fold-text)",
   },
   ".cm-panels": { backgroundColor: "var(--edna-panel)", color: "inherit", borderColor: "var(--edna-divider)" },
-  ".heynote-block-start:not(.first)": { borderTop: "1px solid var(--edna-divider)" },
+  ".edna-block-start:not(.first)": { borderTop: "1px solid var(--edna-divider)" },
   ".block-even": { backgroundColor: "var(--edna-block-even)" },
   ".block-odd": { backgroundColor: "var(--edna-block-odd)" },
-  ".heynote-math-result": { marginLeft: "0.8em", whiteSpace: "nowrap" },
-  ".heynote-math-result .inner": {
+  ".edna-math-result": { marginLeft: "0.8em", whiteSpace: "nowrap" },
+  ".edna-math-result .inner": {
     padding: "0 4px",
     borderRadius: "2px",
     color: "var(--edna-result-text)",
     backgroundColor: "var(--edna-result-background)",
     cursor: "pointer",
   },
-  ".heynote-math-result .inner.copied": { boxShadow: "0 0 0 2px currentColor" },
-  ".heynote-todo-checkbox": {
+  ".edna-math-result .inner.copied": { boxShadow: "0 0 0 2px currentColor" },
+  ".edna-todo-checkbox": {
     fontFamily: "ui-monospace",
     width: "15px",
     height: "15px",
@@ -42,6 +42,6 @@ export const heynoteBase = EditorView.theme({
     verticalAlign: "-2px",
     cursor: "pointer",
   },
-  '.heynote-todo-checkbox[aria-disabled="true"]': { cursor: "default" },
-  ".heynote-link": { color: "var(--edna-link)", textDecoration: "underline" },
+  '.edna-todo-checkbox[aria-disabled="true"]': { cursor: "default" },
+  ".edna-link": { color: "var(--edna-link)", textDecoration: "underline" },
 });

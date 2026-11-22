@@ -38,7 +38,7 @@ describe("Block folding (browser tests)", () => {
   }
 
   function blockCount() {
-    return te.container.querySelectorAll(".heynote-block-start").length;
+    return te.container.querySelectorAll(".edna-block-start").length;
   }
 
   function fold() {

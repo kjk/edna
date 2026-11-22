@@ -15,7 +15,7 @@ export function editorLines(container: HTMLElement): HTMLElement[] {
 export function visibleBlocks(container: HTMLElement): string[] {
   const blocks: string[][] = [];
   for (const element of container.querySelectorAll(".cm-content > *")) {
-    if (element.classList.contains("heynote-block-start")) {
+    if (element.classList.contains("edna-block-start")) {
       blocks.push([]);
     } else if (element.classList.contains("cm-line")) {
       const line = element.cloneNode(true) as HTMLElement;

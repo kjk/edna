@@ -1,1 +1,1 @@
-export const FOLD_LABEL_LENGTH = 50;
+export const kFoldLabelLength = 50;

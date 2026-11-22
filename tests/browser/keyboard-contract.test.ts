@@ -9,7 +9,7 @@ afterEach(() => cleanup(te));
 it("selects an empty block first and replaces the whole note on the second Select All", async () => {
   te = createEditor("\n∞∞∞text\n\n∞∞∞text\nsecond");
   await press("a", modKey);
-  expect(te.container.querySelector(".heynote-empty-block-selected")).toBeTruthy();
+  expect(te.container.querySelector(".edna-empty-block-selected")).toBeTruthy();
   await press("a", modKey);
   await userEvent.keyboard("replacement");
   expect(visibleBlocks(te.container)).toEqual(["replacement"]);
@@ -43,7 +43,7 @@ it("Emacs mark extends movement and transpose swaps neighboring characters", asy
 
 it("marks complete web links and updates the link as text is edited", async () => {
   te = createEditor("\n∞∞∞text\n(https://example.com/test) plain");
-  const link = () => te.container.querySelector<HTMLElement>(".heynote-link");
+  const link = () => te.container.querySelector<HTMLElement>(".edna-link");
   await expect.poll(() => link()?.textContent).toBe("https://example.com/test");
   expect(link()?.title).toMatch(/click/i);
   await userEvent.click(editorLines(te.container)[0]);

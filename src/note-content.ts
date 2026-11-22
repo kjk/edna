@@ -1,5 +1,5 @@
 import { blockHdrMarkdown } from "./constants";
-import { DELIMITER_PREFIX, parseDelimiterLine } from "./editor/new-parser/node-types";
+import { kDelimiterPrefix, parseDelimiterLine } from "./editor/new-parser/node-types";
 
 // a line that looks like a delimiter but isn't valid: upper case language or
 // Heynote metadata (∞∞∞text-a;created=...)
@@ -21,12 +21,12 @@ export function fixUpNoteContent(s: string | null): string {
   if (s.includes("\r")) {
     s = s.replace(/\r\n?/g, "\n");
   }
-  if (s.startsWith(DELIMITER_PREFIX)) {
+  if (s.startsWith(kDelimiterPrefix)) {
     // legacy: first delimiter without the leading newline
     s = "\n" + s;
   }
   s = s.replace(reFixableDelimiterLine, (m, lang: string, auto?: string) => {
-    return "\n" + DELIMITER_PREFIX + lang.toLowerCase() + (auto ?? "");
+    return "\n" + kDelimiterPrefix + lang.toLowerCase() + (auto ?? "");
   });
   if (!startsWithValidDelimiter(s)) {
     s = blockHdrMarkdown + s;
@@ -39,7 +39,7 @@ export function fixUpNoteContent(s: string | null): string {
 
 // true if s starts with "\n" + valid delimiter line (+ "\n" or end of string)
 export function startsWithValidDelimiter(s: string): boolean {
-  if (!s.startsWith("\n" + DELIMITER_PREFIX)) {
+  if (!s.startsWith("\n" + kDelimiterPrefix)) {
     return false;
   }
   let end = s.indexOf("\n", 1);

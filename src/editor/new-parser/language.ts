@@ -11,11 +11,9 @@ import {
   languageDataProp,
   foldNodeProp,
 } from "@codemirror/language";
+import { kFoldLabelLength } from "../constants";
 import { parser } from "./parser";
 import { configureNesting } from "./nested";
-
-// Number of characters to show before folding starts
-const FOLD_LABEL_LENGTH = 50;
 
 // Language data configuration
 const languageData = defineLanguageFacet({
@@ -30,7 +28,7 @@ const parserWithProps = parser.configure({
         if (node.from >= node.to) return null;
 
         const firstLine = state.doc.lineAt(node.from);
-        const foldFrom = Math.min(firstLine.to, node.from + FOLD_LABEL_LENGTH);
+        const foldFrom = Math.min(firstLine.to, node.from + kFoldLabelLength);
 
         if (foldFrom >= node.to) return null;
 

@@ -49,6 +49,6 @@ describe("Scroll margin", () => {
     await expect.poll(() => scroller.scrollTop).toBeGreaterThan(500);
     const rendered = editorLines(te.container);
     expect(rendered.slice(-2).map((line) => line.textContent)).toEqual(["line 49", "new block"]);
-    expect(rendered.at(-1)?.previousElementSibling?.classList.contains("heynote-block-start")).toBe(true);
+    expect(rendered.at(-1)?.previousElementSibling?.classList.contains("edna-block-start")).toBe(true);
   });
 });

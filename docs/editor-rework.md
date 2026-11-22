@@ -47,7 +47,7 @@ Run the Chromium UI suite against the original behavior before deleting code. Ex
 
 These are compatibility names. Internals may be grouped differently.
 
-- `annotation` — `heynoteEvent`, `LANGUAGE_CHANGE`, `CURRENCIES_LOADED`, `SET_CONTENT`, `ADD_NEW_BLOCK`, `MOVE_BLOCK`, `DELETE_BLOCK`, `SET_FONT`, `transactionsHasAnnotation`, `transactionsHasAnnotationsAny`, `transactionsHasHistoryEvent`.
+- `annotation` — `ednaEvent`, `kLanguageChange`, `kCurrenciesLoaded`, `kSetContent`, `kAddNewBlock`, `kMoveBlock`, `kDeleteBlock`, `kSetFont`, `transactionsHasAnnotation`, `transactionsHasAnnotationsAny`, `transactionsHasHistoryEvent`.
 - `block/block-parsing` — `NoteBlock`, `getBlocksFromSyntaxTree`, `getBlocksFromString`.
 - `block/block` — `getBlocks`, `blockState`, `getActiveNoteBlock`, `Block`, `blockContent`, `BlocksInfo`, `getBlocksInfo`, `getFirstNoteBlock`, `getLastNoteBlock`, `getBlockN`, `getNoteBlockFromPos`, `getNoteBlocksBetween`, `getNoteBlocksFromRangeSet`, `getBlockLineFromPos`, `blockLineNumbers`, `noteBlockExtension`, `insertAfterActiveBlock`.
 - `block/commands` — `getBlockDelimiter`, `defaultBlockDelimiter`, `insertNewBlockAtCursor`, `addNewBlockBeforeCurrent`, `addNewBlockAfterCurrent`, `addNewBlockBeforeFirst`, `addNewBlockAfterLastAndScrollDown`, `addNewBlockAfterLast`, `changeLanguageTo`, `changeCurrentBlockLanguage`, `gotoBlock`, `gotoNextBlock`, `selectNextBlock`, `gotoPreviousBlock`, `selectPreviousBlock`, `gotoNextParagraph`, `selectNextParagraph`, `gotoPreviousParagraph`, `selectPreviousParagraph`, `newCursorBelow`, `newCursorAbove`, `triggerCurrenciesLoaded`, `moveCurrentBlockUp`, `moveCurrentBlockDown`, `deleteBlock`, `moveLineDown`, `moveLineUp`, `selectAll`.
@@ -58,7 +58,7 @@ These are compatibility names. Internals may be grouped differently.
 - `block/transpose-chars` — `transposeChars`.
 - `cmutils` — `isMac`, `isWindows`, `isReadOnly`, `getCurrentSelection`, `hasSelection`, `focusEditorView`, `getFoldedRanges`.
 - `color-preview` — `colorPreviewExtension`.
-- `copy-paste` — `removeDelimitersFromPastedText`, `heynoteCopyCut`, `copyCommand`, `cutCommand`, `pasteCommand`.
+- `copy-paste` — `removeDelimitersFromPastedText`, `ednaCopyCut`, `copyCommand`, `cutCommand`, `pasteCommand`.
 - `date-time` — `insertDateAndTime`, `insertTime`.
 - `editor` — `KeymapSpec`, `MultiBlockEditor`. The facade exposes `destroy`, `save`, `getContent`, `setContent`, `getSelectionJSON`, `setSelection`, `getFoldedRanges`, `setFoldedRanges`, `getBlocks`, `getCursorPosition`, `setCursorPosition`, `focus`, `isReadOnly`, `setReadOnly`, `setFont`, `setTheme`, `setKeymap`, `setLineNumberGutter`, `setFoldGutter`, `setColorPreview`, `setDefaultBlockLanguage`, `didLoadCurrencies`, `setBracketClosing` and `setTabsState`.
 - `emacs` — `setEmacsMarkMode`, `emacsKeymap`.
@@ -69,15 +69,15 @@ These are compatibility names. Internals may be grouped differently.
 - `keymap` — `keymapFromSpec`, `ednaKeymap`.
 - `language-detection/autodetect` — `applyDetectionResult`, `languageDetection`.
 - `language-detection/levenshtein` — `levenshtein_distance`.
-- `languages` — `Language`, `kLanguages`, `LANGUAGES`, `extForLang`, `getLanguage`, `getLanguageNameFromToken`, `langSupportsRun`, `langGetParser`, `PrettierInfo`, `langGetPrettierInfo`, `langSupportsFormat`.
+- `languages` — `Language`, `kLanguages`, `extForLang`, `getLanguage`, `getLanguageNameFromToken`, `langSupportsRun`, `langGetParser`, `PrettierInfo`, `langGetPrettierInfo`, `langSupportsFormat`.
 - `links` — `links`.
 - `save` — `autoSaveContent`.
 - `scroll-margin` — `scrollMargin`.
 - `setup` — `CreateFindPanelFn`, `customSetup`.
-- `theme/base` — `heynoteBase`.
-- `theme/dark` — `heynoteDark`, `darkHighlightStyle`, `darkTheme`.
+- `theme/base` — `ednaBase`.
+- `theme/dark` — `ednaDark`, `darkHighlightStyle`, `darkTheme`.
 - `theme/font-theme` — `setDefaultFontFamilyAndSize`, `isMonospaceFont`, `getFontTheme`.
-- `theme/light` — `heynoteLight`.
+- `theme/light` — `ednaLight`.
 - `todo-checkbox` — `todoCheckboxPlugin`, `toggleCheckbox`.
 
 ## Input compatibility

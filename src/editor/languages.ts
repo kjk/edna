@@ -80,8 +80,7 @@ export const kLanguages: Language[] = [
   { token: "mermaid", name: "Mermaid", guesslang: null, ext: "mmd" },
 ];
 
-export const LANGUAGES = kLanguages;
-const byToken = new Map(LANGUAGES.map((language) => [language.token, language]));
+const byToken = new Map(kLanguages.map((language) => [language.token, language]));
 const parsers = new Map(
   Object.entries({
     math: mathjsLanguage,
@@ -132,7 +131,7 @@ export function getLanguage(token: string): Language | undefined {
 }
 
 export function extForLang(lang: string): string {
-  const language = getLanguage(lang) ?? LANGUAGES.find(({ name }) => name === lang);
+  const language = getLanguage(lang) ?? kLanguages.find(({ name }) => name === lang);
   return language ? (language.ext ?? language.guesslang ?? language.token) : "txt";
 }
 

@@ -1,5 +1,5 @@
 import { ViewPlugin, type ViewUpdate } from "@codemirror/view";
-import { SET_CONTENT, transactionsHasAnnotation } from "./annotation";
+import { kSetContent, transactionsHasAnnotation } from "./annotation";
 import type { MultiBlockEditor } from "./editor";
 
 export function autoSaveContent(editor: MultiBlockEditor, interval: number) {
@@ -31,7 +31,7 @@ export function autoSaveContent(editor: MultiBlockEditor, interval: number) {
         }
         window.clearTimeout(this.timer);
         this.timer = undefined;
-        if (transactionsHasAnnotation(update.transactions, SET_CONTENT)) {
+        if (transactionsHasAnnotation(update.transactions, kSetContent)) {
           return;
         }
         const dirty = update.state.doc.toString() !== editor.diskContent;

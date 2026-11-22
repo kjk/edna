@@ -21,7 +21,7 @@
     kWelcomeDevSystemNoteName,
     kWelcomeSystemNoteName,
   } from "../constants";
-  import { ADD_NEW_BLOCK, heynoteEvent } from "../editor/annotation";
+  import { kAddNewBlock, ednaEvent } from "../editor/annotation";
   import { getActiveNoteBlock, getBlockN, getBlocksInfo, insertAfterActiveBlock } from "../editor/block/block";
   import type { NoteBlock } from "../editor/block/block-parsing";
   import {
@@ -2340,7 +2340,7 @@
             insert: s + "\n",
           },
           selection: EditorSelection.cursor(len(s) + 1),
-          annotations: [heynoteEvent.of(ADD_NEW_BLOCK)],
+          annotations: [ednaEvent.of(kAddNewBlock)],
         },
         {
           scrollIntoView: true,

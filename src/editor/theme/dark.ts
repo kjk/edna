@@ -50,7 +50,7 @@ export const darkHighlightStyle = HighlightStyle.define([
   { tag: tags.invalid, color: "#e48b93" },
 ]);
 
-export const heynoteDark = [
+export const ednaDark = [
   EditorView.editorAttributes.of({ class: "dark-theme" }),
   darkTheme,
   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),

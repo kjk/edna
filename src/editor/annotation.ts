@@ -1,21 +1,21 @@
 import { Annotation, type Transaction } from "@codemirror/state";
 
-export const heynoteEvent = Annotation.define<string>();
-export const LANGUAGE_CHANGE = "heynote-change";
-export const CURRENCIES_LOADED = "heynote-currencies-loaded";
-export const SET_CONTENT = "heynote-set-content";
-export const ADD_NEW_BLOCK = "heynote-add-new-block";
-export const MOVE_BLOCK = "heynote-move-block";
-export const DELETE_BLOCK = "heynote-delete-block";
-export const SET_FONT = "heynote-set-font";
+export const ednaEvent = Annotation.define<string>();
+export const kLanguageChange = "edna-change";
+export const kCurrenciesLoaded = "edna-currencies-loaded";
+export const kSetContent = "edna-set-content";
+export const kAddNewBlock = "edna-add-new-block";
+export const kMoveBlock = "edna-move-block";
+export const kDeleteBlock = "edna-delete-block";
+export const kSetFont = "edna-set-font";
 
 export function transactionsHasAnnotation(transactions: readonly Transaction[], annotation: string): boolean {
-  return transactions.some((tr) => tr.annotation(heynoteEvent) === annotation);
+  return transactions.some((tr) => tr.annotation(ednaEvent) === annotation);
 }
 
 export function transactionsHasAnnotationsAny(transactions: readonly Transaction[], annotations: string[]): boolean {
   return transactions.some((tr) => {
-    const annotation = tr.annotation(heynoteEvent);
+    const annotation = tr.annotation(ednaEvent);
     return annotation !== undefined && annotations.includes(annotation);
   });
 }

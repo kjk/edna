@@ -88,7 +88,7 @@ function writeSelection(view: EditorView, editor: MultiBlockEditor, cut: boolean
   }
 }
 
-export function heynoteCopyCut(editor: MultiBlockEditor) {
+export function ednaCopyCut(editor: MultiBlockEditor) {
   return [
     EditorView.domEventHandlers({
       copy(event, view) {

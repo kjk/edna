@@ -50,7 +50,7 @@ const lightHighlight = HighlightStyle.define([
   { tag: tags.invalid, color: "#c22130" },
 ]);
 
-export const heynoteLight = [
+export const ednaLight = [
   EditorView.editorAttributes.of({ class: "light-theme" }),
   lightTheme,
   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),

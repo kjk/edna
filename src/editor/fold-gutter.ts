@@ -9,16 +9,16 @@ import {
 } from "@codemirror/language";
 import { EditorSelection, EditorState, type StateEffect, type Transaction } from "@codemirror/state";
 import { BlockType, gutter, GutterMarker, type BlockInfo, type EditorView } from "@codemirror/view";
-import { ADD_NEW_BLOCK, DELETE_BLOCK, heynoteEvent, LANGUAGE_CHANGE, MOVE_BLOCK, SET_CONTENT } from "./annotation";
+import { kAddNewBlock, kDeleteBlock, ednaEvent, kLanguageChange, kMoveBlock, kSetContent } from "./annotation";
 import { getBlocks, getNoteBlockFromPos, getNoteBlocksFromRangeSet, type Block } from "./block/block";
-import { FOLD_LABEL_LENGTH } from "./constants";
+import { kFoldLabelLength } from "./constants";
 import type { MultiBlockEditor } from "./editor";
 import type { SimpleRange } from "./types";
 
 function foldRange(state: EditorState, block: Block): SimpleRange | null {
   const firstLine = state.doc.lineAt(block.contentFrom);
   if (firstLine.to >= block.to) return null;
-  return { from: Math.min(firstLine.to, block.contentFrom + FOLD_LABEL_LENGTH), to: block.to };
+  return { from: Math.min(firstLine.to, block.contentFrom + kFoldLabelLength), to: block.to };
 }
 
 const placeholders = codeFolding({
@@ -38,16 +38,16 @@ const placeholders = codeFolding({
 });
 
 function editingUnfolds(tr: Transaction): StateEffect<SimpleRange>[] {
-  const event = tr.annotation(heynoteEvent);
+  const event = tr.annotation(ednaEvent);
   if (
     !tr.docChanged ||
     tr.isUserEvent("undo") ||
     tr.isUserEvent("redo") ||
-    event === SET_CONTENT ||
-    event === LANGUAGE_CHANGE ||
-    event === ADD_NEW_BLOCK ||
-    event === DELETE_BLOCK ||
-    event === MOVE_BLOCK
+    event === kSetContent ||
+    event === kLanguageChange ||
+    event === kAddNewBlock ||
+    event === kDeleteBlock ||
+    event === kMoveBlock
   )
     return [];
 

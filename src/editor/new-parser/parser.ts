@@ -19,7 +19,7 @@ import {
   type Input,
   type ParseWrapper,
 } from "@lezer/common";
-import { NodeID, nodeSet, DELIMITER_PREFIX, parseDelimiterLine } from "./node-types";
+import { NodeID, nodeSet, kDelimiterPrefix, parseDelimiterLine } from "./node-types";
 
 /**
  * Find all delimiter positions in the input text.
@@ -39,7 +39,7 @@ export function findDelimiters(text: string): DelimiterInfo[] {
   let pos = 0;
 
   // Check for delimiter at document start (no leading newline)
-  if (text.startsWith(DELIMITER_PREFIX)) {
+  if (text.startsWith(kDelimiterPrefix)) {
     const lineEnd = text.indexOf("\n");
     if (lineEnd !== -1) {
       const delim = parseDelimiterLine(text.slice(0, lineEnd));
@@ -47,8 +47,8 @@ export function findDelimiters(text: string): DelimiterInfo[] {
         delimiters.push({
           start: 0,
           end: lineEnd + 1,
-          langStart: DELIMITER_PREFIX.length,
-          langEnd: DELIMITER_PREFIX.length + delim.language.length,
+          langStart: kDelimiterPrefix.length,
+          langEnd: kDelimiterPrefix.length + delim.language.length,
           autoDetect: delim.autoDetect,
         });
       }
@@ -64,8 +64,8 @@ export function findDelimiters(text: string): DelimiterInfo[] {
     // Check if next line starts with delimiter
     const afterNewline = nextNewline + 1;
     if (
-      text.slice(afterNewline, afterNewline + DELIMITER_PREFIX.length) ===
-      DELIMITER_PREFIX
+      text.slice(afterNewline, afterNewline + kDelimiterPrefix.length) ===
+      kDelimiterPrefix
     ) {
       const lineEnd = text.indexOf("\n", afterNewline);
       if (lineEnd !== -1) {
@@ -74,8 +74,8 @@ export function findDelimiters(text: string): DelimiterInfo[] {
           delimiters.push({
             start: nextNewline, // Include the newline before ∞∞∞
             end: lineEnd + 1, // Include the newline after language
-            langStart: afterNewline + DELIMITER_PREFIX.length,
-            langEnd: afterNewline + DELIMITER_PREFIX.length + delim.language.length,
+            langStart: afterNewline + kDelimiterPrefix.length,
+            langEnd: afterNewline + kDelimiterPrefix.length + delim.language.length,
             autoDetect: delim.autoDetect,
           });
           pos = lineEnd + 1;

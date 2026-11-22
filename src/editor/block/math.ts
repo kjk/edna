@@ -1,6 +1,6 @@
 import { foldedRanges } from "@codemirror/language";
 import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet } from "@codemirror/view";
-import { CURRENCIES_LOADED, transactionsHasAnnotation } from "../annotation";
+import { kCurrenciesLoaded, transactionsHasAnnotation } from "../annotation";
 import { getNoteBlocksBetween } from "./block";
 
 interface MathAPI {
@@ -96,7 +96,7 @@ class MathResult extends WidgetType {
   toDOM(view: EditorView) {
     const { ownerDocument } = view.dom;
     const wrapper = ownerDocument.createElement("span");
-    wrapper.className = "heynote-math-result";
+    wrapper.className = "edna-math-result";
     const inner = wrapper.appendChild(ownerDocument.createElement("span"));
     inner.className = "inner";
     inner.textContent = this.label;
@@ -147,7 +147,7 @@ export const mathBlock = ViewPlugin.define(
     return {
       decorations: visibleResults(view, evaluate(view, evaluations)),
       update(update) {
-        const refresh = update.docChanged || transactionsHasAnnotation(update.transactions, CURRENCIES_LOADED);
+        const refresh = update.docChanged || transactionsHasAnnotation(update.transactions, kCurrenciesLoaded);
         if (refresh) evaluations.clear();
         if (refresh || update.viewportChanged || foldedRanges(update.state) !== foldedRanges(update.startState)) {
           this.decorations = visibleResults(update.view, evaluate(update.view, evaluations));

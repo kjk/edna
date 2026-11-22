@@ -9,7 +9,7 @@ import {
   layer,
   type DecorationSet,
 } from "@codemirror/view";
-import { ADD_NEW_BLOCK, DELETE_BLOCK, heynoteEvent, LANGUAGE_CHANGE, MOVE_BLOCK, SET_CONTENT } from "../annotation";
+import { kAddNewBlock, kDeleteBlock, ednaEvent, kLanguageChange, kMoveBlock, kSetContent } from "../annotation";
 import type { MultiBlockEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
 import type { SimpleRange } from "../types";
@@ -162,9 +162,9 @@ class BlockStart extends WidgetType {
 
   toDOM(): HTMLElement {
     const element = document.createElement("div");
-    element.className = "heynote-block-start";
+    element.className = "edna-block-start";
     element.classList.toggle("first", this.first);
-    element.classList.toggle("heynote-empty-block-selected", this.selected);
+    element.classList.toggle("edna-empty-block-selected", this.selected);
     return element;
   }
 }
@@ -201,7 +201,7 @@ const atomicHeaders = EditorView.atomicRanges.from(blockState, (blocks) => {
 
 const blockBackgrounds = Prec.low(layer({
   above: false,
-  class: "heynote-blocks-layer",
+  class: "edna-blocks-layer",
   update: (update) => update.docChanged || update.viewportChanged || update.geometryChanged,
   markers(view) {
     const blocks = getNoteBlocksBetween(view.state, view.viewport.from, view.viewport.to);
@@ -214,7 +214,7 @@ const blockBackgrounds = Prec.low(layer({
       const next = getBlockN(view.state, block.index + 1);
       const bottom = next ? startHeight(view, next) : height;
       const marker = new RectangleMarker(
-        block.index % 2 ? "heynote-block-background block-odd" : "heynote-block-background block-even",
+        block.index % 2 ? "edna-block-background block-odd" : "edna-block-background block-even",
         0,
         origin + top * view.scaleY,
         width,
@@ -233,15 +233,15 @@ function startHeight(view: EditorView, block: Block): number {
 }
 
 const blockStyle = EditorView.baseTheme({
-  ".heynote-block-start": { height: "12px" },
-  ".heynote-block-start.first": { height: "0" },
-  ".heynote-empty-block-selected": { boxShadow: "0 0 0 1px currentColor" },
+  ".edna-block-start": { height: "12px" },
+  ".edna-block-start.first": { height: "0" },
+  ".edna-empty-block-selected": { boxShadow: "0 0 0 1px currentColor" },
 });
 
 const protectDelimiters = EditorState.changeFilter.of((tr) => {
   if (!tr.docChanged || tr.isUserEvent("undo") || tr.isUserEvent("redo")) return true;
-  const event = tr.annotation(heynoteEvent);
-  if (event === SET_CONTENT || event === LANGUAGE_CHANGE || event === ADD_NEW_BLOCK || event === MOVE_BLOCK || event === DELETE_BLOCK) {
+  const event = tr.annotation(ednaEvent);
+  if (event === kSetContent || event === kLanguageChange || event === kAddNewBlock || event === kMoveBlock || event === kDeleteBlock) {
     return true;
   }
 
@@ -254,7 +254,7 @@ const protectDelimiters = EditorState.changeFilter.of((tr) => {
 });
 
 const normalizeSelection = EditorState.transactionFilter.of((tr) => {
-  if (!tr.selection || tr.annotation(heynoteEvent) === SET_CONTENT) return tr;
+  if (!tr.selection || tr.annotation(ednaEvent) === kSetContent) return tr;
   const blocks = getBlocks(tr.state);
   if (!blocks.length) return tr;
 
@@ -330,7 +330,7 @@ export function insertAfterActiveBlock(view: EditorView, text: string): boolean 
   view.dispatch({
     changes: { from: active.to, insert },
     selection: { anchor: active.to + insert.length },
-    annotations: heynoteEvent.of(ADD_NEW_BLOCK),
+    annotations: ednaEvent.of(kAddNewBlock),
     scrollIntoView: true,
   });
   return true;

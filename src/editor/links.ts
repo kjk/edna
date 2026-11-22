@@ -22,7 +22,7 @@ function linkDecorations(view: EditorView): DecorationSet {
       const start = from + match.index;
       decorations.push(
         Decoration.mark({
-          class: "heynote-link",
+          class: "edna-link",
           attributes: { "data-href": link, title: `${isMac() ? "Command" : "Ctrl"}+Click to open link` },
         }).range(start, start + link.length),
       );
@@ -43,7 +43,7 @@ export const links = ViewPlugin.define(
     eventHandlers: {
       click(event, view) {
         if (!(isMac() ? event.metaKey : event.ctrlKey) || event.button !== 0) return false;
-        const anchor = (event.target as Element | null)?.closest<HTMLElement>(".heynote-link");
+        const anchor = (event.target as Element | null)?.closest<HTMLElement>(".edna-link");
         const href = anchor?.dataset.href;
         if (!href) return false;
         view.dom.ownerDocument.defaultView?.open(href, "_blank", "noopener,noreferrer");

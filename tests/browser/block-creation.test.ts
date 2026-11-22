@@ -18,13 +18,13 @@ describe("Block creation (browser tests)", () => {
 
   async function runTest(expectedBlocks: string[], ...modifiers: string[]) {
     expect(blocks()).toEqual(["Block A", "Block B", "Block C"]);
-    await expect.poll(() => te.container.querySelectorAll(".heynote-blocks-layer > div").length).toBe(3);
+    await expect.poll(() => te.container.querySelectorAll(".edna-blocks-layer > div").length).toBe(3);
 
     await press("Enter", ...modifiers);
     await userEvent.keyboard("Block D");
 
     expect(blocks()).toEqual(expectedBlocks.map((name) => `Block ${name}`));
-    await expect.poll(() => te.container.querySelectorAll(".heynote-block-start.first").length).toBe(1);
+    await expect.poll(() => te.container.querySelectorAll(".edna-block-start.first").length).toBe(1);
   }
 
   afterEach(() => {

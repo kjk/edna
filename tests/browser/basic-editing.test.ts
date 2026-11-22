@@ -28,7 +28,7 @@ describe("Basic editing (browser tests)", () => {
 
     expect(blocks()).toEqual(["Hello World!", ""]);
     await expect
-      .poll(() => te.container.querySelectorAll(".heynote-blocks-layer > div").length)
+      .poll(() => te.container.querySelectorAll(".edna-blocks-layer > div").length)
       .toBe(2);
   });
 
