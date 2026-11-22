@@ -7,6 +7,7 @@ import { blockLineNumbers, blockState, noteBlockExtension } from "./block/block"
 import { defaultBlockDelimiter, getBlockDelimiter, triggerCurrenciesLoaded } from "./block/commands";
 import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
 import { colorPreviewExtension } from "./color-preview";
+import { scrollMargin } from "./scroll-margin";
 import { heynoteCopyCut } from "./copy-paste";
 import { emacsKeymap } from "./emacs";
 import { createDynamicCloseBracketsExtension } from "./extensions";
@@ -156,9 +157,7 @@ export class MultiBlockEditor {
         heynoteBase,
         this.fontTheme.of(getFontTheme(fontFamily || "", fontSize || 14)),
         makeTabState(useTabs, tabSize),
-        EditorView.scrollMargins.of((f) => {
-          return { top: 80, bottom: 80 };
-        }),
+        scrollMargin(),
         multiBlock(),
         noteBlockExtension(this),
         languageDetection,

@@ -151,6 +151,15 @@ export function addNewBlockBeforeFirst({ state, dispatch }: EditorView): boolean
   return true;
 }
 
+// adds a new block at the end and scrolls all the way down so that only the new block is visible
+export function addNewBlockAfterLastAndScrollDown(view: EditorView): boolean {
+  if (!addNewBlockAfterLast(view)) {
+    return false;
+  }
+  view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+  return true;
+}
+
 export function addNewBlockAfterLast({ state, dispatch }: EditorView): boolean {
   if (state.readOnly) return false;
   const block = getLastNoteBlock(state);

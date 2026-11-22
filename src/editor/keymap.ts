@@ -4,7 +4,7 @@ import { foldCode, unfoldCode } from "@codemirror/language";
 import { keymap } from "@codemirror/view";
 import {
   addNewBlockAfterCurrent,
-  addNewBlockAfterLast,
+  addNewBlockAfterLastAndScrollDown,
   addNewBlockBeforeCurrent,
   addNewBlockBeforeFirst,
   gotoNextBlock,
@@ -60,7 +60,7 @@ export function ednaKeymap(editor: MultiBlockEditor) {
     ["Tab", insertIndentation],
     ["Shift-Tab", indentLess],
     ["Alt-Shift-Enter", addNewBlockBeforeFirst],
-    ["Mod-Shift-Enter", addNewBlockAfterLast],
+    ["Mod-Shift-Enter", addNewBlockAfterLastAndScrollDown],
     ["Alt-Enter", addNewBlockBeforeCurrent],
     ["Mod-Enter", addNewBlockAfterCurrent],
     ["Mod-Alt-Enter", insertNewBlockAtCursor],

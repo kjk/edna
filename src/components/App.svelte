@@ -26,7 +26,7 @@
   import type { NoteBlock } from "../editor/block/block-parsing";
   import {
     addNewBlockAfterCurrent,
-    addNewBlockAfterLast,
+    addNewBlockAfterLastAndScrollDown,
     addNewBlockBeforeCurrent,
     addNewBlockBeforeFirst,
     changeCurrentBlockLanguage,
@@ -1440,7 +1440,7 @@
       addNewBlockBeforeCurrent(requireView());
       focusView();
     } else if (cmdId === kCmdNewBlockAtEnd) {
-      addNewBlockAfterLast(requireView());
+      addNewBlockAfterLastAndScrollDown(requireView());
       focusView();
     } else if (cmdId === kCmdNewBlockAtStart) {
       addNewBlockBeforeFirst(requireView());
