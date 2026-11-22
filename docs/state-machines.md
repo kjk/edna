@@ -494,14 +494,17 @@ to state machines). Ordered by impact.
   **Fixed**: `menuItemStatus` handles an unknown language; `getLanguage` uses a `Map` (token
   `constructor` found `Object.prototype.constructor`); `changeLanguageTo` rejects invalid tokens.
 - **U13. Restored folds / selections fit the document.** Stored as offsets; not checked
-  against the current document length (note changed elsewhere).
+  against the current document length (note changed elsewhere). **Fixed**: only folds inside
+  one block's content are restored; a selection outside the document falls back to the default.
 - **U14. `moveCurrentBlock`: the selection anchor is in the current block.** A selection
   spanning two blocks produced positions outside the document.
 - **U15. Menu entries are commands.** `menuItemStatus` treated a submenu as a command id; on the
   Home tab every submenu (Notes storage, Encryption, Help) was removed. **Fixed**.
 - **U16. A selection is never inside a delimiter (after the first block).** Atomic ranges only
   constrain cursor motion; programmatic selections (find, restored selection) could land
-  inside, and typing changed the language or broke the delimiter.
+  inside, and typing changed the language or broke the delimiter. **Fixed**: a transaction filter
+  moves selection ends inside any delimiter to the block's content
+  (`preventSelectionInsideDelimiters`).
 
 ### Low impact
 - **U17.** User function results are strings; function metadata JSON is an object.

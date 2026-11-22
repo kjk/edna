@@ -270,6 +270,16 @@ export class MultiBlockEditor {
   }
 
   setFoldedRanges(ranges: SimpleRange[]) {
+    // folds are stored as offsets: if the note changed elsewhere they might not
+    // fit the document. Keep only folds inside the content of one block (U13)
+    let blocks = this.getBlocks();
+    ranges = ranges.filter(
+      (r) =>
+        Number.isInteger(r.from) &&
+        Number.isInteger(r.to) &&
+        r.from < r.to &&
+        blocks.some((b) => b.contentFrom <= r.from && r.to <= b.to),
+    );
     if (ranges.length === 0) {
       return;
     }

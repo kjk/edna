@@ -347,23 +347,51 @@ const preventFirstBlockFromBeingDeleted = EditorState.changeFilter.of((tr) => {
   return true;
 });
 
+// if pos is inside a block delimiter (after the line break that starts it),
+// returns the start of that block's content, otherwise pos
+function posOutsideDelimiter(blocks: readonly { from: number; contentFrom: number }[], pos: number): number {
+  // binary search for the last block with from <= pos
+  let lo = 0;
+  let hi = blocks.length - 1;
+  while (lo < hi) {
+    let mid = (lo + hi + 1) >> 1;
+    if (blocks[mid].from <= pos) lo = mid;
+    else hi = mid - 1;
+  }
+  let b = blocks[lo];
+  if (!b) return pos;
+  // the first block's delimiter starts at 0 and has no previous block to end
+  let inside = lo === 0 ? pos < b.contentFrom : pos > b.from && pos < b.contentFrom;
+  return inside ? b.contentFrom : pos;
+}
+
 /**
- * Transaction filter to prevent the selection from being before the first block
+ * Transaction filter that keeps the selection out of block delimiters (U16).
+ * Atomic ranges only constrain cursor motion; selections set programmatically
+ * (find, restored selection, reload) could land inside a delimiter, where
+ * typing would change the language or break the delimiter.
  */
-const preventSelectionBeforeFirstBlock = EditorState.transactionFilter.of((tr) => {
+const preventSelectionInsideDelimiters = EditorState.transactionFilter.of((tr) => {
   const sel = tr.selection;
   if (!sel || tr.annotation(heynoteEvent)) {
     return tr;
   }
   // selection is in the coordinates of the new document
-  const delimSize = firstBlockDelimiterSize(tr.docChanged ? tr.state : tr.startState);
-  if (!delimSize || !sel.ranges.some((r) => r.from < delimSize)) {
+  const blocks = (tr.docChanged ? tr.state : tr.startState).field(blockState);
+  if (blocks.length === 0) {
     return tr;
   }
-  // move the parts of the selection that are before the first block to its start
-  const ranges = sel.ranges.map((r) =>
-    EditorSelection.range(Math.max(r.anchor, delimSize), Math.max(r.head, delimSize)),
-  );
+  let changed = false;
+  const ranges = sel.ranges.map((r) => {
+    let anchor = posOutsideDelimiter(blocks, r.anchor);
+    let head = posOutsideDelimiter(blocks, r.head);
+    if (anchor === r.anchor && head === r.head) return r;
+    changed = true;
+    return EditorSelection.range(anchor, head);
+  });
+  if (!changed) {
+    return tr;
+  }
   return [tr, { selection: EditorSelection.create(ranges, sel.mainIndex), sequential: true }];
 });
 
@@ -452,7 +480,7 @@ export const noteBlockExtension = (editor: MultiBlockEditor) => {
     atomicNoteBlock,
     blockLayer,
     preventFirstBlockFromBeingDeleted,
-    preventSelectionBeforeFirstBlock,
+    preventSelectionInsideDelimiters,
     emitCursorChange(editor),
     mathBlock,
     emptyBlockSelected,
