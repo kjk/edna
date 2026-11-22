@@ -22,8 +22,7 @@ describe("language auto-detection", () => {
     const ok = applyDetectionResult(editor.view, {
       guesslang: { language: "py", confidence: 1 },
       content: py,
-      idx: 0,
-    });
+    }, editor.getBlocks()[0]!.from);
     expect(ok).toBe(true);
     const blocks = editor.getBlocks();
     expect(blocks[0]!.language).toBe("python");
@@ -35,9 +34,24 @@ describe("language auto-detection", () => {
     const ok = applyDetectionResult(te.editor.view, {
       guesslang: { language: "py", confidence: 1 },
       content: py,
-      idx: 0,
-    });
+    }, te.editor.getBlocks()[0]!.from);
     expect(ok).toBe(false);
     expect(te.editor.getBlocks()[0]!.language).toBe("text");
+  });
+
+  it("result is applied by block position, not index (U28)", () => {
+    te = createEditor("\n∞∞∞text\nfirst\n∞∞∞text-a\n" + py);
+    const view = te.editor.view;
+    const target = te.editor.getBlocks()[1]!;
+    // a block inserted before the target: the target's index changes
+    view.dispatch({ changes: { from: 0, insert: "\n∞∞∞text-a\n" + py } });
+    const mapped = target.from + ("\n∞∞∞text-a\n" + py).length;
+    const ok = applyDetectionResult(view, { guesslang: { language: "py", confidence: 1 }, content: py }, mapped);
+    expect(ok).toBe(true);
+    const blocks = te.editor.getBlocks();
+    expect(blocks[0]!.language).toBe("text");
+    expect(blocks[2]!.language).toBe("python");
+    // a position that isn't a block start: not applied
+    expect(applyDetectionResult(view, { guesslang: { language: "py", confidence: 1 }, content: py }, mapped + 1)).toBe(false);
   });
 });

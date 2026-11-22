@@ -1,4 +1,5 @@
 import { redoDepth } from "@codemirror/commands";
+import { MapMode } from "@codemirror/state";
 import { EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { blockState, getActiveNoteBlock } from "../block/block";
 import { changeLanguageTo } from "../block/commands";
@@ -26,15 +27,17 @@ function cancelIdleCallbackCompat(id: number): void {
   }
 }
 
-// Applies a detection result to the block it was requested for (by index),
-// only if the editor still shows the same document and the block's content
-// hasn't changed significantly (issue 15d in docs/state-machines.md)
+// Applies a detection result to the block it was requested for: the block that
+// starts at blockFrom (its start position mapped through edits made since the
+// request, so inserting or deleting blocks before it doesn't matter, U28), only
+// if the block's content hasn't changed significantly (issue 15d)
 export function applyDetectionResult(
   view: EditorView,
-  result: { guesslang: { language: string; confidence: number }; content: string; idx: number },
+  result: { guesslang: { language: string; confidence: number }; content: string },
+  blockFrom: number,
 ): boolean {
   const state = view.state;
-  const block = state.field(blockState)[result.idx];
+  const block = state.field(blockState).find((b) => b.from === blockFrom);
   if (!block) return false;
   const newLang = GUESSLANG_TO_TOKEN[result.guesslang.language];
   if (!newLang || block.autoDetect !== true || block.language === newLang) {
@@ -57,29 +60,38 @@ export function applyDetectionResult(
 function createLanguageDetection(view: EditorView) {
   let previousBlockContent: Record<number, string> = {};
   let idleCallbackId: number | null = null;
-  // incremented when another document (note) is loaded into the editor;
-  // requestDocGen[idx] is docGen when detection for block idx was requested
-  let docGen = 0;
-  let requestDocGen: Record<number, number> = {};
+  // detection requests in flight: request id => start of the block it's for,
+  // kept up to date with edits. Cleared when another note is loaded
+  let pending = new Map<number, number>();
+  let nextRequestID = 1;
 
   const detectionWorker = new Worker("langdetect-worker.js?worker");
   detectionWorker.onmessage = (event) => {
-    if (!event.data.guesslang.language) {
+    // the worker echoes back the idx we sent: the request id
+    const blockFrom = pending.get(event.data.idx);
+    pending.delete(event.data.idx);
+    if (blockFrom === undefined || !event.data.guesslang.language) {
+      // e.g. requested for a different note, or the block was deleted
       return;
     }
-    if (requestDocGen[event.data.idx] !== docGen) {
-      // requested for a different note
-      return;
-    }
-    applyDetectionResult(view, event.data);
+    applyDetectionResult(view, event.data, blockFrom);
   };
 
   const update = (update: ViewUpdate) => {
     if (transactionsHasAnnotation(update.transactions, SET_CONTENT)) {
       // a different note was loaded
-      docGen++;
       previousBlockContent = {};
-      requestDocGen = {};
+      pending.clear();
+    } else if (update.docChanged && pending.size > 0) {
+      for (let [id, from] of pending) {
+        // null if the block's start was deleted
+        const mapped = update.changes.mapPos(from, 1, MapMode.TrackDel);
+        if (mapped === null) {
+          pending.delete(id);
+        } else {
+          pending.set(id, mapped);
+        }
+      }
     }
     if (update.docChanged) {
       if (idleCallbackId !== null) {
@@ -136,10 +148,18 @@ function createLanguageDetection(view: EditorView) {
         if (!prevContent || levenshtein_distance(prevContent, content) >= threshold) {
           // the content has changed significantly, so schedule a language detection
           //console.log("Scheduling language detection for block", idx, "with threshold", threshold)
-          requestDocGen[idx] = docGen;
+          // the state might be older than view.state: map the block start
+          // through changes made since (idle callback)
+          let from = block.from;
+          if (update.state.doc !== view.state.doc) {
+            // can't map reliably: request again on the next change
+            return;
+          }
+          const id = nextRequestID++;
+          pending.set(id, from);
           detectionWorker.postMessage({
             content: content,
-            idx: idx,
+            idx: id,
           });
           previousBlockContent[idx] = content;
         }

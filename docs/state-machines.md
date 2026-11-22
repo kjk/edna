@@ -257,9 +257,9 @@ Invariants:
   request (**A-I1**, `AbortController`); the inserted header names the model that produced the
   response (**A-I2**, `responseModelName`); a response that can't be inserted keeps the dialog
   open with an error.
-- **Language auto-detection**: request posted per block index; the reply is applied to that
-  block if the editor still shows the same note (`docGen`) and the block's content is similar
-  (Levenshtein).
+- **Language auto-detection**: a request remembers the start of its block, mapped through later
+  edits; the reply is applied to the block starting there if the editor still shows the same
+  note (pending requests are dropped on load) and the block's content is similar (Levenshtein).
 - **Currency rates**: `NOT_LOADED` → `LOADED`; refreshed every 4 h.
 
 ---
@@ -406,7 +406,7 @@ other tabs are open.
 - 15d. Language auto-detect worker replies were applied to the active block if its content
   was similar (Levenshtein), not by block identity; could change another block or a block in
   another note. **Fixed**: the reply is applied to the block it was requested
-  for (by index), only if the content is still similar and no other note was loaded since
+  for (by index; by mapped position since U28), only if the content is still similar and no other note was loaded since
   (`applyDetectionResult`, `tests/browser/autodetect.test.ts`).
 - 15e. Metadata write failures in a directory were logged but not shown; in-memory metadata
   and the file could diverge. **Fixed**: the failure is shown; the next successful save writes all
@@ -541,6 +541,10 @@ to state machines). Ordered by impact.
   but text from outside (a raw note file) added blocks, possibly with unknown languages.
   **Fixed**: delimiter lines in pasted / dropped text become empty lines
   (`removeDelimitersFromPastedText`, also used by `clipboardInputFilter`).
+- **U28. A language detection result is applied to the block it was requested for.** Requests
+  were identified by block index, which changes when a block is inserted or deleted before it.
+  **Fixed**: a request remembers the block's start position, mapped through later edits (dropped
+  if the block was deleted, or another note loaded).
 
 ## Status
 
