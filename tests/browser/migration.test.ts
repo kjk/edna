@@ -4,6 +4,7 @@ import { blockHdrMarkdown } from "../../src/constants";
 import { fsReadTextFile, fsWriteTextFile } from "../../src/fileutil";
 import { getNoteMeta, kMetadataName, loadNotesMetadata, toggleNoteStarred, upgradeMetadata } from "../../src/metadata";
 import {
+  appendToNote,
   createNoteWithName,
   dbDelDirHandle,
   encryptAllNotes,
@@ -46,6 +47,29 @@ describe("move notes to directory", () => {
     // switchToStoringNotesOnDisk() remembers the directory
     await dbDelDirHandle();
     localStorage.clear();
+  });
+
+  it("a browser note with an invalid name is renamed (U2)", async () => {
+    await setup({}, { a: note("a") });
+    // created before names were validated
+    localStorage.setItem("note:b.encr", note("b.encr"));
+    await loadNoteNames();
+    const renamed = await switchToStoringNotesOnDisk(dh);
+    expect(renamed.get("b.encr")).toBe("b.encr-1");
+    expect(await listFiles(dh)).not.toContain("b.encr.edna.txt");
+    expect(await loadNote("b.encr-1")).toBe(note("b.encr"));
+    expect(await loadNote("a")).toBe(note("a"));
+  });
+
+  it("invalid note names are refused (U2)", async () => {
+    await setup({}, {});
+    setStorageFS(dh);
+    await loadNoteNames();
+    await expect(createNoteWithName("x.encr", note("x"))).rejects.toThrow("invalid note name");
+    await expect(createNoteWithName("system:help", note("x"))).rejects.toThrow("invalid note name");
+    await expect(appendToNote("system:help", note("x"))).rejects.toThrow("invalid note name");
+    const files = await listFiles(dh);
+    expect(files.filter((f) => f.startsWith("x.encr") || f.startsWith("system"))).toEqual([]);
   });
 
   it("can't run twice at the same time", async () => {

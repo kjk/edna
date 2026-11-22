@@ -438,6 +438,10 @@ to state machines). Ordered by impact.
   - a name isn't reserved (`system:*` always shows built-in content and isn't saved;
     `__home:` is the Home tab sentinel). Moving a block to `system:help` lost it;
   - a name isn't empty (file `.edna.txt`).
+  **Fixed**: `noteNameError` (`note-name.ts`) also rejects Windows device names and names whose
+  file name would exceed 255 bytes; enforced by `createNoteWithName`, `appendToNote` (new
+  notes; system notes refused), `renameNote`, the dialogs and note selectors, notes opened
+  from disk; migration renames invalid browser note names.
 - **U3. The remembered password belongs to the current folder** (P-I1, E-I2). It was returned
   without verification after switching to another encrypted folder; writes before the first
   read encrypted notes with the other folder's key.

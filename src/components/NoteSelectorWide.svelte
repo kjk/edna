@@ -4,6 +4,7 @@
   import { kScratchNoteName } from "../constants";
   import { reassignNoteShortcut, toggleNoteStarred } from "../metadata";
   import { findNoteIgnoreCase, isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { noteNameError } from "../note-name";
   import {
     findMatchingItems,
     getAltChar,
@@ -85,9 +86,9 @@
     let name = sanitizeNoteName(filter);
     // check all notes, not just visible ones (archived notes might be hidden)
     // to not overwrite an existing note (N-I1)
-    canCreate = len(name) > 0 && !findNoteIgnoreCase(name);
+    canCreate = len(name) > 0 && !findNoteIgnoreCase(name) && !noteNameError(name);
 
-    canCreateWithEnter = !canOpenSelected;
+    canCreateWithEnter = canCreate && !canOpenSelected;
     // if there are no matches for the filter, we can create with just Enter
     // otherwise we need Ctrl + Enter
     if (name.length === 0) {

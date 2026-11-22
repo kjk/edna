@@ -114,6 +114,7 @@
     unArchiveNote,
   } from "../metadata";
   import { findNoteIgnoreCase, isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { noteNameError } from "../note-name";
   import {
     findMatchingItems,
     getAltChar,
@@ -200,7 +201,7 @@
     canCreate = len(name) > 0;
     // check all notes, not just visible ones (archived notes might be hidden)
     // to not overwrite an existing note (N-I1)
-    if (findNoteIgnoreCase(name)) {
+    if (findNoteIgnoreCase(name) || noteNameError(name)) {
       canCreate = false;
       canCreateWithEnter = false;
     }

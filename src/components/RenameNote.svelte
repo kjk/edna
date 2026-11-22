@@ -1,7 +1,8 @@
 <script lang="ts">
   import { focus } from "../actions";
   import { escapeHTML } from "../util";
-  import { findNoteIgnoreCase, isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { findNoteIgnoreCase, sanitizeNoteName } from "../notes";
+  import { noteNameError } from "../note-name";
 
   interface Props {
     onclose: () => void;
@@ -22,7 +23,7 @@
     if (name === "" || name === oldName) {
       return false;
     }
-    if (isSystemNoteName(name)) {
+    if (noteNameError(name)) {
       return false;
     }
     let existing = findNoteIgnoreCase(name);
@@ -31,8 +32,9 @@
 
   let renameError = $derived.by(() => {
     let name = sanitizedNewName;
-    if (name === "") {
-      return "name cannot be empty";
+    let nameErr = noteNameError(name);
+    if (nameErr) {
+      return escapeHTML(nameErr);
     }
     let existing = findNoteIgnoreCase(name);
     if (existing && existing !== oldName) {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
   import { findNoteIgnoreCase, sanitizeNoteName } from "../notes";
+  import { noteNameError } from "../note-name";
   import { escapeHTML } from "../util";
 
   interface Props {
@@ -13,7 +14,7 @@
 
   let canCreate = $derived.by(() => {
     let name = sanitizeNoteName(newName);
-    if (name === "") {
+    if (noteNameError(name)) {
       return false;
     }
     return !findNoteIgnoreCase(name);
@@ -21,8 +22,9 @@
 
   let createError = $derived.by(() => {
     let name = sanitizeNoteName(newName);
-    if (name === "") {
-      return "name cannot be empty";
+    let nameErr = noteNameError(name);
+    if (nameErr) {
+      return escapeHTML(nameErr);
     }
     let existing = findNoteIgnoreCase(name);
     if (existing) {

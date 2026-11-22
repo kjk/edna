@@ -2242,7 +2242,13 @@
     let block = getActiveNoteBlock(state)!;
     let delim = state.sliceDoc(block.from, block.contentFrom);
     let content = state.sliceDoc(block.contentFrom, block.to);
-    await appendToNote(name, delim + content);
+    try {
+      await appendToNote(name, delim + content);
+    } catch (e) {
+      // e.g. invalid name or a system note: the block stays where it is
+      showError(`${e}`);
+      return;
+    }
     let view = getEditorView();
     let ednaEditor = getEditor();
     deleteBlock(ednaEditor)(view);

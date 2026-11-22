@@ -43,6 +43,7 @@ import {
   renameNoteInMetadata,
 } from "./metadata";
 import { mergeMetadata, normalizeMetadata } from "./metadata-merge";
+import { noteNameError } from "./note-name";
 import { getSettings } from "./settings.svelte";
 import { getStats, incNoteCreateCount, incNoteDeleteCount, incNoteSaveCount } from "./state";
 import {
@@ -350,7 +351,7 @@ export function rememberOpenedNote(fh: FileSystemFileHandle): string | null {
     return null;
   }
   let noteName = noteNameFromFileNameFS(fh.name);
-  if (!noteName) {
+  if (!noteName || noteNameError(noteName)) {
     return null;
   }
 
@@ -589,6 +590,10 @@ async function saveNoteNow(
 // creates a new note. Throws if a note with this name (ignoring case) already
 // exists, to never overwrite an existing note (N-I1)
 export async function createNoteWithName(name: string, content: string | null = null) {
+  let nameErr = noteNameError(name);
+  if (nameErr) {
+    throw new Error(`invalid note name '${name}': ${nameErr}`);
+  }
   let existing = findNoteIgnoreCase(name);
   if (existing) {
     throw new Error(`note '${existing}' already exists`);
@@ -613,6 +618,13 @@ export async function appendToNote(name: string, content: string) {
   // append to existing note even if the name differs in case, instead of
   // creating a note that would overwrite it on case-insensitive file systems
   name = findNoteIgnoreCase(name) || name;
+  // system notes "exist" but their content is built in
+  if (isSystemNoteName(name) || !noteExists(name)) {
+    let nameErr = noteNameError(name);
+    if (nameErr) {
+      throw new Error(`invalid note name '${name}': ${nameErr}`);
+    }
+  }
 
   let dh = getStorageFS();
   if (!dh) {
@@ -830,6 +842,10 @@ export async function deleteNote(name: string) {
 }
 
 export async function renameNote(oldName: string, newName: string, content: string) {
+  let nameErr = noteNameError(newName);
+  if (nameErr) {
+    throw new Error(`invalid note name '${newName}': ${nameErr}`);
+  }
   let dh = getStorageFS();
   if (oldName !== newName && oldName.toLowerCase() === newName.toLowerCase()) {
     await renameNoteCaseOnly(dh, oldName, newName, content);
@@ -958,6 +974,14 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
 
     for (let name of lsNames) {
       let content = loadNoteLS(name) || "";
+      if (noteNameError(name)) {
+        // e.g. "foo.encr" would become encrypted note "foo" in the directory (U2)
+        let newName = pickUniqueNameIgnoreCase(name, used);
+        used.add(newName.toLowerCase());
+        renamed.set(name, newName);
+        console.log(`switchToStoringNotesOnDisk: '${name}' is not a valid name, moving as '${newName}'`);
+        name = newName;
+      }
       let diskName = diskByLC.get(name.toLowerCase());
       if (diskName !== undefined) {
         if (!diskEncrNames!.includes(diskName)) {
