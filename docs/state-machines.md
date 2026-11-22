@@ -444,7 +444,10 @@ to state machines). Ordered by impact.
   from disk; migration renames invalid browser note names.
 - **U3. The remembered password belongs to the current folder** (P-I1, E-I2). It was returned
   without verification after switching to another encrypted folder; writes before the first
-  read encrypted notes with the other folder's key.
+  read encrypted notes with the other folder's key. **Fixed**: the remembered password is
+  verified once per directory (`getVerifiedPasswordHash`) and forgotten if it doesn't decrypt
+  its notes; verification tries up to 5 notes; a note that doesn't decrypt with a verified
+  password fails to load instead of prompting forever.
 - **U4. Note names are unique ignoring case everywhere.** Enforced on create but not:
   `createIfNotExists` (exact case: boot threw if `Scratch` existed but not `scratch`),
   `pickUniqueName` (`-conflict` / scratch names: create threw forever), migration of

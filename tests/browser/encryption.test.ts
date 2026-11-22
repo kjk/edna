@@ -11,7 +11,7 @@ import {
   loadNoteNames,
   setStorageFS,
 } from "../../src/notes";
-import { listFiles, setupFSStorage } from "./fs-utils";
+import { forgetPassword, listFiles, setupFSStorage } from "./fs-utils";
 
 // workspace encryption (docs/state-machines.md M2, issue 6)
 describe("encrypt / decrypt all notes", () => {
@@ -73,5 +73,44 @@ describe("encryption is a property of the directory", () => {
     await loadNoteNames();
     await createNoteWithName("y", blockHdrMarkdown + "y");
     expect(await listFiles(b)).toEqual(["y.edna.txt"]);
+  });
+
+  it("a password remembered for another encrypted directory isn't used (U3)", async () => {
+    const { dh, ui } = await setupFSStorage();
+    const a = await dh.getDirectoryHandle("a", { create: true });
+    const b = await dh.getDirectoryHandle("b", { create: true });
+    setStorageFS(a);
+    await loadNoteNames();
+    await createNoteWithName("x", blockHdrMarkdown + "x");
+    await encryptAllNotes("password-a");
+
+    forgetPassword();
+    setStorageFS(b);
+    await loadNoteNames();
+    await createNoteWithName("y", blockHdrMarkdown + "y");
+    await encryptAllNotes("password-b");
+    expect(localStorage.getItem("edna-password")).toBe("password-b");
+
+    // back in a: the remembered password is b's, a new note must use a's key
+    setStorageFS(a);
+    await loadNoteNames();
+    ui.passwords.push("password-a");
+    await createNoteWithName("z", blockHdrMarkdown + "z");
+    expect(ui.prompts.length).toBe(1);
+    expect(localStorage.getItem("edna-password")).toBe("password-a");
+    forgetPassword();
+    ui.passwords.push("password-a");
+    expect(await loadNote("z")).toBe(blockHdrMarkdown + "z");
+    expect(await loadNote("x")).toBe(blockHdrMarkdown + "x");
+  });
+
+  it("a damaged encrypted note fails to load instead of asking for the password forever", async () => {
+    const { dh, ui } = await setupFSStorage();
+    await createNoteWithName("a", blockHdrMarkdown + "a");
+    await encryptAllNotes("goodpassword");
+    await fsWriteTextFile(dh, "zz.encr.edna.txt", "not encrypted");
+    await loadNoteNames();
+    await expect(loadNote("zz")).rejects.toThrow("can't decrypt");
+    expect(ui.prompts.length).toBe(0);
   });
 });

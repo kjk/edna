@@ -83,10 +83,12 @@ const kLSPassowrdKey = "edna-password";
 
 function rememberPassword(pwd: string) {
   localStorage.setItem(kLSPassowrdKey, pwd);
+  verifiedPassword = undefined;
 }
 
 function removePassword() {
   localStorage.removeItem(kLSPassowrdKey);
+  verifiedPassword = undefined;
 }
 
 function getPasswordHash(): string | undefined {
@@ -106,25 +108,28 @@ export class PasswordCancelledError extends Error {
   }
 }
 
-// returns true if pwdHash decrypts encrypted notes in the directory
-// (checks one note); true if there are no encrypted notes
+// returns true if pwdHash decrypts encrypted notes in the directory; true if
+// there are no encrypted notes. Tries a few notes so that one damaged file
+// doesn't make the right password look wrong
 async function passwordHashDecryptsNotes(dh: FileSystemDirectoryHandle, pwdHash: string): Promise<boolean> {
-  let encrFileName: string | undefined;
+  const maxToTry = 5;
+  let encrFileNames: string[] = [];
   await forEachNoteFileFS(dh, async (fileName, noteName, isEncr) => {
-    if (isEncr && !encrFileName) {
-      encrFileName = fileName;
+    if (isEncr && encrFileNames.length < maxToTry) {
+      encrFileNames.push(fileName);
     }
   });
-  if (!encrFileName) {
+  if (encrFileNames.length === 0) {
     return true;
   }
-  let d = await fsReadBinaryFile(dh, encrFileName);
-  try {
-    decryptBlobAsString({ key: pwdHash, cipherblob: d });
-    return true;
-  } catch {
-    return false;
+  for (let fileName of encrFileNames) {
+    let d = await fsReadBinaryFile(dh, fileName);
+    try {
+      decryptBlobAsString({ key: pwdHash, cipherblob: d });
+      return true;
+    } catch {}
   }
+  return false;
 }
 
 // asks the user for a password until it decrypts existing notes (P-I1).
@@ -147,13 +152,42 @@ async function askForPasswordHash(msg: string, dh = getStorageFS()): Promise<str
 // concurrent requests for a password share one dialog (P-I3)
 let pendingPasswordHash: Promise<string> | undefined;
 
-async function getPasswordHashMust(msg: string): Promise<string> {
+// directory and password hash that was verified to decrypt its notes. The
+// password is remembered globally but it belongs to a directory (U3)
+let verifiedPassword: { dh: FileSystemDirectoryHandle; pwdHash: string } | undefined;
+
+// remembered password hash if it decrypts notes in dh (forgets it if not)
+async function getVerifiedPasswordHash(dh: FileSystemDirectoryHandle | undefined): Promise<string | undefined> {
   let pwdHash = getPasswordHash();
-  if (pwdHash) {
+  if (!pwdHash || !dh) {
     return pwdHash;
   }
+  if (verifiedPassword && verifiedPassword.dh === dh && verifiedPassword.pwdHash === pwdHash) {
+    return pwdHash;
+  }
+  if (await passwordHashDecryptsNotes(dh, pwdHash)) {
+    verifiedPassword = { dh, pwdHash };
+    return pwdHash;
+  }
+  // remembered from another directory
+  removePassword();
+  return undefined;
+}
+
+async function getPasswordHashMust(msg: string): Promise<string> {
   if (!pendingPasswordHash) {
-    pendingPasswordHash = askForPasswordHash(msg).finally(() => {
+    let dh = getStorageFS();
+    pendingPasswordHash = (async () => {
+      let pwdHash = await getVerifiedPasswordHash(dh);
+      if (pwdHash) {
+        return pwdHash;
+      }
+      pwdHash = await askForPasswordHash(msg, dh);
+      if (dh) {
+        verifiedPassword = { dh, pwdHash };
+      }
+      return pwdHash;
+    })().finally(() => {
       pendingPasswordHash = undefined;
     });
   }
@@ -747,6 +781,11 @@ async function readEncryptedFS(dh: FileSystemDirectoryHandle, fileName: string):
     }
     if (s !== null) {
       return s;
+    }
+    if (await passwordHashDecryptsNotes(dh, pwdHash)) {
+      // the password decrypts other notes: this file is damaged or encrypted
+      // with a different key, asking for the password again wouldn't help
+      throw new Error(`can't decrypt '${fileName}'`);
     }
     let pwd = localStorage.getItem(kLSPassowrdKey);
     if (!pwd) {
