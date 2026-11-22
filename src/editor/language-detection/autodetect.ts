@@ -58,7 +58,9 @@ export function applyDetectionResult(
 }
 
 function createLanguageDetection(view: EditorView) {
-  let previousBlockContent: Record<number, string> = {};
+  // content of a block when its language was last detected, by the block's
+  // start position (kept up to date with edits, like pending requests)
+  let previousBlockContent = new Map<number, string>();
   let idleCallbackId: number | null = null;
   // detection requests in flight: request id => start of the block it's for,
   // kept up to date with edits. Cleared when another note is loaded
@@ -80,16 +82,25 @@ function createLanguageDetection(view: EditorView) {
   const update = (update: ViewUpdate) => {
     if (transactionsHasAnnotation(update.transactions, SET_CONTENT)) {
       // a different note was loaded
-      previousBlockContent = {};
+      previousBlockContent.clear();
       pending.clear();
-    } else if (update.docChanged && pending.size > 0) {
+    } else if (update.docChanged) {
+      // null if the block's start was deleted
+      const map = (from: number) => update.changes.mapPos(from, 1, MapMode.TrackDel);
       for (let [id, from] of pending) {
-        // null if the block's start was deleted
-        const mapped = update.changes.mapPos(from, 1, MapMode.TrackDel);
+        const mapped = map(from);
         if (mapped === null) {
           pending.delete(id);
         } else {
           pending.set(id, mapped);
+        }
+      }
+      let prev = previousBlockContent;
+      previousBlockContent = new Map();
+      for (let [from, content] of prev) {
+        const mapped = map(from);
+        if (mapped !== null) {
+          previousBlockContent.set(mapped, content);
         }
       }
     }
@@ -105,21 +116,19 @@ function createLanguageDetection(view: EditorView) {
         const range = update.state.selection.asSingle().main;
         const blocks = update.state.field(blockState);
         let block: (typeof blocks)[number] | null = null;
-        let idx: number | null = null;
         for (let i = 0; i < blocks.length; i++) {
           const b = blocks[i]!;
           if (b.contentFrom <= range.from && b.to >= range.from) {
             block = b;
-            idx = i;
             break;
           }
         }
-        if (block === null || idx === null) {
+        if (block === null) {
           return;
         } else if (block.autoDetect === false) {
           // if language is not auto, set it's previousBlockContent to null so that we'll trigger a language detection
           // immediately if the user changes the language to auto
-          delete previousBlockContent[idx];
+          previousBlockContent.delete(block.from);
           return;
         }
 
@@ -138,16 +147,16 @@ function createLanguageDetection(view: EditorView) {
           ) {
             changeLanguageTo(view.state, view.dispatch, activeBlock, "text", true);
           }
-          delete previousBlockContent[idx];
+          previousBlockContent.delete(block.from);
         }
         if (content.length <= 8) {
           return;
         }
         const threshold = content.length * 0.1;
-        const prevContent = previousBlockContent[idx];
+        const prevContent = previousBlockContent.get(block.from);
         if (!prevContent || levenshtein_distance(prevContent, content) >= threshold) {
           // the content has changed significantly, so schedule a language detection
-          //console.log("Scheduling language detection for block", idx, "with threshold", threshold)
+          //console.log("Scheduling language detection for block at", block.from, "with threshold", threshold)
           // the state might be older than view.state: map the block start
           // through changes made since (idle callback)
           let from = block.from;
@@ -161,7 +170,7 @@ function createLanguageDetection(view: EditorView) {
             content: content,
             idx: id,
           });
-          previousBlockContent[idx] = content;
+          previousBlockContent.set(block.from, content);
         }
       });
     }

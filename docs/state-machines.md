@@ -544,7 +544,8 @@ to state machines). Ordered by impact.
 - **U28. A language detection result is applied to the block it was requested for.** Requests
   were identified by block index, which changes when a block is inserted or deleted before it.
   **Fixed**: a request remembers the block's start position, mapped through later edits (dropped
-  if the block was deleted, or another note loaded).
+  if the block was deleted, or another note loaded). The content seen at the last request
+  (which decides whether to request again) is also kept by mapped block start, not index.
 - **U29. Edits respect read-only.** Clicking a todo checkbox changed the note while code was
   running (the run's output then overwrote it). **Fixed**: the toggle checks `readOnly`.
 - **U30. The in-memory note list matches storage when creating a note** (N-I1 relied on it).
@@ -573,4 +574,4 @@ to state machines). Ordered by impact.
 | 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent edits of the same note: see 15g |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
 | 15 Previously open items | fixed (15a–15g) |
-| U1–U31 Unenforced invariants | fixed, each with a regression test. Remaining known gaps: auto-detect decides whether to request detection by block index (at worst an extra / skipped detection); U24's list of OpenRouter-only ids is based on naming patterns; U27 drops a pasted line that is exactly a delimiter even mid-line; U30 leaves a narrow race (no exclusive create) |
+| U1–U31 Unenforced invariants | fixed, each with a regression test. Remaining known gaps: U24's list of OpenRouter-only ids is based on naming patterns; U27 drops a pasted line that is exactly a delimiter even mid-line; U30 leaves a narrow race (no exclusive create) |
