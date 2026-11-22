@@ -460,7 +460,8 @@ to state machines). Ordered by impact.
   `decryptNoteFS` wrote the target without checking it exists, overwriting the other copy.
   **Fixed**: an identical copy is removed, a different one is kept under a unique name.
 - **U6. Notes opened from disk belong to the current storage.** `openedNotes` survived a
-  storage switch and shadowed a note with the same name in the new store.
+  storage switch and shadowed a note with the same name in the new store. **Fixed**: cleared by
+  `dbSetDirHandle` / `dbDelDirHandle`; their names are unique ignoring case.
 - **U7. Metadata entries belong to existing notes.** Entries of deleted (outside Edna) notes
   were inherited by a new note with that name (archived, starred, shortcut, folds).
 - **U8. Stored data and the URL parse.** Unguarded `JSON.parse` of settings / stats, metadata

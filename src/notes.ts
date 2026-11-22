@@ -204,11 +204,15 @@ export async function dbGetDirHandle(): Promise<FileSystemDirectoryHandle | unde
 export async function dbSetDirHandle(dh: FileSystemDirectoryHandle) {
   await db.set(kStorageDirHandleKey, dh);
   storageFS = dh;
+  // names of notes opened from disk were made unique for the previous storage (U6)
+  openedNotes = [];
 }
 
 export async function dbDelDirHandle() {
   await db.del(kStorageDirHandleKey);
   storageFS = undefined;
+  // names of notes opened from disk were made unique for the previous storage (U6)
+  openedNotes = [];
 }
 
 function isEncryptedEdnaFile(fileName: string): boolean {
@@ -400,18 +404,9 @@ export function rememberOpenedNote(fh: FileSystemFileHandle): string | null {
     return null;
   }
 
-  // ensure name is unique
-  // TODO: should clear when switching workspaces because the uniqueness
-  // will no longer be guaranteed
-  // note: could solve that by using unique IDs for files and returning
-  // NoteInfo[] that contains info about note, including id and using
-  // ids to identify notes
-  let baseNoteName = noteName;
-  let n = 1;
-  while (appState.allNotes.includes(noteName)) {
-    noteName = baseNoteName + `-${n}`;
-    n++;
-  }
+  // unique ignoring case among notes of the current storage (U4). Forgotten when
+  // the storage changes (U6)
+  noteName = pickUniqueName(noteName, appState.allNotes);
   let opened = {
     handle: fh,
     fileName: fh.name,
@@ -1085,7 +1080,6 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
     await fsWriteTextFile(dh, kMetadataName, JSON.stringify(merged, null, 2));
 
     // everything is in the directory: switch to it and remove from localStorage
-    openedNotes = []; // can't guarantee names will be unique
     await dbSetDirHandle(dh);
     for (let name of lsNames) {
       localStorage.removeItem(notePathFromNameLS(name));
@@ -1109,7 +1103,6 @@ export async function pickAnotherDirectory(): Promise<boolean> {
       return false;
     }
     await dbSetDirHandle(newDh);
-    openedNotes = []; // can't guarantee names will be unique
     return true;
   } catch (e) {
     console.error("pickAnotherDirectory", e);

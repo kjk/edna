@@ -7,7 +7,9 @@ import {
   createDefaultNotes,
   createNoteWithName,
   loadNote,
+  dbDelDirHandle,
   loadNoteNames,
+  rememberOpenedNote,
   renameNote,
   saveNote,
 } from "../../src/notes";
@@ -79,5 +81,17 @@ describe("notes (localStorage)", () => {
     expect(await loadNote("scratch")).toBe(blockHdrMarkdown + "my scratch");
     // not a new store: inbox / journal not created
     expect(appState.allNotes).not.toContain("inbox");
+  });
+
+  it("notes opened from disk: unique ignoring case, forgotten when storage changes (U4, U6)", async () => {
+    await createNoteWithName("foo", blockHdrMarkdown + "browser foo");
+    const root = await navigator.storage.getDirectory();
+    const fh = await root.getFileHandle("Foo.edna.txt", { create: true });
+    expect(rememberOpenedNote(fh)).toBe("Foo-1");
+    expect(appState.allNotes).toContain("Foo-1");
+    await dbDelDirHandle();
+    await loadNoteNames();
+    expect(appState.allNotes).toEqual(["foo"]);
+    await root.removeEntry("Foo.edna.txt");
   });
 });
