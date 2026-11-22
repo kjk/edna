@@ -30,3 +30,16 @@ test("block delimiter lines are not matched", () => {
   const s = "\n\u221E\u221E\u221Emarkdown\n# markdown notes\n\u221E\u221E\u221Emarkdown-a\nmore\n";
   expect(findMatchesInNote(s, ["markdown"], false, false).map((m) => m.line)).toEqual(["# markdown notes"]);
 });
+
+test("a line with multiple matches is reported once, at the first match", () => {
+  const res = findMatchesInNote("foo and foo\nbar foo\n", ["foo"], true, false);
+  expect(res).toEqual([
+    { line: "foo and foo", pos: 0 },
+    { line: "bar foo", pos: 16 },
+  ]);
+});
+
+test("whole word: first non-whole-word occurrence doesn't hide a later whole word on the line", () => {
+  const res = findMatchesInNote("foobar foo\n", ["foo"], true, true);
+  expect(res).toEqual([{ line: "foobar foo", pos: 7 }]);
+});

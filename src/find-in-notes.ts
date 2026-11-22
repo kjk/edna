@@ -66,6 +66,8 @@ export function findMatchesInNote(
     if (wholeWord && !isWholeWord(s, idx, idx + len(toFind))) {
       continue;
     }
+    // the rest is per-line: report each line once and skip other matches on it
+    startIdx = lineEndIdx;
     if (!matchesOtherParts(line)) {
       continue;
     }
