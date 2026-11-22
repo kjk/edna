@@ -26,7 +26,7 @@ import {
 } from "./block/commands";
 import { isMac, isWindows } from "./cmutils";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
-import { insertDateAndTime } from "./date-time";
+import { insertDateAndTime, insertTime } from "./date-time";
 import type { MultiBlockEditor } from "./editor";
 import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
 import { toggleCheckbox } from "./todo-checkbox";
@@ -73,6 +73,8 @@ export function ednaKeymap(editor: MultiBlockEditor) {
     ["Alt-Mod-Shift-ArrowUp", moveCurrentBlockUp],
     ["Alt-Mod-Shift-ArrowDown", moveCurrentBlockDown],
     ["Alt-Shift-d", insertDateAndTime],
+    // the menu shows this shortcut (U20)
+    ["Alt-Shift-t", insertTime],
 
     {
       key: "Mod-ArrowUp",

@@ -516,6 +516,7 @@ to state machines). Ordered by impact.
   **Fixed**: if the switch failed and the note is still shown, it isn't deleted (no automated
   test).
 - **U20.** Menu shortcut labels match real bindings ("Insert time Alt-Shift-t" was unbound).
+  **Fixed**: bound in `keymap.ts`; the other labels were checked against the keymaps.
 - **U21.** Currency API response has the expected shape.
 - **U22.** Math blocks: evaluation starts at the block start, not the viewport start.
 
