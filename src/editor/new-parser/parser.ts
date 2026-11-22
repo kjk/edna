@@ -105,6 +105,10 @@ class MultiBlockParse implements PartialParse {
   advance(): Tree | null {
     if (this.done) return this.tree;
 
+    // note: we always re-parse the whole document, ignoring fragments of the
+    // previous tree. It's a linear scan for delimiters: ~5 ms for a 5 MB document,
+    // so incremental parsing is not worth the complexity. Nested language
+    // parsers (parseMixed) still re-use their previous trees.
     const text = this.input.read(0, this.input.length);
     this.tree = this.parseDocument(text);
     this.done = true;

@@ -9,7 +9,7 @@ import {
   transactionsHasAnnotationsAny,
   transactionsHasHistoryEvent,
 } from "./annotation";
-import { getBlocks, getNoteBlocksFromRangeSet } from "./block/block";
+import { blockState, getNoteBlocksFromRangeSet } from "./block/block";
 import { delimiterLineRegex } from "./new-parser/node-types";
 import { FOLD_LABEL_LENGTH } from "./constants";
 import type { MultiBlockEditor } from "./editor";
@@ -235,7 +235,7 @@ export const foldAllBlocks = (editor: MultiBlockEditor) => (view: EditorView) =>
   const state = view.state;
   const blockRanges = [];
 
-  for (const block of getBlocks(state)) {
+  for (const block of state.field(blockState)) {
     const line = state.doc.lineAt(block.contentFrom);
     // fold the block content, but only the first line
     const from = Math.min(line.to, block.contentFrom + FOLD_LABEL_LENGTH);
@@ -257,7 +257,7 @@ export const unfoldAlBlocks = (editor: MultiBlockEditor) => (view: EditorView) =
   const folds = state.field(foldState, false) || RangeSet.empty;
   const blockFolds: SimpleRange[] = [];
 
-  for (const block of getBlocks(state)) {
+  for (const block of state.field(blockState)) {
     const firstLine = state.doc.lineAt(block.contentFrom);
     folds.between(block.contentFrom, block.to, (from: number, to: number) => {
       if (from <= firstLine.to && to === block.to) {
