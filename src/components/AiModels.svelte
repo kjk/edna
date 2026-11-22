@@ -74,10 +74,8 @@
     let modelID = model[kModelIDIdx];
     if (appState.settings.starredModels.includes(modelID)) {
       arrayRemove(appState.settings.starredModels, modelID);
-      console.warn("unstarred model:", modelID);
     } else {
       appState.settings.starredModels.push(modelID);
-      console.warn("starred model:", modelID);
     }
     forceUpdate++;
   }

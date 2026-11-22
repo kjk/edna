@@ -407,11 +407,9 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   if (token == "json") {
     // @ts-ignore
     let babelPrettierPlugin = (await import("prettier/plugins/babel.mjs")).default;
-    console.log("babelPrettierPlugin:", babelPrettierPlugin);
     // import * as prettierPluginEstree from "prettier/plugins/estree.mjs";
     // @ts-ignore
     let prettierPluginEstree = await import("prettier/plugins/estree.mjs");
-    console.log("prettierPluginEstree:", prettierPluginEstree);
     return {
       parser: "json-stringify",
       plugins: [babelPrettierPlugin, prettierPluginEstree],
@@ -421,7 +419,6 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
     // import htmlPrettierPlugin from "prettier/esm/parser-html.mjs";
     // @ts-ignore
     let htmlPrettierPlugin = (await import("prettier/plugins/html.mjs")).default;
-    console.log("htmlPrettierPlugin:", htmlPrettierPlugin);
     return {
       parser: "html",
       plugins: [htmlPrettierPlugin],
@@ -432,7 +429,6 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
     // import markdownPrettierPlugin from "prettier/esm/parser-markdown.mjs";
     // @ts-ignore
     let markdownPrettierPlugin = (await import("prettier/plugins/markdown.mjs")).default;
-    console.log("markdownPrettierPlugin:", markdownPrettierPlugin);
     return {
       parser: "markdown",
       plugins: [markdownPrettierPlugin],
@@ -442,7 +438,6 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   if (token === "css") {
     // @ts-ignore
     let cssPrettierPlugin = (await import("prettier/plugins/postcss.mjs")).default;
-    console.log("cssPrettierPlugin:", cssPrettierPlugin);
     return {
       parser: "css",
       plugins: [cssPrettierPlugin],
@@ -453,7 +448,6 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
     // import yamlPrettierPlugin from "prettier/plugins/yaml.mjs";
     // @ts-ignore
     let yamlPrettierPlugin = (await import("prettier/plugins/yaml.mjs")).default;
-    console.log("yamlPrettierPlugin:", yamlPrettierPlugin);
     return {
       parser: "yaml",
       plugins: [yamlPrettierPlugin],
@@ -463,11 +457,9 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   if (token === "javascript" || token === "jsx") {
     // @ts-ignore
     let babelPrettierPlugin = (await import("prettier/plugins/babel.mjs")).default;
-    console.log("babelPrettierPlugin:", babelPrettierPlugin);
     // import * as prettierPluginEstree from "prettier/plugins/estree.mjs";
     // @ts-ignore
     let prettierPluginEstree = await import("prettier/plugins/estree.mjs");
-    console.log("prettierPluginEstree:", prettierPluginEstree);
     return {
       parser: "babel",
       plugins: [babelPrettierPlugin, prettierPluginEstree],
@@ -477,11 +469,9 @@ export async function langGetPrettierInfo(lang: Language | undefined): Promise<P
   if (token === "typescript" || token === "tsx") {
     // @ts-ignore
     let typescriptPlugin = (await import("prettier/plugins/typescript.mjs")).default;
-    console.log("typescriptPlugin:", typescriptPlugin);
     // import * as prettierPluginEstree from "prettier/plugins/estree.mjs";
     // @ts-ignore
     let prettierPluginEstree = await import("prettier/plugins/estree.mjs");
-    console.log("prettierPluginEstree:", prettierPluginEstree);
     return {
       parser: "typescript",
       plugins: [typescriptPlugin, prettierPluginEstree],

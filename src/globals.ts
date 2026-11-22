@@ -36,7 +36,6 @@ export async function getPasswordFromUser(msg: string): Promise<string> {
 
 export async function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
   let ok = await globalFunctions.requestFileWritePermission(fh);
-  console.log("ok:", ok);
   // TODO: check permissions
   return ok;
 }

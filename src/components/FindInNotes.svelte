@@ -134,7 +134,6 @@
     if (ev.key == "Enter") {
       ev.preventDefault();
       let sameSearchTerm = searchTerm == currSearchTerm;
-      console.log("searchTerm:", searchTerm, "currSearchTerm:", currSearchTerm, "same:", sameSearchTerm);
       if (sameSearchTerm && lastChangeNo == changeNo && len(results) > 0 && selectedItem) {
         openItem(selectedItem);
       } else {
@@ -161,13 +160,11 @@
 
   function matchCase() {
     appState.searchNotesMatchCase = !appState.searchNotesMatchCase;
-    console.log("matchCase", appState.searchNotesMatchCase);
     changeNo++; // make Enter redo the search
     focusInput();
   }
   function matchWholeWOrd() {
     appState.searchNotesMatchWholeWord = !appState.searchNotesMatchWholeWord;
-    console.log("matchWholeWOrd", appState.searchNotesMatchWholeWord);
     changeNo++; // make Enter redo the search
     focusInput();
   }

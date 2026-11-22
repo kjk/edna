@@ -14,7 +14,6 @@
   $effect(() => {
     console.log("AskFSPermissions");
     dbGetDirHandle().then((dh?: FileSystemDirectoryHandle) => {
-      console.log("dh:", dh);
       if (!dh) return;
       dirName = dh.name;
     });

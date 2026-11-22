@@ -33,7 +33,6 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   if (state.readOnly) return false;
   const block = getActiveNoteBlock(state);
   if (!block) return false;
-  console.log("formatBlockContent:", block);
   const language = getLanguage(block.language);
   if (!language || !langSupportsFormat(language)) {
     return false;
@@ -83,13 +82,10 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
         scrollIntoView: true,
       },
     );
-    console.log("state == view.state:", state == view.state);
-    console.log("state == tr.startState:", state == tr.startState);
     view.dispatch(tr);
     return true;
   }
 
-  console.log("formatting with prettier");
   // There is a performance bug in prettier causing formatWithCursor() to be extremely slow in some cases (https://github.com/prettier/prettier/issues/4801)
   // To work around this we use format() when the cursor is in the beginning or the end of the block.
   // This is not a perfect solution, and once the following PR is merged and released, we should be abe to remove this workaround:
@@ -100,7 +96,6 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   }
 
   let prettier = await import("prettier/standalone");
-  console.log("prettier:", prettier);
   const prettierInfo = await langGetPrettierInfo(language);
   if (!prettierInfo) return false;
   const { parser, plugins } = prettierInfo;

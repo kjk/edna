@@ -225,15 +225,12 @@
   }
   function matchCase() {
     appState.searchMatchCase = !appState.searchMatchCase;
-    console.log("matchCase", appState.searchMatchCase);
   }
   function matchWholeWOrd() {
     appState.searchMatchWholeWord = !appState.searchMatchWholeWord;
-    console.log("matchWholeWOrd", appState.searchMatchWholeWord);
   }
   function matchRegex() {
     appState.searchRegex = !appState.searchRegex;
-    console.log("matchRegex", appState.searchRegex);
   }
   function btnPressedCls(isPressed: boolean) {
     return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";

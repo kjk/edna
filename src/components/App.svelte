@@ -1614,7 +1614,6 @@
       console.log("oncontestmenu: isShowingDialog");
       return;
     }
-    console.log("contextmenu: ", ev);
     // show native context menu if ctrl or shift is pressed
     // especially important for spell checking
     let forceNativeMenu = ev.ctrlKey;
@@ -1900,7 +1899,6 @@
   let fnSelectBlock: (block: NoteBlock) => void = $state(selectBlock);
 
   function runBlockWithAnotherBlock(block: NoteBlock) {
-    console.log(block);
     closeDialogs();
     let n = block.index;
     let editor = getEditor();
@@ -2151,7 +2149,6 @@
   function didLoadNote(name: string, noPushHistory = false) {
     console.log("didLoadNote:", name);
     throwIf(!name);
-    console.log("onDocChanged: just opened");
     let editor = editorComp.getEditor();
     let readOnly = isSystemNoteName(name);
     editor.setReadOnly(readOnly);

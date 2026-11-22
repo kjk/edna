@@ -16,7 +16,6 @@
   let nextId = 0;
 
   function removeToast(id: number) {
-    console.log("removeToast:", id);
     let idx = -1;
     for (let i = 0; i < len(toasts); i++) {
       if (toasts[i].id === id) {

@@ -39,7 +39,6 @@
   }
 
   $effect(() => {
-    console.log("EnterDecryptPassword did mount, input:", inputRef);
     if (inputRef) {
       inputRef.focus();
     }
