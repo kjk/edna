@@ -155,6 +155,23 @@ export function isAltNumEvent(e: KeyboardEvent): string | null {
   return String.fromCharCode(e.keyCode);
 }
 
+// adds an entry for the Home tab: URL without a note name in the hash.
+// Replaces the current entry if it has no note (e.g. at startup)
+export function addHomeToBrowserHistory(homeTab: string) {
+  if (window.history.state?.noteName === homeTab) {
+    return;
+  }
+  // @ts-ignore
+  let url = new URL(window.location);
+  url.hash = "";
+  let hadNote = !!window.history.state?.noteName || window.location.hash !== "";
+  if (hadNote) {
+    window.history.pushState({ noteName: homeTab }, "", url);
+  } else {
+    window.history.replaceState({ noteName: homeTab }, "", url);
+  }
+}
+
 export function addNoteToBrowserHistory(noteName: string) {
   // @ts-ignore
   let url = new URL(window.location);

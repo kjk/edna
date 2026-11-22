@@ -168,7 +168,8 @@ Invariants:
 | `LOADING(A→B)` | open note C | `LOADING(A→C)`; B's result discarded | `MultiBlockEditor openNote` |
 | `LOADING(A→B)` | load failed | `SHOWING(A)`, error shown | `MultiBlockEditor openNote` |
 | `SHOWING(A)` | Home tab | editor destroyed (pending save flushed to A) → `HOME` | `TopNav`, `MultiBlockEditor` cleanup |
-| any | popstate (Back) | open note from history entry (if no dialog) | `App onPopState` |
+| any | popstate (Back/Forward) | dialogs closed; open note from history entry, replacing current tab; Home entry → `HOME` | `App onPopState` |
+| any | switch to `HOME` | history entry without note in URL, title "Edna" | `App` effect, `addHomeToBrowserHistory` |
 
 ## M6. Dirty / auto-save
 
@@ -389,7 +390,9 @@ other tabs are open.
   showed it and edits re-created it. **Fixed**: `NoteLoader` checks the note still exists
   before showing it (`tests/browser/note-loader.test.ts`).
 - 15b. URL / history: the Home tab didn't update the URL (reloading on Home re-opened the
-  note from the hash); Back/Forward through notes added tabs.
+  note from the hash); Back/Forward through notes added tabs. **Fixed**: switching to Home adds a
+  history entry without a note in the URL (`addHomeToBrowserHistory`); Back to it switches
+  to Home; Back/Forward replaces the current tab (`tests/browser/app.test.ts`).
 - 15c. One shared modal message for overlapping operations (e.g. "Loading..." cleared
   "running code").
 - 15d. Language auto-detect worker replies were applied to the active block if its content
@@ -419,4 +422,4 @@ other tabs are open.
 | 12 Ask AI | fixed (12a–12c), `tests/browser/askai.test.ts` |
 | 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent editing of the same note in two tabs is still last-writer-wins |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
-| 15 Previously open items | 15a fixed; 15b–15g open |
+| 15 Previously open items | 15a, 15b fixed; 15c–15g open |

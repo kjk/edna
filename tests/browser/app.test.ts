@@ -2,6 +2,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { appState } from "../../src/appstate.svelte";
 import { EditorView } from "@codemirror/view";
 import { dbDelDirHandle, loadNote } from "../../src/notes";
+import { getSettings } from "../../src/settings.svelte";
+import { kTabHome } from "../../src/constants";
 
 // Integration tests: boot the whole app (docs/state-machines.md M8 dialogs)
 
@@ -172,5 +174,28 @@ describe("app", () => {
     await new Promise((r) => setTimeout(r, 500));
     expect(appState.currentNoteName).toBe("scratch");
     expect(document.title).toBe("scratch");
+  });
+
+  it("Home tab updates the URL; Back returns to the note; Back/Forward doesn't add tabs", async () => {
+    await openWithShortcut(1, "scratch");
+    expect(location.hash).toBe("#scratch");
+    const settings = getSettings();
+    settings.currentTab = kTabHome;
+    await expect.poll(() => location.hash).toBe("");
+    expect(history.state?.noteName).toBe(kTabHome);
+
+    // Back from Home to the note
+    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: "scratch" } }));
+    await expect.poll(() => appState.currentNoteName).toBe("scratch");
+
+    // Back to Home entry
+    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: kTabHome } }));
+    await expect.poll(() => settings.currentTab).toBe(kTabHome);
+
+    await openWithShortcut(1, "scratch");
+    const nTabs = settings.tabs.length;
+    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: "daily journal" } }));
+    await expect.poll(() => appState.currentNoteName).toBe("daily journal");
+    expect(settings.tabs.length).toBe(nTabs);
   });
 });

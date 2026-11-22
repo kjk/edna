@@ -114,6 +114,7 @@
   } from "../settings.svelte";
   import { getMyFunctionsNote } from "../system-notes";
   import {
+    addHomeToBrowserHistory,
     addNoteToBrowserHistory,
     formatDateYYYYMMDDDay,
     getClipboardText,
@@ -312,6 +313,13 @@
       }
       let name = state.noteName;
       console.log("popstate:", name, state);
+      if (isTabHome(name)) {
+        if (isShowingDialog) {
+          closeDialogs();
+        }
+        settings.currentTab = kTabHome;
+        return;
+      }
       if (name === noteName) {
         console.log("same as noteName, nothing to do");
         return;
@@ -324,7 +332,8 @@
       if (isShowingDialog) {
         closeDialogs();
       }
-      openNote(name, false, true /* noPushHistory */);
+      // like opening a note: replace the current tab instead of adding one
+      openNote(name, false, true /* noPushHistory */, true /* replaceTab */);
     };
     window.addEventListener("popstate", onPopState);
 
@@ -564,6 +573,14 @@
   function openEncryptPassword() {
     appState.showingEncryptPassword = true;
   }
+
+  // URL / history and title follow the Home tab (the URL hash names the open note)
+  $effect(() => {
+    if (isTabHome(settings.currentTab)) {
+      addHomeToBrowserHistory(kTabHome);
+      window.document.title = "Edna";
+    }
+  });
 
   function closeEncryptPassword() {
     appState.showingEncryptPassword = false;
