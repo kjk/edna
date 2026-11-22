@@ -263,4 +263,32 @@ describe("app", () => {
       appState.showingCommandPalette = false;
     }
   });
+
+  it("deleting the current note when switching to scratch fails keeps the note (U19)", async () => {
+    const { createNoteWithName, loadNoteNames } = await import("../../src/notes");
+    await createNoteWithName("todel", "\n\u221E\u221E\u221Emarkdown\nkeep me\n");
+    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: "todel" } }));
+    await expect.poll(() => appState.currentNoteName).toBe("todel");
+
+    // make loading scratch fail: it's gone from storage
+    const scratch = localStorage.getItem("note:scratch")!;
+    localStorage.removeItem("note:scratch");
+    await loadNoteNames();
+    try {
+      appState.showingNoteSelector = true;
+      await expect.poll(() => document.querySelector<HTMLInputElement>("form input")).not.toBeNull();
+      const input = document.querySelector<HTMLInputElement>("form input")!;
+      input.value = "todel";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 50));
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", ctrlKey: true, bubbles: true, cancelable: true }));
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await loadNote("todel")).toContain("keep me");
+      expect(appState.currentNoteName).toBe("todel");
+    } finally {
+      appState.showingNoteSelector = false;
+      localStorage.setItem("note:scratch", scratch);
+      await loadNoteNames();
+    }
+  });
 });
