@@ -29,8 +29,9 @@
     messages = messages.filter((m) => m.key !== key);
   }
 
-  // shows message msgHTML owned by key after delay ms (replaces the previous
-  // message with the same key)
+  // shows message msgHTML owned by key after delay ms. msgHTML is rendered as HTML:
+  // build it with html`...` (util.ts) so interpolated names are escaped (U1).
+  // Replaces the previous message with the same key.
   export function showModalMessageHTML(msgHTML: string, delay: number, key = "default") {
     removeMessage(key);
     let timer: ReturnType<typeof setTimeout> | null = null;

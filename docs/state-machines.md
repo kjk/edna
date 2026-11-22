@@ -430,6 +430,7 @@ to state machines). Ordered by impact.
 - **U1. Strings rendered as HTML are escaped.** `showModalMessageHTML` renders with `{@html}`;
   callers interpolated raw note / function names (`Loading <b>${name}</b>`). A note file named
   `<img src=x onerror=…>.edna.txt` ran script in the app's origin (API keys, notes).
+  **Fixed**: messages are built with the `html` tagged template (escapes values).
 - **U2. Note names are valid.** `sanitizeNoteName` only trimmed. Assumed but not checked:
   - a name doesn't end in `.encr` (`a.encr` is written plain as `a.encr.edna.txt`, which the
     next listing reads as encrypted note `a`: the folder becomes "encrypted", no password

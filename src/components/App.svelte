@@ -116,6 +116,7 @@
   import {
     addHomeToBrowserHistory,
     addNoteToBrowserHistory,
+    html,
     formatDateYYYYMMDDDay,
     getClipboardText,
     isAltNumEvent,
@@ -1035,7 +1036,7 @@
     }
     let onSelection = runFunctionOnSelection;
     await withRun(getEditor(), async (run) => {
-      let msg = `Running <span class="font-bold">${fdef.name}</span>...`;
+      let msg = html`Running <span class="font-bold">${fdef.name}</span>...`;
       showModalMessageHTML(msg, 300, "run");
       if (onSelection) {
         await runBoopFunctionWithSelection(run, fdef);
@@ -2188,7 +2189,7 @@
       settingsAddTab(settings, name);
       return true;
     }
-    let msg = `Loading <span class="font-bold">${name}</span>...`;
+    let msg = html`Loading <span class="font-bold">${name}</span>...`;
     showModalMessageHTML(msg, 300, "load");
     let ok = false;
     try {

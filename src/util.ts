@@ -361,6 +361,15 @@ export function escapeHTML(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
+// tagged template: interpolated values are HTML-escaped, so html`<b>${name}</b>` is safe for {@html}
+export function html(strings: TemplateStringsArray, ...values: unknown[]): string {
+  let res = strings[0];
+  for (let i = 0; i < values.length; i++) {
+    res += escapeHTML(String(values[i])) + strings[i + 1];
+  }
+  return res;
+}
+
 // returns HTML: s is escaped and matches of regexp are wrapped in <span class="hili">
 export function hilightText(s: string, regexp: RegExp): string {
   let res = "";

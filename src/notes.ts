@@ -54,7 +54,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { len, removeDuplicates, throwIf, trimSuffix } from "./util";
+import { html, len, removeDuplicates, throwIf, trimSuffix } from "./util";
 
 // is set if we store notes on disk, null if in localStorage
 let storageFS: FileSystemDirectoryHandle | undefined;
@@ -973,7 +973,7 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
         console.log(`switchToStoringNotesOnDisk: '${name}' exists, moving as '${newName}'`);
         name = newName;
       }
-      showModalMessageHTML(`Moving <b>${name}</b>`, 0, "storage");
+      showModalMessageHTML(html`Moving <b>${name}</b>`, 0, "storage");
       let fileName = notePathFromNameFS(name, encrypt);
       if (encrypt) {
         await writeEncryptedFS(dh, pwdHash, fileName, content);
@@ -1128,7 +1128,7 @@ export async function encryptAllNotes(pwd: string) {
         if (isEncr) {
           return;
         }
-        let msg = `Encrypting <b>${name}</b>`;
+        let msg = html`Encrypting <b>${name}</b>`;
         showModalMessageHTML(msg, 0, "storage");
         await encryptNoteFS(dh, fileName, pwdHash);
       });
@@ -1151,7 +1151,7 @@ export async function decryptAllNotes() {
         if (!isEncr) {
           return;
         }
-        let msg = `Decrypting <b>${name}</b>`;
+        let msg = html`Decrypting <b>${name}</b>`;
         showModalMessageHTML(msg, 0, "storage");
         await decryptNoteFS(dh, fileName);
       });
