@@ -421,6 +421,70 @@ other tabs are open.
   local edits is reloaded when the window gets focus (`tests/browser/notes.test.ts`,
   `tests/browser/app.test.ts`).
 
+## Unenforced invariants (audit)
+
+Invariants the code relied on without checking them, found by reading the code (not limited
+to state machines). Ordered by impact.
+
+### Names and storage
+- **U1. Strings rendered as HTML are escaped.** `showModalMessageHTML` renders with `{@html}`;
+  callers interpolated raw note / function names (`Loading <b>${name}</b>`). A note file named
+  `<img src=x onerror=…>.edna.txt` ran script in the app's origin (API keys, notes).
+- **U2. Note names are valid.** `sanitizeNoteName` only trimmed. Assumed but not checked:
+  - a name doesn't end in `.encr` (`a.encr` is written plain as `a.encr.edna.txt`, which the
+    next listing reads as encrypted note `a`: the folder becomes "encrypted", no password
+    verifies, creating notes fails);
+  - a name isn't reserved (`system:*` always shows built-in content and isn't saved;
+    `__home:` is the Home tab sentinel). Moving a block to `system:help` lost it;
+  - a name isn't empty (file `.edna.txt`).
+- **U3. The remembered password belongs to the current folder** (P-I1, E-I2). It was returned
+  without verification after switching to another encrypted folder; writes before the first
+  read encrypted notes with the other folder's key.
+- **U4. Note names are unique ignoring case everywhere.** Enforced on create but not:
+  `createIfNotExists` (exact case: boot threw if `Scratch` existed but not `scratch`),
+  `pickUniqueName` (`-conflict` / scratch names: create threw forever), migration of
+  browser notes `foo` + `Foo` to a case-insensitive directory (one overwritten, both deleted).
+- **U5. A note never exists both plain and encrypted (E-I1).** `encryptNoteFS` /
+  `decryptNoteFS` wrote the target without checking it exists, overwriting the other copy.
+- **U6. Notes opened from disk belong to the current storage.** `openedNotes` survived a
+  storage switch and shadowed a note with the same name in the new store.
+- **U7. Metadata entries belong to existing notes.** Entries of deleted (outside Edna) notes
+  were inherited by a new note with that name (archived, starred, shortcut, folds).
+- **U8. Stored data and the URL parse.** Unguarded `JSON.parse` of settings / stats, metadata
+  cast instead of normalized, `decodeURIComponent` of the URL hash: corrupt data or a URL like
+  `#50%off` left the app blank.
+
+### Editor / block model
+- **U9. Note content starts with a valid delimiter.** `fixUpNoteContent` only checked the
+  `\n∞∞∞` prefix; `\n∞∞∞Text\n`, Heynote `;created=` headers, a missing trailing newline, an
+  empty file or CRLF line endings produced a document with zero blocks (no delimiter
+  protection, `getActiveNoteBlock()!` crashes) or an extra block.
+- **U10. Adjacent delimiters are separated by a newline.** Cut-line (Mod-X without selection)
+  cut `line.to + 1`, eating the next delimiter's leading `\n`; the next block merged and its
+  delimiter became visible text.
+- **U11. The document doesn't change while formatting awaits.** `formatBlockContent` used
+  offsets read before awaiting prettier / the Go formatter.
+- **U12. Every block language is known.** The delimiter grammar accepts any `[a-z]+`;
+  `menuItemStatus` did `getLanguage(language)!` and crashed the menu / command palette.
+  `changeLanguageTo` didn't validate the token.
+- **U13. Restored folds / selections fit the document.** Stored as offsets; not checked
+  against the current document length (note changed elsewhere).
+- **U14. `moveCurrentBlock`: the selection anchor is in the current block.** A selection
+  spanning two blocks produced positions outside the document.
+- **U15. Menu entries are commands.** `menuItemStatus` treated a submenu as a command id; on the
+  Home tab every submenu (Notes storage, Encryption, Help) was removed.
+- **U16. A selection is never inside a delimiter (after the first block).** Atomic ranges only
+  constrain cursor motion; programmatic selections (find, restored selection) could land
+  inside, and typing changed the language or broke the delimiter.
+
+### Low impact
+- **U17.** User function results are strings; function metadata JSON is an object.
+- **U18.** Ask AI stream chunks have `choices` (in-stream `{"error": …}` was swallowed).
+- **U19.** Deleting the current note: the switch to scratch succeeded before deleting.
+- **U20.** Menu shortcut labels match real bindings ("Insert time Alt-Shift-t" was unbound).
+- **U21.** Currency API response has the expected shape.
+- **U22.** Math blocks: evaluation starts at the block start, not the viewport start.
+
 ## Status
 
 | Issue | Status |
