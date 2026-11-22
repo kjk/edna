@@ -116,4 +116,32 @@ describe("app", () => {
     const view = EditorView.findFromDOM(document.querySelector(".cm-editor") as HTMLElement)!;
     await expect.poll(() => view.state.selection.main.head).toBe(pos);
   });
+
+  it("starting a new 'find in notes' search stops the previous one", async () => {
+    await openWithShortcut(1, "scratch");
+    const { saveNote } = await import("../../src/notes");
+    for (const name of ["inbox", "scratch", "daily journal"]) {
+      const c = (await loadNote(name)) ?? "";
+      await saveNote(name, c + "\nfirst-search-term second-search-term-" + name + "\n");
+    }
+    await saveNote("inbox", ((await loadNote("inbox")) ?? "") + "\nonly-first-search-term\n");
+
+    appState.showingFindInNotes = true;
+    const sel = "input[placeholder^='Find in notes']";
+    await expect.poll(() => document.querySelector<HTMLInputElement>(sel)).not.toBeNull();
+    const input = document.querySelector<HTMLInputElement>(sel)!;
+    const search = (term: string) => {
+      input.value = term;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    };
+    search("first-search-term");
+    search("second-search-term");
+    const dlg = () => document.querySelector(".dlg-colors")?.textContent ?? "";
+    await expect.poll(dlg).toContain("second-search-term-inbox");
+    await new Promise((r) => setTimeout(r, 200));
+    expect(dlg()).not.toContain("only-first-search-term");
+    expect(dlg()).not.toContain("No results");
+    appState.showingFindInNotes = false;
+  });
 });

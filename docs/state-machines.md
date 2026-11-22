@@ -371,7 +371,7 @@ other tabs are open.
 | 8 Storage switch / boot | fixed (8a–8c), `tests/browser/boot.test.ts` (8b), `tests/browser/encryption.test.ts` (8c); 8a by saving before switching + editor refuses to save to a different storage |
 | 9 Code runs | fixed (9a–9d), `tests/browser/app.test.ts` (9a) |
 | 10 Tabs / navigation | fixed (10a, 10b); `tests/browser/app.test.ts` covers 10b (passes on old code too: the old timer happened to be long enough in localStorage mode) |
-| 11 Find in notes | open |
+| 11 Find in notes | fixed (11a–11c), `tests/browser/app.test.ts` (11a) |
 | 12 Ask AI | open |
 | 13 Multiple browser tabs | open |
 | 14 Low impact | open |

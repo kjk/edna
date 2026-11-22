@@ -39,7 +39,12 @@
 
   let noResultsMsg = $state("");
 
+  // identifies the latest search. Only the latest search updates results (F-I1)
+  // and closing the dialog stops it (F-I2)
+  let searchId = 0;
+
   async function searchAllNotes(searchTerm: string) {
+    let id = ++searchId;
     currSearchTerm = searchTerm;
     hiliRegExp = makeHilightRegExp(searchTerm);
     results = [];
@@ -61,7 +66,17 @@
     while (len(notesToSearch) > 0) {
       noteBeingSearched = notesToSearch[0]!;
       notesToSearch.splice(0, 1);
-      let content = await loadNote(noteBeingSearched);
+      let content: string | undefined;
+      try {
+        content = await loadNote(noteBeingSearched);
+      } catch (e) {
+        // e.g. encrypted note and the user cancelled the password dialog
+        console.log(`find in notes: failed to load '${noteBeingSearched}'`, e);
+      }
+      if (id !== searchId) {
+        // a newer search started or the dialog was closed
+        return;
+      }
       if (!content) continue;
       let maxResults = kMaxSearchResults - len(results);
       for (let m of findMatchesInNote(content, parts, matchCase, wholeWord, maxResults)) {
@@ -108,6 +123,8 @@
 
     return () => {
       isMoving.disableMoveTracking = false;
+      // stop the search in progress
+      searchId++;
     };
   });
 

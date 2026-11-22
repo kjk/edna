@@ -69,8 +69,14 @@
       if (curr === prevItems && n === prevItemsLen) {
         return;
       }
+      // items appended to the same array (e.g. search results arriving):
+      // keep the selection
+      let appended = curr === prevItems && n > prevItemsLen && selectedIdx >= 0;
       prevItems = curr;
       prevItemsLen = n;
+      if (appended) {
+        return;
+      }
       select(n > 0 ? 0 : -1);
     });
   });
