@@ -52,11 +52,17 @@
     return sanitizeNoteName(filter);
   });
 
+  // note: must be in $effect because it modifies state, which is not allowed in $derived
+  $effect(() => {
+    if (sanitizedFilter.startsWith(">")) {
+      switchToCommandPalette();
+    }
+  });
+
   let itemsFiltered = $derived.by(() => {
     // we split the search term by space, the name of the note
     // must match all parts
     if (sanitizedFilter.startsWith(">")) {
-      switchToCommandPalette();
       return [];
     }
     return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
