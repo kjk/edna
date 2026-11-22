@@ -1137,6 +1137,25 @@ export function isUsingEncryption(): boolean {
 // each password
 const kEdnaSalt = "dbd71826401a4fca6c360f065a281063";
 
+async function fileExistsFS(dh: FileSystemDirectoryHandle, fileName: string): Promise<boolean> {
+  try {
+    await dh.getFileHandle(fileName);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// name for a copy of note `name` (encrypted or not) that doesn't exist yet
+async function pickUniqueNoteNameFS(dh: FileSystemDirectoryHandle, name: string): Promise<string> {
+  let [names, encrNames] = await loadNoteNamesFS(dh);
+  return pickUniqueName(name, [...names!, ...encrNames!]);
+}
+
+// note "X" exists as both X.edna.txt and X.encr.edna.txt (interrupted
+// operation, sync conflict): E-I1 doesn't hold. Encrypting / decrypting one
+// must not overwrite the other (U5): a copy with different content gets a
+// unique name, an identical copy is removed
 async function encryptNoteFS(dh: FileSystemDirectoryHandle, oldFileName: string, pwdHash: string) {
   if (isEncryptedEdnaFile(oldFileName)) {
     console.log("encryptNoteFS:", oldFileName, "already encrypted");
@@ -1144,9 +1163,21 @@ async function encryptNoteFS(dh: FileSystemDirectoryHandle, oldFileName: string,
   }
   console.log("encryptNoteFS:", oldFileName);
   let s = await fsReadTextFile(dh, oldFileName);
-  let newFileName = trimSuffix(oldFileName, kEdnaFileExt);
-  newFileName += kEdnaEncrFileExt;
-  await writeEncryptedFS(dh, pwdHash, newFileName, s);
+  let name = noteNameFromFileNameFS(oldFileName)!;
+  let newFileName = notePathFromNameFS(name, true);
+  if (await fileExistsFS(dh, newFileName)) {
+    let existing = await readEncryptedFS(dh, newFileName);
+    if (existing !== s) {
+      let newName = await pickUniqueNoteNameFS(dh, name);
+      console.log(`encryptNoteFS: '${newFileName}' exists, encrypting as '${newName}'`);
+      newFileName = notePathFromNameFS(newName, true);
+    } else {
+      newFileName = "";
+    }
+  }
+  if (newFileName) {
+    await writeEncryptedFS(dh, pwdHash, newFileName, s);
+  }
   await dh.removeEntry(oldFileName);
 }
 
@@ -1157,9 +1188,21 @@ async function decryptNoteFS(dh: FileSystemDirectoryHandle, oldFileName: string)
   }
   console.log("decryptNoteFS:", oldFileName);
   let s = await readEncryptedFS(dh, oldFileName);
-  let newFileName = trimSuffix(oldFileName, kEdnaEncrFileExt);
-  newFileName += kEdnaFileExt;
-  await fsWriteTextFile(dh, newFileName, s);
+  let name = noteNameFromFileNameFS(oldFileName)!;
+  let newFileName = notePathFromNameFS(name, false);
+  if (await fileExistsFS(dh, newFileName)) {
+    let existing = await fsReadTextFile(dh, newFileName);
+    if (existing !== s) {
+      let newName = await pickUniqueNoteNameFS(dh, name);
+      console.log(`decryptNoteFS: '${newFileName}' exists, decrypting as '${newName}'`);
+      newFileName = notePathFromNameFS(newName, false);
+    } else {
+      newFileName = "";
+    }
+  }
+  if (newFileName) {
+    await fsWriteTextFile(dh, newFileName, s);
+  }
   await dh.removeEntry(oldFileName);
 }
 

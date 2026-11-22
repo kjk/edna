@@ -49,6 +49,24 @@ describe("encrypt / decrypt all notes", () => {
     expect(await loadNote("c")).toBe(content);
   });
 
+  it("a note stored both plain and encrypted: neither copy is overwritten (U5)", async () => {
+    await encryptAllNotes("goodpassword");
+    // e.g. a sync tool restored the plain version of "a"
+    await fsWriteTextFile(dh, "a.edna.txt", blockHdrMarkdown + "plain copy");
+    await loadNoteNames();
+    await encryptAllNotes("goodpassword");
+    expect(await listFiles(dh)).toEqual(["__metadata.edna.json", "a-1.encr.edna.txt", "a.encr.edna.txt", "b.encr.edna.txt"]);
+    expect(await loadNote("a")).toBe(content);
+    expect(await loadNote("a-1")).toBe(blockHdrMarkdown + "plain copy");
+
+    await fsWriteTextFile(dh, "b.edna.txt", blockHdrMarkdown + "plain b");
+    await loadNoteNames();
+    await decryptAllNotes();
+    expect(await listFiles(dh)).toEqual(["__metadata.edna.json", "a-1.edna.txt", "a.edna.txt", "b-1.edna.txt", "b.edna.txt"]);
+    expect(await loadNote("b")).toBe(blockHdrMarkdown + "plain b");
+    expect(await loadNote("b-1")).toBe(content);
+  });
+
   it("decrypt all", async () => {
     await encryptAllNotes("goodpassword");
     await decryptAllNotes();

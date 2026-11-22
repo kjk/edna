@@ -458,6 +458,7 @@ to state machines). Ordered by impact.
   not for a directory with notes picked during the first session.
 - **U5. A note never exists both plain and encrypted (E-I1).** `encryptNoteFS` /
   `decryptNoteFS` wrote the target without checking it exists, overwriting the other copy.
+  **Fixed**: an identical copy is removed, a different one is kept under a unique name.
 - **U6. Notes opened from disk belong to the current storage.** `openedNotes` survived a
   storage switch and shadowed a note with the same name in the new store.
 - **U7. Metadata entries belong to existing notes.** Entries of deleted (outside Edna) notes
