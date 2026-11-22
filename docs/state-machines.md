@@ -528,6 +528,9 @@ to state machines). Ordered by impact.
   saved content (unsaved edits in the open note shifted positions) and, when lower-casing
   changed the length (`İ`), returned positions in the lower-cased text. **Fixed**: the open
   note is searched in the editor; positions are mapped back to the original text.
+- **U24. A model id sent to the OpenAI / xAI API exists there.** Model ids are OpenRouter ids;
+  `:free` / `:extended` variants, `o4-mini-high`, `gpt-oss-*` were sent to api.openai.com.
+  **Fixed**: `isOpenRouterOnlyModel` routes them to OpenRouter.
 
 ## Status
 

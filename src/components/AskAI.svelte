@@ -2,6 +2,7 @@
   import { tick } from "svelte";
   import hljs from "highlight.js";
   import markdownIt, { type MarkdownIt } from "markdown-it";
+  import { isOpenRouterOnlyModel } from "../ai-provider";
   import { parseChatStreamData } from "../ai-stream";
   import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
@@ -88,6 +89,9 @@
   const maxTokens = 10000;
 
   function apiProviderForAiModel(aiModel: any) {
+    if (isOpenRouterOnlyModel(aiModel[kModelIDIdx] ?? "")) {
+      return kApiProviderOpenRouter;
+    }
     let provider = aiModel[kModelProviderIdx];
     switch (provider) {
       case kProviderOpenAI:
