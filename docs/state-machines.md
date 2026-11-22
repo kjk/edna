@@ -497,7 +497,8 @@ to state machines). Ordered by impact.
   against the current document length (note changed elsewhere). **Fixed**: only folds inside
   one block's content are restored; a selection outside the document falls back to the default.
 - **U14. `moveCurrentBlock`: the selection anchor is in the current block.** A selection
-  spanning two blocks produced positions outside the document.
+  spanning two blocks produced positions outside the document. **Fixed**: the selection is
+  clamped to the moved block.
 - **U15. Menu entries are commands.** `menuItemStatus` treated a submenu as a command id; on the
   Home tab every submenu (Notes storage, Encryption, Help) was removed. **Fixed**.
 - **U16. A selection is never inside a delimiter (after the first block).** Atomic ranges only

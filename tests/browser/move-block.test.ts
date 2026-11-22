@@ -126,4 +126,22 @@ describe("Move block (browser tests)", () => {
     const pos = editor.getCursorPosition();
     expect(content.slice(pos - 1, pos)).toBe("C");
   });
+
+  it("move block down with a selection extending into the next block (U14)", async () => {
+    const { EditorSelection } = await import("@codemirror/state");
+    const { moveCurrentBlockDown } = await import("../../src/editor/block/commands");
+    const t = createEditor("\n∞∞∞text\nA\n∞∞∞text\nB\n∞∞∞text\nC");
+    try {
+      const view = t.editor.view;
+      const s0 = view.state.doc.toString();
+      // anchor in the last block, head in the middle block
+      view.dispatch({ selection: EditorSelection.range(s0.indexOf("C") + 1, s0.indexOf("B")) });
+      expect(moveCurrentBlockDown(view)).toBe(true);
+      expect(view.state.doc.toString()).toBe("\n∞∞∞text\nA\n∞∞∞text\nC\n∞∞∞text\nB");
+      const sel = view.state.selection.main;
+      expect(sel.to).toBeLessThanOrEqual(view.state.doc.length);
+    } finally {
+      cleanup(t);
+    }
+  });
 });

@@ -471,16 +471,21 @@ function moveCurrentBlock(state: EditorState, dispatch: EditorView["dispatch"], 
   const newContent = up ? currentBlockContent + neighborBlockContent : neighborBlockContent + currentBlockContent;
 
   const selectionRange = state.selection.asSingle().main;
+  // the selection moves with the block, so it must be inside it: the anchor
+  // can be in another block (U14)
+  const clamp = (pos: number) => Math.min(Math.max(pos, currentBlock.contentFrom), currentBlock.to);
+  const anchor = clamp(selectionRange.anchor);
+  const head = clamp(selectionRange.head);
   let newSelectionRange;
   if (up) {
     newSelectionRange = EditorSelection.range(
-      selectionRange.anchor - currentBlock.from + neighborBlock.from,
-      selectionRange.head - currentBlock.from + neighborBlock.from,
+      anchor - currentBlock.from + neighborBlock.from,
+      head - currentBlock.from + neighborBlock.from,
     );
   } else {
     newSelectionRange = EditorSelection.range(
-      selectionRange.anchor + neighborBlock.to - neighborBlock.from,
-      selectionRange.head + neighborBlock.to - neighborBlock.from,
+      anchor + neighborBlock.to - neighborBlock.from,
+      head + neighborBlock.to - neighborBlock.from,
     );
   }
 
