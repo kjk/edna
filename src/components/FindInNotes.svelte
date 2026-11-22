@@ -4,7 +4,8 @@
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
   import { loadNote } from "../notes";
-  import { hilightText, isWholeWord, len, makeHilightRegExp, splitStringPreservingQuotes } from "../util";
+  import { findMatchesInNote } from "../find-in-notes";
+  import { hilightText, len, makeHilightRegExp, splitStringPreservingQuotes } from "../util";
   import { IconFluentWholeWord, IconTablerLetterCase } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
@@ -57,76 +58,28 @@
       searchTerm = searchTerm.toLowerCase();
     }
     let parts = splitStringPreservingQuotes(searchTerm);
-    let nParts = len(parts);
     while (len(notesToSearch) > 0) {
       noteBeingSearched = notesToSearch[0]!;
       notesToSearch.splice(0, 1);
-      let s = await loadNote(noteBeingSearched);
-      if (!s) continue;
-      if (!matchCase) {
-        s = s.toLowerCase();
-      }
-      let startIdx = 0;
-      let line: string;
-      while (true) {
-        let toFind = parts[0]!;
-        let idx = s.indexOf(toFind, startIdx);
-        if (idx < 0) {
-          break;
-        }
-        startIdx = idx + 1;
-
-        let lineStartIdx = s.lastIndexOf("\n", idx - 1) + 1;
-        let lineEndIdx = s.indexOf("\n", idx + 1);
-        if (lineEndIdx < 0) {
-          line = s.substring(lineStartIdx);
-        } else {
-          line = s.substring(lineStartIdx, lineEndIdx);
-        }
-        if (wholeWord) {
-          let ok = isWholeWord(s, idx, idx + len(toFind));
-          if (!ok) {
-            continue;
-          }
-        }
-
-        // must match all parts
-        function matchesAll() {
-          for (let i = 1; i < nParts; i++) {
-            let toFind = parts[i]!;
-            let idx = line.indexOf(toFind);
-            if (idx < 0) {
-              return false;
-            }
-            if (wholeWord) {
-              let ok = isWholeWord(line, idx, idx + len(toFind));
-              if (!ok) {
-                return false;
-              }
-            }
-          }
-          return true;
-        }
-        if (!matchesAll()) {
-          continue;
-        }
-
-        let res = {
+      let content = await loadNote(noteBeingSearched);
+      if (!content) continue;
+      let maxResults = kMaxSearchResults - len(results);
+      for (let m of findMatchesInNote(content, parts, matchCase, wholeWord, maxResults)) {
+        results.push({
           key: uniqueId,
           note: noteBeingSearched,
-          line: line,
-          pos: idx,
-        };
+          line: m.line,
+          pos: m.pos,
+        });
         uniqueId++;
-        results.push(res);
-        if (len(results) > kMaxSearchResults) {
-          notesToSearch = [];
-        }
+      }
+      if (len(results) >= kMaxSearchResults) {
+        notesToSearch = [];
       }
     }
     noteBeingSearched = "";
     if (len(results) == 0) {
-      noResultsMsg = `No results for '${searchTerm}''`;
+      noResultsMsg = `No results for '${currSearchTerm}'`;
     }
   }
 
