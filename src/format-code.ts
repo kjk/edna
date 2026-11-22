@@ -40,34 +40,39 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
 
   const cursorPos = state.selection.asSingle().main.head;
   const content = state.sliceDoc(block.contentFrom, block.to);
+  // block offsets are only valid for this document: the user can keep typing
+  // or switch notes while we await the formatter (U11). Doc is immutable, so
+  // the same object means no changes (and the same note)
+  const docUnchanged = () => {
+    if (view.state.doc === state.doc) {
+      return true;
+    }
+    console.log("formatBlockContent: document changed while formatting, not applying");
+    return false;
+  };
 
   // console.log("prettier supports:", getSupportInfo());
   if (language.token == "golang") {
-    // formatGo() is async so we need to prevent changes to the state of the editor
-    // we make it read-only
     // TODO: maybe show some indication that we're doing an operation
     let s;
     try {
-      editor.setReadOnly(true);
       s = await formatGo(content);
     } catch (e) {
       console.log("error formatting go:", e);
       return false;
-    } finally {
-      editor.setReadOnly(false);
     }
 
     if (!s) {
       console.log("failed to format go");
       return false;
     }
+    if (!docUnchanged()) {
+      return false;
+    }
     // console.log("formatted go:", s)
     // console.log("block:", block)
     let cursorOffset = cursorPos - block.contentFrom;
     // console.log("cursorOffset:", cursorOffset)
-    // TODO: this probably might fail. For some reason during formatGo()
-    // view.state is changed so we might be updating incorrect part
-    // would have to disable
     const tr = view.state.update(
       {
         changes: {
@@ -124,6 +129,9 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
     const hyphens = "----------------------------------------------------------------------------";
     const message = e instanceof Error ? e.message : String(e);
     console.log(`Error when trying to format block:\n${hyphens}\n${message}\n${hyphens}`);
+    return false;
+  }
+  if (!docUnchanged()) {
     return false;
   }
   // console.log("formattedContent.formatted:", formattedContent.formatted);
