@@ -408,7 +408,9 @@ other tabs are open.
   and the file could diverge. **Fixed**: the failure is shown; the next successful save writes all
   metadata again (`tests/browser/low-impact.test.ts`).
 - 15f. A password prompt needed while booting from the permissions screen (before `App` is
-  mounted, or after it was unmounted) had no UI: boot failed or hung.
+  mounted, or after it was unmounted) had no UI: boot failed or hung. **Fixed**: without `App`
+  `getPasswordFromUser` mounts a standalone dialog (`PasswordPrompt.svelte`); `App` clears its
+  global functions when unmounted (`tests/browser/password.test.ts`).
 - 15g. Two Edna tabs editing the same note: last writer won.
 
 ## Status
@@ -429,4 +431,4 @@ other tabs are open.
 | 12 Ask AI | fixed (12a–12c), `tests/browser/askai.test.ts` |
 | 13 Multiple browser tabs | mitigated: other instances detected (`instances.ts`), warning at startup, storage operations refused while another instance is open; `tests/browser/instances.test.ts`. Concurrent editing of the same note in two tabs is still last-writer-wins |
 | 14 Low impact | fixed (14a–14d); `tests/browser/low-impact.test.ts` covers 14c and 14d (14d passes on old code too: OPFS happened to complete writes in order); 14a, 14b no automated test |
-| 15 Previously open items | 15a–15e fixed; 15f, 15g open |
+| 15 Previously open items | 15a–15f fixed; 15g open |

@@ -63,7 +63,7 @@
   import { formatBlockContent } from "../format-code";
   import { parseUserFunctions, runBoopFunction } from "../functions";
   import type { BoopFunction, BoopFunctionArg } from "../functions";
-  import { setGlobalFuncs } from "../globals";
+  import { clearGlobalFuncs, setGlobalFuncs } from "../globals";
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import { hasOtherInstances, startInstanceDetection } from "../instances";
@@ -353,6 +353,8 @@
       window.removeEventListener("keydown", onKeyDown, { capture: true });
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("popstate", onPopState);
+      // App's functions must not be used after it's unmounted
+      clearGlobalFuncs(gf);
     };
   });
 

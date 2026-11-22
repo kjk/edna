@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { blockHdrMarkdown } from "../../src/constants";
 import { createNoteWithName, encryptAllNotes, loadNote, saveNote } from "../../src/notes";
+import { setGlobalFuncs } from "../../src/globals";
 import { forgetPassword, setupFSStorage, type FakeUI } from "./fs-utils";
 
 // password state machine (docs/state-machines.md M3, issue 5)
@@ -43,5 +44,18 @@ describe("password", () => {
   it("cancelling while reading fails the load instead of looping", async () => {
     ui.passwords = [""];
     await expect(loadNote("a")).rejects.toThrow("password not provided");
+  });
+
+  it("password can be asked for when App is not mounted (e.g. while booting)", async () => {
+    setGlobalFuncs(undefined);
+    const p = loadNote("a");
+    await expect.poll(() => document.querySelector<HTMLInputElement>("input[type=password]")).not.toBeNull();
+    const input = document.querySelector<HTMLInputElement>("input[type=password]")!;
+    input.value = "goodpassword";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(await p).toBe(content);
+    // dialog removed
+    expect(document.querySelector("input[type=password]")).toBeNull();
   });
 });
