@@ -39,3 +39,36 @@ export function addTargetBlank(md: MarkdownIt) {
     return defaultRender(tokens, idx, options, env, self);
   };
 }
+
+export interface MarkdownHeading {
+  level: number;
+  text: string;
+  // offset of the start of heading's line in the markdown text
+  offset: number;
+}
+
+// h1 ... h{maxLevel} headings of markdown text s, in order. Uses a real parser
+// so that e.g. "# comment" in a code fence isn't a heading
+export function getMarkdownHeadings(s: string, maxLevel = 4): MarkdownHeading[] {
+  let lineStarts = [0];
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === "\n") {
+      lineStarts.push(i + 1);
+    }
+  }
+  let res: MarkdownHeading[] = [];
+  let tokens = markdownIt().parse(s, {});
+  for (let i = 0; i < tokens.length; i++) {
+    let t = tokens[i]!;
+    if (t.type !== "heading_open" || !t.map) {
+      continue;
+    }
+    let level = Number(t.tag.slice(1));
+    if (level > maxLevel) {
+      continue;
+    }
+    let text = tokens[i + 1]?.content.trim() || "(empty)";
+    res.push({ level, text, offset: lineStarts[t.map[0]] ?? 0 });
+  }
+  return res;
+}

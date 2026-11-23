@@ -24,6 +24,7 @@ Use:
 
 - `Mod + L` to assign a type for current block
 - `Mod + B` to navigate between blocks
+- `Mod + Shift + B` to navigate between headings of a markdown block
 - `Mod + A` and `Delete` to delete block (select block text and delete)
 
 Use [keyboard shortcuts](#keyboard-shortcuts) to create blocks, move between blocks.
@@ -787,7 +788,7 @@ Each block has a type (markdown, text, JavaScript and 40+ programming languages)
 
 Blocks can be folded so that you an focus on the block you're currently editing.
 
-You can quickly navigate between blocks with `Mod + B`.
+You can quickly navigate between blocks with `Mod + B` and between headings of a markdown block with `Mod + Shift + B`.
 
 ## Scratch note
 

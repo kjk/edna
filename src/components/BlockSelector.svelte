@@ -1,54 +1,46 @@
 <script module lang="ts">
+  // an item in a list of blocks or of headings in a block
   export interface Item {
-    block: NoteBlock;
+    key: number;
     text: string;
+    // nesting level, for showing headings as a tree
+    indent?: number;
   }
 </script>
 
 <!-- svelte-ignore state_referenced_locally -->
-<script lang="ts">
+<script lang="ts" generics="T extends Item">
   import { focus } from "../actions";
-  import type { NoteBlock } from "../editor/block/block-parsing";
   import { findMatchingItems, handleDigitPick, handleListKeydown, hilightText, len, makeHilightRegExp } from "../util";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
-    blocks: Item[];
-    selectBlock: (block: NoteBlock) => void;
+    items: T[];
+    onselect: (item: T) => void;
     initialSelection?: number;
+    // what the items are, for "3 blocks"
+    noun?: string;
   }
-  let { blocks, selectBlock, initialSelection = 0 }: Props = $props();
+  let { items, onselect, initialSelection = 0, noun = "block" }: Props = $props();
 
   let filter: string = $state("");
   let hiliRegExp = $derived(makeHilightRegExp(filter));
 
-  let blockCountMsg = $state(`${len(blocks)} blocks`);
-  if (len(blocks) == 1) {
-    blockCountMsg = `1 block`;
-  }
+  let countMsg = len(items) == 1 ? `1 ${noun}` : `${len(items)} ${noun}s`;
 
-  interface BlockItem {
-    item: Item;
+  interface ListItem {
+    item: T;
     textLC: string;
     key: number;
   }
 
-  function buildItems(): BlockItem[] {
-    let res: BlockItem[] = [];
-    for (let block of blocks) {
-      let bi = {
-        item: block,
-        textLC: block.text.toLowerCase(),
-        key: block.block.index,
-      };
-      res.push(bi);
-    }
-    return res;
-  }
+  let listItems: ListItem[] = items.map((item) => ({
+    item,
+    textLC: item.text.toLowerCase(),
+    key: item.key,
+  }));
 
-  let items: BlockItem[] = buildItems();
-
-  let itemsFiltered: BlockItem[] = $derived(findMatchingItems(items, filter, "textLC"));
+  let itemsFiltered: ListItem[] = $derived(findMatchingItems(listItems, filter, "textLC"));
 
   function onkeydown(ev: KeyboardEvent) {
     // Ctrl + '0' ... '9' picks an item
@@ -57,9 +49,8 @@
       ev,
       listboxRef,
       filter === "",
-      (ev) => ev.ctrlKey && handleDigitPick(ev, len(itemsFiltered), (idx) => selectBlock(itemsFiltered[idx]!.item.block)),
+      (ev) => ev.ctrlKey && handleDigitPick(ev, len(itemsFiltered), (idx) => onselect(itemsFiltered[idx]!.item)),
     );
-
   }
 
   let listboxRef: ListBox;
@@ -75,18 +66,13 @@
     <input use:focus type="text" bind:value={filter} class="py-1 px-2 bg-white w-full min-w-100 mb-2 rounded-xs" />
 
     <div class="absolute right-4 top-3 italic text-gray-400">
-      {blockCountMsg}
+      {countMsg}
     </div>
   </div>
-  <ListBox
-    bind:this={listboxRef}
-    items={itemsFiltered}
-    onclick={(item, metaPressed) => selectBlock(item.item.block)}
-    {initialSelection}
-  >
+  <ListBox bind:this={listboxRef} items={itemsFiltered} onclick={(item, metaPressed) => onselect(item.item)} {initialSelection}>
     {#snippet renderItem(item, idx)}
       {@const hili = hilightText(item.item.text, hiliRegExp)}
-      <div class="truncate">
+      <div class="truncate" style:padding-left={item.item.indent ? `${item.item.indent * 1.25}em` : undefined}>
         {@html hili}
       </div>
       <div class="grow"></div>

@@ -5,7 +5,7 @@
   import { foldCode, unfoldCode } from "@codemirror/language";
   import { openSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorState } from "@codemirror/state";
-  import type { EditorView } from "@codemirror/view";
+  import { EditorView } from "@codemirror/view";
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
   import {
     blockHdrMarkdown,
@@ -81,6 +81,7 @@
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import { hasOtherInstances, startInstanceDetection } from "../instances";
+  import { getMarkdownHeadings } from "../markdown-util";
   import { boot, switchToBrowserStorage, switchToDirectory } from "../main";
   import {
     archiveNote,
@@ -154,7 +155,7 @@
   import AskAI from "./AskAI.svelte";
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";
-  import type { Item as BlockItem } from "./BlockSelector.svelte";
+  import type { Item as SelectorItem } from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
   import PasswordPrompt from "./PasswordPrompt.svelte";
@@ -288,6 +289,7 @@
     ["Mod-e", smartRun],
     ["Alt-Shift-r", () => openFunctionSelector(false)],
     ["Mod-b", () => openBlockSelector()],
+    ["Mod-Shift-b", openHeadingSelector],
     ...globalKeymap,
   ];
   // Alt-n for create scratch note only on non-Mac (Option-n is used for accented characters on Mac)
@@ -751,20 +753,57 @@
     return s;
   }
 
-  let blockItems: BlockItem[] = $state([]);
+  // state of BlockSelector, which lists blocks or headings
+  let selectorItems: SelectorItem[] = $state([]);
+  let selectorNoun = $state("block");
   let initialBlockSelection = $state(0);
+  let onSelectorPick: (item: SelectorItem) => void = $state(() => {});
 
   function openBlockSelector(fn = selectBlock) {
     console.log("openBlockSelector");
-    fnSelectBlock = fn;
     let editor = getEditor();
     let { blocks, active } = getBlocksInfo(editor.view.state);
     let content = editor.getContent();
-    blockItems = blocks.map((b): BlockItem => ({
-      block: b,
+    selectorItems = blocks.map((b) => ({
+      key: b.index,
       text: extractBlockTitle(content, b.contentFrom, b.to),
     }));
+    selectorNoun = "block";
     initialBlockSelection = active;
+    onSelectorPick = (item) => fn(blocks[item.key]!);
+    showingBlockSelector = true;
+  }
+
+  // lists headings of the current markdown block, to go to one of them (#61)
+  function openHeadingSelector() {
+    let view = getEditorView();
+    let block = getActiveNoteBlock(view.state)!;
+    if (block.language !== "markdown") {
+      showWarning("Go to heading works in markdown blocks");
+      return;
+    }
+    let content = view.state.sliceDoc(block.contentFrom, block.to);
+    let headings = getMarkdownHeadings(content);
+    if (headings.length === 0) {
+      showToast("This block has no headings");
+      return;
+    }
+    let minLevel = Math.min(...headings.map((h) => h.level));
+    selectorItems = headings.map((h, i) => ({ key: i, text: h.text, indent: h.level - minLevel }));
+    selectorNoun = "heading";
+    // the heading the cursor is under
+    let cursor = view.state.selection.main.head - block.contentFrom;
+    initialBlockSelection = Math.max(0, headings.findLastIndex((h) => h.offset <= cursor));
+    onSelectorPick = (item) => {
+      closeDialogs();
+      let pos = block.contentFrom + headings[item.key]!.offset;
+      view.dispatch({
+        selection: { anchor: pos },
+        effects: EditorView.scrollIntoView(pos, { y: "start", yMargin: 32 }),
+        userEvent: "select",
+      });
+      view.focus();
+    };
     showingBlockSelector = true;
   }
 
@@ -1025,6 +1064,7 @@
   const kCmdNewBlockAfterCurrent = nmid();
   const kCmdBlockFirst = kCmdNewBlockAfterCurrent;
   const kCmdGoToBlock = nmid();
+  const kCmdGoToHeading = nmid();
   const kCmdNewBlockBeforeCurrent = nmid();
   const kCmdNewBlockAtEnd = nmid();
   const kCmdNewBlockAtStart = nmid();
@@ -1152,6 +1192,7 @@
 
     const menuBlock: Command[] = [
       ["Go To\tMod + B", kCmdGoToBlock],
+      ["Go To Heading\tMod + Shift + B", kCmdGoToHeading],
       ["Add after current\tMod + Enter", kCmdNewBlockAfterCurrent],
       ["Add before current\tAlt + Enter", kCmdNewBlockBeforeCurrent],
       ["Add at end\tMod + Shift + Enter", kCmdNewBlockAtEnd],
@@ -1528,6 +1569,8 @@
       focusEditor();
     } else if (cmdId === kCmdGoToBlock) {
       openBlockSelector();
+    } else if (cmdId === kCmdGoToHeading) {
+      openHeadingSelector();
     } else if (cmdId === kCmdGoToNextBlock) {
       gotoNextBlock(requireView());
       focusEditor();
@@ -1917,8 +1960,6 @@
     let editor = getEditor();
     runAndFocus(editor, () => runBlockContent(editor), "runBlock");
   }
-
-  let fnSelectBlock: (block: NoteBlock) => void = $state(selectBlock);
 
   function runBlockWithAnotherBlock(block: NoteBlock) {
     closeDialogs();
@@ -2310,9 +2351,13 @@
   </Overlay>
 {/if}
 
-{#if showingBlockSelector && fnSelectBlock}
+{#if showingBlockSelector}
   <Overlay onclose={closeDialogs} blur={true}>
-    <BlockSelector blocks={blockItems} selectBlock={fnSelectBlock} initialSelection={initialBlockSelection}
+    <BlockSelector
+      items={selectorItems}
+      onselect={onSelectorPick}
+      noun={selectorNoun}
+      initialSelection={initialBlockSelection}
     ></BlockSelector>
   </Overlay>
 {/if}
