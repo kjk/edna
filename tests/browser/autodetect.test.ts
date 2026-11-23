@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
-import { editorLines, modKey, pasteText, press, visibleBlocks } from "./editor-ui";
+import { editorLines, highlightedTokens, modKey, pasteText, press, visibleBlocks } from "./editor-ui";
 import { cleanup, createEditor, type TestEditor } from "./utils";
 
 interface DetectionRequest {
@@ -57,16 +57,7 @@ describe("Language auto-detection", () => {
   // worker detects request content as Python, wait for Python highlighting
   async function replyPython(request: DetectionRequest) {
     DetectionWorker.instance.reply(request, "py");
-    await expect.poll(highlightedTokens).toContain("def");
-  }
-
-  function highlightedTokens() {
-    return editorLines(te!.container).flatMap((line) =>
-      Array.from(
-        line.querySelectorAll("span[class]:not(.cm-matchingBracket, .cm-nonmatchingBracket)"),
-        (span) => span.textContent,
-      ),
-    );
+    await expect.poll(() => highlightedTokens(te!.container)).toContain("def");
   }
 
   it("highlights the requested block after the cursor moves to another block", async () => {
@@ -76,7 +67,7 @@ describe("Language auto-detection", () => {
     const request = await requestFor(py);
 
     await userEvent.click(editorLines(te.container).find((line) => line.textContent === "second block")!);
-    expect(highlightedTokens()).toEqual([]);
+    expect(highlightedTokens(te!.container)).toEqual([]);
     await replyPython(request);
     expect(visibleBlocks(te.container)).toEqual([py, "second block"]);
   });
@@ -92,9 +83,9 @@ describe("Language auto-detection", () => {
     const newRequest = await requestFor(js);
 
     DetectionWorker.instance.reply(oldRequest, "py");
-    expect(highlightedTokens()).toEqual([]);
+    expect(highlightedTokens(te!.container)).toEqual([]);
     DetectionWorker.instance.reply(newRequest, "js");
-    await expect.poll(highlightedTokens).toContain("function");
+    await expect.poll(() => highlightedTokens(te!.container)).toContain("function");
   });
 
   it("highlights the requested block after a new block is inserted before it", async () => {
@@ -108,7 +99,7 @@ describe("Language auto-detection", () => {
     await press("Enter", "Alt", "Shift");
     await userEvent.keyboard("new");
     expect(visibleBlocks(te.container)).toEqual(["new", "first", py]);
-    expect(highlightedTokens()).toEqual([]);
+    expect(highlightedTokens(te!.container)).toEqual([]);
 
     await replyPython(request);
     expect(visibleBlocks(te.container)).toEqual(["new", "first", py]);

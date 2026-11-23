@@ -1,4 +1,5 @@
 import { userEvent } from "vitest/browser";
+import { cleanup, createEditor, type TestEditor } from "./utils";
 
 export const modKey = /Mac/.test(navigator.platform) ? "Meta" : "Control";
 
@@ -16,6 +17,16 @@ export function press(key: string, ...modifiers: string[]) {
 
 export function editorLines(container: HTMLElement): HTMLElement[] {
   return [...container.querySelectorAll<HTMLElement>(".cm-content > .cm-line")];
+}
+
+// text of syntax highlighted spans in the editor (not bracket matching marks)
+export function highlightedTokens(container: HTMLElement): (string | null)[] {
+  return editorLines(container).flatMap((line) =>
+    Array.from(
+      line.querySelectorAll("span[class]:not(.cm-matchingBracket, .cm-nonmatchingBracket)"),
+      (span) => span.textContent,
+    ),
+  );
 }
 
 export function visibleBlocks(container: HTMLElement): string[] {
@@ -40,4 +51,19 @@ export function pasteText(container: HTMLElement, text: string) {
   container.querySelector(".cm-content")!.dispatchEvent(
     new ClipboardEvent("paste", { clipboardData: clipboard, bubbles: true, cancelable: true }),
   );
+}
+
+// creates a test editor and presses keys, e.g. to place the cursor.
+// Each press is [key, ...modifiers]
+export async function createEditorAndPress(content: string, ...presses: string[][]): Promise<TestEditor> {
+  const te = createEditor(content);
+  try {
+    for (const [key, ...modifiers] of presses) {
+      await press(key!, ...modifiers);
+    }
+  } catch (e) {
+    cleanup(te);
+    throw e;
+  }
+  return te;
 }

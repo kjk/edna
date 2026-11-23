@@ -11,9 +11,6 @@ describe("Clipboard", () => {
     te = undefined;
   });
 
-  function blocks() {
-    return visibleBlocks(te!.container);
-  }
 
   async function cut() {
     const write = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue(undefined);
@@ -31,7 +28,7 @@ describe("Clipboard", () => {
     await userEvent.keyboard("{ArrowRight}{ArrowDown}{ArrowRight}{ArrowRight}");
 
     expect(await cut()).toBe("line 2");
-    expect(blocks()).toEqual(["line 1\nline 3"]);
+    expect(visibleBlocks(te!.container)).toEqual(["line 1\nline 3"]);
   });
 
   it("cut with selection removes only the selection", async () => {
@@ -39,7 +36,7 @@ describe("Clipboard", () => {
     await userEvent.keyboard("{ArrowRight}{ArrowDown}{Home}{Shift>}{ArrowRight>4/}{/Shift}");
 
     expect(await cut()).toBe("line");
-    expect(blocks()).toEqual(["line 1\n 2"]);
+    expect(visibleBlocks(te!.container)).toEqual(["line 1\n 2"]);
   });
 
   // Cutting the last line of a block keeps the next block's delimiter intact (U10).
@@ -52,7 +49,7 @@ describe("Clipboard", () => {
     await userEvent.keyboard(keys);
 
     expect(await cut()).toBe(removed);
-    expect(blocks()).toEqual([kept, "x"]);
+    expect(visibleBlocks(te!.container)).toEqual([kept, "x"]);
   });
 
   // Pasted text doesn't create blocks (U27).
@@ -68,7 +65,7 @@ describe("Clipboard", () => {
 
     pasteText(te.container, input);
 
-    expect(blocks()).toEqual([expected.join("\n")]);
+    expect(visibleBlocks(te!.container)).toEqual([expected.join("\n")]);
   });
 
   it("pasting a note's raw text doesn't add blocks", async () => {
@@ -77,7 +74,7 @@ describe("Clipboard", () => {
 
     pasteText(te.container, "\n∞∞∞js\nlet x\n∞∞∞markdown\n# hi");
 
-    expect(blocks()).toEqual(["hello\n\n\nlet x\n\n# hi"]);
+    expect(visibleBlocks(te!.container)).toEqual(["hello\n\n\nlet x\n\n# hi"]);
   });
 
   it.each([
@@ -94,6 +91,6 @@ describe("Clipboard", () => {
 
     pasteText(te.container, input);
 
-    expect(blocks()).toEqual([expected.join("\n")]);
+    expect(visibleBlocks(te!.container)).toEqual([expected.join("\n")]);
   });
 });

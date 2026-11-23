@@ -16,9 +16,6 @@ describe("Cursor document navigation (browser tests)", () => {
     "\nSome markdown content\n",
   ].join("");
 
-  function blocks() {
-    return visibleBlocks(te.container);
-  }
 
   afterEach(() => {
     cleanup(te);
@@ -30,7 +27,7 @@ describe("Cursor document navigation (browser tests)", () => {
     await press("Home", modKey);
     await userEvent.keyboard("X");
 
-    expect(blocks()[0]).toBe("XFirst block content");
+    expect(visibleBlocks(te.container)[0]).toBe("XFirst block content");
   });
 
   it("moves to the end of the document", async () => {
@@ -39,7 +36,7 @@ describe("Cursor document navigation (browser tests)", () => {
     await press("End", modKey);
     await userEvent.keyboard("X");
 
-    expect(blocks()[2]).toBe("# Third block\nSome markdown content\nX");
+    expect(visibleBlocks(te.container)[2]).toBe("# Third block\nSome markdown content\nX");
   });
 
   it("selects from the cursor to the beginning of the document", async () => {
@@ -49,7 +46,7 @@ describe("Cursor document navigation (browser tests)", () => {
     await press("Home", modKey, "Shift");
     await userEvent.keyboard("X");
 
-    expect(blocks()).toEqual(['Xsecond block")', "# Third block\nSome markdown content\n"]);
+    expect(visibleBlocks(te.container)).toEqual(['Xsecond block")', "# Third block\nSome markdown content\n"]);
   });
 
   it("selects from the cursor to the end of the document", async () => {
@@ -59,7 +56,7 @@ describe("Cursor document navigation (browser tests)", () => {
     await press("End", modKey, "Shift");
     await userEvent.keyboard("X");
 
-    expect(blocks()).toEqual(["First block conX"]);
+    expect(visibleBlocks(te.container)).toEqual(["First block conX"]);
   });
 
   it("cursor navigation works with empty blocks", async () => {
@@ -68,11 +65,11 @@ describe("Cursor document navigation (browser tests)", () => {
     await press("End", modKey);
     await press("Home", modKey);
     await userEvent.keyboard("A");
-    expect(blocks()).toEqual(["A", "", ""]);
+    expect(visibleBlocks(te.container)).toEqual(["A", "", ""]);
 
     await press("End", modKey);
     await userEvent.keyboard("C");
-    expect(blocks()).toEqual(["A", "", "C"]);
+    expect(visibleBlocks(te.container)).toEqual(["A", "", "C"]);
   });
 
   it("cursor cannot be set within block delimiter", async () => {
@@ -82,7 +79,7 @@ describe("Cursor document navigation (browser tests)", () => {
     expect(te.editor.getCursorPosition()).toBe(te.editor.getBlocks()[0].contentFrom);
     await userEvent.keyboard("X");
 
-    expect(blocks()).toEqual(["Xhello"]);
+    expect(visibleBlocks(te.container)).toEqual(["Xhello"]);
   });
 
   it("selection starting before first block is clamped to first block content", async () => {
@@ -97,7 +94,7 @@ describe("Cursor document navigation (browser tests)", () => {
     });
     await userEvent.keyboard("X");
 
-    expect(blocks()).toEqual(["X"]);
+    expect(visibleBlocks(te.container)).toEqual(["X"]);
   });
 
   it("cursor navigation works in single block", async () => {
@@ -110,6 +107,6 @@ describe("Cursor document navigation (browser tests)", () => {
     await press("End", modKey);
     await userEvent.keyboard("Z");
 
-    expect(blocks()).toEqual(["ASingle block with some content\nZ"]);
+    expect(visibleBlocks(te.container)).toEqual(["ASingle block with some content\nZ"]);
   });
 });

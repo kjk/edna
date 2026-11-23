@@ -1,5 +1,4 @@
 import { expect, vi } from "vitest";
-import { userEvent } from "vitest/browser";
 import { kMetadataName } from "../../src/metadata";
 import { dbDelDirHandle } from "../../src/notes";
 import { modKey, press } from "./editor-ui";
@@ -45,8 +44,24 @@ export async function pressMod(key: string, shift = false) {
   await press(key, modKey, ...(shift ? ["Shift"] : []));
 }
 
+// presses Alt + n: dispatched to window so it's synchronous and works
+// regardless of which element has focus
+export function altDigit(n: number) {
+  window.dispatchEvent(
+    new KeyboardEvent("keydown", {
+      key: String(n),
+      code: `Digit${n}`,
+      keyCode: 48 + n,
+      altKey: true,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+}
+
+// opens note with quick access shortcut Alt + shortcut
 export async function openNoteShortcut(shortcut: number, name: string) {
-  await userEvent.keyboard(`{Alt>}${shortcut}{/Alt}`);
+  altDigit(shortcut);
   await expect.poll(() => document.title).toBe(name);
   await expect.poll(editorElement).not.toBeNull();
 }

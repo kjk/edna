@@ -4,22 +4,9 @@ import { appState } from "../../src/appstate.svelte";
 import { createNoteWithName, loadNote, saveNote } from "../../src/notes";
 import { getSettings } from "../../src/settings.svelte";
 import { kTabHome } from "../../src/constants";
-import { editorElement, editorInput, editorText, mountApp, openNoteShortcut, pressMod } from "./app-ui";
+import { altDigit, editorElement, editorInput, editorText, mountApp, openNoteShortcut, pressMod } from "./app-ui";
 
 // Integration tests: boot the whole app (docs/state-machines.md M8 dialogs)
-
-function altDigit(n: number) {
-  window.dispatchEvent(
-    new KeyboardEvent("keydown", {
-      key: String(n),
-      code: `Digit${n}`,
-      keyCode: 48 + n,
-      altKey: true,
-      bubbles: true,
-      cancelable: true,
-    }),
-  );
-}
 
 describe("app", () => {
   beforeAll(async () => {

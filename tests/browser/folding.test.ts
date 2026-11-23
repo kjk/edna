@@ -1,7 +1,7 @@
 import { describe, expect, it, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
-import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
-import { createEditor, cleanup, type TestEditor } from "./utils";
+import { editorLines, createEditorAndPress, modKey, press, visibleBlocks } from "./editor-ui";
+import { cleanup, type TestEditor } from "./utils";
 
 describe("Block folding (browser tests)", () => {
   let te: TestEditor;
@@ -28,9 +28,7 @@ describe("Block folding (browser tests)", () => {
   const firstBlock = "\n∞∞∞text\nBlock A line 1\nBlock A line 2\nBlock A line 3";
 
   async function openEditor(content = fourBlockContent) {
-    te = createEditor(content);
-    await press("Home", modKey);
-    await press("ArrowRight");
+    te = await createEditorAndPress(content, ["Home", modKey], ["ArrowRight"]);
   }
 
   function foldPlaceholderCount() {
