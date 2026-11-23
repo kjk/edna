@@ -7,7 +7,7 @@ import {
   type SelectionRange,
 } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { getFirstNoteBlock, getNoteBlockFromPos } from "./block/block";
+import { editableRange, getFirstNoteBlock, getNoteBlockFromPos } from "./block/block";
 import { collapseSelectionToHeads } from "./cmutils";
 import type { MultiBlockEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
@@ -25,11 +25,6 @@ export function removeDelimitersFromPastedText(text: string, atLineStart = true,
 
 function contextFilteredText(state: EditorState, text: string, from: number, to: number): string {
   return removeDelimitersFromPastedText(text, from === state.doc.lineAt(from).from, to === state.doc.lineAt(to).to);
-}
-
-function editableRange(state: EditorState, range: SelectionRange): SimpleRange {
-  const firstContent = getFirstNoteBlock(state)?.contentFrom ?? 0;
-  return { from: Math.max(firstContent, range.from), to: Math.max(firstContent, range.to) };
 }
 
 function writeSelection(view: EditorView, editor: MultiBlockEditor, cut: boolean, write: (text: string) => void) {

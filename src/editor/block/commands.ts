@@ -5,6 +5,7 @@ import type { MultiBlockEditor } from "../editor";
 import { getBlockDelimiter, kDelimiterPrefix } from "../new-parser/node-types";
 import {
   blockLineRange,
+  editableRange,
   getActiveNoteBlock,
   getBlockN,
   getEditableActiveBlock,
@@ -29,8 +30,7 @@ export function insertNewBlockAtCursor({ state, dispatch }: EditorView): boolean
   const changes = state.changeByRange((range) => {
     const block = getNoteBlockFromPos(state, range.head) ?? first;
     const delimiter = getBlockDelimiter(block.language, block.autoDetect);
-    const from = Math.max(range.from, first.contentFrom);
-    const to = Math.max(range.to, from);
+    const { from, to } = editableRange(state, range);
     return { changes: { from, to, insert: delimiter }, range: EditorSelection.cursor(from + delimiter.length) };
   });
   dispatch(state.update(changes, {

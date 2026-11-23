@@ -28,18 +28,21 @@ export async function setupFSStorage(): Promise<{ dh: FileSystemDirectoryHandle;
       return ui.passwords.shift() ?? "";
     },
   });
+  await startWithStorage(dh);
+  return { dh, ui };
+}
+
+// loads settings and switches to storage dh (undefined: localStorage), as when booting
+async function startWithStorage(dh: FileSystemDirectoryHandle | undefined) {
   getSettings();
   setStorageFS(dh);
   await loadStorageState();
-  return { dh, ui };
 }
 
 // empty localStorage storage, loaded
 export async function setupLocalStorage() {
-  setStorageFS(undefined);
   localStorage.clear();
-  getSettings();
-  await loadStorageState();
+  await startWithStorage(undefined);
 }
 
 // switches storage to directory dh (undefined: localStorage) and loads its note names

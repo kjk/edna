@@ -169,7 +169,7 @@ export async function removeStaleNoteMeta(name: string) {
   if (!metadata || metadataStorage !== getStorageFS()) {
     return;
   }
-  if (!getNotesMetadata().some((m) => m.name === name)) {
+  if (!getNoteMeta(name)) {
     return;
   }
   console.log(`removeStaleNoteMeta: removing metadata of deleted note '${name}'`);

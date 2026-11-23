@@ -295,7 +295,7 @@ export function pickClosestModel(key: string, models: AiModel[]): string | undef
   if (models.length === 0) {
     return undefined;
   }
-  if (models.some((m) => modelKey(m) === key)) {
+  if (findModel(key, models)) {
     return key;
   }
   let parsed = parseModelKey(key);

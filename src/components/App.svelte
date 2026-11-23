@@ -223,9 +223,7 @@
 
     appState.forceNewTab = false;
 
-    if (editorComp) {
-      getEditorComp().focus();
-    }
+    focusEditor();
   }
 
   let isSpellChecking = $state(false);
@@ -874,12 +872,21 @@
     return !!editorComp && getEditor() === run.editor && run.editor.contentGen === run.contentGen;
   }
 
+  // if the editor still shows the document of run, makes it editable again and
+  // runs edit(); returns false if the document changed
+  function editIfSameDocument(run: RunContext, edit: () => void): boolean {
+    if (!isSameDocument(run)) {
+      return false;
+    }
+    run.editor.setReadOnly(run.wasReadOnly);
+    edit();
+    return true;
+  }
+
   // inserts output (starting with a block header) after the active block, or
   // appends it to the note the run started in if the user switched notes
   async function insertRunOutput(run: RunContext, text: string) {
-    if (isSameDocument(run)) {
-      run.editor.setReadOnly(run.wasReadOnly);
-      insertAfterActiveBlock(run.editor.view, text);
+    if (editIfSameDocument(run, () => insertAfterActiveBlock(run.editor.view, text))) {
       return;
     }
     await appendToNote(run.note, text);
@@ -942,9 +949,12 @@
 
     // block offsets are only valid if it's still the same document (the editor
     // is read-only while running so it can't be edited)
-    if (replace && isSameDocument(run)) {
-      run.editor.setReadOnly(run.wasReadOnly);
-      replaceBlockContent(view, block, res, cursorPos - block.contentFrom, { userEvent: "input" });
+    let replaced =
+      replace &&
+      editIfSameDocument(run, () =>
+        replaceBlockContent(view, block, res, cursorPos - block.contentFrom, { userEvent: "input" }),
+      );
+    if (replaced) {
       return true;
     }
     await insertRunOutputBlock(run, res);
@@ -1470,11 +1480,6 @@
       if (!ednaEditor) ednaEditor = getEditor();
       return ednaEditor;
     }
-    function focusView() {
-      // no editor e.g. on Home tab
-      getEditorView()?.focus();
-    }
-
     if (cmdId === kCmdCommandPalette) {
       openCommandPalette();
     } else if (cmdId === kCmdOpenNote) {
@@ -1490,111 +1495,111 @@
       appState.showingRenameNote = true;
     } else if (cmdId == kCmdPermanentlyDeleteNote) {
       deleteNotePermanently(noteName!, true);
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdArchiveCurrentNote) {
       archiveNote(noteName!);
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdUnArchiveCurrentNote) {
       unArchiveNote(noteName!);
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdCreateScratchNote) {
       await createScratchNote();
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdNewBlockAfterCurrent) {
       addNewBlockAfterCurrent(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdNewBlockBeforeCurrent) {
       addNewBlockBeforeCurrent(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdNewBlockAtEnd) {
       addNewBlockAfterLastAndScrollDown(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdNewBlockAtStart) {
       addNewBlockBeforeFirst(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdSplitBlockAtCursor) {
       insertNewBlockAtCursor(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdGoToBlock) {
       openBlockSelector();
     } else if (cmdId === kCmdGoToNextBlock) {
       gotoNextBlock(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdTransposeChars) {
       transposeChars(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdToggleComment) {
       toggleComment(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdToggleLineComment) {
       toggleLineComment(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdToggleBlockComment) {
       toggleBlockComment(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdToggleCheckbox) {
       toggleCheckbox(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdInsertDateAndTime) {
       insertDateAndTime(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdInsertTime) {
       insertTime(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdGoToPreviousBlock) {
       gotoPreviousBlock(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdMoveBlockUp) {
       moveCurrentBlockUp(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdMoveBlockDown) {
       moveCurrentBlockDown(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdChangeBlockLanguage) {
       openLanguageSelector();
     } else if (cmdId === kCmdBlockSelectAll) {
       selectAll(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdFormatBlock) {
       formatCurrentBlock();
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdMoveBlock) {
       moveCurrentBlock();
     } else if (cmdId === kCmdFoldCode) {
       foldCode(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdUnfoldColde) {
       unfoldCode(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdFoldBlock) {
       foldBlock(requireEditor())(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdUnfoldBlock) {
       unfoldBlock(requireEditor())(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdMoveLineUp || cmdId === kCmdMoveSelectionUp) {
       moveLineUp(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdMoveLineDown || cmdId === kCmdMoveSelectionDown) {
       moveLineDown(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdFoldAllBlocks) {
       foldAllBlocks(requireEditor())(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdUnfoldAllBlocks) {
       unfoldAlBlocks(requireEditor())(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdUnfoldEverything) {
       unfoldEverything(requireEditor())(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdToggleBlockFold) {
       toggleBlockFold(requireEditor())(requireView());
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdExportCurrentBlock) {
       await exportCurrentBlock();
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdBlockDelete) {
-      focusView();
+      focusEditor();
       tick().then(() => {
         deleteBlock(requireEditor())(requireView());
       });
@@ -1604,7 +1609,7 @@
       openAskAI();
     } else if (cmdId === kCmdToggleSpellChecking) {
       toggleSpellCheck();
-      focusView();
+      focusEditor();
     } else if (cmdId === kCmdShowHelp) {
       showHTMLHelp();
     } else if (cmdId === kCmdShowHelpAsNote) {
@@ -1902,9 +1907,7 @@
 
   function runCurrentBlock() {
     let editor = getEditor();
-    runBlockContent(editor);
-    editor.focus();
-    logNoteOp("runBlock");
+    runAndFocus(editor, () => runBlockContent(editor), "runBlock");
   }
 
   let fnSelectBlock: (block: NoteBlock) => void = $state(selectBlock);
@@ -1915,11 +1918,13 @@
     let editor = getEditor();
     let state = editor.view.state;
     let blockArg = getBlockN(state, n);
-    runWithArgAndFocus(editor, blockContentText(state, blockArg), "runBlockWithBlock");
+    let arg = blockContentText(state, blockArg);
+    runAndFocus(editor, () => runBlockContentWithArg(editor, arg), "runBlockWithBlock");
   }
 
-  function runWithArgAndFocus(editor: MultiBlockEditor, arg: string, logOp: string) {
-    runBlockContentWithArg(editor, arg);
+  // starts run() (running code of the current block), focuses the editor and logs logOp
+  function runAndFocus(editor: MultiBlockEditor, run: () => unknown, logOp: string) {
+    run();
     editor.focus();
     logNoteOp(logOp);
   }
@@ -1941,7 +1946,8 @@
     if (!currentBlockSupportsRun(editor.view.state)) {
       return;
     }
-    runWithArgAndFocus(editor, await getClipboardText(), "runBlockWithClipboard");
+    let arg = await getClipboardText();
+    runAndFocus(editor, () => runBlockContentWithArg(editor, arg), "runBlockWithClipboard");
   }
 
   // if have a selection, run function with selection
@@ -2040,7 +2046,7 @@
       clearModalMessage("load");
     }
     // note: editor might have been unmounted (e.g. switched to Home tab) while loading
-    editorComp?.focus();
+    focusEditor();
     return ok;
   }
 

@@ -52,6 +52,12 @@ export function getLastNoteBlock(state: EditorState): Block {
   return getBlocks(state).at(-1)!;
 }
 
+// range moved out of the text before the first block's content (which can't be edited)
+export function editableRange(state: EditorState, range: SimpleRange): SimpleRange {
+  const firstContent = getFirstNoteBlock(state)?.contentFrom ?? 0;
+  return { from: Math.max(firstContent, range.from), to: Math.max(firstContent, range.to) };
+}
+
 // block whose header starts at from
 export function getBlockStartingAt(state: EditorState, from: number): Block | undefined {
   return getBlocks(state).find((block) => block.from === from);

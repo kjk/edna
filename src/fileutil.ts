@@ -177,10 +177,8 @@ export async function readDir(
 export async function openDirPicker(writeAccess: boolean): Promise<FileSystemDirectoryHandle | null> {
   const opts: any = {
     mutltiple: false,
+    ...permissionOpts(writeAccess),
   };
-  if (writeAccess) {
-    opts.mode = "readwrite";
-  }
   try {
     // @ts-ignore
     const fh = await window.showDirectoryPicker(opts);
