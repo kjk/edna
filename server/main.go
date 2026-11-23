@@ -114,35 +114,39 @@ func Main() {
 		logf("edna.arslexis.io, build: %s (%s)\n", GitCommitHash, uriBase+GitCommitHash)
 	}
 
-	if flgDeployHetzner {
+	// runs a deploy step and logs how long it took
+	timed := func(step func()) {
 		defer measureDuration()()
-		deploy.ToHetzner(deployConfig)
+		step()
+	}
+
+	if flgDeployHetzner {
+		timed(func() { deploy.ToHetzner(deployConfig) })
 		return
 	}
 
 	if flgSetupAndRun {
-		defer measureDuration()()
-		deploy.SetupOnServerAndRun(deployConfig)
+		timed(func() { deploy.SetupOnServerAndRun(deployConfig) })
 		return
 	}
 
-	logConfig := log.Config{
-		Dir: getLogsDirMust(),
+	// runs the server with logging to files
+	withLog := func(runServer func()) {
+		logConfig := log.Config{
+			Dir: getLogsDirMust(),
+		}
+		log.Init(&logConfig)
+		defer log.Close()
+		runServer()
 	}
 
 	if flgRunDev {
-		log.Init(&logConfig)
-		defer log.Close()
-
-		runServerDev()
+		withLog(runServerDev)
 		return
 	}
 
 	if flgRunProd {
-		log.Init(&logConfig)
-		defer log.Close()
-
-		runServerProd()
+		withLog(runServerProd)
 		return
 	}
 

@@ -100,7 +100,7 @@
     let canOpenSelected = !!selected;
     // check all notes, not just visible ones (archived notes might be hidden)
     // to not overwrite an existing note (N-I1)
-    let canCreate = len(name) > 0 && !findNoteIgnoreCase(name) && !noteNameError(name);
+    let canCreate = noteNameUnavailableHTML(name) === "";
     // if nothing is selected, we can create with just Enter
     // otherwise we need Ctrl + Enter
     let canCreateWithEnter = canCreate && !canOpenSelected;
@@ -256,8 +256,7 @@
     toggleNoteStarred,
     unArchiveNote,
   } from "../metadata";
-  import { canDeleteNote, findNoteIgnoreCase, isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
-  import { noteNameError } from "../note-name";
+  import { canDeleteNote, isNoteArchivable, isSystemNoteName, noteNameUnavailableHTML, sanitizeNoteName } from "../notes";
   import {
     altShortcutStr,
     compareTrueFirst,

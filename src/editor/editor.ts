@@ -233,7 +233,7 @@ export class MultiBlockEditor {
       changes: { from: 0, to: this.view.state.doc.length, insert: text },
       selection: { anchor: 0 },
       effects: [
-        ...this.getFoldedRanges().map((range) => unfoldEffect.of(range)),
+        ...this.unfoldAllEffects(),
         this.historyCompartment.reconfigure([]),
       ],
       annotations: [ednaEvent.of(kSetContent), Transaction.addToHistory.of(false)],
@@ -280,11 +280,16 @@ export class MultiBlockEditor {
     });
     this.view.dispatch({
       effects: [
-        ...this.getFoldedRanges().map((range) => unfoldEffect.of(range)),
+        ...this.unfoldAllEffects(),
         ...valid.map((range) => foldEffect.of(range)),
       ],
       annotations: Transaction.addToHistory.of(false),
     });
+  }
+
+  // effects that remove all current folds
+  private unfoldAllEffects() {
+    return this.getFoldedRanges().map((range) => unfoldEffect.of(range));
   }
 
   getBlocks() {

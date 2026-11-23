@@ -93,16 +93,17 @@ async function parseMetadata(s: string, dh: FileSystemDirectoryHandle | undefine
   return v ?? null;
 }
 
+// metadata stored in directory dh (localStorage if undefined), parsed but not
+// normalized; null if there is none or it's corrupted (a copy is saved)
+export async function readStoredMetadata(dh: FileSystemDirectoryHandle | undefined): Promise<unknown> {
+  let s = dh ? await readMetadataFileFS(dh) : localStorage.getItem(kMetadataName);
+  return s ? await parseMetadata(s, dh) : null;
+}
+
 export async function loadNotesMetadata(): Promise<Metadata> {
   console.log("loadNotesMetadata: started");
   let dh = getStorageFS();
-  let s;
-  if (!dh) {
-    s = localStorage.getItem(kMetadataName);
-  } else {
-    s = await readMetadataFileFS(dh);
-  }
-  let v = s ? await parseMetadata(s, dh) : null;
+  let v = await readStoredMetadata(dh);
   // note: "[]" is the old format, upgraded by upgradeMetadata()
   metadata = v == null || Array.isArray(v) ? ((v ?? []) as any) : normalizeMetadata(v);
   metadataStorage = dh;

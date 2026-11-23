@@ -1,3 +1,4 @@
+import { aiProviders } from "./ai-models";
 import { appState } from "./appstate.svelte";
 import { kSettingsPath } from "./constants";
 import { kMetadataName, loadNotesMetadata } from "./metadata";
@@ -37,7 +38,10 @@ export async function exportUnencryptedNotesToZipBlob(): Promise<Blob> {
   }
   {
     // don't export API keys: the export is not encrypted and might be shared
-    let { openAIKey, xAIKey, openRouterKey, anthropicKey, ...settings } = appState.settings;
+    let settings: Record<string, unknown> = { ...appState.settings };
+    for (let provider of aiProviders) {
+      delete settings[provider.keySetting];
+    }
     let s = JSON.stringify(settings, null, 2);
     await addTextFile(libZip, zipWriter, kSettingsPath, s);
   }

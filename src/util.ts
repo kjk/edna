@@ -306,13 +306,16 @@ export function removeDuplicates<T>(a: T[]): T[] {
   return [...new Set(a)];
 }
 
-export function stringMatchesParts(s: string, parts: string[]): boolean {
-  for (let p of parts) {
-    if (s.indexOf(p) === -1) {
-      return false;
-    }
-  }
-  return true;
+// true if every part occurs in s (and accept() approves its first occurrence)
+export function stringMatchesParts(
+  s: string,
+  parts: string[],
+  accept: (idx: number, part: string) => boolean = () => true,
+): boolean {
+  return parts.every((part) => {
+    let idx = s.indexOf(part);
+    return idx >= 0 && accept(idx, part);
+  });
 }
 
 export function findMatchingItems(items: any[], filter: string, itemKey: string): any[] {

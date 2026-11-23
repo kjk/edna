@@ -1,5 +1,5 @@
 import { parseDelimiterLine } from "./editor/new-parser/node-types";
-import { isWholeWord, len } from "./util";
+import { isWholeWord, len, stringMatchesParts } from "./util";
 
 export interface NoteMatch {
   line: string; // the line with the match, as in the original content
@@ -53,17 +53,7 @@ export function findMatchesInNote(
 
   // must match all other parts on the same line
   function matchesOtherParts(line: string): boolean {
-    for (let i = 1; i < len(parts); i++) {
-      const part = parts[i]!;
-      const idx = line.indexOf(part);
-      if (idx < 0) {
-        return false;
-      }
-      if (wholeWord && !isWholeWord(line, idx, idx + len(part))) {
-        return false;
-      }
-    }
-    return true;
+    return stringMatchesParts(line, parts.slice(1), (idx, part) => !wholeWord || isWholeWord(line, idx, idx + len(part)));
   }
 
   let startIdx = 0;

@@ -36,7 +36,7 @@ import {
   kMetadataName,
   type Metadata,
   loadNotesMetadata,
-  readMetadataFileFS,
+  readStoredMetadata,
   reassignNoteShortcut,
   removeNoteFromMetadata,
   removeStaleNoteMeta,
@@ -56,7 +56,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { arrayReplace, KeyedSerialQueue, valueOrUndefined, escapeHTML, html, len, removeDuplicates, throwIf, trimSuffix, tryParseJSON } from "./util";
+import { arrayReplace, KeyedSerialQueue, valueOrUndefined, escapeHTML, html, len, removeDuplicates, throwIf, trimSuffix } from "./util";
 
 // is set if we store notes on disk, null if in localStorage
 let storageFS: FileSystemDirectoryHandle | undefined;
@@ -939,14 +939,6 @@ export async function preLoadAllNotes(): Promise<number | undefined> {
   return n;
 }
 
-// parses metadata stored in localStorage / a file; corrupted data is treated as empty
-function parseMetadataLenient(s: string | null): Metadata {
-  if (s === null) {
-    return normalizeMetadata(null);
-  }
-  return normalizeMetadata(tryParseJSON(s, "metadata") ?? null);
-}
-
 // returns a name not in `used` (compared case-insensitively)
 function pickUniqueNameIgnoreCase(base: string, used: Set<string>): string {
   let name = base;
@@ -1027,11 +1019,11 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
     }
 
     // merge metadata (metadata of renamed notes moves with them)
-    let lsMeta = parseMetadataLenient(localStorage.getItem(kMetadataName));
+    let lsMeta = normalizeMetadata(await readStoredMetadata(undefined));
     for (let m of lsMeta.notes) {
       m.name = renamed.get(m.name) || m.name;
     }
-    let diskMeta = parseMetadataLenient(await readMetadataFileFS(dh));
+    let diskMeta = normalizeMetadata(await readStoredMetadata(dh));
     let merged = mergeMetadata(diskMeta, lsMeta);
     await fsWriteFile(dh, kMetadataName, JSON.stringify(merged, null, 2));
 
