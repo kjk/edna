@@ -8,6 +8,7 @@ import {
 } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { editableRange, getFirstNoteBlock, getNoteBlockFromPos } from "./block/block";
+import { pushOrMerge } from "../util";
 import { collapseSelectionToHeads } from "./cmutils";
 import type { MultiBlockEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
@@ -65,12 +66,12 @@ function writeSelection(view: EditorView, editor: MultiBlockEditor, cut: boolean
     cuts.sort((a, b) => a.from - b.from);
     const joined: SimpleRange[] = [];
     for (const cut of cuts) {
-      const last = joined.at(-1);
-      if (last && cut.from <= last.to) {
-        last.to = Math.max(last.to, cut.to);
-      } else {
-        joined.push(cut);
-      }
+      pushOrMerge(
+        joined,
+        cut,
+        (last, cut) => cut.from <= last.to,
+        (last, cut) => (last.to = Math.max(last.to, cut.to)),
+      );
     }
     view.dispatch({ changes: joined, scrollIntoView: true, userEvent: "delete.cut" });
   } else if (!cut && editor.deselectOnCopy) {

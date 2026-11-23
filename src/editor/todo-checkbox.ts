@@ -3,7 +3,7 @@ import type { ChangeSpec, EditorState } from "@codemirror/state";
 import { Decoration, EditorView, WidgetType, type DecorationSet } from "@codemirror/view";
 import { NodeProp } from "@lezer/common";
 import { getNoteBlocksBetween } from "./block/block";
-import { decorationsPlugin, docViewOrTreeChanged, groupToggleTarget } from "./cmutils";
+import { decorationsPlugin, docViewOrTreeChanged, groupToggleTarget, rangeLineNumbers } from "./cmutils";
 
 interface TaskMarker {
   from: number;
@@ -96,9 +96,8 @@ export function toggleCheckbox(view: EditorView): boolean {
   if (state.readOnly) return false;
   const tasks = new Map<number, TaskMarker>();
   for (const range of state.selection.ranges) {
-    const first = state.doc.lineAt(range.from);
-    const last = state.doc.lineAt(range.empty ? range.to : range.to - 1);
-    for (const task of markers(state, first.from, last.to)) tasks.set(task.from, task);
+    const { first, last } = rangeLineNumbers(state.doc, range.from, range.to);
+    for (const task of markers(state, state.doc.line(first).from, state.doc.line(last).to)) tasks.set(task.from, task);
   }
   if (!tasks.size) return false;
   const check = groupToggleTarget([...tasks.values()].map((task) => task.checked));

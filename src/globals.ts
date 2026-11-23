@@ -1,5 +1,5 @@
-import { mount, unmount } from "svelte";
 import PasswordPrompt from "./components/PasswordPrompt.svelte";
+import { mountInNewDiv, unmountAndRemove } from "./mount-util";
 import { getSessionDurationInMs } from "./state";
 import { formatDurationShort } from "./util";
 
@@ -73,18 +73,11 @@ export function askPassword(msg: string, show: (props: PasswordPromptProps) => v
 
 // password dialog when App isn't mounted (issue 15f in docs/state-machines.md)
 function getPasswordStandalone(msg: string): Promise<string> {
-  let target = document.createElement("div");
-  document.body.appendChild(target);
-  let comp: ReturnType<typeof mount> | undefined;
+  let mounted: ReturnType<typeof mountInNewDiv> | undefined;
   return askPassword(
     msg,
-    (props) => (comp = mount(PasswordPrompt, { target, props })),
-    () => {
-      if (comp) {
-        unmount(comp);
-      }
-      target.remove();
-    },
+    (props) => (mounted = mountInNewDiv(PasswordPrompt, props)),
+    () => unmountAndRemove(mounted?.target, mounted?.comp),
   );
 }
 

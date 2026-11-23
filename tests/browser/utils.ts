@@ -1,4 +1,3 @@
-import { mount, unmount } from "svelte";
 import { expect } from "vitest";
 import { MultiBlockEditor } from "../../src/editor/editor";
 
@@ -48,25 +47,7 @@ export function setEditorHeight(container: HTMLElement, height: number): HTMLEle
   return container.querySelector<HTMLElement>(".cm-scroller")!;
 }
 
-// mounts component into a new <div> added to the page (style: css of the div)
-export function mountInNewDiv(
-  component: any,
-  props: Record<string, unknown> = {},
-  style = "",
-): { target: HTMLDivElement; comp: ReturnType<typeof mount> } {
-  const target = document.createElement("div");
-  target.style.cssText = style;
-  document.body.appendChild(target);
-  return { target, comp: mount(component, { target, props }) };
-}
-
-// undoes mountInNewDiv(); either can be undefined (e.g. already unmounted)
-export async function unmountAndRemove(target?: HTMLElement, comp?: ReturnType<typeof mount>) {
-  if (comp) {
-    await unmount(comp);
-  }
-  target?.remove();
-}
+export { mountInNewDiv, unmountAndRemove } from "../../src/mount-util";
 
 /**
  * Destroy the editor and remove its container from the DOM.

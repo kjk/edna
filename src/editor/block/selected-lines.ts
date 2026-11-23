@@ -1,4 +1,6 @@
 import type { EditorState } from "@codemirror/state";
+import { pushOrMerge } from "../../util";
+import { rangeLineNumbers } from "../cmutils";
 import { getNoteBlocksBetween, type Block } from "./block";
 
 interface SelectedLines {
@@ -16,17 +18,15 @@ export function selectedLines(state: EditorState): SelectedLines[] {
       const to = Math.min(range.to, block.to);
       if (to < from && !range.empty) continue;
 
-      const first = doc.lineAt(from).number;
-      let last = doc.lineAt(Math.max(from, to)).number;
-      if (last > first && doc.line(last).from === to) last--;
+      const { first, last } = rangeLineNumbers(doc, from, to);
       if (!range.empty && range.to === block.contentFrom) continue;
 
-      const previous = groups.at(-1);
-      if (previous?.block === block && previous.last + 1 >= first) {
-        previous.last = Math.max(previous.last, last);
-      } else {
-        groups.push({ block, first, last });
-      }
+      pushOrMerge(
+        groups,
+        { block, first, last },
+        (prev, group) => prev.block === group.block && prev.last + 1 >= group.first,
+        (prev, group) => (prev.last = Math.max(prev.last, group.last)),
+      );
     }
   }
   return groups;

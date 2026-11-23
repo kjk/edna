@@ -149,13 +149,23 @@ async function askForPasswordHash(msg: string, dh = getStorageFS()): Promise<str
     if (!pwd) {
       throw new PasswordCancelledError();
     }
-    let pwdHash = saltPassword(pwd);
-    if (!dh || (await passwordHashDecryptsNotes(dh, pwdHash))) {
-      rememberPassword(pwd);
+    let pwdHash = await acceptPassword(pwd, dh);
+    if (pwdHash) {
       return pwdHash;
     }
     msg = "Password is not correct. Please enter valid password.";
   }
+}
+
+// if password pwd decrypts the notes in dh (or there's no dh), remembers it and
+// returns its hash; otherwise undefined
+async function acceptPassword(pwd: string, dh: FileSystemDirectoryHandle | undefined): Promise<string | undefined> {
+  let pwdHash = saltPassword(pwd);
+  if (dh && !(await passwordHashDecryptsNotes(dh, pwdHash))) {
+    return undefined;
+  }
+  rememberPassword(pwd);
+  return pwdHash;
 }
 
 // concurrent requests for a password share one dialog (P-I3)
@@ -186,17 +196,7 @@ async function getVerifiedPasswordHash(dh: FileSystemDirectoryHandle | undefined
 async function getPasswordHashMust(msg: string): Promise<string> {
   if (!pendingPasswordHash) {
     let dh = getStorageFS();
-    pendingPasswordHash = (async () => {
-      let pwdHash = await getVerifiedPasswordHash(dh);
-      if (pwdHash) {
-        return pwdHash;
-      }
-      pwdHash = await askForPasswordHash(msg, dh);
-      if (dh) {
-        verifiedPassword = { dh, pwdHash };
-      }
-      return pwdHash;
-    })().finally(() => {
+    pendingPasswordHash = getPasswordHashForDir(dh, msg).finally(() => {
       pendingPasswordHash = undefined;
     });
   }
@@ -948,10 +948,20 @@ function pickUniqueNameIgnoreCase(base: string, used: Set<string>): string {
   return name;
 }
 
-// password hash that decrypts the notes in dh (remembered or asked for)
-async function getPasswordHashForDir(dh: FileSystemDirectoryHandle): Promise<string> {
+// password hash that decrypts the notes in dh (remembered or asked for with msg)
+async function getPasswordHashForDir(
+  dh: FileSystemDirectoryHandle | undefined,
+  msg = "Please enter password of notes in this directory",
+): Promise<string> {
   let pwdHash = await getVerifiedPasswordHash(dh);
-  return pwdHash ?? (await askForPasswordHash("Please enter password of notes in this directory", dh));
+  if (pwdHash) {
+    return pwdHash;
+  }
+  pwdHash = await askForPasswordHash(msg, dh);
+  if (dh) {
+    verifiedPassword = { dh, pwdHash };
+  }
+  return pwdHash;
 }
 
 /**
@@ -1167,11 +1177,10 @@ export function hasUnencryptedNotes(): boolean {
 // notes (E-I2).
 export async function encryptAllNotes(pwd: string) {
   await exclusiveStorageOpInDir("encrypt notes", async (dh) => {
-    let pwdHash = saltPassword(pwd);
-    if (!(await passwordHashDecryptsNotes(dh, pwdHash))) {
+    let pwdHash = await acceptPassword(pwd, dh);
+    if (!pwdHash) {
       throw new Error("password doesn't match the password of already encrypted notes");
     }
-    rememberPassword(pwd);
     await convertAllNotesFS(dh, true, pwdHash);
   });
 }

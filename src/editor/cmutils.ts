@@ -1,5 +1,5 @@
 import { foldedRanges, syntaxTree } from "@codemirror/language";
-import { EditorSelection, type EditorState } from "@codemirror/state";
+import { EditorSelection, type EditorState, type Text } from "@codemirror/state";
 import { ViewPlugin, type Command, type DecorationSet, type DOMEventHandlers, type EditorView, type ViewUpdate } from "@codemirror/view";
 import type { SimpleRange } from "./types";
 
@@ -18,6 +18,15 @@ export function hasSelection(state: EditorState, mainOnly = false): boolean {
     return !state.selection.main.empty;
   }
   return state.selection.ranges.some((range) => !range.empty);
+}
+
+// numbers of the first and last line covered by from..to; a non-empty range
+// ending at the start of a line doesn't cover that line
+export function rangeLineNumbers(doc: Text, from: number, to: number): { first: number; last: number } {
+  const first = doc.lineAt(from).number;
+  let last = doc.lineAt(Math.max(from, to)).number;
+  if (last > first && doc.line(last).from === to) last--;
+  return { first, last };
 }
 
 // collapse every selection range to a cursor at its head

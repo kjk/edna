@@ -309,6 +309,21 @@ export function commonPrefixLen(a: string, b: string): number {
   return i;
 }
 
+// adds item to list, or merges it into the last item (merge()) if canMerge()
+export function pushOrMerge<T>(
+  list: T[],
+  item: T,
+  canMerge: (last: T, item: T) => boolean,
+  merge: (last: T, item: T) => void,
+) {
+  const last = list.at(-1);
+  if (last !== undefined && canMerge(last, item)) {
+    merge(last, item);
+  } else {
+    list.push(item);
+  }
+}
+
 // items of a without repeats, in order of first appearance
 export function removeDuplicates<T>(a: T[]): T[] {
   return [...new Set(a)];
