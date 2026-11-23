@@ -5,6 +5,7 @@ import {
   createNoteWithName,
   decryptAllNotes,
   encryptAllNotes,
+  encryptUnencryptedNotes,
   hasEncryptedNotes,
   hasUnencryptedNotes,
   loadNote,
@@ -64,6 +65,31 @@ describe("encrypt / decrypt all notes", () => {
     expect(await listFiles(dh)).toEqual(["__metadata.edna.json", "a-1.edna.txt", "a.edna.txt", "b-1.edna.txt", "b.edna.txt"]);
     expect(await loadNote("b")).toBe(blockHdrMarkdown + "plain b");
     expect(await loadNote("b-1")).toBe(content);
+  });
+
+  it("notes copied into an encrypted directory are encrypted with the remembered password (#17)", async () => {
+    await encryptAllNotes("goodpassword");
+    await fsWriteFile(dh, "c.edna.txt", content);
+    await loadNoteNames();
+    await encryptUnencryptedNotes();
+    expect(hasUnencryptedNotes()).toBe(false);
+    expect(await listFiles(dh)).toEqual(["__metadata.edna.json", "a.encr.edna.txt", "b.encr.edna.txt", "c.encr.edna.txt"]);
+    expect(await loadNote("c")).toBe(content);
+  });
+
+  it("without a remembered password, notes are left unencrypted (#17)", async () => {
+    await encryptAllNotes("goodpassword");
+    forgetPassword();
+    await fsWriteFile(dh, "c.edna.txt", content);
+    await loadNoteNames();
+    await encryptUnencryptedNotes();
+    expect(await listFiles(dh)).toContain("c.edna.txt");
+  });
+
+  it("notes in a directory without encrypted notes are not encrypted (#17)", async () => {
+    localStorage.setItem("edna-password", "goodpassword");
+    await encryptUnencryptedNotes();
+    expect(await listFiles(dh)).toEqual(["__metadata.edna.json", "a.edna.txt", "b.edna.txt"]);
   });
 
   it("decrypt all", async () => {

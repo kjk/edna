@@ -1191,6 +1191,22 @@ export async function encryptAllNotes(pwd: string) {
   });
 }
 
+// encrypts notes that aren't encrypted (e.g. copied into the directory) when
+// the directory has encrypted notes and the remembered password decrypts them.
+// Doesn't ask for a password (#17)
+export async function encryptUnencryptedNotes() {
+  let dh = getStorageFS();
+  if (!dh || !hasEncryptedNotes() || !hasUnencryptedNotes()) {
+    return;
+  }
+  let pwdHash = await getVerifiedPasswordHash(dh);
+  if (!pwdHash) {
+    return;
+  }
+  console.log("encryptUnencryptedNotes: encrypting notes that are not encrypted");
+  await exclusiveStorageOp("encrypt notes", () => convertAllNotesFS(dh, true, pwdHash));
+}
+
 export async function decryptAllNotes() {
   await exclusiveStorageOpInDir("decrypt notes", async (dh) => {
     await convertAllNotesFS(dh, false);

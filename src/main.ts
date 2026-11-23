@@ -12,6 +12,7 @@ import {
   createDefaultNotes,
   dbDelDirHandle,
   dbGetDirHandle,
+  encryptUnencryptedNotes,
   loadNoteNames,
   noteExists,
   pickAnotherDirectory,
@@ -85,6 +86,12 @@ async function bootNow() {
       noteNames = await loadNoteNames();
     }
     await loadNotesMetadata(); // pre-load
+    try {
+      await encryptUnencryptedNotes();
+    } catch (e) {
+      // the notes still work unencrypted, don't fail the boot
+      console.error("failed to encrypt notes:", e);
+    }
   } catch (e) {
     if (!dh) {
       throw e;
