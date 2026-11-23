@@ -197,13 +197,18 @@ export function addHomeToBrowserHistory(homeTab: string) {
   }
 }
 
-export function addNoteToBrowserHistory(noteName: string) {
+// replace: update the current entry instead of adding one (e.g. after a rename,
+// so that Back doesn't go to the note's old name)
+export function addNoteToBrowserHistory(noteName: string, replace = false) {
   // @ts-ignore
   let url = new URL(window.location);
   url.hash = encodeURIComponent(noteName);
   // update browser's URL without reloading the page
-  window.history.pushState({ noteName: noteName }, noteName, url);
-  console.log("window.history.pushState:", noteName);
+  if (replace) {
+    window.history.replaceState({ noteName: noteName }, noteName, url);
+  } else {
+    window.history.pushState({ noteName: noteName }, noteName, url);
+  }
 }
 
 let cachedScrollbarDx = 0;

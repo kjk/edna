@@ -1999,7 +1999,11 @@
       showError(`Failed to rename note '${currentNote}': ${e}`);
       return;
     }
-    await openNote(newName, true);
+    // the old name no longer exists: replace its browser history entry (#54).
+    // renameNote() already renamed it in our own history
+    if (await openNote(newName, true, true)) {
+      addNoteToBrowserHistory(newName, true);
+    }
   }
 
   function openQuickAccess() {
