@@ -66,7 +66,14 @@
   import { extForLang, getLanguage, langSupportsFormat, langSupportsRun } from "../editor/languages";
   import { setDefaultFontFamilyAndSize } from "../editor/theme/font-theme";
   import { toFileName } from "../filenamify";
-  import { fsFileHandleWrite, hasHandlePermission, openDirPicker, supportsFileSystem } from "../fileutil";
+  import {
+    fsFileHandleWrite,
+    hasHandlePermission,
+    isBraveWithoutFileSystem,
+    kBraveEnableFileSystemMsg,
+    openDirPicker,
+    supportsFileSystem,
+  } from "../fileutil";
   import { formatBlockContent } from "../format-code";
   import { boopFunctionResult, parseUserFunctions, runBoopFunction } from "../functions";
   import type { BoopFunction, BoopFunctionArg } from "../functions";
@@ -1326,6 +1333,8 @@
     let dh = getStorageFS();
     // console.log("dh:", dh);
     let hasFS = supportsFileSystem();
+    // in Brave, keep them visible so that running them explains how to enable it
+    let braveNoFS = isBraveWithoutFileSystem();
     let view = getEditorView();
     let readOnly = view ? isReadOnly(view) : true;
     let hasSel = view ? editorHasSelection() : false;
@@ -1367,7 +1376,8 @@
     if (readOnly && removeIfReadOnly.includes(mid)) {
       return kMenuStatusRemoved;
     }
-    if (!hasFS && removedfNeedsFS.includes(mid)) {
+    let braveExplains = braveNoFS && (mid === kCmdMoveNotesToDirectory || mid === kCmdSwitchToNotesInDir);
+    if (!hasFS && removedfNeedsFS.includes(mid) && !braveExplains) {
       return kMenuStatusRemoved;
     }
 
@@ -1618,6 +1628,8 @@
       showHTMLHelp("#running-code");
     } else if (cmdId == kCmdShowWelcomeDevNote) {
       openNote(kWelcomeDevSystemNoteName);
+    } else if ((cmdId === kCmdMoveNotesToDirectory || cmdId === kCmdSwitchToNotesInDir) && isBraveWithoutFileSystem()) {
+      showWarning(kBraveEnableFileSystemMsg, 20000);
     } else if (cmdId === kCmdMoveNotesToDirectory) {
       storeNotesOnDisk();
     } else if (cmdId === kCmdSwitchToNotesInDir) {

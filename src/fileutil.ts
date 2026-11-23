@@ -190,6 +190,14 @@ export function supportsFileSystem(): boolean {
   return ok;
 }
 
+// Brave supports the File System Access API but disables it by default (#80)
+export function isBraveWithoutFileSystem(): boolean {
+  return "brave" in navigator && !("showDirectoryPicker" in window) && !isIFrame();
+}
+
+export const kBraveEnableFileSystemMsg =
+  "Brave disables storing notes in a directory by default. To enable it, open brave://flags/#file-system-access-api, set it to Enabled and restart Brave.";
+
 export async function fsFileHandleWrite(fh: FileSystemFileHandle, data: string | Blob) {
   const writable = await fh.createWritable();
   await writable.write(data);
