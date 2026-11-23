@@ -24,6 +24,13 @@
   };
 </script>
 
+<!-- single-path, 2px-stroke 24x24 icon (Tabler / Lucide style) -->
+{#snippet strokeIcon(d: string, fill = "none", klass = "")}
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class={klass}
+    ><path {fill} stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" {d} /></svg
+  >
+{/snippet}
+
 <!--
 Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
 
@@ -86,16 +93,7 @@ https://icones.js.org/collection/tabler?s=archive&icon=tabler:trash
 -->
 
 {#snippet IconTablerTrash()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M4 7h16m-10 4v6m4-6v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"
-    /></svg
-  >
+  {@render strokeIcon("M4 7h16m-10 4v6m4-6v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3")}
 {/snippet}
 
 <!--
@@ -103,16 +101,7 @@ Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/b
 https://icones.js.org/collection/tabler?s=archive&icon=tabler:archive
 -->
 {#snippet IconTablerArchive()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2m2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8m-9 4h4"
-    /></svg
-  >
+  {@render strokeIcon("M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2m2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8m-9 4h4")}
 {/snippet}
 
 <!--
@@ -120,16 +109,7 @@ Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/b
 https://icones.js.org/collection/tabler?s=plus&icon=tabler:plus
 -->
 {#snippet IconTablerPlus()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M12 5v14m-7-7h14"
-    /></svg
-  >
+  {@render strokeIcon("M12 5v14m-7-7h14")}
 {/snippet}
 <!--
 Icon from Tabler Icons by Paweł Kuna
@@ -138,16 +118,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:star
 -->
 {#snippet IconTablerStar(fill = "none", klass = "")}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class={klass}
-    ><path
-      {fill}
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="m12 17.75l-6.172 3.245l1.179-6.873l-5-4.867l6.9-1l3.086-6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z"
-    /></svg
-  >
+  {@render strokeIcon("m12 17.75l-6.172 3.245l1.179-6.873l-5-4.867l6.9-1l3.086-6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z", fill, klass)}
 {/snippet}
 
 <!--
@@ -157,16 +128,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:arrow-up
 -->
 {#snippet IconTablerArrowUp()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M12 5v14m6-8l-6-6m-6 6l6-6"
-    /></svg
-  >
+  {@render strokeIcon("M12 5v14m6-8l-6-6m-6 6l6-6")}
 {/snippet}
 
 <!--
@@ -177,16 +139,7 @@ https://icones.js.org/collection/tabler?s=arrow+up&icon=tabler:arrow-down
 -->
 
 {#snippet IconTablerArrowDown()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M12 5v14m6-6l-6 6m-6-6l6 6"
-    /></svg
-  >
+  {@render strokeIcon("M12 5v14m6-6l-6 6m-6-6l6 6")}
 {/snippet}
 
 <!--
@@ -197,16 +150,7 @@ https://icones.js.org/collection/tabler?s=case&icon=tabler:letter-case
 -->
 
 {#snippet IconTablerLetterCase()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M14 15.5a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0M3 19V8.5a3.5 3.5 0 0 1 7 0V19m-7-6h7m11-1v7"
-    /></svg
-  >
+  {@render strokeIcon("M14 15.5a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0M3 19V8.5a3.5 3.5 0 0 1 7 0V19m-7-6h7m11-1v7")}
 {/snippet}
 
 <!--
@@ -214,16 +158,7 @@ Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide
 https://icones.js.org/collection/all?s=text-select&icon=lucide:text-select
 -->
 {#snippet IconLucideTextSelect()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M5 3a2 2 0 0 0-2 2m16-2a2 2 0 0 1 2 2m0 14a2 2 0 0 1-2 2M5 21a2 2 0 0 1-2-2M9 3h1M9 21h1m4-18h1m-1 18h1M3 9v1m18-1v1M3 14v1m18-1v1M7 8h8m-8 4h10M7 16h6"
-    /></svg
-  >
+  {@render strokeIcon("M5 3a2 2 0 0 0-2 2m16-2a2 2 0 0 1 2 2m0 14a2 2 0 0 1-2 2M5 21a2 2 0 0 1-2-2M9 3h1M9 21h1m4-18h1m-1 18h1M3 9v1m18-1v1M3 14v1m18-1v1M7 8h8m-8 4h10M7 16h6")}
 {/snippet}
 
 <!--
@@ -233,16 +168,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-down
 -->
 {#snippet IconTablerChevronDown()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="m6 9l6 6l6-6"
-    /></svg
-  >
+  {@render strokeIcon("m6 9l6 6l6-6")}
 {/snippet}
 
 <!--
@@ -252,16 +178,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=select&icon=tabler:chevron-right
 -->
 {#snippet IconTablerChevronRight()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="m9 6l6 6l-6 6"
-    /></svg
-  >
+  {@render strokeIcon("m9 6l6 6l-6 6")}
 {/snippet}
 
 <!--
@@ -271,16 +188,7 @@ https://github.com/tabler/tabler-icons/blob/master/LICENSE
 https://icones.js.org/collection/tabler?s=select&icon=tabler:x
 -->
 {#snippet IconTablerX()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M18 6L6 18M6 6l12 12"
-    /></svg
-  >
+  {@render strokeIcon("M18 6L6 18M6 6l12 12")}
 {/snippet}
 
 <!--
@@ -311,16 +219,7 @@ https://icones.js.org/collection/all?s=regex&icon=tabler:regex
 -->
 
 {#snippet IconTablerRegex()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-    <path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M6.5 15a2.5 2.5 0 1 1 0 5a2.5 2.5 0 0 1 0-5M17 7.875l3-1.687m-3 1.687v3.375m0-3.375l-3-1.687m3 1.687l3 1.688M17 4.5v3.375m0 0l-3 1.688"
-    /></svg
-  >
+  {@render strokeIcon("M6.5 15a2.5 2.5 0 1 1 0 5a2.5 2.5 0 0 1 0-5M17 7.875l3-1.687m-3 1.687v3.375m0-3.375l-3-1.687m3 1.687l3 1.688M17 4.5v3.375m0 0l-3 1.688")}
 {/snippet}
 
 <!--
@@ -358,16 +257,7 @@ Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/b
 https://icones.js.org/collection/tabler?icon=tabler:home
 -->
 {#snippet IconTablerHome()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="none"
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M5 12H3l9-9l9 9h-2M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7m-9 9v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"
-    /></svg
-  >
+  {@render strokeIcon("M5 12H3l9-9l9 9h-2M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7m-9 9v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6")}
 {/snippet}
 
 <!--

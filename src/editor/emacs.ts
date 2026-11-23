@@ -27,9 +27,10 @@ import {
   splitLine,
   undo,
 } from "@codemirror/commands";
-import { EditorSelection, Prec, type Extension } from "@codemirror/state";
+import { Prec, type Extension } from "@codemirror/state";
 import { keymap, type Command, type KeyBinding } from "@codemirror/view";
 import { transposeChars } from "./block/transpose-chars";
+import { collapseSelectionToHeads } from "./cmutils";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
 import type { MultiBlockEditor } from "./editor";
 
@@ -82,14 +83,7 @@ export function emacsKeymap(editor: MultiBlockEditor): Extension[] {
       key: "Ctrl-g",
       run(view) {
         setEmacsMarkMode(false);
-        const { ranges, mainIndex } = view.state.selection;
-        view.dispatch({
-          selection: EditorSelection.create(
-            ranges.map((range) => EditorSelection.cursor(range.head)),
-            mainIndex,
-          ),
-          userEvent: "select",
-        });
+        collapseSelectionToHeads(view);
         return true;
       },
     },

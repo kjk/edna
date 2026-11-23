@@ -34,27 +34,22 @@ describe("Block parsing with syntax tree (browser tests)", () => {
     }
   }
 
-  it("should parse note-scratch-dev.edna.txt same as getBlocksFromString", async () => {
-    const testData = goldenData[0];
-    if (!testData) throw new Error("Test data not found");
+  it.each([
+    { idx: 0, file: "note-scratch-dev.edna.txt" },
+    { idx: 1, file: "note-scratch.edna.txt" },
+  ])(
+    "should parse $file same as getBlocksFromString",
+    async ({ idx }) => {
+      const testData = goldenData[idx];
+      if (!testData) throw new Error("Test data not found");
 
-    const expectedBlocks = testData.blocks;
-    const blocksFromString = getBlocksFromString(testData.content);
-    const blocksFromSyntaxTree = await parseWithSyntaxTree(testData.content);
+      const expectedBlocks = testData.blocks;
+      const blocksFromString = getBlocksFromString(testData.content);
+      const blocksFromSyntaxTree = await parseWithSyntaxTree(testData.content);
 
-    expect(blocksFromSyntaxTree).toEqual(blocksFromString);
-    expect(blocksFromSyntaxTree).toEqual(expectedBlocks);
-  }, 15000);
-
-  it("should parse note-scratch.edna.txt same as getBlocksFromString", async () => {
-    const testData = goldenData[1];
-    if (!testData) throw new Error("Test data not found");
-
-    const expectedBlocks = testData.blocks;
-    const blocksFromString = getBlocksFromString(testData.content);
-    const blocksFromSyntaxTree = await parseWithSyntaxTree(testData.content);
-
-    expect(blocksFromSyntaxTree).toEqual(blocksFromString);
-    expect(blocksFromSyntaxTree).toEqual(expectedBlocks);
-  }, 15000);
+      expect(blocksFromSyntaxTree).toEqual(blocksFromString);
+      expect(blocksFromSyntaxTree).toEqual(expectedBlocks);
+    },
+    15000,
+  );
 });

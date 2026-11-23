@@ -1,8 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import { findNoteIgnoreCase, sanitizeNoteName } from "../notes";
-  import { noteNameError } from "../note-name";
-  import { escapeHTML } from "../util";
+  import { noteNameUnavailableHTML, sanitizeNoteName } from "../notes";
+  import { submitOnEnter } from "../util";
 
   interface Props {
     onclose: () => void;
@@ -12,36 +11,11 @@
 
   let newName = $state("");
 
-  let canCreate = $derived.by(() => {
-    let name = sanitizeNoteName(newName);
-    if (noteNameError(name)) {
-      return false;
-    }
-    return !findNoteIgnoreCase(name);
-  });
-
-  let createError = $derived.by(() => {
-    let name = sanitizeNoteName(newName);
-    let nameErr = noteNameError(name);
-    if (nameErr) {
-      return escapeHTML(nameErr);
-    }
-    let existing = findNoteIgnoreCase(name);
-    if (existing) {
-      return `note <span class="font-bold">${escapeHTML(existing)}</span> already exists`;
-    }
-    return "";
-  });
+  let createError = $derived(noteNameUnavailableHTML(sanitizeNoteName(newName)));
+  let canCreate = $derived(createError === "");
 
   function onkeydown(ev: KeyboardEvent) {
-    let key = ev.key;
-
-    if (canCreate && key === "Enter") {
-      emitCreate();
-      ev.preventDefault();
-      ev.stopPropagation();
-      return;
-    }
+    submitOnEnter(ev, canCreate, emitCreate);
   }
 
   function emitCreate() {

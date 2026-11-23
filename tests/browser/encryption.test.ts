@@ -77,35 +77,39 @@ describe("encrypt / decrypt all notes", () => {
 });
 
 describe("encryption is a property of the directory", () => {
-  it("a password remembered for another directory doesn't encrypt new notes", async () => {
-    const { dh } = await setupFSStorage();
+  // creates sub-directories "a" and "b" of the storage directory
+  async function makeTwoDirs(dh: FileSystemDirectoryHandle) {
     const a = await dh.getDirectoryHandle("a", { create: true });
     const b = await dh.getDirectoryHandle("b", { create: true });
-    setStorageFS(a);
+    return { a, b };
+  }
+
+  // switches storage to dir and creates note name in it
+  async function createNoteInDir(dir: FileSystemDirectoryHandle, name: string) {
+    setStorageFS(dir);
     await loadNoteNames();
-    await createNoteWithName("x", blockHdrMarkdown + "x");
+    await createNoteWithName(name, blockHdrMarkdown + name);
+  }
+
+  it("a password remembered for another directory doesn't encrypt new notes", async () => {
+    const { dh } = await setupFSStorage();
+    const { a, b } = await makeTwoDirs(dh);
+    await createNoteInDir(a, "x");
     await encryptAllNotes("goodpassword");
     expect(localStorage.getItem("edna-password")).toBe("goodpassword");
 
-    setStorageFS(b);
-    await loadNoteNames();
-    await createNoteWithName("y", blockHdrMarkdown + "y");
+    await createNoteInDir(b, "y");
     expect(await listFiles(b)).toEqual(["y.edna.txt"]);
   });
 
   it("a password remembered for another encrypted directory isn't used (U3)", async () => {
     const { dh, ui } = await setupFSStorage();
-    const a = await dh.getDirectoryHandle("a", { create: true });
-    const b = await dh.getDirectoryHandle("b", { create: true });
-    setStorageFS(a);
-    await loadNoteNames();
-    await createNoteWithName("x", blockHdrMarkdown + "x");
+    const { a, b } = await makeTwoDirs(dh);
+    await createNoteInDir(a, "x");
     await encryptAllNotes("password-a");
 
     forgetPassword();
-    setStorageFS(b);
-    await loadNoteNames();
-    await createNoteWithName("y", blockHdrMarkdown + "y");
+    await createNoteInDir(b, "y");
     await encryptAllNotes("password-b");
     expect(localStorage.getItem("edna-password")).toBe("password-b");
 

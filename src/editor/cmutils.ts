@@ -1,5 +1,5 @@
 import { foldedRanges } from "@codemirror/language";
-import type { EditorState } from "@codemirror/state";
+import { EditorSelection, type EditorState } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import type { SimpleRange } from "./types";
 
@@ -22,6 +22,18 @@ export function getCurrentSelection(state: EditorState): SimpleRange & { selecte
 
 export function hasSelection(state: EditorState): boolean {
   return state.selection.ranges.some((range) => !range.empty);
+}
+
+// collapse every selection range to a cursor at its head
+export function collapseSelectionToHeads(view: EditorView): void {
+  const { ranges, mainIndex } = view.state.selection;
+  view.dispatch({
+    selection: EditorSelection.create(
+      ranges.map((range) => EditorSelection.cursor(range.head)),
+      mainIndex,
+    ),
+    userEvent: "select",
+  });
 }
 
 export function focusEditorView(view: EditorView): void {

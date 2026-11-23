@@ -4,7 +4,6 @@
   import { focusEditor } from "../globals";
   import { getNoteMeta } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
-  import { isSystemNoteName } from "../notes";
   import { getSettings } from "../settings.svelte";
   import { getAltChar, len } from "../util";
   import HelpDropDown from "./HelpDropDown.svelte";
@@ -18,6 +17,7 @@
     IconTablerX,
   } from "./Icons.svelte";
   import Menu, { type Command, type MenuDef } from "./Menu.svelte";
+  import { noteNameCls } from "./NoteSelector.svelte";
   import QuickAccess from "./QuickAccess.svelte";
 
   interface Props {
@@ -121,15 +121,6 @@
     shwingMenu = false;
     executeCommand(cmdid, undefined);
   }
-
-  function noteCls(name: string) {
-    let m = getNoteMeta(name);
-    let isArchived = m && m.isArchived;
-    if (isSystemNoteName(name) || isArchived) {
-      return "italic";
-    }
-    return "";
-  }
 </script>
 
 <div
@@ -197,7 +188,7 @@
         {@const cls = isSelected
           ? "bg-white hover:bg-white! dark:bg-gray-800 dark:hover:bg-gray-800!"
           : "bg-gray-200 dark:bg-gray-500! hover:bg-gray-100 cursor-pointer"}
-        {@const tabNameCls = isHome ? "" : noteCls(tab)}
+        {@const tabNameCls = isHome ? "" : noteNameCls(tab)}
         {#if isHome}
           <button
             class="ml-2 flex items-center self-stretch px-3 cursor-pointer text-gray-500 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-500 hover:bg-gray-100 {cls}"

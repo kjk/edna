@@ -67,7 +67,7 @@
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import { hasOtherInstances, startInstanceDetection } from "../instances";
-  import { boot } from "../main";
+  import { boot, switchToBrowserStorage, switchToDirectory } from "../main";
   import {
     archiveNote,
     getNoteMeta,
@@ -83,7 +83,6 @@
     createIfNotExists,
     createNewScratchNote,
     createNoteWithName,
-    dbDelDirHandle,
     debugRemoveLocalStorageNotes,
     decryptAllNotes,
     deleteNote,
@@ -97,8 +96,6 @@
     loadNote,
     loadNoteIfExists,
     noteExists,
-    pickAnotherDirectory,
-    preLoadAllNotes,
     rememberOpenedNote,
     renameNote,
     switchToStoringNotesOnDisk,
@@ -518,12 +515,7 @@
     if (!(await checkSingleInstance()) || !(await saveBeforeStorageSwitch())) {
       return;
     }
-    let ok = await pickAnotherDirectory();
-    if (!ok) {
-      return;
-    }
-    await boot();
-    await preLoadAllNotes();
+    await switchToDirectory();
   }
 
   function noOpStr(s: string): void {
@@ -740,12 +732,11 @@
     logNoteOp("noteCreate");
   }
 
-  async function switchToBrowserStorage() {
+  async function switchToBrowserStorage2() {
     if (!(await checkSingleInstance()) || !(await saveBeforeStorageSwitch())) {
       return;
     }
-    await dbDelDirHandle();
-    await boot();
+    await switchToBrowserStorage();
   }
 
   function extractBlockTitle(c: string, from: number, to: number): string {
@@ -1730,7 +1721,7 @@
     } else if (cmdId === kCmdSwitchToNotesInDir) {
       await pickAnotherDirectory2();
     } else if (cmdId === kCmdSwitchToLocalStorage) {
-      await switchToBrowserStorage();
+      await switchToBrowserStorage2();
     } else if (cmdId === kCmdExportNotes) {
       exportNotesToZipFile();
     } else if (cmdId === kCmdExportCurrentNote) {
@@ -1978,7 +1969,12 @@
     return insertAfterActiveBlock(view, text);
   }
 
-  export async function runBlockContent(editor: MultiBlockEditor): Promise<boolean> {
+  // runs the content of the active block with evaluate() and inserts the output
+  // as a new block after it
+  async function runActiveBlock(
+    editor: MultiBlockEditor,
+    evaluate: (token: string, content: string) => Promise<CapturingEval>,
+  ): Promise<boolean> {
     const view = editor.view;
     const { state } = view;
     if (isReadOnly(view)) {
@@ -1992,13 +1988,7 @@
     const content = state.sliceDoc(block.contentFrom, block.to);
     let res = await withRun(editor, async (run) => {
       showModalMessageHTML("running code", 300, "run");
-      let token = lang.token;
-      let res: CapturingEval;
-      if (token === "golang") {
-        res = await runGo(content);
-      } else {
-        res = await runJS(content);
-      }
+      let res = await evaluate(lang.token, content);
       let output = evalResultToString(res);
       if (!output) {
         output = "executed code returned empty output";
@@ -2013,43 +2003,23 @@
     return !!res;
   }
 
-  export async function runBlockContentWithArg(editor: MultiBlockEditor, arg: string): Promise<boolean> {
-    const view = editor.view;
-    const { state } = view;
-    if (isReadOnly(view)) {
-      return false;
-    }
-    const block = getActiveNoteBlock(state)!;
-    const lang = getLanguage(block.language);
-    if (!langSupportsRun(lang)) {
-      return false;
-    }
-    const content = state.sliceDoc(block.contentFrom, block.to);
-    let res = await withRun(editor, async (run) => {
-      showModalMessageHTML("running code", 300, "run");
-      let res: CapturingEval;
-      let token = lang.token;
-      if (token === "javascript") {
-        res = await runJSWithArg(content, arg);
-      } else {
-        res = {
-          output: "",
-          consoleLogs: [],
-          exception: `Error: unspported language '${token}'`,
-        };
-      }
-      let output = evalResultToString(res);
-      if (!output) {
-        output = "executed code returned empty output";
-      }
-      let text = output;
-      if (!output.startsWith("\n∞∞∞")) {
-        text = "\n∞∞∞text-a\n" + output;
-      }
-      await insertRunOutput(run, text);
-      return true;
+  export async function runBlockContent(editor: MultiBlockEditor): Promise<boolean> {
+    return runActiveBlock(editor, (token, content) => {
+      return token === "golang" ? runGo(content) : runJS(content);
     });
-    return !!res;
+  }
+
+  export async function runBlockContentWithArg(editor: MultiBlockEditor, arg: string): Promise<boolean> {
+    return runActiveBlock(editor, async (token, content) => {
+      if (token === "javascript") {
+        return runJSWithArg(content, arg);
+      }
+      return {
+        output: "",
+        consoleLogs: [],
+        exception: `Error: unspported language '${token}'`,
+      };
+    });
   }
 
   function runCurrentBlock() {

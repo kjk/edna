@@ -6,6 +6,7 @@ import { kDelimiterPrefix } from "../new-parser/node-types";
 import {
   getActiveNoteBlock,
   getBlockN,
+  getEditableActiveBlock,
   getFirstNoteBlock,
   getLastNoteBlock,
   getNoteBlockFromPos,
@@ -205,8 +206,7 @@ export function triggerCurrenciesLoaded(view: EditorView): void {
 
 function moveBlock(view: EditorView, direction: -1 | 1): boolean {
   const { state } = view;
-  if (state.readOnly) return false;
-  const active = getActiveNoteBlock(state);
+  const active = getEditableActiveBlock(state);
   if (!active) return false;
   const neighbor = getBlockN(state, active.index + direction);
   if (!neighbor) return false;

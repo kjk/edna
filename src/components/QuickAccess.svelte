@@ -1,12 +1,16 @@
 <script lang="ts">
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import { toggleNoteStarred } from "../metadata";
   import { getSettings } from "../settings.svelte";
   import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";
-  import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
-  import { buildNoteInfo, buildNoteInfos, noteShortcutStr } from "./NoteSelector.svelte";
+  import {
+    buildNoteInfo,
+    buildNoteInfos,
+    noteShortcutStr,
+    noteStarButton,
+    toggleStarredAndFocus,
+  } from "./NoteSelector.svelte";
   import type { NoteInfo } from "./NoteSelector.svelte";
 
   interface Props {
@@ -69,10 +73,6 @@
     listboxRef.onkeydown(ev, true);
   }
 
-  async function toggleStarred(noteInfo: NoteInfo) {
-    // note: UI is updated via updateAfterNoteStateChange() after metadata is saved
-    await toggleNoteStarred(noteInfo.name);
-  }
   // if forHistory, showing in absolute position inside overlay
   // otherwise is absolute child of relative parent
   let cls = $derived.by(() => {
@@ -114,17 +114,7 @@
           {shortcut}
         </div>
       {:else if noteInfo.isStarred && historyTrigger < 0}
-        <button
-          tabindex="-1"
-          class="ml-0.5 cursor-pointer hover:text-yellow-600"
-          onclick={(ev) => {
-            toggleStarred(noteInfo);
-            ev.preventDefault();
-            ev.stopPropagation();
-          }}
-        >
-          {@render IconTablerStar(noteInfo.isStarred ? "var(--color-yellow-300)" : "none")}
-        </button>
+        {@render noteStarButton(noteInfo, toggleStarredAndFocus, "ml-0.5")}
       {:else}
         <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">&nbsp;</div>
       {/if}

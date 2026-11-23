@@ -8,14 +8,20 @@ export interface TestEditor {
 /**
  * Create a MultiBlockEditor for testing. Call cleanup() in afterEach to remove the container.
  */
-export function createEditor(content: string): TestEditor {
+export function createEditor(
+  content: string,
+  opts: {
+    save?: (content: string) => Promise<void>;
+    setIsDirty?: (dirty: boolean) => void;
+  } = {},
+): TestEditor {
   const container = document.createElement("div");
   document.body.appendChild(container);
 
   const editor = new MultiBlockEditor({
     element: container,
-    save: async () => {},
-    setIsDirty: () => {},
+    save: opts.save ?? (async () => {}),
+    setIsDirty: opts.setIsDirty ?? (() => {}),
     createFindPanel: () => ({ dom: document.createElement("div"), update: () => {} }),
     focus: true,
     useTabs: false,

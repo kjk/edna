@@ -88,24 +88,34 @@ func runCompile(body *string) ([]byte, error) {
 	return postForm("https://play.golang.org/compile", form)
 }
 
-// format code snippet
-func fmtHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+// readAndFormatBody reads the POSTed source code and runs it through the
+// playground's goimports formatter. It returns the original source and the
+// formatter's response. On failure it writes an HTTP error and returns ok == false.
+func readAndFormatBody(w http.ResponseWriter, r *http.Request) (body string, formatted []byte, ok bool) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+		return "", nil, false
 	}
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request data", http.StatusInternalServerError)
-		return
+		return "", nil, false
 	}
-
-	body := string(bodyBytes)
-	bodyBytes, err = runImports(&body)
+	body = string(bodyBytes)
+	formatted, err = runImports(&body)
 	if err != nil {
 		logf("runImports() error: %v", err)
 		http.Error(w, "Failed to format source code", http.StatusInternalServerError)
+		return "", nil, false
+	}
+	return body, formatted, true
+}
+
+// format code snippet
+func fmtHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	_, bodyBytes, ok := readAndFormatBody(w, r)
+	if !ok {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -114,30 +124,14 @@ func fmtHandler(w http.ResponseWriter, r *http.Request) {
 
 func compileHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	bodyBytes, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read request data", http.StatusInternalServerError)
-		return
-	}
-
-	body := string(bodyBytes)
-
-	bodyBytes, err = runImports(&body)
-	if err != nil {
-		logf("runImports() error: %v", err)
-		http.Error(w, "Failed to format source code", http.StatusInternalServerError)
+	body, bodyBytes, ok := readAndFormatBody(w, r)
+	if !ok {
 		return
 	}
 
 	fmtResponse := FmtResponse{}
 
-	err = json.Unmarshal(bodyBytes, &fmtResponse)
+	err := json.Unmarshal(bodyBytes, &fmtResponse)
 	if err != nil {
 		logf("fmtResponse unmarshal error: %v", err)
 		http.Error(w, "Failed to decode upstream server response", http.StatusInternalServerError)

@@ -96,10 +96,187 @@
     return buildNoteInfos([...regular, ...archived]);
   }
 
+  // regular notes (current note list by default) and, if showing them, archived notes
+  export function buildVisibleNoteInfos(regular: string[] = appState.regularNotes): NoteInfo[] {
+    return buildRegularAndArchivedNoteInfos(regular, appState.showingArchived ? appState.archivedNotes : []);
+  }
+
   // e.g. "Alt + 1" or "" if no shortcut
   export function noteShortcutStr(note: NoteInfo): string {
     return note.altShortcut ? getAltChar() + " + " + note.altShortcut : "";
   }
+
+  // e.g. "12 notes" or "3 of 12 notes"
+  export function notesCountMsg(nFiltered: number, nTotal: number): string {
+    if (nFiltered === 0) {
+      return ""; // don't obscure user entering new, long note name
+    }
+    if (nFiltered === nTotal) {
+      return `${nTotal} notes`;
+    }
+    return `${nFiltered} of ${nTotal} notes`;
+  }
+
+  // system and archived notes are shown in italic
+  export function noteNameCls(name: string): string {
+    let m = getNoteMeta(name);
+    let isArchived = m && m.isArchived;
+    if (isSystemNoteName(name) || isArchived) {
+      return "italic";
+    }
+    return "";
+  }
+
+  export interface NoteSelectorActions {
+    canOpenSelected: boolean;
+    canCreate: boolean;
+    canCreateWithEnter: boolean;
+    canDeleteSelected: boolean;
+  }
+
+  // what the user can do given selected note and (sanitized) note name typed in filter
+  export function noteSelectorActions(selected: NoteInfo | undefined, name: string): NoteSelectorActions {
+    let canOpenSelected = !!selected;
+    // check all notes, not just visible ones (archived notes might be hidden)
+    // to not overwrite an existing note (N-I1)
+    let canCreate = len(name) > 0 && !findNoteIgnoreCase(name) && !noteNameError(name);
+    // if nothing is selected, we can create with just Enter
+    // otherwise we need Ctrl + Enter
+    let canCreateWithEnter = canCreate && !canOpenSelected;
+    // can't delete scratch note or system notes
+    let canDeleteSelected = !!selected && selected.name !== kScratchNoteName && !isSystemNoteName(selected.name);
+    return { canOpenSelected, canCreate, canCreateWithEnter, canDeleteSelected };
+  }
+
+  // note: UI is updated via updateAfterNoteStateChange() after metadata is saved
+  export async function toggleStarredAndFocus(noteInfo: NoteInfo, focusEl?: HTMLElement) {
+    await toggleNoteStarred(noteInfo.name);
+    focusEl?.focus();
+  }
+
+  export interface NoteSelectorCallbacks {
+    openNote: (name: string, newTab: boolean) => void;
+    // creating and deleting are optional; without them Enter only opens the selected note
+    createNote?: (name: string) => void;
+    deleteNote?: (name: string, showNotif: boolean) => void;
+  }
+
+  const kNoActions: NoteSelectorActions = {
+    canOpenSelected: false,
+    canCreate: false,
+    canCreateWithEnter: false,
+    canDeleteSelected: false,
+  };
+
+  // filter text, matching notes and the selected note, shared by note selectors
+  // must be created during component initialization
+  export class NoteFilter {
+    private getNoteInfos: () => NoteInfo[];
+    private onCommandPrefix?: () => void;
+    private getCallbacks: () => NoteSelectorCallbacks;
+    // filter <input>, bind with bind:this so that it gets focus back after toggling starred
+    input: HTMLInputElement | undefined;
+
+    filter = $state("");
+    hiliRegExp = $derived(makeHilightRegExp(this.filter));
+    sanitizedFilter = $derived(sanitizeNoteName(this.filter));
+    noteInfos: NoteInfo[] = $derived.by(() => this.getNoteInfos());
+    // we split the search term by space, the name of the note must match all parts
+    filtered: NoteInfo[] = $derived(
+      this.isCommand() ? [] : findMatchingItems(this.noteInfos, this.sanitizedFilter, "nameLC"),
+    );
+    countMsg = $derived(notesCountMsg(len(this.filtered), len(this.noteInfos)));
+
+    selected: NoteInfo | undefined = $state();
+    selectedName = $derived(this.selected ? this.selected.name : "");
+    actions: NoteSelectorActions = $state(kNoActions);
+    // key that creates a note named after the filter
+    createKey = $derived(this.actions.canCreateWithEnter ? "Enter" : "Ctrl + Enter");
+
+    // onCommandPrefix, if given, is called when the user types ">" to switch to command palette
+    constructor(
+      getNoteInfos: () => NoteInfo[],
+      getCallbacks: () => NoteSelectorCallbacks,
+      onCommandPrefix?: () => void,
+    ) {
+      this.getNoteInfos = getNoteInfos;
+      this.getCallbacks = getCallbacks;
+      this.onCommandPrefix = onCommandPrefix;
+      if (onCommandPrefix) {
+        // note: must be in $effect because it modifies state, which is not allowed in $derived
+        $effect(() => {
+          if (this.isCommand()) {
+            onCommandPrefix();
+          }
+        });
+      }
+    }
+
+    private isCommand(): boolean {
+      return !!this.onCommandPrefix && this.sanitizedFilter.startsWith(">");
+    }
+
+    // pass as ListBox selectionChanged
+    selectionChanged = (item: NoteInfo | undefined, idx: number) => {
+      this.selected = item;
+      this.actions = noteSelectorActions(item, this.sanitizedFilter);
+    };
+
+    openNote = (noteInfo: NoteInfo, newTab: boolean) => {
+      this.getCallbacks().openNote(noteInfo.name, newTab);
+    };
+
+    toggleStarred = (noteInfo: NoteInfo) => {
+      toggleStarredAndFocus(noteInfo, this.input);
+    };
+
+    // keyboard shortcuts shared by note selectors:
+    // Alt + 1...9 assigns quick access shortcut, Alt + S toggles starred,
+    // Enter opens selected or creates note, Ctrl + Delete deletes selected note
+    // Returns true if the event was handled
+    handleKeydown(ev: KeyboardEvent): boolean {
+      let selected = this.selected;
+      let altN = isAltNumEvent(ev);
+      if (altN !== null) {
+        ev.preventDefault();
+        if (selected) {
+          reassignNoteShortcut(selected.name, altN);
+          return true;
+        }
+      }
+      let key = ev.key;
+      if (key === "s" && ev.altKey && selected) {
+        ev.preventDefault();
+        this.toggleStarred(selected);
+        return true;
+      }
+
+      let { createNote, deleteNote } = this.getCallbacks();
+      if (key === "Enter") {
+        ev.preventDefault();
+        let actions = this.actions;
+        if (createNote && (actions.canCreateWithEnter || (ev.ctrlKey && actions.canCreate))) {
+          createNote(this.sanitizedFilter);
+          return true;
+        }
+        if (selected) {
+          this.openNote(selected, false);
+        }
+        return true;
+      }
+
+      if (deleteNote && isKeyCtrlDelete(ev)) {
+        ev.preventDefault();
+        if (this.actions.canDeleteSelected && selected) {
+          deleteNote(selected.name, false);
+        }
+        return true;
+      }
+      return false;
+    }
+  }
+
+  export { noteStarButton, noteFilterInput, noteItemRow };
 </script>
 
 <script lang="ts">
@@ -113,6 +290,7 @@
     toggleNoteStarred,
     unArchiveNote,
   } from "../metadata";
+  import { kScratchNoteName } from "../constants";
   import { findNoteIgnoreCase, isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
   import { noteNameError } from "../note-name";
   import {
@@ -147,151 +325,28 @@
     forMoveBlock = false,
   }: Props = $props();
 
-  let noteInfos = $derived(
-    buildRegularAndArchivedNoteInfos(
-      // can't move a block to the note it's in
-      forMoveBlock ? appState.regularNotes.filter((n) => n !== appState.currentNoteName) : appState.regularNotes,
-      appState.showingArchived ? appState.archivedNotes : [],
-    ),
+  const nf = new NoteFilter(
+    () =>
+      buildVisibleNoteInfos(
+        // can't move a block to the note it's in
+        forMoveBlock ? appState.regularNotes.filter((n) => n !== appState.currentNoteName) : appState.regularNotes,
+      ),
+    () => ({ openNote, createNote, deleteNote }),
+    () => switchToCommandPalette(),
   );
-
-  let filter = $state("");
-  let hiliRegExp = $derived(makeHilightRegExp(filter));
   let altChar = getAltChar();
 
-  let sanitizedFilter = $derived.by(() => {
-    return sanitizeNoteName(filter);
-  });
-
-  $effect(() => {
-    if (sanitizedFilter.startsWith(">")) {
-      switchToCommandPalette();
-    }
-  });
-
-  let filteredNoteInfos = $derived.by(() => {
-    // we split the search term by space, the name of the note
-    // must match all parts
-    return findMatchingItems(noteInfos, sanitizedFilter, "nameLC");
-  });
-
-  let selectedNote: NoteInfo | undefined = $state();
-  let selectedName = $state("");
-  let canOpenSelected = $state(false);
-  let canCreate = $state(false);
-  let canCreateWithEnter = $state(false);
-  let canDeleteSelected = $state(false);
-  let showDelete = $state(false);
-
-  let notesCountMsg = $derived.by(() => {
-    let n = len(filteredNoteInfos);
-    if (n === 0) {
-      return ""; // don't obscure user entering new, long note name
-    }
-    let nItems = len(noteInfos);
-    if (n === nItems) {
-      return `${nItems} notes`;
-    }
-    return `${n} of ${nItems} notes`;
-  });
-
-  function recalcAvailableActions(item: NoteInfo | undefined, name: string) {
-    canOpenSelected = !!selectedNote;
-    canCreateWithEnter = !(len(name) == 0) && !canOpenSelected;
-    canCreate = len(name) > 0;
-    // check all notes, not just visible ones (archived notes might be hidden)
-    // to not overwrite an existing note (N-I1)
-    if (findNoteIgnoreCase(name) || noteNameError(name)) {
-      canCreate = false;
-      canCreateWithEnter = false;
-    }
-
-    canDeleteSelected = false;
-    if (item && canOpenSelected) {
-      if (item.name !== "scratch" && !isSystemNoteName(item.name)) {
-        // can't delete scratch note or system notes
-        canDeleteSelected = true;
-      }
-    }
-    showDelete = canOpenSelected;
-  }
-
-  function selectionChanged(item: NoteInfo | undefined, idx: number) {
-    selectedNote = item;
-    selectedName = selectedNote ? selectedNote.name : "";
-    recalcAvailableActions(item, sanitizedFilter);
-  }
-
-  async function onKeydown(ev: KeyboardEvent) {
-    // console.log("onKeyDown:", event);
-    let altN = isAltNumEvent(ev);
-    if (altN !== null) {
-      ev.preventDefault();
-      let note = selectedNote;
-      if (note) {
-        await reassignNoteShortcut(note.name, altN);
-        return;
-      }
-    }
-    let key = ev.key;
-
-    if (key === "s" && ev.altKey && selectedNote) {
-      toggleStarred(selectedNote);
-      ev.preventDefault();
+  function onKeydown(ev: KeyboardEvent) {
+    if (nf.handleKeydown(ev)) {
       return;
     }
-
-    if (key === "Enter") {
-      ev.preventDefault();
-      let name = sanitizedFilter;
-      if (canCreateWithEnter) {
-        emitCreateNote(name);
-        return;
-      }
-      if (ev.ctrlKey && canCreate) {
-        emitCreateNote(name);
-        return;
-      }
-      if (selectedNote) {
-        emitOpenNote(selectedNote, false);
-      }
-      return;
-    }
-
-    if (isKeyCtrlDelete(ev)) {
-      ev.preventDefault();
-      if (canDeleteSelected && selectedNote) {
-        // console.log("delete note", name);
-        deleteNote(selectedNote.name, false);
-        // .then(updateNoteInfos);
-      }
-      return;
-    }
-
-    listboxRef?.onkeydown(ev, filter === "");
-  }
-
-  function emitOpenNote(noteInfo: NoteInfo, newTab: boolean) {
-    // console.log("emitOpenNote", noteInfo.name, "newTab:", newTab);
-    openNote(noteInfo.name, newTab);
-  }
-
-  function emitCreateNote(name: string) {
-    // log("create note", name);
-    createNote(name);
-  }
-
-  async function toggleStarred(noteInfo: NoteInfo) {
-    // note: UI is updated via updateAfterNoteStateChange() after metadata is saved
-    await toggleNoteStarred(noteInfo.name);
-    inputRef.focus();
+    listboxRef?.onkeydown(ev, nf.filter === "");
   }
 
   function toggleInfoPanelCollapsed() {
     appState.noteSelectorInfoCollapsed = !appState.noteSelectorInfoCollapsed;
   }
 
-  let inputRef: HTMLInputElement;
   let listboxRef: ListBox;
 
   function toggleShowArchived() {
@@ -300,17 +355,50 @@
   function showHideTxt(isShowing: boolean) {
     return isShowing ? "hide" : "show";
   }
-
-  function noteCls(noteInfo: NoteInfo) {
-    let name = noteInfo.name;
-    let m = getNoteMeta(name);
-    let isArchived = m && m.isArchived;
-    if (isSystemNoteName(name) || isArchived) {
-      return "italic";
-    }
-    return "";
-  }
 </script>
+
+{#snippet noteStarButton(noteInfo: NoteInfo, toggleStarred: (noteInfo: NoteInfo) => void, cls: string)}
+  <button
+    tabindex="-1"
+    class="{cls} cursor-pointer hover:text-yellow-600"
+    onclick={(ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      toggleStarred(noteInfo);
+    }}
+  >
+    {@render IconTablerStar(noteInfo.isStarred ? "var(--color-yellow-300)" : "none")}
+  </button>
+{/snippet}
+
+<!-- filter <input> with "n of m notes" count -->
+{#snippet noteFilterInput(nf: NoteFilter)}
+  <div class="relative">
+    <input
+      use:focus
+      bind:this={nf.input}
+      bind:value={nf.filter}
+      type="text"
+      class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
+    />
+    <div class="absolute right-2 top-1 italic text-gray-400">
+      {nf.countMsg}
+    </div>
+  </div>
+{/snippet}
+
+<!-- star button, highlighted name and shortcut of a note in ListBox -->
+{#snippet noteItemRow(noteInfo: NoteInfo, nf: NoteFilter, nameCls: string)}
+  {@const hili = hilightText(noteInfo.name, nf.hiliRegExp)}
+  {@render noteStarButton(noteInfo, nf.toggleStarred, "-ml-1.5")}
+  <div class="ml-2 truncate {nameCls}">
+    {@html hili}
+  </div>
+  <div class="grow"></div>
+  <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap">
+    {noteShortcutStr(noteInfo)}
+  </div>
+{/snippet}
 
 {#snippet showArchived()}
   {#if len(appState.archivedNotes)}
@@ -388,51 +476,46 @@
         hide help</button
       >
     </div>
-    {#if canOpenSelected}
+    {#if nf.actions.canOpenSelected}
       <div class="kbd">Enter</div>
       <div class="truncate">
         open note <span class="font-bold">
-          {selectedName}
+          {nf.selectedName}
         </span>
       </div>
     {/if}
 
-    {#if canCreateWithEnter}
-      <div class="kbd">Enter</div>
-    {/if}
-    {#if canCreate && !canCreateWithEnter}
-      <div class="kbd">Ctrl + Enter</div>
-    {/if}
-    {#if canCreate}
+    {#if nf.actions.canCreate}
+      <div class="kbd">{nf.createKey}</div>
       <div class="truncate">
         create note <span class="font-bold">
-          {filter}
+          {nf.filter}
         </span>
       </div>
     {/if}
 
-    {#if showDelete && canDeleteSelected}
+    {#if nf.actions.canOpenSelected && nf.actions.canDeleteSelected}
       <div class="kbd">Ctrl + Delete</div>
       <div class="red truncate">
         delete note <span class="font-bold">
-          {selectedName}
+          {nf.selectedName}
         </span>
       </div>
     {/if}
 
-    {#if showDelete && !canDeleteSelected}
+    {#if nf.actions.canOpenSelected && !nf.actions.canDeleteSelected}
       <div class="kbd">Ctrl + Delete</div>
       <div class="red truncate">
-        can't trash <span class="font-bold">{selectedName}</span>
+        can't trash <span class="font-bold">{nf.selectedName}</span>
       </div>
     {/if}
 
-    {#if canOpenSelected}
+    {#if nf.actions.canOpenSelected}
       <div class="kbd">{altChar} + 1...9</div>
       <div>assign quick access shortcut</div>
     {/if}
 
-    {#if canOpenSelected}
+    {#if nf.actions.canOpenSelected}
       <div class="kbd">{altChar} + S</div>
       <div>toggle favorite</div>
     {/if}
@@ -459,45 +542,16 @@
   {#if header}
     <div class="font-bold mb-2 text-lg ml-1">{header}</div>
   {/if}
-  <div class="relative">
-    <input
-      use:focus
-      bind:this={inputRef}
-      bind:value={filter}
-      type="text"
-      class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
-    />
-    <div class="absolute right-2 top-1 italic text-gray-400">
-      {notesCountMsg}
-    </div>
-  </div>
+  {@render noteFilterInput(nf)}
   <ListBox
     bind:this={listboxRef}
-    items={filteredNoteInfos}
-    {selectionChanged}
-    onclick={(item, metaPressed) => emitOpenNote(item, metaPressed)}
+    items={nf.filtered}
+    selectionChanged={nf.selectionChanged}
+    onclick={(item, metaPressed) => nf.openNote(item, metaPressed)}
   >
     {#snippet renderItem(noteInfo)}
-      {@const hili = hilightText(noteInfo.name, hiliRegExp)}
       <div class="flex w-full relative group">
-        <button
-          tabindex="-1"
-          class="-ml-1.5 cursor-pointer hover:text-yellow-600"
-          onclick={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            toggleStarred(noteInfo);
-          }}
-        >
-          {@render IconTablerStar(noteInfo.isStarred ? "var(--color-yellow-300)" : "none")}
-        </button>
-        <div class="ml-2 truncate {noteCls(noteInfo)}">
-          {@html hili}
-        </div>
-        <div class="grow"></div>
-        <div class="ml-4 mr-2 text-xs text-gray-400 whitespace-nowrap">
-          {noteShortcutStr(noteInfo)}
-        </div>
+        {@render noteItemRow(noteInfo, nf, noteNameCls(noteInfo.name))}
 
         <div
           class="absolute top-0 right-2 opacity-0 invisible group-hover:visible group-hover:opacity-100 flex items-center self-center bg-gray-100"
@@ -531,14 +585,14 @@
   </ListBox>
 
   <div class="flex justify-center mt-2">
-    {#if canCreate}
-      <button onclick={() => emitCreateNote(sanitizedFilter)} class="truncate button-outline cursor-pointer max-w-[80%]"
-        >Create Note <b>{sanitizedFilter}</b></button
+    {#if nf.actions.canCreate}
+      <button onclick={() => createNote(nf.sanitizedFilter)} class="truncate button-outline cursor-pointer max-w-[80%]"
+        >Create Note <b>{nf.sanitizedFilter}</b></button
       >
     {/if}
   </div>
 
-  {#if canOpenSelected || canDeleteSelected || filter.length > 0}
+  {#if nf.actions.canOpenSelected || nf.actions.canDeleteSelected || nf.filter.length > 0}
     <!-- <hr class="mt-2 border-gray-300 dark:border-gray-600" /> -->
   {/if}
 

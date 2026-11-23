@@ -56,7 +56,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { html, len, removeDuplicates, throwIf, trimSuffix } from "./util";
+import { escapeHTML, html, len, removeDuplicates, throwIf, trimSuffix } from "./util";
 
 // is set if we store notes on disk, null if in localStorage
 let storageFS: FileSystemDirectoryHandle | undefined;
@@ -336,15 +336,22 @@ function getLSKeys(): string[] {
   return keys;
 }
 
-export function debugRemoveLocalStorageNotes() {
-  let keys = getLSKeys();
-  for (let key of keys) {
+// localStorage keys that store notes (regular or encrypted)
+function getNoteKeysLS(): { key: string; isEncr: boolean }[] {
+  let res = [];
+  for (let key of getLSKeys()) {
     let isEncr = key.startsWith(kLSKeyEncrPrefix);
-    let isRegular = key.startsWith(kLSKeyPrefix);
-    if (isEncr || isRegular) {
-      localStorage.removeItem(key);
-      console.log(`removed ${key}`);
+    if (isEncr || key.startsWith(kLSKeyPrefix)) {
+      res.push({ key, isEncr });
     }
+  }
+  return res;
+}
+
+export function debugRemoveLocalStorageNotes() {
+  for (let { key } of getNoteKeysLS()) {
+    localStorage.removeItem(key);
+    console.log(`removed ${key}`);
   }
   localStorage.removeItem(kMetadataName);
 }
@@ -357,16 +364,11 @@ function loadNoteNamesLS(): string[][] {
 
   let allNotes = [];
   let encryptedNotes = [];
-  let keys = getLSKeys();
-  for (let key of keys) {
-    let isEncr = key.startsWith(kLSKeyEncrPrefix);
-    let isRegular = key.startsWith(kLSKeyPrefix);
-    if (isEncr || isRegular) {
-      let name = getNoteNameLS(key);
-      allNotes.push(name);
-      if (isEncr) {
-        encryptedNotes.push(name);
-      }
+  for (let { key, isEncr } of getNoteKeysLS()) {
+    let name = getNoteNameLS(key);
+    allNotes.push(name);
+    if (isEncr) {
+      encryptedNotes.push(name);
     }
   }
   return [allNotes, encryptedNotes];
@@ -732,6 +734,20 @@ export function findNoteIgnoreCase(name: string): string | undefined {
   return appState.allNotes.find((n) => n.toLowerCase() === nameLC);
 }
 
+// returns HTML explaining why name can't be used for a new / renamed note,
+// or "" if it can. allowedExisting is a note name that may match (the note being renamed)
+export function noteNameUnavailableHTML(name: string, allowedExisting?: string): string {
+  let nameErr = noteNameError(name);
+  if (nameErr) {
+    return escapeHTML(nameErr);
+  }
+  let existing = findNoteIgnoreCase(name);
+  if (existing && existing !== allowedExisting) {
+    return `note <span class="font-bold">${escapeHTML(existing)}</span> already exists`;
+  }
+  return "";
+}
+
 export function noteExists(name: string): boolean {
   let notes = appState.allNotes;
   return notes.includes(name) || isSystemNoteName(name);
@@ -812,8 +828,17 @@ async function readEncryptedFS(dh: FileSystemDirectoryHandle, fileName: string):
 }
 
 async function writeMaybeEncryptedFS(dh: FileSystemDirectoryHandle, name: string, content: string): Promise<void> {
-  let path = notePathFromNameFS(name);
-  if (!isEncryptedNote(name)) {
+  await writeTextFS(dh, notePathFromNameFS(name), content, isEncryptedNote(name));
+}
+
+// write content to path, encrypted with the user's password if encrypt is true
+async function writeTextFS(
+  dh: FileSystemDirectoryHandle,
+  path: string,
+  content: string,
+  encrypt: boolean,
+): Promise<void> {
+  if (!encrypt) {
     await fsWriteTextFile(dh, path, content);
     return;
   }
@@ -834,13 +859,7 @@ async function writeEncryptedFS(
 
 export async function writeNoteFS(dh: FileSystemDirectoryHandle, name: string, content: string) {
   let isEncr = isUsingEncryption();
-  const path = notePathFromNameFS(name, isEncr);
-  if (!isEncr) {
-    await fsWriteTextFile(dh, path, content);
-    return;
-  }
-  let pwdHash = await getPasswordHashMust("");
-  await writeEncryptedFS(dh, pwdHash, path, content);
+  await writeTextFS(dh, notePathFromNameFS(name, isEncr), content, isEncr);
 }
 
 export function canDeleteNote(name: string): boolean {
@@ -905,6 +924,12 @@ export async function renameNote(oldName: string, newName: string, content: stri
   await createNoteWithName(newName, content);
   // update metadata and history before deleteNote() because it'll
   // remove from history and metadata
+  await renameNoteReferences(oldName, newName);
+  await deleteNote(oldName);
+}
+
+// point metadata, history and open tabs at the new note name
+async function renameNoteReferences(oldName: string, newName: string) {
   await renameNoteInMetadata(oldName, newName);
   renameNoteInHistory(oldName, newName);
   let settings = getSettings();
@@ -912,7 +937,6 @@ export async function renameNote(oldName: string, newName: string, content: stri
   if (idx >= 0) {
     settings.tabs[idx] = newName;
   }
-  await deleteNote(oldName);
 }
 
 // on case-insensitive file systems (macOS, Windows) "Foo" and "foo" are the same
@@ -936,13 +960,7 @@ async function renameNoteCaseOnly(
       throw e;
     }
   }
-  await renameNoteInMetadata(oldName, newName);
-  renameNoteInHistory(oldName, newName);
-  let settings = getSettings();
-  let idx = settings.tabs.indexOf(oldName);
-  if (idx >= 0) {
-    settings.tabs[idx] = newName;
-  }
+  await renameNoteReferences(oldName, newName);
   await loadNoteNames();
 }
 

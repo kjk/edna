@@ -10,9 +10,11 @@ import { loadNotesMetadata, upgradeMetadata } from "./metadata";
 import {
   clearStorageFS,
   createDefaultNotes,
+  dbDelDirHandle,
   dbGetDirHandle,
   isSystemNoteName,
   loadNoteNames,
+  pickAnotherDirectory,
   preLoadAllNotes,
 } from "./notes";
 import { getSettings, settingsAddTab } from "./settings.svelte";
@@ -29,6 +31,22 @@ export function boot(): Promise<void> {
   let p = bootQueue.then(bootNow);
   bootQueue = p.catch(() => {});
   return p;
+}
+
+// let the user pick a directory for storing notes and re-boot using it
+export async function switchToDirectory(): Promise<void> {
+  let ok = await pickAnotherDirectory();
+  if (!ok) {
+    return;
+  }
+  await boot();
+  await preLoadAllNotes();
+}
+
+// stop storing notes in a directory and re-boot using browser storage
+export async function switchToBrowserStorage(): Promise<void> {
+  await dbDelDirHandle();
+  await boot();
 }
 
 function mountRoot(component: any, props: Record<string, unknown> = {}) {

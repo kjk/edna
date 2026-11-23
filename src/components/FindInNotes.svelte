@@ -4,7 +4,7 @@
   import { appState } from "../appstate.svelte";
   import { loadNote } from "../notes";
   import { findMatchesInNote } from "../find-in-notes";
-  import { hilightText, len, makeHilightRegExp, splitStringPreservingQuotes } from "../util";
+  import { btnPressedCls, hilightText, len, makeHilightRegExp, splitStringPreservingQuotes } from "../util";
   import { IconFluentWholeWord, IconTablerLetterCase } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
@@ -138,9 +138,6 @@
     appState.searchNotesMatchWholeWord = !appState.searchNotesMatchWholeWord;
     changeNo++; // make Enter redo the search
     focusInput();
-  }
-  function btnPressedCls(isPressed: boolean) {
-    return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";
   }
   let matchCaseCls = $derived(btnPressedCls(appState.searchNotesMatchCase));
   let matchWholeWordCls = $derived(btnPressedCls(appState.searchNotesMatchWholeWord));

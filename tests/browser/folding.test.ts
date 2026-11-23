@@ -58,6 +58,20 @@ describe("Block folding (browser tests)", () => {
     await press("a", modKey);
   }
 
+  // open editor with content and fold the block with the cursor (the first one)
+  async function openWithFirstBlockFolded(content: string) {
+    await openEditor(content);
+    await fold();
+    await expect.poll(foldPlaceholderCount).toBe(1);
+  }
+
+  // toggle fold of all blocks and wait for expected number of folded blocks
+  async function toggleFoldAll(expectedFolds: number) {
+    await selectEntireBuffer();
+    await toggleFold();
+    await expect.poll(foldPlaceholderCount).toBe(expectedFolds);
+  }
+
   afterEach(() => {
     cleanup(te);
   });
@@ -143,9 +157,7 @@ describe("Block folding (browser tests)", () => {
     await toggleFold();
     await expect.poll(foldPlaceholderCount).toBe(3);
 
-    await selectEntireBuffer();
-    await toggleFold();
-    await expect.poll(foldPlaceholderCount).toBe(0);
+    await toggleFoldAll(0);
   });
 
   it("toggleBlockFold with mixed folded/unfolded state", async () => {
@@ -153,13 +165,9 @@ describe("Block folding (browser tests)", () => {
     await fold();
     await expect.poll(foldPlaceholderCount).toBe(1);
 
-    await selectEntireBuffer();
-    await toggleFold();
-    await expect.poll(foldPlaceholderCount).toBe(3);
+    await toggleFoldAll(3);
 
-    await selectEntireBuffer();
-    await toggleFold();
-    await expect.poll(foldPlaceholderCount).toBe(0);
+    await toggleFoldAll(0);
   });
 
   it("toggleBlockFold with mixed state with many single line blocks", async () => {
@@ -170,19 +178,13 @@ describe("Block folding (browser tests)", () => {
         "\n∞∞∞text\nBlock C single line" +
         "\n∞∞∞text\nBlock C single line",
     );
-    await selectEntireBuffer();
-    await toggleFold();
-    await expect.poll(foldPlaceholderCount).toBe(2);
+    await toggleFoldAll(2);
 
-    await selectEntireBuffer();
-    await toggleFold();
-    await expect.poll(foldPlaceholderCount).toBe(0);
+    await toggleFoldAll(0);
   });
 
   it("typing at the beginning of a folded block unfolds it", async () => {
-    await openEditor(firstBlock);
-    await fold();
-    await expect.poll(foldPlaceholderCount).toBe(1);
+    await openWithFirstBlockFolded(firstBlock);
 
     await press("Home", modKey);
     await userEvent.keyboard("X");
@@ -192,9 +194,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("typing at the end of a folded block unfolds it", async () => {
-    await openEditor(firstBlock);
-    await fold();
-    await expect.poll(foldPlaceholderCount).toBe(1);
+    await openWithFirstBlockFolded(firstBlock);
 
     await press("End", modKey);
     await userEvent.keyboard("Y");
@@ -204,9 +204,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("typing in empty block does not unfold previous folded block", async () => {
-    await openEditor(firstBlock + "\n∞∞∞text\n");
-    await fold();
-    await expect.poll(foldPlaceholderCount).toBe(1);
+    await openWithFirstBlockFolded(firstBlock + "\n∞∞∞text\n");
     expect(blockCount()).toBe(2);
 
     await press("End", modKey);
@@ -217,9 +215,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("folded block does not unfold when new block created after it and backspace pressed immediately", async () => {
-    await openEditor(firstBlock + "\n");
-    await fold();
-    await expect.poll(foldPlaceholderCount).toBe(1);
+    await openWithFirstBlockFolded(firstBlock + "\n");
 
     await press("Home", modKey);
     await press("Enter", modKey);
@@ -231,9 +227,7 @@ describe("Block folding (browser tests)", () => {
   });
 
   it("folded block does not unfold when new block created before it and delete pressed immediately", async () => {
-    await openEditor(firstBlock + "\n");
-    await fold();
-    await expect.poll(foldPlaceholderCount).toBe(1);
+    await openWithFirstBlockFolded(firstBlock + "\n");
 
     await press("Home", modKey);
     await press("Enter", "Alt");

@@ -1,13 +1,7 @@
 <script lang="ts">
   import { requestHandlePermission } from "../fileutil";
-  import { boot } from "../main";
-  import {
-    clearStorageFS,
-    dbDelDirHandle,
-    dbGetDirHandle,
-    pickAnotherDirectory,
-    preLoadAllNotes,
-  } from "../notes";
+  import { boot, switchToBrowserStorage, switchToDirectory } from "../main";
+  import { clearStorageFS, dbGetDirHandle } from "../notes";
 
   interface Props {
     // set if notes in the directory couldn't be read
@@ -34,20 +28,6 @@
       clearStorageFS();
     }
   }
-
-  async function pickAnotherDirectory2() {
-    let ok = await pickAnotherDirectory();
-    if (!ok) {
-      return;
-    }
-    await boot();
-    await preLoadAllNotes();
-  }
-
-  async function switchToBrowserStorage() {
-    await dbDelDirHandle();
-    await boot();
-  }
 </script>
 
 <div class="fixed inset-0 overflow-hidden bg-gray-50">
@@ -69,7 +49,7 @@
           >Allow Edna to access files in directory <span class="font-bold">{dirName}</span></button
         >
       {/if}
-      <button onclick={pickAnotherDirectory2} class="mt-4 px-2 py-1 border border-black hover:bg-gray-100"
+      <button onclick={switchToDirectory} class="mt-4 px-2 py-1 border border-black hover:bg-gray-100"
         >Pick another directory with notes</button
       >
       <button onclick={switchToBrowserStorage} class="mt-4 px-2 py-1 border border-black hover:bg-gray-100"

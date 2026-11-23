@@ -15,6 +15,7 @@
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
+  import { btnPressedCls } from "../util";
   import {
     IconFluentWholeWord,
     IconLucideReplace,
@@ -231,9 +232,6 @@
   }
   function matchRegex() {
     appState.searchRegex = !appState.searchRegex;
-  }
-  function btnPressedCls(isPressed: boolean) {
-    return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";
   }
   let matchCaseCls = $derived(btnPressedCls(appState.searchMatchCase));
   let matchWholeWordCls = $derived(btnPressedCls(appState.searchMatchWholeWord));

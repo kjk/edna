@@ -8,6 +8,7 @@ import {
 } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { getFirstNoteBlock, getNoteBlockFromPos } from "./block/block";
+import { collapseSelectionToHeads } from "./cmutils";
 import type { MultiBlockEditor } from "./editor";
 import { setEmacsMarkMode } from "./emacs";
 import { parseDelimiterLine } from "./new-parser/node-types";
@@ -33,7 +34,7 @@ function editableRange(state: EditorState, range: SelectionRange): SimpleRange {
 
 function writeSelection(view: EditorView, editor: MultiBlockEditor, cut: boolean, write: (text: string) => void) {
   const { state } = view;
-  const { ranges, mainIndex } = state.selection;
+  const { ranges } = state.selection;
   const text: string[] = [];
   const cuts: SimpleRange[] = [];
   const seenLines = new Set<number>();
@@ -78,13 +79,7 @@ function writeSelection(view: EditorView, editor: MultiBlockEditor, cut: boolean
     }
     view.dispatch({ changes: joined, scrollIntoView: true, userEvent: "delete.cut" });
   } else if (!cut && editor.deselectOnCopy) {
-    view.dispatch({
-      selection: EditorSelection.create(
-        ranges.map((range) => EditorSelection.cursor(range.head)),
-        mainIndex,
-      ),
-      userEvent: "select",
-    });
+    collapseSelectionToHeads(view);
   }
 }
 

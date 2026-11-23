@@ -67,6 +67,11 @@ export function getActiveNoteBlock(state: EditorState): Block | undefined {
   return getNoteBlockFromPos(state, state.selection.main.head);
 }
 
+// active block, or undefined if the editor is read-only
+export function getEditableActiveBlock(state: EditorState): Block | undefined {
+  return state.readOnly ? undefined : getActiveNoteBlock(state);
+}
+
 export interface BlocksInfo {
   blocks: Block[];
   active: number;
@@ -323,8 +328,7 @@ export function noteBlockExtension(_editor: MultiBlockEditor): Extension[] {
 
 export function insertAfterActiveBlock(view: EditorView, text: string): boolean {
   const { state } = view;
-  if (state.readOnly) return false;
-  const active = getActiveNoteBlock(state);
+  const active = getEditableActiveBlock(state);
   if (!active) return false;
   const insert = state.toText(text);
   view.dispatch({

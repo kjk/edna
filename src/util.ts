@@ -405,6 +405,20 @@ export function isKeyCtrlEnter(ev: KeyboardEvent): boolean {
   return ev.key === "Enter" && ev.ctrlKey;
 }
 
+// css classes for a toggle button (e.g. "match case" in find)
+export function btnPressedCls(isPressed: boolean): string {
+  return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";
+}
+
+// keydown handler for dialogs: Enter calls submit() if canSubmit and swallows the event
+export function submitOnEnter(ev: KeyboardEvent, canSubmit: boolean, submit: () => void) {
+  if (canSubmit && ev.key === "Enter") {
+    submit();
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+}
+
 export function humanPrice(price: number): string {
   if (price == 0) {
     return "0";

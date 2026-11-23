@@ -8,6 +8,7 @@
   import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";
+  import { addTargetBlank } from "../markdown-util";
   import { getSettings } from "../settings.svelte";
   import { isKeyCtrlEnter, len } from "../util";
   import AiModels from "./AiModels.svelte";
@@ -189,40 +190,6 @@
         }
       }
     }
-  }
-
-  function addTargetBlank(md: MarkdownIt) {
-    // Remember old renderer, if overridden, or proxy to default renderer
-    var defaultRender =
-      md.renderer.rules.link_open ||
-      function (tokens, idx, options, env, self) {
-        return self.renderToken(tokens, idx, options);
-      };
-
-    md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-      // If you are using linkify to automatically detect links, you might want to
-      // check if it's an external link here. You can do so based on tokens[idx].href
-
-      // Add target="_blank" to links except the internal #foo links
-      let token = tokens[idx];
-      // console.log("token:", token);
-      // console.log("token.attrs:", token.attrs);
-      let aidx = token.attrIndex("href");
-      let uri = String(token.attrs![aidx]![1]);
-      if (uri.startsWith("#")) {
-        // console.log("skipping uri: ", uri);
-        return defaultRender(tokens, idx, options, env, self);
-      }
-      aidx = token.attrIndex("target");
-      if (aidx < 0) {
-        token.attrPush(["target", "_blank"]); // add new attribute
-      } else {
-        token.attrs![aidx]![1] = "_blank"; // replace existing attribute
-      }
-      // console.log("added to uri: ", uri);
-      // pass token to default renderer.
-      return defaultRender(tokens, idx, options, env, self);
-    };
   }
 
   // creating markdown-it instance is expensive and mdToHTML() is called for every streamed token

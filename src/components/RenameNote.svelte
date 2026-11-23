@@ -1,8 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import { escapeHTML } from "../util";
-  import { findNoteIgnoreCase, sanitizeNoteName } from "../notes";
-  import { noteNameError } from "../note-name";
+  import { noteNameUnavailableHTML, sanitizeNoteName } from "../notes";
+  import { submitOnEnter } from "../util";
 
   interface Props {
     onclose: () => void;
@@ -18,40 +17,12 @@
     return sanitizeNoteName(newName);
   });
 
-  let canRename = $derived.by(() => {
-    let name = sanitizedNewName;
-    if (name === "" || name === oldName) {
-      return false;
-    }
-    if (noteNameError(name)) {
-      return false;
-    }
-    let existing = findNoteIgnoreCase(name);
-    return !existing || existing === oldName;
-  });
+  let renameError = $derived(noteNameUnavailableHTML(sanitizedNewName, oldName));
 
-  let renameError = $derived.by(() => {
-    let name = sanitizedNewName;
-    let nameErr = noteNameError(name);
-    if (nameErr) {
-      return escapeHTML(nameErr);
-    }
-    let existing = findNoteIgnoreCase(name);
-    if (existing && existing !== oldName) {
-      return `note <span class="font-bold">${escapeHTML(existing)}</span> already exists`;
-    }
-    return "";
-  });
+  let canRename = $derived(sanitizedNewName !== "" && sanitizedNewName !== oldName && renameError === "");
 
   function onkeydown(ev: KeyboardEvent) {
-    let key = ev.key;
-
-    if (canRename && key === "Enter") {
-      emitRename();
-      ev.preventDefault();
-      ev.stopPropagation();
-      return;
-    }
+    submitOnEnter(ev, canRename, emitRename);
   }
 
   function emitRename() {

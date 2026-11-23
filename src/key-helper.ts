@@ -1,11 +1,17 @@
 import { getAltChar, getModChar, platformName } from "./util.js";
 
+// replace Alt and Mod with platform-specific key names
 export function fixUpShortcuts(s: string, platform = platformName): string {
   let modChar = getModChar(platform);
   let altChar = getAltChar(platform);
   s = s.replace(/\bAlt\b/g, altChar);
   s = s.replace(/\bMod\b/g, modChar);
   return s;
+}
+
+// like fixUpShortcuts() but only inside `code` spans of markdown
+export function fixUpShortcutsInCode(s: string, platform = platformName): string {
+  return s.replace(/`([^`]*)`/g, (match, code) => "`" + fixUpShortcuts(code, platform) + "`");
 }
 
 function getKeyHelp(platform = platformName): string[][] {

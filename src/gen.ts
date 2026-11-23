@@ -2,31 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import markdownIt, { type MarkdownIt } from "markdown-it";
 import markdownItAnchor from "markdown-it-anchor";
-import { keyHelpStr } from "./key-helper.js";
+import { fixUpShortcutsInCode, keyHelpStr } from "./key-helper.js";
+import { addTargetBlank } from "./markdown-util.js";
 
 console.log(
   "Generating help-win.html and help-mac.html from note-help.edna.txt",
 );
-
-function getModChar(platform: string): string {
-  return platform === "darwin" ? "⌘" : "Ctrl";
-}
-
-function getAltChar(platform: string): string {
-  return platform === "darwin" ? "⌥" : "Alt";
-}
-
-function fixUpShortcuts(s: string, platform: string): string {
-  let modChar = getModChar(platform);
-  let altChar = getAltChar(platform);
-  s = s.replace(/`([^`]*)`/g, (match, p1) => {
-    return "`" + p1.replace(/Alt/g, altChar) + "`";
-  });
-  s = s.replace(/`([^`]*)`/g, (match, p1) => {
-    return "`" + p1.replace(/Mod/g, modChar) + "`";
-  });
-  return s;
-}
 
 function removeLineStartingWith(lines: string[], s: string): string[] {
   return lines.filter((line) => !line.startsWith(s));
@@ -112,7 +93,7 @@ function getHelp(platform: string): string {
   let keyHelp = keyHelpStr(platform);
   keyHelp = "```\n" + keyHelp + "\n```";
 
-  let help = fixUpShortcuts(helpRaw, platform);
+  let help = fixUpShortcutsInCode(helpRaw, platform);
   help = help.replace("{{keyHelp}}", keyHelp);
   // link Edna to website
   // help = help.replace(/Edna/g, "[Edna](https://edna.arslexis.io)");
@@ -149,40 +130,6 @@ let htmlEnd = `
   </body>
 </html>
 `;
-
-function addTargetBlank(md: MarkdownIt) {
-  // Remember old renderer, if overridden, or proxy to default renderer
-  var defaultRender =
-    md.renderer.rules.link_open ||
-    function (tokens, idx, options, env, self) {
-      return self.renderToken(tokens, idx, options);
-    };
-
-  md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-    // If you are using linkify to automatically detect links, you might want to
-    // check if it's an external link here. You can do so based on tokens[idx].href
-
-    // Add target="_blank" to links except the internal #foo links
-    let token = tokens[idx]!;
-    // console.log("token:", token);
-    // console.log("token.attrs:", token.attrs);
-    let aidx = token.attrIndex("href");
-    let uri = String(token.attrs![aidx]![1]);
-    if (uri.startsWith("#")) {
-      // console.log("skipping uri: ", uri);
-      return defaultRender(tokens, idx, options, env, self);
-    }
-    aidx = token.attrIndex("target");
-    if (aidx < 0) {
-      token.attrPush(["target", "_blank"]); // add new attribute
-    } else {
-      token.attrs![aidx]![1] = "_blank"; // replace existing attribute
-    }
-    // console.log("added to uri: ", uri);
-    // pass token to default renderer.
-    return defaultRender(tokens, idx, options, env, self);
-  };
-}
 
 function genHTMLFromMarkdown() {
   let md = markdownIt({
