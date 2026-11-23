@@ -35,8 +35,13 @@ export const nodeSet = new NodeSet(nodeTypes);
 export const kDelimiterPrefix = "\u221e\u221e\u221e";
 
 // block header line for language token, e.g. "\n\u221e\u221e\u221etext-a\n" (-a: language is auto-detected)
+// ∞∞∞{token}[-a], without newlines
+export function delimiterLine(token: string, autoDetect: boolean): string {
+  return kDelimiterPrefix + token + (autoDetect ? "-a" : "");
+}
+
 export function getBlockDelimiter(token: string, autoDetect: boolean): string {
-  return "\n" + kDelimiterPrefix + token + (autoDetect ? "-a" : "") + "\n";
+  return "\n" + delimiterLine(token, autoDetect) + "\n";
 }
 
 // This is the single definition of a valid block delimiter. A delimiter is a line

@@ -2,7 +2,7 @@
   import { clickOutside, focus } from "../actions";
   import { appState } from "../appstate.svelte";
   import {
-    compareTrueFirst,
+    starredThenName,
     filteredCountMsg,
     findMatchingItemsFn,
     handleListKeydown,
@@ -43,13 +43,8 @@
     }
 
     let res = findMatchingItemsFn(items, filter, modelNameFn);
-    res.sort((a, b) => {
-      const starred = appState.settings.starredModels;
-      return (
-        compareTrueFirst(starred.includes(modelKey(a)), starred.includes(modelKey(b))) ||
-        modelNameFn(a).localeCompare(modelNameFn(b))
-      );
-    });
+    const starred = appState.settings.starredModels;
+    res.sort(starredThenName((m) => starred.includes(modelKey(m)), modelNameFn));
     return res;
   }
 

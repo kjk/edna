@@ -1,6 +1,11 @@
-import { mount, unmount } from "svelte";
+import { mount, tick, unmount } from "svelte";
 
 // mounts component into a new <div> added to the page (style: css of the div)
+// selects the text of input once pending changes are rendered
+export function selectAfterTick(getInput: () => HTMLInputElement | undefined) {
+  tick().then(() => getInput()?.select());
+}
+
 export function mountInNewDiv(
   component: any,
   props: object = {},

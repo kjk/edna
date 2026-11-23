@@ -66,6 +66,11 @@ async function writeStorageText(dh: FileSystemDirectoryHandle | undefined, name:
   }
 }
 
+// writes m as the metadata file of dh (localStorage if undefined)
+export async function writeMetadataFile(dh: FileSystemDirectoryHandle | undefined, m: Metadata) {
+  await writeStorageText(dh, kMetadataName, JSON.stringify(m, null, 2));
+}
+
 // reads metadata file. Returns null if the file doesn't exist.
 // Other read errors are re-thrown so that we don't over-write metadata
 // with empty data because of a transient error.
@@ -117,11 +122,10 @@ const metadataWriteQueue = new SerialQueue();
 
 export async function saveNotesMetadata(m: Metadata = metadata!) {
   metadata = m;
-  let s = JSON.stringify(m, null, 2);
   let dh = getStorageFS();
   await metadataWriteQueue.run(async () => {
     try {
-      await writeStorageText(dh, kMetadataName, s);
+      await writeMetadataFile(dh, m);
     } catch (e) {
       // in-memory metadata is ahead of the file until the next successful
       // save (which writes all metadata); tell the user

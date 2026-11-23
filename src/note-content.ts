@@ -1,5 +1,5 @@
 import { blockHdrMarkdown } from "./constants";
-import { kDelimiterPrefix, parseDelimiterLine } from "./editor/new-parser/node-types";
+import { delimiterLine, kDelimiterPrefix, parseDelimiterLine } from "./editor/new-parser/node-types";
 
 // a line that looks like a delimiter but isn't valid: upper case language or
 // Heynote metadata (∞∞∞text-a;created=...)
@@ -26,7 +26,7 @@ export function fixUpNoteContent(s: string | null): string {
     s = "\n" + s;
   }
   s = s.replace(reFixableDelimiterLine, (m, lang: string, auto?: string) => {
-    return "\n" + kDelimiterPrefix + lang.toLowerCase() + (auto ?? "");
+    return "\n" + delimiterLine(lang.toLowerCase(), !!auto);
   });
   if (!startsWithValidDelimiter(s)) {
     s = blockHdrMarkdown + s;

@@ -41,6 +41,7 @@ import {
   removeNoteFromMetadata,
   removeStaleNoteMeta,
   renameNoteInMetadata,
+  writeMetadataFile,
 } from "./metadata";
 import { mergeMetadata, normalizeMetadata } from "./metadata-merge";
 import { fixUpNoteContent } from "./note-content";
@@ -1033,7 +1034,7 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
     }
     let diskMeta = normalizeMetadata(await readStoredMetadata(dh));
     let merged = mergeMetadata(diskMeta, lsMeta);
-    await fsWriteFile(dh, kMetadataName, JSON.stringify(merged, null, 2));
+    await writeMetadataFile(dh, merged);
 
     // everything is in the directory: switch to it and remove from localStorage
     await dbSetDirHandle(dh);
@@ -1129,7 +1130,7 @@ async function convertNoteFS(dh: FileSystemDirectoryHandle, oldFileName: string,
   if (newFileName) {
     await writeTextFS(dh, newFileName, s, encrypt, pwdHash);
   }
-  await dh.removeEntry(oldFileName);
+  await fsDeleteFile(dh, oldFileName);
 }
 
 function saltPassword(pwd: string): string {

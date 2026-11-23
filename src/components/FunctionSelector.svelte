@@ -4,7 +4,7 @@
   import { getFunctionMeta, toggleFunctionStarred } from "../metadata";
   import { getBoopFunctions } from "../system-notes";
   import {
-    compareTrueFirst,
+    starredThenName,
     filteredCountMsg,
     findMatchingItems,
     getAltChar,
@@ -56,10 +56,10 @@
    * 0 if a = b
    * 1 if a > b
    */
-  function sortItem(a: Item, b: Item): number {
-    // starred before not starred
-    return compareTrueFirst(a.isStarred, b.isStarred) || a.name.localeCompare(b.name);
-  }
+  const sortItem = starredThenName<Item>(
+    (item) => item.isStarred,
+    (item) => item.name,
+  );
 
   function buildItems(): Item[] {
     let blockFunctions = getBoopFunctions();

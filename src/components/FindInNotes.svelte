@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
+  import { onMount } from "svelte";
+  import { selectAfterTick } from "../mount-util";
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { loadNote } from "../notes";
@@ -120,9 +121,7 @@
   }
 
   function focusInput() {
-    tick().then(() => {
-      searchInputRef.select();
-    });
+    selectAfterTick(() => searchInputRef);
   }
   onMount(() => {
     focusInput();

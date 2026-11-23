@@ -1,7 +1,7 @@
 import { flushSync, mount } from "svelte";
 import { afterEach, describe, expect, it } from "vitest";
 import ModalMessage, { clearModalMessage, modalMessageState, showModalMessageHTML } from "../../src/components/ModalMessage.svelte";
-import { mountInNewDiv, unmountAndRemove } from "./utils";
+import { mountInNewDiv, sleep, unmountAndRemove } from "./utils";
 
 // overlapping busy messages (docs/state-machines.md issue 15c)
 describe("ModalMessage", () => {
@@ -32,7 +32,7 @@ describe("ModalMessage", () => {
     showModalMessageHTML("Loading note", 50, "load");
     expect(modalMessageState.isShowing).toBe(false);
     clearModalMessage("load");
-    await new Promise((r) => setTimeout(r, 100));
+    await sleep(100);
     expect(modalMessageState.isShowing).toBe(false);
     showModalMessageHTML("Loading note", 30, "load");
     await expect.poll(() => modalMessageState.isShowing).toBe(true);

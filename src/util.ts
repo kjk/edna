@@ -301,6 +301,11 @@ export function compareTrueFirst(a: boolean | undefined, b: boolean | undefined)
   return Number(!!b) - Number(!!a);
 }
 
+// comparator: starred items first, then by name
+export function starredThenName<T>(isStarred: (t: T) => boolean, name: (t: T) => string): (a: T, b: T) => number {
+  return (a, b) => compareTrueFirst(isStarred(a), isStarred(b)) || name(a).localeCompare(name(b));
+}
+
 // number of characters at the start of a and b that are the same
 export function commonPrefixLen(a: string, b: string): number {
   let n = Math.min(a.length, b.length);

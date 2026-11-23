@@ -254,7 +254,7 @@ export class MultiBlockEditor {
         !Number.isInteger(selection.mainIndex) ||
         selection.mainIndex < 0 ||
         selection.mainIndex >= selection.ranges.length ||
-        selection.ranges.some(({ from, to }) => !this.validPosition(from) || !this.validPosition(to))
+        selection.ranges.some(({ from, to }) => !this.validRange(from, to))
       ) {
         throw new RangeError("Invalid saved selection");
       }
@@ -272,7 +272,7 @@ export class MultiBlockEditor {
   setFoldedRanges(ranges: SimpleRange[]): void {
     const { state } = this.view;
     const valid = ranges.filter((range) => {
-      if (!range || !this.validPosition(range.from) || !this.validPosition(range.to) || range.from >= range.to) {
+      if (!range || !this.validRange(range.from, range.to) || range.from >= range.to) {
         return false;
       }
       const block = getNoteBlockFromPos(state, range.from);
@@ -302,6 +302,10 @@ export class MultiBlockEditor {
 
   setCursorPosition(position: number): void {
     this.setSelection({ ranges: [{ head: position, anchor: position }], main: 0 });
+  }
+
+  private validRange(from: number, to: number): boolean {
+    return this.validPosition(from) && this.validPosition(to);
   }
 
   private validPosition(position: number): boolean {

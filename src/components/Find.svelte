@@ -7,6 +7,7 @@
 
 <script lang="ts">
   import { onMount, tick } from "svelte";
+  import { selectAfterTick } from "../mount-util";
   import {
     closeSearchPanel,
     findNext,
@@ -206,9 +207,7 @@
   }
 
   onMount(() => {
-    tick().then(() => {
-      searchInputREf.select();
-    });
+    selectAfterTick(() => searchInputREf);
     isMoving.findPanelOpen = true;
 
     return () => {

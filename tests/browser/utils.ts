@@ -49,6 +49,10 @@ export function setEditorHeight(container: HTMLElement, height: number): HTMLEle
 
 export { mountInNewDiv, unmountAndRemove } from "../../src/mount-util";
 
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Destroy the editor and remove its container from the DOM.
  */

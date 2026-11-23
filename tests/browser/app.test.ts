@@ -4,6 +4,7 @@ import { appState } from "../../src/appstate.svelte";
 import { createNoteWithName, loadNote, saveNote } from "../../src/notes";
 import { getSettings } from "../../src/settings.svelte";
 import { kTabHome } from "../../src/constants";
+import { sleep } from "./utils";
 import {
   altDigit,
   editorElement,
@@ -71,7 +72,7 @@ describe("app", () => {
     await openWithShortcut(1, "scratch");
     appState.showingRenameNote = true;
     altDigit(3);
-    await new Promise((r) => setTimeout(r, 100));
+    await sleep(100);
     expect(appState.currentNoteName).toBe("scratch");
     appState.showingRenameNote = false;
   });
@@ -137,7 +138,7 @@ describe("app", () => {
     search("second-search-term");
     const dlg = () => document.querySelector(".dlg-colors")?.textContent ?? "";
     await expect.poll(dlg).toContain("second-search-term-inbox");
-    await new Promise((r) => setTimeout(r, 200));
+    await sleep(200);
     expect(dlg()).not.toContain("only-first-search-term");
     expect(dlg()).not.toContain("No results");
     appState.showingFindInNotes = false;
@@ -150,7 +151,7 @@ describe("app", () => {
     enterText(input, "inbox-renamed");
     await expect.poll(() => appState.currentNoteName).toBe("inbox-renamed");
     // wait for the auto-save delay
-    await new Promise((r) => setTimeout(r, 2500));
+    await sleep(2500);
     expect(appState.allNotes).not.toContain("inbox");
     expect(await loadNote("inbox-renamed")).toContain("edit-before-rename");
   }, 10000);
@@ -162,7 +163,7 @@ describe("app", () => {
     await pressMod("End");
     altDigit(3);
     altDigit(1);
-    await new Promise((r) => setTimeout(r, 500));
+    await sleep(500);
     expect(appState.currentNoteName).toBe("scratch");
     expect(document.title).toBe("scratch");
   });
@@ -260,9 +261,9 @@ describe("app", () => {
     await loadNoteNames();
     try {
       const input = await typeInNoteSelector("todel");
-      await new Promise((r) => setTimeout(r, 50));
+      await sleep(50);
       input.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", ctrlKey: true, bubbles: true, cancelable: true }));
-      await new Promise((r) => setTimeout(r, 300));
+      await sleep(300);
       expect(await loadNote("todel")).toContain("keep me");
       expect(appState.currentNoteName).toBe("todel");
     } finally {
