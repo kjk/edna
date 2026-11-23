@@ -1129,6 +1129,13 @@ async function convertNoteFS(dh: FileSystemDirectoryHandle, oldFileName: string,
   }
   if (newFileName) {
     await writeTextFS(dh, newFileName, s, encrypt, pwdHash);
+    // only delete the original once the converted file reads back the same:
+    // a failed write must not lose the note (#18)
+    let written = encrypt ? await tryDecryptFileFS(dh, newFileName, pwdHash) : await fsReadTextFile(dh, newFileName);
+    if (written !== s) {
+      await fsDeleteFile(dh, newFileName).catch(() => {});
+      throw new Error(`failed to ${what} '${name}': '${newFileName}' doesn't match the original, kept '${oldFileName}'`);
+    }
   }
   await fsDeleteFile(dh, oldFileName);
 }

@@ -152,8 +152,16 @@
     function onDocChanged() {
       docDidChange();
     }
+    // save folds right away so they survive reloading the page (#9).
+    // fold-all etc. emits many events, so coalesce them
+    let foldsSaveTimer: ReturnType<typeof setTimeout> | undefined;
+    function onFoldsChanged() {
+      clearTimeout(foldsSaveTimer);
+      foldsSaveTimer = setTimeout(saveEditorState, 500);
+    }
     editorRef.addEventListener("selectionChange", onSelChange);
     editorRef.addEventListener("docChanged", onDocChanged);
+    editorRef.addEventListener("foldsChanged", onFoldsChanged);
 
     throwIf(!settings);
     let noteToLoad = appState.currentNoteName!;
@@ -233,6 +241,8 @@
       window.document.removeEventListener("currenciesLoaded", didLoadCurrencies);
       editorRef.removeEventListener("selectionChange", onSelChange);
       editorRef.removeEventListener("docChanged", onDocChanged);
+      editorRef.removeEventListener("foldsChanged", onFoldsChanged);
+      clearTimeout(foldsSaveTimer);
       editor.destroy();
     };
   }

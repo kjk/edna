@@ -154,6 +154,12 @@ export class MultiBlockEditor {
           if (update.docChanged) {
             this.element.dispatchEvent(new Event("docChanged"));
           }
+          let foldsChanged = update.transactions.some((tr) =>
+            tr.effects.some((e) => e.is(foldEffect) || e.is(unfoldEffect)),
+          );
+          if (foldsChanged) {
+            this.element.dispatchEvent(new Event("foldsChanged"));
+          }
         }),
       ],
     });
