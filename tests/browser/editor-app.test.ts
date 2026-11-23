@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { loadNote } from "../../src/notes";
-import { editorInput, editorText, mountApp, openNoteShortcut, pressMod, runPaletteCommand, waitForInput } from "./app-ui";
+import { editorInput, editorText, mountApp, openNoteShortcut, openNoteWithSelector, pressMod, runPaletteCommand } from "./app-ui";
 import { copyText, pasteText } from "./editor-ui";
 
 describe("editor in the app", () => {
@@ -65,10 +65,7 @@ describe("editor in the app", () => {
   });
 
   it("runs the checkbox command and strips block delimiters on copy and paste", async () => {
-    await pressMod("k");
-    (await waitForInput("form input[type=text]")).focus();
-    await userEvent.keyboard("editor tasks");
-    await page.getByRole("option", { name: "editor tasks" }).click();
+    await openNoteWithSelector("editor tasks");
     await expect.poll(() => document.title).toBe("editor tasks");
     const checkbox = () => editorInput().querySelector<HTMLInputElement>("input[type=checkbox]");
     await expect.poll(() => checkbox()?.checked).toBe(false);

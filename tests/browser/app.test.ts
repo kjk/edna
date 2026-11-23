@@ -252,9 +252,7 @@ describe("app", () => {
 
   it("deleting the current note when switching to scratch fails keeps the note (U19)", async () => {
     const { loadNoteNames } = await import("../../src/notes");
-    await createNoteWithName("todel", "\n\u221E\u221E\u221Emarkdown\nkeep me\n");
-    popStateTo("todel");
-    await expect.poll(() => appState.currentNoteName).toBe("todel");
+    await openFixture("todel", "\n\u221E\u221E\u221Emarkdown\nkeep me\n", "keep me");
 
     // make loading scratch fail: it's gone from storage
     const scratch = localStorage.getItem("note:scratch")!;

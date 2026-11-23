@@ -458,9 +458,7 @@ export async function forEachNoteFileFS(
     if (!isEdnaFile(fileName)) {
       continue;
     }
-    if (!isValidFileName(fileName)) {
-      continue;
-    }
+    // null for an invalid file name
     let name = noteNameFromFileNameFS(fileName);
     // filter out empty names, can be created maliciously or due to a bug
     if (name === null || name === "") {
