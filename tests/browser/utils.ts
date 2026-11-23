@@ -1,4 +1,5 @@
 import { mount, unmount } from "svelte";
+import { expect } from "vitest";
 import { MultiBlockEditor } from "../../src/editor/editor";
 
 export interface TestEditor {
@@ -33,6 +34,18 @@ export function createEditor(
   editor.view.focus();
 
   return { editor, container };
+}
+
+// waits until get() returns a value (not null / undefined) and returns it
+export async function waitForValue<T>(get: () => T | null | undefined): Promise<T> {
+  await expect.poll(get).not.toBeNullable();
+  return get()!;
+}
+
+// sets height of the editor in container; returns its scrolling element
+export function setEditorHeight(container: HTMLElement, height: number): HTMLElement {
+  container.querySelector<HTMLElement>(".cm-editor")!.style.height = `${height}px`;
+  return container.querySelector<HTMLElement>(".cm-scroller")!;
 }
 
 // mounts component into a new <div> added to the page (style: css of the div)

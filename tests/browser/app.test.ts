@@ -14,8 +14,9 @@ import {
   popStateTo,
   pressEnterIn,
   pressMod,
+  enterText,
+  openDialogInput,
   setInputValue,
-  waitForInput,
 } from "./app-ui";
 
 // Integration tests: boot the whole app (docs/state-machines.md M8 dialogs)
@@ -28,10 +29,13 @@ describe("app", () => {
 
   // open note selector and type text into its filter input
   async function typeInNoteSelector(text: string): Promise<HTMLInputElement> {
-    appState.showingNoteSelector = true;
-    const input = await waitForInput("form input");
+    const input = await openDialogInput(() => (appState.showingNoteSelector = true), "form input");
     setInputValue(input, text);
     return input;
+  }
+
+  function openFindInNotes(): Promise<HTMLInputElement> {
+    return openDialogInput(() => (appState.showingFindInNotes = true), "input[placeholder^='Find in notes']");
   }
 
   async function openWithShortcut(n: number, name: string) {
@@ -102,8 +106,7 @@ describe("app", () => {
     const inbox = (await loadNote("inbox"))!;
     await saveNote("inbox", inbox + "\nsome text " + word + "\n");
 
-    appState.showingFindInNotes = true;
-    const input = await waitForInput("input[placeholder^='Find in notes']");
+    const input = await openFindInNotes();
     setInputValue(input, word);
     const enter = () => pressEnterIn(input);
     enter();
@@ -125,12 +128,8 @@ describe("app", () => {
     }
     await saveNote("inbox", ((await loadNote("inbox")) ?? "") + "\nonly-first-search-term\n");
 
-    appState.showingFindInNotes = true;
-    const input = await waitForInput("input[placeholder^='Find in notes']");
-    const search = (term: string) => {
-      setInputValue(input, term);
-      pressEnterIn(input);
-    };
+    const input = await openFindInNotes();
+    const search = (term: string) => enterText(input, term);
     search("first-search-term");
     search("second-search-term");
     const dlg = () => document.querySelector(".dlg-colors")?.textContent ?? "";
@@ -144,10 +143,8 @@ describe("app", () => {
   it("renaming a note with pending edits doesn't re-create the old note", async () => {
     await openWithShortcut(3, "inbox");
     await appendText("{Enter}edit-before-rename");
-    appState.showingRenameNote = true;
-    const input = await waitForInput(".dlg input, form input");
-    setInputValue(input, "inbox-renamed");
-    pressEnterIn(input);
+    const input = await openDialogInput(() => (appState.showingRenameNote = true), ".dlg input, form input");
+    enterText(input, "inbox-renamed");
     await expect.poll(() => appState.currentNoteName).toBe("inbox-renamed");
     // wait for the auto-save delay
     await new Promise((r) => setTimeout(r, 2500));

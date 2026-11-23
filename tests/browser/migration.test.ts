@@ -11,10 +11,9 @@ import {
   getStorageFS,
   loadNote,
   loadNoteNames,
-  setStorageFS,
   switchToStoringNotesOnDisk,
 } from "../../src/notes";
-import { forgetPassword, listFiles, loadStorageState, setupFSStorage, type FakeUI } from "./fs-utils";
+import { forgetPassword, listFiles, setupFSStorage, setupLocalStorage, useStorage, type FakeUI } from "./fs-utils";
 
 const note = (s: string) => blockHdrMarkdown + s;
 
@@ -29,9 +28,7 @@ describe("move notes to directory", () => {
     for (let [name, content] of Object.entries(dirNotes)) {
       await fsWriteFile(dh, name + ".edna.txt", content);
     }
-    setStorageFS(undefined);
-    localStorage.clear();
-    await loadStorageState();
+    await setupLocalStorage();
     for (let [name, content] of Object.entries(lsNotes)) {
       await createNoteWithName(name, content);
     }
@@ -61,8 +58,7 @@ describe("move notes to directory", () => {
 
   it("invalid note names are refused (U2)", async () => {
     await setup({}, {});
-    setStorageFS(dh);
-    await loadNoteNames();
+    await useStorage(dh);
     await expect(createNoteWithName("x.encr", note("x"))).rejects.toThrow("invalid note name");
     await expect(createNoteWithName("system:help", note("x"))).rejects.toThrow("invalid note name");
     await expect(appendToNote("system:help", note("x"))).rejects.toThrow("invalid note name");
@@ -116,8 +112,7 @@ describe("move notes to directory", () => {
     await createNoteWithName("s", note("secret"));
     await encryptAllNotes("goodpassword");
     forgetPassword();
-    setStorageFS(undefined);
-    await loadNoteNames();
+    await useStorage(undefined);
     await createNoteWithName("a", note("a"));
     ui.passwords = ["goodpassword"];
     await switchToStoringNotesOnDisk(dh);

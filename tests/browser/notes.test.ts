@@ -13,15 +13,12 @@ import {
   renameNote,
   saveNote,
 } from "../../src/notes";
-import { getSettings } from "../../src/settings.svelte";
-import { loadStorageState } from "./fs-utils";
+import { setupLocalStorage } from "./fs-utils";
 
 // note lifecycle in localStorage (docs/state-machines.md M4, issue 3)
 describe("notes (localStorage)", () => {
   beforeEach(async () => {
-    localStorage.clear();
-    getSettings();
-    await loadStorageState();
+    await setupLocalStorage();
   });
 
   it("creating a note never overwrites an existing note, ignoring case", async () => {

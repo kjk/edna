@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { blockHdrMarkdown } from "../../src/constants";
 import { createNoteWithName, encryptAllNotes, loadNote, saveNote } from "../../src/notes";
 import { setGlobalFuncs } from "../../src/globals";
-import { pressEnterIn, setInputValue, waitForInput } from "./app-ui";
+import { enterText, waitForInput } from "./app-ui";
 import { forgetPassword, setupFSStorage, type FakeUI } from "./fs-utils";
 
 // password state machine (docs/state-machines.md M3, issue 5)
@@ -50,9 +50,7 @@ describe("password", () => {
   it("password can be asked for when App is not mounted (e.g. while booting)", async () => {
     setGlobalFuncs(undefined);
     const p = loadNote("a");
-    const input = await waitForInput("input[type=password]");
-    setInputValue(input, "goodpassword");
-    pressEnterIn(input);
+    enterText(await waitForInput("input[type=password]"), "goodpassword");
     expect(await p).toBe(content);
     // dialog removed
     expect(document.querySelector("input[type=password]")).toBeNull();

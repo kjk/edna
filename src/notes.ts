@@ -56,7 +56,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { arrayReplace, KeyedSerialQueue, escapeHTML, html, len, removeDuplicates, throwIf, trimSuffix, tryParseJSON } from "./util";
+import { arrayReplace, KeyedSerialQueue, valueOrUndefined, escapeHTML, html, len, removeDuplicates, throwIf, trimSuffix, tryParseJSON } from "./util";
 
 // is set if we store notes on disk, null if in localStorage
 let storageFS: FileSystemDirectoryHandle | undefined;
@@ -72,7 +72,7 @@ export function setStorageFS(dh: FileSystemDirectoryHandle | undefined) {
 }
 
 export function clearStorageFS() {
-  storageFS = undefined;
+  setStorageFS(undefined);
 }
 
 // some things, like FilesystemDirectoryHandle, we need to store in indexedDb
@@ -212,16 +212,19 @@ export async function dbGetDirHandle(): Promise<FileSystemDirectoryHandle | unde
 
 export async function dbSetDirHandle(dh: FileSystemDirectoryHandle) {
   await db.set(kStorageDirHandleKey, dh);
-  storageFS = dh;
+  switchStorage(dh);
+}
+
+// notes are now stored in dh (undefined: localStorage)
+function switchStorage(dh: FileSystemDirectoryHandle | undefined) {
+  setStorageFS(dh);
   // names of notes opened from disk were made unique for the previous storage (U6)
   openedNotes = [];
 }
 
 export async function dbDelDirHandle() {
   await db.del(kStorageDirHandleKey);
-  storageFS = undefined;
-  // names of notes opened from disk were made unique for the previous storage (U6)
-  openedNotes = [];
+  switchStorage(undefined);
 }
 
 function isEncryptedEdnaFile(fileName: string): boolean {
@@ -554,13 +557,8 @@ export interface SaveResult {
 // true if the stored note differs from both base (what the caller loaded /
 // last saved) and content (what it wants to save): someone else changed it
 async function isChangedElsewhere(name: string, content: string, base: string): Promise<boolean> {
-  let stored: string | undefined;
-  try {
-    stored = await loadNote(name);
-  } catch (e) {
-    // can't read it (e.g. deleted): nothing to protect
-    return false;
-  }
+  // can't read it (e.g. deleted): nothing to protect
+  let stored = await tryLoadNote(name);
   if (stored === undefined) {
     return false;
   }
@@ -663,19 +661,12 @@ export async function appendToNote(name: string, content: string) {
   }
 
   let dh = getStorageFS();
-  let path = notePathFromName(name);
-  let exists = dh ? noteExists(name) : localStorage.getItem(path) !== null;
-  if (!exists) {
+  let oldContent = dh ? (noteExists(name) ? ((await loadNote(name)) ?? "") : undefined) : loadNoteLS(name);
+  if (oldContent === undefined) {
     await writeNewNote(name, content);
     return;
   }
-  let oldContent = (dh ? await loadNote(name) : localStorage.getItem(path)) ?? "";
-  incNoteSaveCount();
-  if (dh) {
-    await writeMaybeEncryptedFS(dh, name, oldContent + content);
-  } else {
-    localStorage.setItem(path, oldContent + content);
-  }
+  await saveNoteNow(name, oldContent + content, null, dh);
 }
 
 export async function createNewScratchNote(): Promise<string> {
@@ -689,6 +680,11 @@ export async function createNewScratchNote(): Promise<string> {
 function isEncryptedNote(name: string): boolean {
   let res = encryptedNoteNames.includes(name);
   return res;
+}
+
+// note content, or undefined if it doesn't exist or can't be read
+export function tryLoadNote(name: string): Promise<string | undefined> {
+  return valueOrUndefined(loadNote(name));
 }
 
 function loadNoteLS(name: string): string | undefined {

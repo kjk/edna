@@ -8,7 +8,7 @@
   import type { KeymapSpec } from "../editor/editor";
   import type { SelectionChangeEvent } from "../editor/event";
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
-  import { getStorageFS, loadNote, noteExists, saveNote } from "../notes";
+  import { getStorageFS, loadNote, noteExists, saveNote, tryLoadNote } from "../notes";
   import { getSettings, resolveTheme } from "../settings.svelte";
   import { assignIfChanged, throwIf } from "../util";
   import Find from "./Find.svelte";
@@ -137,10 +137,8 @@
       isCtrlS = isCtrlS || (e.metaKey && e.key === "s");
       if (isCtrlS) {
         e.preventDefault();
-        if (appState.isDirty) {
-          saveOrShowError(() => editor.save());
-        }
-        saveEditorState();
+        // note: saving an unchanged note is a no-op
+        saveOrShowError(saveAll);
       }
     }
     document.addEventListener("keydown", onKeyDown);
@@ -262,12 +260,7 @@
       return;
     }
     let gen = editor.contentGen;
-    let stored: string | undefined;
-    try {
-      stored = await loadNote(name);
-    } catch {
-      return;
-    }
+    let stored = await tryLoadNote(name);
     if (stored === undefined || stored === editor.diskContent) {
       return;
     }
@@ -304,10 +297,9 @@
     let request = loader.newRequest();
     if (!skipSave) {
       // don't switch away from a note with edits we couldn't save
-      if (!(await saveOrShowError(() => editor.save(), loader.current))) {
+      if (!(await saveOrShowError(saveAll, loader.current))) {
         return false;
       }
-      await saveEditorState();
     }
     let res = await loader.load(
       name,

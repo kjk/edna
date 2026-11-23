@@ -10,7 +10,7 @@ import {
   type ProviderModelsResult,
 } from "./ai-models";
 import type { Settings } from "./settings.svelte";
-import { pushIfNotExists } from "./util";
+import { assignIfChanged, pushIfNotExists } from "./util";
 
 class AiModelsState {
   // models of all providers for which the user has a valid API key
@@ -84,7 +84,5 @@ export function validateAiModelSettings(settings: Settings, models: AiModel[]) {
     }
     pushIfNotExists(starred, key);
   }
-  if (starred.join("\n") !== settings.starredModels.join("\n")) {
-    settings.starredModels = starred;
-  }
+  assignIfChanged(settings, "starredModels", starred);
 }

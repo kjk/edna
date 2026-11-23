@@ -2,7 +2,7 @@ import { describe, expect, it, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
 import { newCursorBelow } from "../../src/editor/block/commands";
 import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
-import { createEditor, cleanup, type TestEditor } from "./utils";
+import { createEditor, cleanup, setEditorHeight, type TestEditor } from "./utils";
 
 describe("Multiple cursors (browser tests)", () => {
   let te: TestEditor;
@@ -13,7 +13,7 @@ describe("Multiple cursors (browser tests)", () => {
 
   function openEditor(content: string) {
     te = createEditor(content);
-    te.container.querySelector<HTMLElement>(".cm-editor")!.style.height = "240px";
+    setEditorHeight(te.container, 240);
   }
 
   async function placeCursors(lineCount: number) {

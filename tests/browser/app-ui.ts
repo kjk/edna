@@ -2,6 +2,7 @@ import { expect, vi } from "vitest";
 import { kMetadataName } from "../../src/metadata";
 import { dbDelDirHandle } from "../../src/notes";
 import { modKey, press } from "./editor-ui";
+import { waitForValue } from "./utils";
 
 // creates the #app element and boots the app into it (with whatever storage is set up)
 export async function bootApp(): Promise<HTMLElement> {
@@ -73,9 +74,20 @@ export async function openNoteShortcut(shortcut: number, name: string) {
 }
 
 // waits for an <input> matching selector to appear
-export async function waitForInput(selector: string): Promise<HTMLInputElement> {
-  await expect.poll(() => document.querySelector<HTMLInputElement>(selector)).not.toBeNull();
-  return document.querySelector<HTMLInputElement>(selector)!;
+export function waitForInput(selector: string): Promise<HTMLInputElement> {
+  return waitForValue(() => document.querySelector<HTMLInputElement>(selector));
+}
+
+// opens a dialog (e.g. by setting appState.showingX) and waits for its <input>
+export async function openDialogInput(open: () => void, selector: string): Promise<HTMLInputElement> {
+  open();
+  return waitForInput(selector);
+}
+
+// types text into input and presses Enter
+export function enterText(input: HTMLInputElement, text: string) {
+  setInputValue(input, text);
+  pressEnterIn(input);
 }
 
 // sets value of input as if the user typed it

@@ -261,6 +261,18 @@ export function trimSuffix(s: string, suffix: string): string {
   return s.substring(0, s.length - suffix.length);
 }
 
+// value of p, or undefined if it fails (logged with what, if given)
+export async function valueOrUndefined<T>(p: Promise<T>, what?: string): Promise<T | undefined> {
+  try {
+    return await p;
+  } catch (e) {
+    if (what) {
+      console.log(what, e);
+    }
+    return undefined;
+  }
+}
+
 // message of an Error, or e as a string for anything else that was thrown
 export function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);

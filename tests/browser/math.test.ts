@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
 import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
-import { cleanup, createEditor, type TestEditor } from "./utils";
+import { cleanup, createEditor, setEditorHeight, type TestEditor } from "./utils";
 
 describe("Math mode (browser tests)", () => {
   let te: TestEditor;
@@ -108,8 +108,7 @@ describe("Math mode (browser tests)", () => {
   it("variables defined above the viewport are used (U22)", async () => {
     const filler = Array(300).fill("1").join("\n");
     te = createEditor(`\n\u221E\u221E\u221Emath\nxyz = 21\n${filler}\nxyz * 2`);
-    te.container.querySelector<HTMLElement>(".cm-editor")!.style.height = "200px";
-    const scroller = te.container.querySelector<HTMLElement>(".cm-scroller")!;
+    const scroller = setEditorHeight(te.container, 200);
     const definition = () => editorLines(te.container).find((line) => line.textContent?.includes("xyz = 21"));
     expect(definition()).toBeDefined();
 

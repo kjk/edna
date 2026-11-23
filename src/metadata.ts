@@ -184,10 +184,8 @@ export async function reassignNoteShortcut(name: string, altShortcut: string) {
     }
     if (o.name === name) {
       // same note: just remove shortcut
-      delete o.altShortcut;
-      let res = await saveNotesMetadata();
-      updateAfterNoteStateChange();
-      return res;
+      await updateNoteMeta(name, (m) => delete m.altShortcut);
+      return;
     } else {
       // a different note: remove shortcut and then assign to the new note
       delete o.altShortcut;
@@ -197,12 +195,20 @@ export async function reassignNoteShortcut(name: string, altShortcut: string) {
   await updateNoteMeta(name, (m) => (m.altShortcut = altShortcut));
 }
 
+// changes metadata entry m with change() and saves it; notifyUI: m is about
+// a note, so note lists etc. need to be updated
+async function changeMeta<M, T>(m: M, change: (m: M) => T, notifyUI: boolean): Promise<T> {
+  let res = change(m);
+  await saveNotesMetadata();
+  if (notifyUI) {
+    updateAfterNoteStateChange();
+  }
+  return res;
+}
+
 // changes metadata of note name with change(), saves it and updates the UI
 async function updateNoteMeta<T>(name: string, change: (m: NoteMetadata) => T): Promise<T> {
-  let res = change(getNoteMeta(name, true)!);
-  await saveNotesMetadata();
-  updateAfterNoteStateChange();
-  return res;
+  return changeMeta(getNoteMeta(name, true)!, change, true);
 }
 
 export async function setNoteArchived(name: string, isArchived: boolean) {
@@ -217,17 +223,14 @@ export async function unArchiveNote(name: string) {
   await setNoteArchived(name, false);
 }
 
-// flips isStarred of note or function metadata and saves it
-async function toggleStarredMeta(m: { isStarred?: boolean }): Promise<boolean> {
+// flips isStarred of note or function metadata; returns the new value
+function flipStarred(m: { isStarred?: boolean }): boolean {
   m.isStarred = !m.isStarred;
-  await saveNotesMetadata();
   return m.isStarred;
 }
 
 export async function toggleNoteStarred(name: string): Promise<boolean> {
-  let isStarred = await toggleStarredMeta(getNoteMeta(name, true)!);
-  updateAfterNoteStateChange();
-  return isStarred;
+  return updateNoteMeta(name, flipStarred);
 }
 
 export function isNoteArchived(name: string): boolean {
@@ -243,7 +246,7 @@ export function getFunctionMeta(name: string, createIfNotExists = false): Functi
 }
 
 export async function toggleFunctionStarred(name: string): Promise<boolean> {
-  return await toggleStarredMeta(getFunctionMeta(name, true)!);
+  return changeMeta(getFunctionMeta(name, true)!, flipStarred, false);
 }
 
 // TODO: temporary
@@ -253,11 +256,7 @@ export async function upgradeMetadata() {
     console.log("upgradeMetadata: already upgraded:", meta);
     return;
   }
-  let newMeta = {
-    ver: 1,
-    notes: meta,
-    functions: [],
-  };
+  let newMeta = normalizeMetadata(meta);
   console.log("upgradeMetadata: new meta:", newMeta);
   await saveNotesMetadata(newMeta);
 }

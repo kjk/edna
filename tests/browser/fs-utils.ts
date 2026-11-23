@@ -34,6 +34,20 @@ export async function setupFSStorage(): Promise<{ dh: FileSystemDirectoryHandle;
   return { dh, ui };
 }
 
+// empty localStorage storage, loaded
+export async function setupLocalStorage() {
+  setStorageFS(undefined);
+  localStorage.clear();
+  getSettings();
+  await loadStorageState();
+}
+
+// switches storage to directory dh (undefined: localStorage) and loads its note names
+export async function useStorage(dh: FileSystemDirectoryHandle | undefined) {
+  setStorageFS(dh);
+  await loadNoteNames();
+}
+
 // loads metadata and note names of the current storage, as the app does when booting
 export async function loadStorageState() {
   await upgradeMetadata();

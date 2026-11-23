@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
 import { editorLines, modKey, press } from "./editor-ui";
-import { cleanup, createEditor, type TestEditor } from "./utils";
+import { cleanup, createEditor, setEditorHeight, type TestEditor } from "./utils";
 
 describe("Scroll margin", () => {
   let te: TestEditor | undefined;
@@ -12,8 +12,7 @@ describe("Scroll margin", () => {
   });
 
   function constrainEditorHeight(height: number) {
-    te!.container.querySelector<HTMLElement>(".cm-editor")!.style.height = `${height}px`;
-    return te!.container.querySelector<HTMLElement>(".cm-scroller")!;
+    return setEditorHeight(te!.container, height);
   }
 
   it.each([

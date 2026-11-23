@@ -575,15 +575,10 @@
   // decrypt, move to directory). The current note is saved first and the
   // editor is read-only while it runs so that edits can't race with it.
   async function runStorageOp(fn: () => Promise<unknown>) {
-    if (!(await checkSingleInstance())) {
+    if (!(await canSwitchStorage())) {
       return;
     }
     let editor = editorComp ? getEditor() : undefined;
-    if (editor) {
-      if (!(await saveOrShowError(() => editor.save()))) {
-        return;
-      }
-    }
     try {
       // note: editor might have been destroyed in the meantime
       await withReadOnlyEditor(editor, () => !!editorComp && getEditor() === editor, fn);

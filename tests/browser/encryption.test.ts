@@ -9,9 +9,8 @@ import {
   hasUnencryptedNotes,
   loadNote,
   loadNoteNames,
-  setStorageFS,
 } from "../../src/notes";
-import { forgetPassword, listFiles, setupFSStorage } from "./fs-utils";
+import { forgetPassword, listFiles, setupFSStorage, useStorage } from "./fs-utils";
 
 // workspace encryption (docs/state-machines.md M2, issue 6)
 describe("encrypt / decrypt all notes", () => {
@@ -86,8 +85,7 @@ describe("encryption is a property of the directory", () => {
 
   // switches storage to dir and creates note name in it
   async function createNoteInDir(dir: FileSystemDirectoryHandle, name: string) {
-    setStorageFS(dir);
-    await loadNoteNames();
+    await useStorage(dir);
     await createNoteWithName(name, blockHdrMarkdown + name);
   }
 
@@ -114,8 +112,7 @@ describe("encryption is a property of the directory", () => {
     expect(localStorage.getItem("edna-password")).toBe("password-b");
 
     // back in a: the remembered password is b's, a new note must use a's key
-    setStorageFS(a);
-    await loadNoteNames();
+    await useStorage(a);
     ui.passwords.push("password-a");
     await createNoteWithName("z", blockHdrMarkdown + "z");
     expect(ui.prompts.length).toBe(1);

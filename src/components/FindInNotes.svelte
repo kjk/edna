@@ -13,6 +13,7 @@
     makeHilightRegExp,
     splitStringPreservingQuotes,
     toggleFlag,
+    valueOrUndefined,
   } from "../util";
   import { IconFluentWholeWord, IconTablerLetterCase } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
@@ -75,13 +76,11 @@
     while (len(notesToSearch) > 0) {
       noteBeingSearched = notesToSearch[0]!;
       notesToSearch.splice(0, 1);
-      let content: string | undefined;
-      try {
-        content = await getNoteContent(noteBeingSearched);
-      } catch (e) {
-        // e.g. encrypted note and the user cancelled the password dialog
-        console.log(`find in notes: failed to load '${noteBeingSearched}'`, e);
-      }
+      // can fail e.g. for an encrypted note if the user cancelled the password dialog
+      let content = await valueOrUndefined(
+        getNoteContent(noteBeingSearched),
+        `find in notes: failed to load '${noteBeingSearched}'`,
+      );
       if (id !== searchId) {
         // a newer search started or the dialog was closed
         return;

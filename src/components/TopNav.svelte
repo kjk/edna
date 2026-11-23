@@ -115,6 +115,20 @@
     window.open(url, "_blank");
   }
 
+  // mouse handlers for a drop-down shown while hovering; when it's hidden the
+  // editor gets focus back (if focusOnLeave())
+  function hoverDropDown(setShowing: (show: boolean) => void, focusOnLeave = () => true) {
+    return {
+      onmouseenter: () => setShowing(true),
+      onmouseleave: () => {
+        setShowing(false);
+        if (focusOnLeave()) {
+          focusEditor();
+        }
+      },
+    };
+  }
+
   let shwingMenu = $state(false);
   let noFocusEditorOnMenuOut = false;
   function myExecuteCommand(cmdid: number) {
@@ -136,16 +150,15 @@
   </button>
 
   <button
-    onmouseenter={(ev) => {
-      noFocusEditorOnMenuOut = false;
-      shwingMenu = true;
-    }}
-    onmouseleave={() => {
-      shwingMenu = false;
-      if (!noFocusEditorOnMenuOut) {
-        focusEditor();
-      }
-    }}
+    {...hoverDropDown(
+      (show) => {
+        shwingMenu = show;
+        if (show) {
+          noFocusEditorOnMenuOut = false;
+        }
+      },
+      () => !noFocusEditorOnMenuOut,
+    )}
     class="clickable-icon relative"
   >
     {@render IconMenu()}
@@ -165,11 +178,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div
-    onmouseenter={() => (showingHelp = true)}
-    onmouseleave={() => {
-      showingHelp = false;
-      focusEditor();
-    }}
+    {...hoverDropDown((show) => (showingHelp = show))}
     class="clickable-icon px-2 relative"
     title="Documentation"
   >
@@ -234,11 +243,7 @@
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    onmouseenter={() => (showingQuickAccess = true)}
-    onmouseleave={() => {
-      showingQuickAccess = false;
-      focusEditor();
-    }}
+    {...hoverDropDown((show) => (showingQuickAccess = show))}
     class="clickable-icon -mt-0.5 relative"
   >
     <div class="mt-0.5">{@render IconGrokIconDown()}</div>

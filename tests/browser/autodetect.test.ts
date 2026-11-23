@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { editorLines, highlightedTokens, modKey, pasteText, press, visibleBlocks } from "./editor-ui";
-import { cleanup, createEditor, type TestEditor } from "./utils";
+import { cleanup, createEditor, waitForValue, type TestEditor } from "./utils";
 
 interface DetectionRequest {
   content: string;
@@ -50,8 +50,7 @@ describe("Language auto-detection", () => {
 
   async function requestFor(content: string) {
     const requests = DetectionWorker.instance.requests;
-    await expect.poll(() => requests.find((request) => request.content === content)).toBeDefined();
-    return requests.find((request) => request.content === content)!;
+    return waitForValue(() => requests.find((request) => request.content === content));
   }
 
   // worker detects request content as Python, wait for Python highlighting

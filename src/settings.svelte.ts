@@ -244,11 +244,7 @@ $effect.root(() => {
 
 // returns "light" or "dark"
 export function getActiveTheme() {
-  let el = document.documentElement;
-  if (el.classList.contains("dark")) {
-    return "dark";
-  }
-  return "light";
+  return resolveTheme(appState.settings.theme);
 }
 
 export function getOverlayScrollbarOptions() {

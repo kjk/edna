@@ -5,7 +5,7 @@ import { page, userEvent } from "vitest/browser";
 import App from "../../src/components/App.svelte";
 import { createNoteWithName, deleteNote } from "../../src/notes";
 import { getSettings, settingsAddTab, settingsRemoveTab } from "../../src/settings.svelte";
-import { mountInNewDiv, unmountAndRemove } from "./utils";
+import { mountInNewDiv, setEditorHeight, unmountAndRemove } from "./utils";
 import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
 
 describe("Delete block (browser tests)", () => {
@@ -28,7 +28,7 @@ describe("Delete block (browser tests)", () => {
     settingsAddTab(settings, noteName);
     ({ target: container, comp: app } = mountInNewDiv(App, {}, "height: 300px"));
     await expect.poll(() => container.querySelector(".cm-editor")).not.toBeNull();
-    container.querySelector<HTMLElement>(".cm-editor")!.style.height = "260px";
+    setEditorHeight(container, 260);
     await expect.poll(() => visibleBlocks(container)).toEqual(["Block A", "Block B", "Block C"]);
   });
 
