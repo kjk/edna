@@ -1,13 +1,11 @@
+import { commonAffixLens } from "../../util";
+
 export function levenshtein_distance(a: string, b: string): number {
   if (a === b) return 0;
-  let start = 0;
-  let endA = a.length;
-  let endB = b.length;
-  while (start < endA && start < endB && a.charCodeAt(start) === b.charCodeAt(start)) start++;
-  while (endA > start && endB > start && a.charCodeAt(endA - 1) === b.charCodeAt(endB - 1)) {
-    endA--;
-    endB--;
-  }
+  // the common start and end don't change the distance
+  const { prefix: start, suffix } = commonAffixLens(a, b);
+  let endA = a.length - suffix;
+  let endB = b.length - suffix;
   if (endA - start > endB - start) {
     [a, b] = [b, a];
     [endA, endB] = [endB, endA];

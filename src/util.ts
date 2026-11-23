@@ -324,6 +324,16 @@ export function pushOrMerge<T>(
   }
 }
 
+// lengths of the common start of a and b, and of their common end that doesn't
+// overlap the start
+export function commonAffixLens(a: string, b: string): { prefix: number; suffix: number } {
+  const prefix = commonPrefixLen(a, b);
+  const limit = Math.min(a.length, b.length) - prefix;
+  let suffix = 0;
+  while (suffix < limit && a.charCodeAt(a.length - suffix - 1) === b.charCodeAt(b.length - suffix - 1)) suffix++;
+  return { prefix, suffix };
+}
+
 // items of a without repeats, in order of first appearance
 export function removeDuplicates<T>(a: T[]): T[] {
   return [...new Set(a)];

@@ -1,7 +1,7 @@
 import { EditorSelection, type Line } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { blockContentText, blockLineRange, getBlockN, getNoteBlockFromPos, outOfBlockHeader, type Block } from "./block";
-import { commonPrefixLen } from "../../util";
+import { commonAffixLens } from "../../util";
 import { selectedLines } from "./selected-lines";
 
 function moveLines(view: EditorView, forward: boolean): boolean {
@@ -44,10 +44,7 @@ function moveLines(view: EditorView, forward: boolean): boolean {
   const changes = state.changes(Array.from(blockLines, ([block, lines]) => {
     const original = blockContentText(state, block);
     const updated = lines.map((line) => line.text).join("\n");
-    const prefix = commonPrefixLen(original, updated);
-    let suffix = 0;
-    const limit = Math.min(original.length, updated.length);
-    while (suffix < limit - prefix && original[original.length - suffix - 1] === updated[updated.length - suffix - 1]) suffix++;
+    const { prefix, suffix } = commonAffixLens(original, updated);
     return {
       from: block.contentFrom + prefix,
       to: block.to - suffix,
