@@ -4,7 +4,7 @@
 import { blockHdrJavaScript, blockHdrMarkdown } from "./constants";
 import type { BoopFunction } from "./functions";
 import { parseBuiltInFunctions } from "./functions.js";
-import { fixUpShortcuts, keyHelpStr } from "./key-helper.js";
+import { expandKeyHelp } from "./key-helper.js";
 import { fixUpNoteContent } from "./notes.js";
 // @ts-ignore
 import builtInFunctionsRaw from "./notes/note-built-in-functions.js?raw";
@@ -25,9 +25,7 @@ import scratchRaw from "./notes/note-scratch.edna.txt?raw";
 import { len, platformName } from "./util.js";
 
 export function getHelp(platform = platformName): string {
-  let keyHelp = keyHelpStr(platform);
-  let help = fixUpShortcuts(helpRaw, platform);
-  help = help.replace("{{keyHelp}}", keyHelp);
+  let help = expandKeyHelp(helpRaw, platform);
   // links are for generated html under /help
   // when showing as note, it's just noise
   help = help.replaceAll("[Edna](https://edna.arslexis.io)", "Edna");
@@ -67,9 +65,7 @@ export function getBuiltInFunctionsJS(): string {
 
 function fixUpNote(s: string): string {
   s = fixUpNoteContent(s);
-  s = fixUpShortcuts(s);
-  let keyHelp = keyHelpStr(platformName);
-  s = s.replace("{{keyHelp}}", keyHelp);
+  s = expandKeyHelp(s);
   return s;
 }
 

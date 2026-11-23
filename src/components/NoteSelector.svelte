@@ -154,11 +154,23 @@
     focusEl?.focus();
   }
 
+  // props shared by the regular and wide note selectors
+  export interface NoteSelectorProps {
+    openNote: (name: string, newTab: boolean) => void;
+    createNote: (name: string) => void;
+    deleteNote: (name: string, showNotif: boolean) => Promise<void>;
+    switchToCommandPalette?: () => void;
+  }
+
   export interface NoteSelectorCallbacks {
     openNote: (name: string, newTab: boolean) => void;
     // creating and deleting are optional; without them Enter only opens the selected note
     createNote?: (name: string) => void;
     deleteNote?: (name: string, showNotif: boolean) => void;
+    // if set, called when the user types ">" to switch to command palette
+    switchToCommandPalette?: () => void;
+    // Left / Right move list selection also when cursor is at the end of non-empty filter
+    leftRightAtInputEnd?: boolean;
   }
 
   const kNoActions: NoteSelectorActions = {
@@ -172,10 +184,12 @@
   // must be created during component initialization
   export class NoteFilter {
     private getNoteInfos: () => NoteInfo[];
-    private onCommandPrefix?: () => void;
     private getCallbacks: () => NoteSelectorCallbacks;
     // filter <input>, bind with bind:this so that it gets focus back after toggling starred
     input: HTMLInputElement | undefined;
+    // bind with bind:this, receives keys not handled by handleKeydown()
+    listbox: ListBox | undefined;
+    altChar = getAltChar();
 
     filter = $state("");
     hiliRegExp = $derived(makeHilightRegExp(this.filter));
@@ -193,27 +207,21 @@
     // key that creates a note named after the filter
     createKey = $derived(this.actions.canCreateWithEnter ? "Enter" : "Ctrl + Enter");
 
-    // onCommandPrefix, if given, is called when the user types ">" to switch to command palette
-    constructor(
-      getNoteInfos: () => NoteInfo[],
-      getCallbacks: () => NoteSelectorCallbacks,
-      onCommandPrefix?: () => void,
-    ) {
+    constructor(getNoteInfos: () => NoteInfo[], getCallbacks: () => NoteSelectorCallbacks) {
       this.getNoteInfos = getNoteInfos;
       this.getCallbacks = getCallbacks;
-      this.onCommandPrefix = onCommandPrefix;
-      if (onCommandPrefix) {
+      if (getCallbacks().switchToCommandPalette) {
         // note: must be in $effect because it modifies state, which is not allowed in $derived
         $effect(() => {
           if (this.isCommand()) {
-            onCommandPrefix();
+            this.getCallbacks().switchToCommandPalette?.();
           }
         });
       }
     }
 
     private isCommand(): boolean {
-      return !!this.onCommandPrefix && this.sanitizedFilter.startsWith(">");
+      return !!this.getCallbacks().switchToCommandPalette && this.sanitizedFilter.startsWith(">");
     }
 
     // pass as ListBox selectionChanged
@@ -274,6 +282,17 @@
       }
       return false;
     }
+
+    // keydown handler for the selector: shortcuts, then list navigation
+    onkeydown = (ev: KeyboardEvent) => {
+      if (this.handleKeydown(ev)) {
+        return;
+      }
+      let input = this.input;
+      let cursorAtEnd = !!input && input.selectionStart === input.value.length;
+      let allowLeftRight = this.filter === "" || (!!this.getCallbacks().leftRightAtInputEnd && cursorAtEnd);
+      this.listbox?.onkeydown(ev, allowLeftRight);
+    };
   }
 
   export { noteStarButton, noteFilterInput, noteItemRow };
@@ -306,12 +325,8 @@
   import { IconTablerArchive, IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
-  interface Props {
+  interface Props extends NoteSelectorProps {
     header?: string;
-    openNote: (name: string, newTab: boolean) => void;
-    createNote: (name: string) => void;
-    deleteNote: (name: string, showNotif: boolean) => Promise<void>;
-    switchToCommandPalette?: () => void;
     switchToWideNoteSelector?: () => void;
     forMoveBlock?: boolean;
   }
@@ -331,23 +346,12 @@
         // can't move a block to the note it's in
         forMoveBlock ? appState.regularNotes.filter((n) => n !== appState.currentNoteName) : appState.regularNotes,
       ),
-    () => ({ openNote, createNote, deleteNote }),
-    () => switchToCommandPalette(),
+    () => ({ openNote, createNote, deleteNote, switchToCommandPalette }),
   );
-  let altChar = getAltChar();
-
-  function onKeydown(ev: KeyboardEvent) {
-    if (nf.handleKeydown(ev)) {
-      return;
-    }
-    listboxRef?.onkeydown(ev, nf.filter === "");
-  }
 
   function toggleInfoPanelCollapsed() {
     appState.noteSelectorInfoCollapsed = !appState.noteSelectorInfoCollapsed;
   }
-
-  let listboxRef: ListBox;
 
   function toggleShowArchived() {
     appState.showingArchived = !appState.showingArchived;
@@ -511,12 +515,12 @@
     {/if}
 
     {#if nf.actions.canOpenSelected}
-      <div class="kbd">{altChar} + 1...9</div>
+      <div class="kbd">{nf.altChar} + 1...9</div>
       <div>assign quick access shortcut</div>
     {/if}
 
     {#if nf.actions.canOpenSelected}
-      <div class="kbd">{altChar} + S</div>
+      <div class="kbd">{nf.altChar} + S</div>
       <div>toggle favorite</div>
     {/if}
 
@@ -535,7 +539,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
-  onkeydown={onKeydown}
+  onkeydown={nf.onkeydown}
   tabindex="-1"
   class="dlg absolute flex flex-col z-20 center-x-with-translate top-8 max-h-[90vh] w-[42em] max-w-[90vw] p-2"
 >
@@ -544,7 +548,7 @@
   {/if}
   {@render noteFilterInput(nf)}
   <ListBox
-    bind:this={listboxRef}
+    bind:this={nf.listbox}
     items={nf.filtered}
     selectionChanged={nf.selectionChanged}
     onclick={(item, metaPressed) => nf.openNote(item, metaPressed)}

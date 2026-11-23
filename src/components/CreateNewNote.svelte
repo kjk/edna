@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { focus } from "../actions";
   import { noteNameUnavailableHTML, sanitizeNoteName } from "../notes";
-  import { submitOnEnter } from "../util";
+  import NoteNameDialog from "./NoteNameDialog.svelte";
 
   interface Props {
     onclose: () => void;
@@ -14,34 +13,21 @@
   let createError = $derived(noteNameUnavailableHTML(sanitizeNoteName(newName)));
   let canCreate = $derived(createError === "");
 
-  function onkeydown(ev: KeyboardEvent) {
-    submitOnEnter(ev, canCreate, emitCreate);
-  }
-
   function emitCreate() {
     let name = sanitizeNoteName(newName);
     createNewNote(name);
   }
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div
-  role="dialog"
-  tabindex="0"
-  {onkeydown}
-  class="dlg z-20 absolute center-x-with-translate top-16 flex flex-col max-w-full p-3"
->
-  <div class="text-lg font-semibold ml-1">Create new note</div>
-  <input bind:value={newName} use:focus class="py-1 px-2 bg-white mt-2 rounded-xs w-[80ch]" />
-  <div class=" text-sm mt-2">
-    {#if canCreate}
-      &nbsp;
-    {:else}
-      <span class="text-red-500">{@html createError}</span>
-    {/if}
-  </div>
-  <div class="flex justify-end mt-2">
+<NoteNameDialog bind:name={newName} errorHTML={createError} canSubmit={canCreate} submit={emitCreate}>
+  {#snippet header()}
+    <div class="text-lg font-semibold ml-1">Create new note</div>
+  {/snippet}
+  {#snippet status()}
+    &nbsp;
+  {/snippet}
+  {#snippet buttons()}
     <button onclick={() => emitCreate()} disabled={!canCreate} class="button-outline">Create</button>
     <button onclick={onclose} class="ml-2 button-outline">Cancel</button>
-  </div>
-</div>
+  {/snippet}
+</NoteNameDialog>

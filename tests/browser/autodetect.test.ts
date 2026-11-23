@@ -54,6 +54,12 @@ describe("Language auto-detection", () => {
     return requests.find((request) => request.content === content)!;
   }
 
+  // worker detects request content as Python, wait for Python highlighting
+  async function replyPython(request: DetectionRequest) {
+    DetectionWorker.instance.reply(request, "py");
+    await expect.poll(highlightedTokens).toContain("def");
+  }
+
   function highlightedTokens() {
     return editorLines(te!.container).flatMap((line) =>
       Array.from(
@@ -71,9 +77,7 @@ describe("Language auto-detection", () => {
 
     await userEvent.click(editorLines(te.container).find((line) => line.textContent === "second block")!);
     expect(highlightedTokens()).toEqual([]);
-    DetectionWorker.instance.reply(request, "py");
-
-    await expect.poll(highlightedTokens).toContain("def");
+    await replyPython(request);
     expect(visibleBlocks(te.container)).toEqual([py, "second block"]);
   });
 
@@ -106,8 +110,7 @@ describe("Language auto-detection", () => {
     expect(visibleBlocks(te.container)).toEqual(["new", "first", py]);
     expect(highlightedTokens()).toEqual([]);
 
-    DetectionWorker.instance.reply(request, "py");
-    await expect.poll(highlightedTokens).toContain("def");
+    await replyPython(request);
     expect(visibleBlocks(te.container)).toEqual(["new", "first", py]);
   });
 });

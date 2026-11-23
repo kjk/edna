@@ -27,6 +27,16 @@ describe("app", () => {
     await mountApp();
   });
 
+  // open note selector and type text into its filter input
+  async function typeInNoteSelector(text: string): Promise<HTMLInputElement> {
+    appState.showingNoteSelector = true;
+    await expect.poll(() => document.querySelector<HTMLInputElement>("form input")).not.toBeNull();
+    const input = document.querySelector<HTMLInputElement>("form input")!;
+    input.value = text;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return input;
+  }
+
   async function openWithShortcut(n: number, name: string) {
     altDigit(n);
     await expect.poll(() => appState.currentNoteName).toBe(name);
@@ -73,11 +83,7 @@ describe("app", () => {
   it("switching from note selector to command palette resets 'open in new tab'", async () => {
     await openWithShortcut(1, "scratch");
     appState.forceNewTab = true;
-    appState.showingNoteSelector = true;
-    await expect.poll(() => document.querySelector<HTMLInputElement>("form input")).not.toBeNull();
-    const input = document.querySelector<HTMLInputElement>("form input")!;
-    input.value = ">";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await typeInNoteSelector(">");
     await expect.poll(() => appState.showingCommandPalette).toBe(true);
     expect(appState.forceNewTab).toBe(false);
     appState.showingCommandPalette = false;
@@ -267,11 +273,7 @@ describe("app", () => {
     localStorage.removeItem("note:scratch");
     await loadNoteNames();
     try {
-      appState.showingNoteSelector = true;
-      await expect.poll(() => document.querySelector<HTMLInputElement>("form input")).not.toBeNull();
-      const input = document.querySelector<HTMLInputElement>("form input")!;
-      input.value = "todel";
-      input.dispatchEvent(new Event("input", { bubbles: true }));
+      const input = await typeInNoteSelector("todel");
       await new Promise((r) => setTimeout(r, 50));
       input.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", ctrlKey: true, bubbles: true, cancelable: true }));
       await new Promise((r) => setTimeout(r, 300));

@@ -323,13 +323,13 @@
 </div>
 
 <style lang="postcss">
-  @reference "tailwindcss";
+  @reference "../main.css";
 
   input {
-    @apply bg-white px-2 py-1 border border-gray-200 dark:border-gray-600 outline-1 outline-gray-200 dark:outline-gray-600;
+    @apply find-input;
   }
 
   button {
-    @apply px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-500 dark:bg-gray-900 border-0;
+    @apply find-btn;
   }
 </style>

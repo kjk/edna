@@ -105,3 +105,14 @@ export function keyHelpStr(platform = platformName): string {
     .map(([key, help]) => `${key.padEnd(keyMaxLength)}   ${help}`)
     .join("\n");
 }
+
+// fix up Alt / Mod shortcuts in a note and replace {{keyHelp}} with the keyboard shortcuts table
+// forHTML: only fix up `code` spans and put the table in a code block (for generated help html)
+export function expandKeyHelp(s: string, platform = platformName, forHTML = false): string {
+  let keyHelp = keyHelpStr(platform);
+  if (forHTML) {
+    keyHelp = "```\n" + keyHelp + "\n```";
+  }
+  s = forHTML ? fixUpShortcutsInCode(s, platform) : fixUpShortcuts(s, platform);
+  return s.replace("{{keyHelp}}", keyHelp);
+}

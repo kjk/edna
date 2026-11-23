@@ -20,7 +20,11 @@ export function getCurrentSelection(state: EditorState): SimpleRange & { selecte
   return { from, to, selectedText: state.sliceDoc(from, to) };
 }
 
-export function hasSelection(state: EditorState): boolean {
+// true if any selection range (or, with mainOnly, the main one) is not empty
+export function hasSelection(state: EditorState, mainOnly = false): boolean {
+  if (mainOnly) {
+    return !state.selection.main.empty;
+  }
   return state.selection.ranges.some((range) => !range.empty);
 }
 

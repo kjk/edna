@@ -42,7 +42,7 @@
     selectAll,
   } from "../editor/block/commands";
   import { transposeChars } from "../editor/block/transpose-chars";
-  import { getCurrentSelection, isReadOnly } from "../editor/cmutils";
+  import { getCurrentSelection, hasSelection, isReadOnly } from "../editor/cmutils";
   import { insertDateAndTime, insertTime } from "../editor/date-time";
   import { MultiBlockEditor } from "../editor/editor";
   import type { KeymapSpec } from "../editor/editor";
@@ -1244,39 +1244,25 @@
       ["Help", kCmdRunHelp],
     ];
 
-    let dh = getStorageFS();
-    const contextMenu: MenuDef = [
-      ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
-      ["Open note\tMod + K", kCmdOpenNote],
-      ["New note", kCmdCreateNewNote],
+    return buildTopLevelMenu([
       ["Ask AI", kCmdAskAI],
       ["This note", menuNote],
       ["Block", menuBlock],
       ["Run code", menuRun],
-      ["Notes storage", buildStorageMenu()],
-    ];
-    if (dh) {
-      // encryption only for files stored on disk
-      contextMenu.push(["Encryption", buildEncryptMenu()]);
-    }
-    contextMenu.push(
-      ["Settings", kCmdSettings],
-      ["Help", buildHelpMenu()],
-      ["Tip: Ctrl + click for browser's context menu", kMenuIdJustText],
-    );
-
-    return contextMenu;
+    ]);
   }
 
-  function buildMenuDefHomePage(): MenuDef {
-    let dh = getStorageFS();
+  // menu items shared by editor and home page menus, with editorItems in the middle
+  function buildTopLevelMenu(editorItems: MenuDef): MenuDef {
     const menu: MenuDef = [
       ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
       ["Open note\tMod + K", kCmdOpenNote],
       ["New note", kCmdCreateNewNote],
+      ...editorItems,
       ["Notes storage", buildStorageMenu()],
     ];
-    if (dh) {
+    if (getStorageFS()) {
+      // encryption only for files stored on disk
       menu.push(["Encryption", buildEncryptMenu()]);
     }
     menu.push(
@@ -1285,6 +1271,10 @@
       ["Tip: Ctrl + click for browser's context menu", kMenuIdJustText],
     );
     return menu;
+  }
+
+  function buildMenuDefHomePage(): MenuDef {
+    return buildTopLevelMenu([]);
   }
 
   function buildMenuDef(): MenuDef {
@@ -1412,7 +1402,7 @@
     let hasFS = supportsFileSystem();
     let view = getEditorView();
     let readOnly = view ? isReadOnly(view) : true;
-    let hasSel = view ? hasSelection() : false;
+    let hasSel = view ? editorHasSelection() : false;
 
     let removeIfReadOnly = [
       kCmdFormatBlock,
@@ -1536,10 +1526,8 @@
     return kMenuStatusNormal;
   }
 
-  function hasSelection(): boolean {
-    let view = getEditorView();
-    let { selectedText } = getCurrentSelection(view.state);
-    return selectedText != "";
+  function editorHasSelection(): boolean {
+    return hasSelection(getEditorView().state, true);
   }
 
   function openFindPanel() {
@@ -2078,7 +2066,7 @@
       return;
     }
 
-    let hasSel = hasSelection();
+    let hasSel = editorHasSelection();
     let supportsRun = currentBlockSupportsRun(view.state);
     // console.log(`smartRun: hasSelection=${hasSel} supportsRun=${supportsRun}`);
     if (hasSel) {

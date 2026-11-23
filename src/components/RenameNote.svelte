@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { focus } from "../actions";
   import { noteNameUnavailableHTML, sanitizeNoteName } from "../notes";
-  import { submitOnEnter } from "../util";
+  import NoteNameDialog from "./NoteNameDialog.svelte";
 
   interface Props {
     onclose: () => void;
@@ -13,46 +12,31 @@
   // svelte-ignore state_referenced_locally
   let newName = $state(oldName);
 
-  let sanitizedNewName = $derived.by(() => {
-    return sanitizeNoteName(newName);
-  });
+  let sanitizedNewName = $derived(sanitizeNoteName(newName));
 
   let renameError = $derived(noteNameUnavailableHTML(sanitizedNewName, oldName));
 
   let canRename = $derived(sanitizedNewName !== "" && sanitizedNewName !== oldName && renameError === "");
-
-  function onkeydown(ev: KeyboardEvent) {
-    submitOnEnter(ev, canRename, emitRename);
-  }
 
   function emitRename() {
     rename(sanitizedNewName);
   }
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div
-  role="dialog"
-  tabindex="0"
-  {onkeydown}
-  class="dlg z-20 absolute center-x-with-translate top-16 flex flex-col max-w-full p-3"
->
-  <div class="flex">
-    <div class="text-lg font-semibold grow">
-      Rename <span class="font-bold">{oldName}</span> to:
+<NoteNameDialog bind:name={newName} errorHTML={renameError} canSubmit={canRename} submit={emitRename}>
+  {#snippet header()}
+    <div class="flex">
+      <div class="text-lg font-semibold grow">
+        Rename <span class="font-bold">{oldName}</span> to:
+      </div>
+      <button onclick={() => onclose()} title="Close" class="kbd-btn">Esc</button>
     </div>
-    <button onclick={() => onclose()} title="Close" class="kbd-btn">Esc</button>
-  </div>
-  <input bind:value={newName} use:focus class="py-1 px-2 bg-white mt-2 rounded-xs w-[80ch]" />
-  <div class=" text-sm mt-2">
-    {#if canRename}
-      New name: <span class="font-bold">{sanitizedNewName}</span>
-    {:else}
-      <span class="text-red-500">{@html renameError}</span>
-    {/if}
-  </div>
-  <div class="flex justify-end mt-2">
+  {/snippet}
+  {#snippet status()}
+    New name: <span class="font-bold">{sanitizedNewName}</span>
+  {/snippet}
+  {#snippet buttons()}
     <button onclick={onclose} class="mr-4 button-outline">Cancel</button>
     <button onclick={() => emitRename()} disabled={!canRename} class="button-outline">Rename</button>
-  </div>
-</div>
+  {/snippet}
+</NoteNameDialog>

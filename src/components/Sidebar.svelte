@@ -15,26 +15,17 @@
   function sysNoteCls(note: NoteInfo): string {
     return isSystemNoteName(note.name) ? "italic" : "";
   }
-
-  function onKeydown(ev: KeyboardEvent) {
-    if (nf.handleKeydown(ev)) {
-      return;
-    }
-    listboxComp.onkeydown(ev, nf.filter === "");
-  }
-
-  let listboxComp: ListBox;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
-  onkeydown={onKeydown}
+  onkeydown={nf.onkeydown}
   tabindex="-1"
   class="flex flex-col w-[16em] p-2 text-sm h-full overflow-auto bg-white dark:bg-gray-900 dark:text-gray-300"
 >
   {@render noteFilterInput(nf)}
   <ListBox
-    bind:this={listboxComp}
+    bind:this={nf.listbox}
     items={nf.filtered}
     selectionChanged={nf.selectionChanged}
     onclick={(item, newTab) => nf.openNote(item, newTab)}

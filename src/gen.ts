@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import markdownIt, { type MarkdownIt } from "markdown-it";
 import markdownItAnchor from "markdown-it-anchor";
-import { fixUpShortcutsInCode, keyHelpStr } from "./key-helper.js";
+import { expandKeyHelp } from "./key-helper.js";
 import { addTargetBlank } from "./markdown-util.js";
 
 console.log(
@@ -90,11 +90,7 @@ function getHelp(platform: string): string {
   lines = collapseMultipleEmptyLines(lines);
   helpRaw = lines.join("\n");
 
-  let keyHelp = keyHelpStr(platform);
-  keyHelp = "```\n" + keyHelp + "\n```";
-
-  let help = fixUpShortcutsInCode(helpRaw, platform);
-  help = help.replace("{{keyHelp}}", keyHelp);
+  let help = expandKeyHelp(helpRaw, platform, true);
   // link Edna to website
   // help = help.replace(/Edna/g, "[Edna](https://edna.arslexis.io)");
   return help;

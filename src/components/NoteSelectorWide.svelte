@@ -1,46 +1,24 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import { getAltChar, hilightText } from "../util";
+  import { hilightText } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
-  import { buildVisibleNoteInfos, NoteFilter, noteShortcutStr } from "./NoteSelector.svelte";
+  import { buildVisibleNoteInfos, NoteFilter, noteShortcutStr, type NoteSelectorProps } from "./NoteSelector.svelte";
 
-  interface Props {
-    openNote: (name: string, newTab: boolean) => void;
-    createNote: (name: string) => void;
-    deleteNote: (name: string, showNotif: boolean) => Promise<void>;
-    switchToCommandPalette: () => void;
+  interface Props extends NoteSelectorProps {
     switchToRegularNoteSelector: () => void;
   }
   let { openNote, createNote, deleteNote, switchToCommandPalette, switchToRegularNoteSelector }: Props = $props();
 
   const nf = new NoteFilter(
     () => buildVisibleNoteInfos(),
-    () => ({ openNote, createNote, deleteNote }),
-    () => switchToCommandPalette(),
+    () => ({ openNote, createNote, deleteNote, switchToCommandPalette, leftRightAtInputEnd: true }),
   );
-  let altChar = getAltChar();
-
-  function onKeydown(ev: KeyboardEvent) {
-    if (nf.handleKeydown(ev)) {
-      return;
-    }
-    let allowLeftRight = nf.filter === "" || isCursorAtEnd(nf.input!);
-    listboxComp.onkeydown(ev, allowLeftRight);
-  }
-
-  function isCursorAtEnd(input: HTMLInputElement) {
-    const cursorPosition = input.selectionStart;
-    const inputLength = input.value.length;
-    return cursorPosition === inputLength;
-  }
-
-  let listboxComp: ListBox;
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
-  onkeydown={onKeydown}
+  onkeydown={nf.onkeydown}
   tabindex="-1"
   class="dlg z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[95vw] p-2"
 >
@@ -58,7 +36,7 @@
   </div>
 
   <ListBox
-    bind:this={listboxComp}
+    bind:this={nf.listbox}
     layout="inline"
     items={nf.filtered}
     selectionChanged={nf.selectionChanged}
@@ -115,13 +93,13 @@
     {#if nf.actions.canOpenSelected}
       <div class="text-gray-400">&bull;</div>
       <div class="flex items-baseline">
-        <div class="kbd">{altChar} 1...9</div>
+        <div class="kbd">{nf.altChar} 1...9</div>
         <div class="ml-2">assign quick access shortcut</div>
       </div>
 
       <div class="text-gray-400">&bull;</div>
       <div class="flex items-baseline">
-        <div class="kbd">{altChar} + S</div>
+        <div class="kbd">{nf.altChar} + S</div>
         <div class="ml-2">toggle favorite</div>
       </div>
     {/if}

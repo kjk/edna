@@ -31,18 +31,18 @@
   >
 {/snippet}
 
+<!-- single-path filled icon -->
+{#snippet fillIcon(d: string, viewBox = "0 0 24 24")}
+  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" {viewBox}><path fill="currentColor" {d} /></svg>
+{/snippet}
+
 <!--
 Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
 
 https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-right
 -->
 {#snippet IconMdiArrowCollapseRight()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="currentColor"
-      d="M12.08 4.08L20 12l-7.92 7.92l-1.41-1.42l5.5-5.5H2v-2h14.17l-5.5-5.5zM20 12v10h2V2h-2z"
-    /></svg
-  >
+  {@render fillIcon("M12.08 4.08L20 12l-7.92 7.92l-1.41-1.42l5.5-5.5H2v-2h14.17l-5.5-5.5zM20 12v10h2V2h-2z")}
 {/snippet}
 
 <!--
@@ -51,12 +51,7 @@ Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian
 https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-left
 -->
 {#snippet IconMdiArrowCollapseLeft()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"
-    ><path
-      fill="currentColor"
-      d="M11.92 19.92L4 12l7.92-7.92l1.41 1.42l-5.5 5.5H22v2H7.83l5.51 5.5zM4 12V2H2v20h2z"
-    /></svg
-  >
+  {@render fillIcon("M11.92 19.92L4 12l7.92-7.92l1.41 1.42l-5.5 5.5H22v2H7.83l5.51 5.5zM4 12V2H2v20h2z")}
 {/snippet}
 
 {#snippet IconMenu()}
@@ -79,12 +74,7 @@ https://icones.js.org/collection/all?s=collapse&icon=mdi:arrow-collapse-left
 {/snippet}}
 
 {#snippet IconCommandPalette()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-    <path
-      fill="currentColor"
-      d="M3.045 18.894L9.94 12L3.045 5.106a.75.75 0 0 1 1.06-1.061l7.425 7.425a.75.75 0 0 1 0 1.06l-7.424 7.425a.75.75 0 0 1-1.061-1.06Zm8.205.606a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5z"
-    />
-  </svg>
+  {@render fillIcon("M3.045 18.894L9.94 12L3.045 5.106a.75.75 0 0 1 1.06-1.061l7.425 7.425a.75.75 0 0 1 0 1.06l-7.424 7.425a.75.75 0 0 1-1.061-1.06Zm8.205.606a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5z")}
 {/snippet}
 
 <!--
@@ -204,12 +194,7 @@ Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/m
 https://icones.js.org/collection/fluent?s=whole-word&icon=fluent:text-whole-word-16-regular
 -->
 {#snippet IconFluentWholeWord()}
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16">
-    <path
-      fill="currentColor"
-      d="M10 2a.5.5 0 0 0-1 0v9.5a.5.5 0 0 0 1 0v-.1c.418.377.937.6 1.5.6c1.381 0 2.5-1.343 2.5-3s-1.119-3-2.5-3c-.563 0-1.082.223-1.5.6zm3 7c0 1.283-.835 2-1.5 2S10 10.283 10 9s.835-2 1.5-2s1.5.717 1.5 2M7 7.834l-.003-.137c-.054-1.212-.832-1.963-2.139-2.028l-.191-.007c-.753-.014-1.35.122-1.789.43a.499.499 0 1 0 .574.818c.264-.185.715-.275 1.356-.243c.82.041 1.184.406 1.191 1.144a5 5 0 0 0-1.893-.14C2.792 7.83 2 8.684 2 9.834c0 1.304.941 2.167 2.167 2.167c.565 0 1.174-.193 1.833-.57v.07l.005.068a.5.5 0 0 0 .495.432l.068-.005A.5.5 0 0 0 7 11.509zm-2.774.854a4 4 0 0 1 1.571.128v.001l.202.06v1.393l-.165.113c-.656.432-1.214.642-1.668.642c-.692 0-1.167-.436-1.167-1.167c0-.633.405-1.07 1.227-1.17M16 13.5V13a.5.5 0 1 0-1 0v.5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5V13a.5.5 0 1 0-1 0v.5A1.5 1.5 0 0 0 1.5 15h13a1.497 1.497 0 0 0 1.5-1.5"
-    /></svg
-  >
+  {@render fillIcon("M10 2a.5.5 0 0 0-1 0v9.5a.5.5 0 0 0 1 0v-.1c.418.377.937.6 1.5.6c1.381 0 2.5-1.343 2.5-3s-1.119-3-2.5-3c-.563 0-1.082.223-1.5.6zm3 7c0 1.283-.835 2-1.5 2S10 10.283 10 9s.835-2 1.5-2s1.5.717 1.5 2M7 7.834l-.003-.137c-.054-1.212-.832-1.963-2.139-2.028l-.191-.007c-.753-.014-1.35.122-1.789.43a.499.499 0 1 0 .574.818c.264-.185.715-.275 1.356-.243c.82.041 1.184.406 1.191 1.144a5 5 0 0 0-1.893-.14C2.792 7.83 2 8.684 2 9.834c0 1.304.941 2.167 2.167 2.167c.565 0 1.174-.193 1.833-.57v.07l.005.068a.5.5 0 0 0 .495.432l.068-.005A.5.5 0 0 0 7 11.509zm-2.774.854a4 4 0 0 1 1.571.128v.001l.202.06v1.393l-.165.113c-.656.432-1.214.642-1.668.642c-.692 0-1.167-.436-1.167-1.167c0-.633.405-1.07 1.227-1.17M16 13.5V13a.5.5 0 1 0-1 0v.5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5V13a.5.5 0 1 0-1 0v.5A1.5 1.5 0 0 0 1.5 15h13a1.497 1.497 0 0 0 1.5-1.5", "0 0 16 16")}
 {/snippet}
 
 <!--
