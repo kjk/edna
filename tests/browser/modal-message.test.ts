@@ -1,6 +1,7 @@
-import { flushSync, mount, unmount } from "svelte";
+import { flushSync, mount } from "svelte";
 import { afterEach, describe, expect, it } from "vitest";
 import ModalMessage, { clearModalMessage, modalMessageState, showModalMessageHTML } from "../../src/components/ModalMessage.svelte";
+import { mountInNewDiv, unmountAndRemove } from "./utils";
 
 // overlapping busy messages (docs/state-machines.md issue 15c)
 describe("ModalMessage", () => {
@@ -10,14 +11,11 @@ describe("ModalMessage", () => {
   afterEach(() => {
     clearModalMessage("run");
     clearModalMessage("load");
-    if (comp) unmount(comp);
-    target?.remove();
+    unmountAndRemove(target, comp);
   });
 
   it("clearing one operation's message keeps another operation's message", async () => {
-    target = document.createElement("div");
-    document.body.appendChild(target);
-    comp = mount(ModalMessage, { target });
+    ({ target, comp } = mountInNewDiv(ModalMessage));
     showModalMessageHTML("running code", 0, "run");
     showModalMessageHTML("Loading note", 0, "load");
     flushSync();

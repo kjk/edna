@@ -84,18 +84,16 @@ function writeSelection(view: EditorView, editor: MultiBlockEditor, cut: boolean
 }
 
 export function ednaCopyCut(editor: MultiBlockEditor) {
+  // handler of copy (cut = false) or cut events
+  const copyHandler = (cut: boolean) => (event: ClipboardEvent, view: EditorView) => {
+    if (!event.clipboardData) return false;
+    writeSelection(view, editor, cut, (text) => event.clipboardData!.setData("text/plain", text));
+    return true;
+  };
   return [
     EditorView.domEventHandlers({
-      copy(event, view) {
-        if (!event.clipboardData) return false;
-        writeSelection(view, editor, false, (text) => event.clipboardData!.setData("text/plain", text));
-        return true;
-      },
-      cut(event, view) {
-        if (!event.clipboardData) return false;
-        writeSelection(view, editor, true, (text) => event.clipboardData!.setData("text/plain", text));
-        return true;
-      },
+      copy: copyHandler(false),
+      cut: copyHandler(true),
       paste(event, view) {
         if (!event.clipboardData) return false;
         if (!view.state.readOnly) {

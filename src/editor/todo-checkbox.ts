@@ -1,9 +1,9 @@
 import { syntaxTree } from "@codemirror/language";
 import type { ChangeSpec, EditorState } from "@codemirror/state";
-import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet } from "@codemirror/view";
+import { Decoration, EditorView, WidgetType, type DecorationSet } from "@codemirror/view";
 import { NodeProp } from "@lezer/common";
 import { getNoteBlocksBetween } from "./block/block";
-import { groupToggleTarget } from "./cmutils";
+import { decorationsPlugin, docViewOrTreeChanged, groupToggleTarget } from "./cmutils";
 
 interface TaskMarker {
   from: number;
@@ -84,22 +84,11 @@ function widgets(view: EditorView): DecorationSet {
 }
 
 export const todoCheckboxPlugin = [
-  ViewPlugin.define(
-    (view) => ({
-      decorations: widgets(view),
-      update(update) {
-        if (
-          update.viewportChanged ||
-          update.docChanged ||
-          update.state.readOnly !== update.startState.readOnly ||
-          syntaxTree(update.state) !== syntaxTree(update.startState)
-        ) {
-          this.decorations = widgets(update.view);
-        }
-      },
-    }),
-    { decorations: (plugin) => plugin.decorations },
-  ),
+  decorationsPlugin(() => ({
+    build: widgets,
+    // checkboxes are disabled in a read-only editor
+    needsRebuild: (update) => docViewOrTreeChanged(update) || update.state.readOnly !== update.startState.readOnly,
+  })),
 ];
 
 export function toggleCheckbox(view: EditorView): boolean {

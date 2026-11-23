@@ -68,17 +68,10 @@ func handleAIModels(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	provider.setHeaders(req, apiKey)
-	req.Header.Set("User-Agent", userAgent)
-	rsp, err := aiModelsClient.Do(req)
+	rsp, d, err := doLimitedRequest(aiModelsClient, req, maxAIModelsResponseSize)
 	if err != nil {
 		logf("handleAIModels: provider '%s' failed with '%s'\n", providerName, err)
 		http.Error(w, "request to provider failed", http.StatusBadGateway)
-		return
-	}
-	defer rsp.Body.Close()
-	d, err := readAllLimited(rsp.Body, maxAIModelsResponseSize)
-	if err != nil {
-		http.Error(w, "reading provider response failed", http.StatusBadGateway)
 		return
 	}
 	logf("handleAIModels: provider '%s' status %d, %d bytes\n", providerName, rsp.StatusCode, len(d))

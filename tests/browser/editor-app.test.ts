@@ -1,7 +1,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { loadNote } from "../../src/notes";
-import { editorInput, editorText, mountApp, openNoteShortcut, pressMod } from "./app-ui";
+import { editorInput, editorText, mountApp, openNoteShortcut, pressMod, waitForInput } from "./app-ui";
+import { copyText, pasteText } from "./editor-ui";
 
 describe("editor in the app", () => {
   beforeAll(async () => {
@@ -66,9 +67,7 @@ describe("editor in the app", () => {
 
   it("runs the checkbox command and strips block delimiters on copy and paste", async () => {
     await pressMod("k");
-    const selectorInput = () => document.querySelector<HTMLInputElement>("form input[type=text]");
-    await expect.poll(selectorInput).not.toBeNull();
-    selectorInput()!.focus();
+    (await waitForInput("form input[type=text]")).focus();
     await userEvent.keyboard("editor tasks");
     await page.getByRole("option", { name: "editor tasks" }).click();
     await expect.poll(() => document.title).toBe("editor tasks");
@@ -88,14 +87,11 @@ describe("editor in the app", () => {
 
     await pressMod("Home");
     await pressMod("End", true);
-    const copiedData = new DataTransfer();
-    editorInput().dispatchEvent(new ClipboardEvent("copy", { clipboardData: copiedData, bubbles: true, cancelable: true }));
-    expect(copiedData.getData("text/plain")).toBe("- [ ] send proposal\n\n\nclipboard end");
+    const app = document.querySelector<HTMLElement>("#app")!;
+    expect(copyText(app)).toBe("- [ ] send proposal\n\n\nclipboard end");
 
     await pressMod("End");
-    const clipboardData = new DataTransfer();
-    clipboardData.setData("text/plain", "\n∞∞∞javascript\npasted text");
-    editorInput().dispatchEvent(new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }));
+    pasteText(app, "\n∞∞∞javascript\npasted text");
     await expect.poll(editorText).toContain("pasted text");
     await pressMod("s");
     await expect

@@ -124,13 +124,21 @@ async function passwordHashDecryptsNotes(dh: FileSystemDirectoryHandle, pwdHash:
     return true;
   }
   for (let fileName of encrFileNames) {
-    let d = await fsReadBinaryFile(dh, fileName);
-    try {
-      decryptBlobAsString({ key: pwdHash, cipherblob: d });
+    if ((await tryDecryptFileFS(dh, fileName, pwdHash)) !== null) {
       return true;
-    } catch {}
+    }
   }
   return false;
+}
+
+// content of encrypted file fileName, or null if pwdHash doesn't decrypt it
+async function tryDecryptFileFS(dh: FileSystemDirectoryHandle, fileName: string, pwdHash: string): Promise<string | null> {
+  let d = await fsReadBinaryFile(dh, fileName);
+  try {
+    return decryptBlobAsString({ key: pwdHash, cipherblob: d });
+  } catch {
+    return null;
+  }
 }
 
 // asks the user for a password until it decrypts existing notes (P-I1).
@@ -626,17 +634,17 @@ export async function createNoteWithName(name: string, content: string | null = 
     throw new Error(`note '${existing}' already exists`);
   }
   await removeStaleNoteMeta(name);
-  let dh = getStorageFS();
-  content = fixUpNoteContent(content);
-  if (!dh) {
-    const path = notePathFromName(name);
-    localStorage.setItem(path, content);
-    incNoteCreateCount();
-    await loadNoteNames();
-    return;
-  }
+  await writeNewNote(name, fixUpNoteContent(content));
+}
 
-  await writeNoteFS(dh, name, content);
+// writes content as new note name (in a directory: encrypted if notes are)
+async function writeNewNote(name: string, content: string) {
+  let dh = getStorageFS();
+  if (dh) {
+    await writeNoteFS(dh, name, content);
+  } else {
+    localStorage.setItem(notePathFromName(name), content);
+  }
   incNoteCreateCount();
   await loadNoteNames();
 }
@@ -655,35 +663,19 @@ export async function appendToNote(name: string, content: string) {
   }
 
   let dh = getStorageFS();
-  if (!dh) {
-    let path = notePathFromName(name);
-    let v = localStorage.getItem(path);
-    if (v === null) {
-      console.log("created new ls note", name, path);
-      incNoteCreateCount();
-    } else {
-      console.log("appended to existing ls note", name, path);
-      incNoteSaveCount();
-    }
-    let newContent = (v || "") + content;
-    localStorage.setItem(path, newContent);
-    if (v === null) {
-      await loadNoteNames();
-    }
+  let path = notePathFromName(name);
+  let exists = dh ? noteExists(name) : localStorage.getItem(path) !== null;
+  if (!exists) {
+    await writeNewNote(name, content);
     return;
   }
-
-  if (noteExists(name)) {
-    let oldContent = await loadNote(name);
-    let newContent = (oldContent ?? "") + content;
-    incNoteSaveCount();
-    await writeMaybeEncryptedFS(dh, name, newContent);
-    return;
+  let oldContent = (dh ? await loadNote(name) : localStorage.getItem(path)) ?? "";
+  incNoteSaveCount();
+  if (dh) {
+    await writeMaybeEncryptedFS(dh, name, oldContent + content);
+  } else {
+    localStorage.setItem(path, oldContent + content);
   }
-  // new note: writeNoteFS() encrypts if we're using encryption
-  await writeNoteFS(dh, name, content);
-  incNoteCreateCount();
-  await loadNoteNames();
 }
 
 export async function createNewScratchNote(): Promise<string> {
@@ -778,14 +770,7 @@ async function readEncryptedFS(dh: FileSystemDirectoryHandle, fileName: string):
   let msg = "";
   while (true) {
     let pwdHash = await getPasswordHashMust(msg);
-    let d = await fsReadBinaryFile(dh, fileName);
-    let s = null;
-    try {
-      s = decryptBlobAsString({ key: pwdHash, cipherblob: d });
-    } catch (e) {
-      console.log(e);
-      s = null;
-    }
+    let s = await tryDecryptFileFS(dh, fileName, pwdHash);
     if (s !== null) {
       return s;
     }

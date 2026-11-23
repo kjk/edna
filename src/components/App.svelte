@@ -4,7 +4,7 @@
   import { toggleBlockComment, toggleComment, toggleLineComment } from "@codemirror/commands";
   import { foldCode, unfoldCode } from "@codemirror/language";
   import { openSearchPanel, searchPanelOpen } from "@codemirror/search";
-  import { EditorSelection, EditorState } from "@codemirror/state";
+  import { EditorState } from "@codemirror/state";
   import type { EditorView } from "@codemirror/view";
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
   import {
@@ -21,7 +21,6 @@
     kWelcomeDevSystemNoteName,
     kWelcomeSystemNoteName,
   } from "../constants";
-  import { kAddNewBlock, ednaEvent } from "../editor/annotation";
   import {
     getActiveNoteBlock,
     getBlockN,
@@ -29,6 +28,7 @@
     getBlocksInfo,
     getEditableActiveBlock,
     insertAfterActiveBlock,
+    insertBlockAt,
     replaceBlockContent,
   } from "../editor/block/block";
   import type { NoteBlock } from "../editor/block/block-parsing";
@@ -71,7 +71,7 @@
   import { formatBlockContent } from "../format-code";
   import { boopFunctionResult, parseUserFunctions, runBoopFunction } from "../functions";
   import type { BoopFunction, BoopFunctionArg } from "../functions";
-  import { clearGlobalFuncs, setGlobalFuncs } from "../globals";
+  import { askPassword, askUser, clearGlobalFuncs, setGlobalFuncs, type PasswordPromptProps } from "../globals";
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import { hasOtherInstances, startInstanceDetection } from "../instances";
@@ -193,7 +193,6 @@
   let selectionSize = $state(0);
 
   let showingBlockSelector = $state(false);
-  let showingDecryptMessage = $state("");
   // dialogs closed by closeDialogs()
   const kClosableDialogs = [
     "showingContextMenu",
@@ -510,22 +509,17 @@
     }
   }
 
-  let closeDecryptPassword: () => void = $state(noOp);
-  let onDecryptPassword: (pwd: string) => void = $state(noOp);
+  let passwordPrompt: PasswordPromptProps | undefined = $state();
 
-  async function getPasswordFromUser(msg: string = ""): Promise<string> {
-    appState.showingDecryptPassword = true;
-    showingDecryptMessage = msg;
-    return new Promise((resolve, reject) => {
-      onDecryptPassword = (pwd: string) => {
-        resolve(pwd);
-        appState.showingDecryptPassword = false;
-      };
-      closeDecryptPassword = () => {
-        resolve("");
-        appState.showingDecryptPassword = false;
-      };
-    });
+  function getPasswordFromUser(msg: string = ""): Promise<string> {
+    return askPassword(
+      msg,
+      (props) => {
+        passwordPrompt = props;
+        appState.showingDecryptPassword = true;
+      },
+      () => (appState.showingDecryptPassword = false),
+    );
   }
 
   let fileWritePermissionsFileHandle: FileSystemFileHandle | undefined = $state();
@@ -544,15 +538,14 @@
       console.log("requestFileWritePermission: already have write permissions to", fh);
       return true;
     }
-    fileWritePermissionsFileHandle = fh;
-    appState.showingAskFileWritePermissions = true;
-    return new Promise((resolve, reject) => {
-      askFileWritePermissionsClose = (ok) => {
-        console.log("requestFileWritePermission: ok", ok);
-        appState.showingAskFileWritePermissions = false;
-        resolve(ok);
-      };
-    });
+    return askUser<boolean>(
+      (answer) => {
+        fileWritePermissionsFileHandle = fh;
+        askFileWritePermissionsClose = answer;
+        appState.showingAskFileWritePermissions = true;
+      },
+      () => (appState.showingAskFileWritePermissions = false),
+    );
   }
 
   function openEncryptPassword() {
@@ -591,18 +584,30 @@
         return;
       }
     }
-    let wasReadOnly = editor ? isReadOnly(editor.view) : false;
-    editor?.setReadOnly(true);
     try {
-      await fn();
+      // note: editor might have been destroyed in the meantime
+      await withReadOnlyEditor(editor, () => !!editorComp && getEditor() === editor, fn);
     } catch (e) {
       if (!(e instanceof PasswordCancelledError)) {
         showError(`${e}`);
       }
+    }
+  }
+
+  // runs fn with editor read-only; afterwards restores its read-only state
+  // if it still shows the same document (stillSame())
+  async function withReadOnlyEditor<T>(
+    editor: MultiBlockEditor | undefined,
+    stillSame: () => boolean,
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    let wasReadOnly = editor ? isReadOnly(editor.view) : false;
+    editor?.setReadOnly(true);
+    try {
+      return await fn();
     } finally {
-      // note: editor might have been destroyed in the meantime
-      if (editorComp && getEditor() === editor) {
-        editor?.setReadOnly(wasReadOnly);
+      if (editor && stillSame()) {
+        editor.setReadOnly(wasReadOnly);
       }
     }
   }
@@ -858,18 +863,14 @@
       note: noteName!,
       wasReadOnly: isReadOnly(editor.view),
     };
-    editor.setReadOnly(true);
     try {
-      return await fn(run);
+      return await withReadOnlyEditor(editor, () => isSameDocument(run), () => fn(run));
     } catch (e) {
       showError(`Error running code: ${e}`);
       return;
     } finally {
       runInProgress = false;
       clearModalMessage("run");
-      if (isSameDocument(run)) {
-        editor.setReadOnly(run.wasReadOnly);
-      }
     }
   }
 
@@ -2084,15 +2085,12 @@
     return loadNote(name);
   }
 
+  // positions past the end (e.g. the note changed since pos was found) are ignored
   function setCursorPos(pos: number) {
     let view = getEditorView();
-    if (!view || pos > view.state.doc.length) {
-      return;
+    if (view && pos <= view.state.doc.length) {
+      getEditor().setCursorPosition(pos);
     }
-    view.dispatch({
-      selection: { anchor: pos, head: pos },
-      scrollIntoView: true,
-    });
   }
 
   function moveCurrentBlock() {
@@ -2187,23 +2185,7 @@
       return;
     }
     // console.log("autoCreateDayInJournal: inserting:", s);
-    let { state, dispatch } = editor.view;
-    dispatch(
-      state.update(
-        {
-          changes: {
-            from: 0,
-            insert: s + "\n",
-          },
-          selection: EditorSelection.cursor(len(s) + 1),
-          annotations: [ednaEvent.of(kAddNewBlock)],
-        },
-        {
-          scrollIntoView: true,
-          userEvent: "input",
-        },
-      ),
-    );
+    insertBlockAt(editor.view, 0, s + "\n", { userEvent: "input" });
   }
 
   // called when note `name` was loaded and shown in the editor
@@ -2427,8 +2409,8 @@
   </Overlay>
 {/if}
 
-{#if appState.showingDecryptPassword}
-  <PasswordPrompt msg={showingDecryptMessage} onpassword={onDecryptPassword} onclose={closeDecryptPassword} />
+{#if appState.showingDecryptPassword && passwordPrompt}
+  <PasswordPrompt {...passwordPrompt} />
 {/if}
 
 {#if appState.showingAskFileWritePermissions}

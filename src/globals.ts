@@ -48,25 +48,44 @@ export async function getPasswordFromUser(msg: string): Promise<string> {
   return await getPasswordStandalone(msg);
 }
 
+// shows a dialog and resolves with the user's answer: show(answer) displays
+// the dialog, which calls answer(v) to hide it (with hide()) and resolve with v
+export function askUser<T>(show: (answer: (v: T) => void) => void, hide: () => void): Promise<T> {
+  return new Promise((resolve) =>
+    show((v) => {
+      hide();
+      resolve(v);
+    }),
+  );
+}
+
+export interface PasswordPromptProps {
+  msg: string;
+  onpassword: (pwd: string) => void;
+  onclose: () => void;
+}
+
+// asks for a password with a PasswordPrompt that show() displays with the given
+// props and hide() removes; resolves "" if cancelled
+export function askPassword(msg: string, show: (props: PasswordPromptProps) => void, hide: () => void): Promise<string> {
+  return askUser((answer) => show({ msg, onpassword: answer, onclose: () => answer("") }), hide);
+}
+
 // password dialog when App isn't mounted (issue 15f in docs/state-machines.md)
 function getPasswordStandalone(msg: string): Promise<string> {
-  return new Promise((resolve) => {
-    let target = document.createElement("div");
-    document.body.appendChild(target);
-    let comp: ReturnType<typeof mount> | undefined;
-    let finish = (pwd: string) => {
+  let target = document.createElement("div");
+  document.body.appendChild(target);
+  let comp: ReturnType<typeof mount> | undefined;
+  return askPassword(
+    msg,
+    (props) => (comp = mount(PasswordPrompt, { target, props })),
+    () => {
       if (comp) {
         unmount(comp);
-        comp = undefined;
       }
       target.remove();
-      resolve(pwd);
-    };
-    comp = mount(PasswordPrompt, {
-      target,
-      props: { msg, onpassword: (pwd: string) => finish(pwd), onclose: () => finish("") },
-    });
-  });
+    },
+  );
 }
 
 export async function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {

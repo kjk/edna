@@ -34,6 +34,28 @@ func readAllLimited(r io.Reader, max int64) ([]byte, error) {
 	return d, nil
 }
 
+// doLimitedRequest sends req (with our User-Agent) using client and reads at
+// most max bytes of the response body
+func doLimitedRequest(client *http.Client, req *http.Request, max int64) (*http.Response, []byte, error) {
+	req.Header.Set("User-Agent", userAgent)
+	rsp, err := client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rsp.Body.Close()
+	d, err := readAllLimited(rsp.Body, max)
+	return rsp, d, err
+}
+
+// httpGetLimited is doLimitedRequest() for a GET of uri
+func httpGetLimited(uri string, max int64) (*http.Response, []byte, error) {
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	return doLimitedRequest(http.DefaultClient, req, max)
+}
+
 // decodeUpstreamJSON unmarshals a response from an upstream server into v.
 // On failure it writes an HTTP error and returns false
 func decodeUpstreamJSON(w http.ResponseWriter, d []byte, v any, what string) bool {

@@ -1,9 +1,14 @@
 <script lang="ts">
-  import { focus } from "../actions";
   import { hilightText } from "../util";
   import { IconTablerStar } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
-  import { buildVisibleNoteInfos, NoteFilter, noteShortcutStr, type NoteSelectorProps } from "./NoteSelector.svelte";
+  import {
+    buildVisibleNoteInfos,
+    NoteFilter,
+    noteFilterInput,
+    noteShortcutStr,
+    type NoteSelectorProps,
+  } from "./NoteSelector.svelte";
 
   interface Props extends NoteSelectorProps {
     switchToRegularNoteSelector: () => void;
@@ -22,18 +27,7 @@
   tabindex="-1"
   class="dlg z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[95vw] p-2"
 >
-  <div>
-    <input
-      bind:this={nf.input}
-      bind:value={nf.filter}
-      use:focus
-      type="text"
-      class="py-1 px-2 bg-white w-full mb-2 rounded-xs"
-    />
-    <div class="absolute right-4 top-3 italic text-gray-400">
-      {nf.countMsg}
-    </div>
-  </div>
+  {@render noteFilterInput(nf)}
 
   <ListBox
     bind:this={nf.listbox}

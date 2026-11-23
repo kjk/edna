@@ -44,14 +44,8 @@ func doRequest(method, url, contentType string, body io.Reader) ([]byte, error) 
 		return nil, err
 	}
 	req.Header.Add("Content-Type", contentType)
-	req.Header.Add("User-Agent", userAgent)
-	response, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer response.Body.Close()
-	return readAllLimited(response.Body, maxSnippetSize)
+	_, d, err := doLimitedRequest(http.DefaultClient, req, maxSnippetSize)
+	return d, err
 }
 
 func postForm(url string, data url.Values) ([]byte, error) {
@@ -186,16 +180,9 @@ func loadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := http.Get("https://play.golang.org/p/" + url.PathEscape(r.URL.RawQuery) + ".go")
+	response, bodyBytes, err := httpGetLimited("https://play.golang.org/p/"+url.PathEscape(r.URL.RawQuery)+".go", maxSnippetSize)
 	if err != nil {
 		http.Error(w, "Failed to load snippet", http.StatusInternalServerError)
-		return
-	}
-	defer response.Body.Close()
-
-	bodyBytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		http.Error(w, "Failed to read data", http.StatusInternalServerError)
 		return
 	}
 

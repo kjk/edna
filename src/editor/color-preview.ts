@@ -1,6 +1,7 @@
 import { syntaxTree } from "@codemirror/language";
-import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet } from "@codemirror/view";
+import { Decoration, EditorView, WidgetType, type DecorationSet } from "@codemirror/view";
 import { getBlocks } from "./block/block";
+import { decorationsPlugin, docViewOrTreeChanged } from "./cmutils";
 
 const colorLanguages = new Set(["css", "html", "javascript", "jsx", "typescript", "tsx", "vue", "svelte"]);
 const colorPattern =
@@ -45,16 +46,7 @@ function swatches(view: EditorView): DecorationSet {
 }
 
 export const colorPreviewExtension = [
-  ViewPlugin.define(
-    (view) => ({
-      decorations: swatches(view),
-      update(update) {
-        if (update.docChanged || update.viewportChanged || syntaxTree(update.state) !== syntaxTree(update.startState))
-          this.decorations = swatches(update.view);
-      },
-    }),
-    { decorations: (plugin) => plugin.decorations },
-  ),
+  decorationsPlugin(() => ({ build: swatches, needsRebuild: docViewOrTreeChanged })),
   EditorView.baseTheme({
     ".edna-color-preview": {
       display: "inline-block",

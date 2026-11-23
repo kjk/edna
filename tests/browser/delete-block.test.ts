@@ -1,10 +1,11 @@
 import "../../src/main.css";
-import { mount, unmount } from "svelte";
+import { mount } from "svelte";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import App from "../../src/components/App.svelte";
 import { createNoteWithName, deleteNote } from "../../src/notes";
 import { getSettings, settingsAddTab, settingsRemoveTab } from "../../src/settings.svelte";
+import { mountInNewDiv, unmountAndRemove } from "./utils";
 import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
 
 describe("Delete block (browser tests)", () => {
@@ -25,19 +26,15 @@ describe("Delete block (browser tests)", () => {
     previousTab = settings.currentTab;
     settings.currentTab = noteName;
     settingsAddTab(settings, noteName);
-    container = document.createElement("div");
-    container.style.height = "300px";
-    document.body.appendChild(container);
-    app = mount(App, { target: container });
+    ({ target: container, comp: app } = mountInNewDiv(App, {}, "height: 300px"));
     await expect.poll(() => container.querySelector(".cm-editor")).not.toBeNull();
     container.querySelector<HTMLElement>(".cm-editor")!.style.height = "260px";
     await expect.poll(() => visibleBlocks(container)).toEqual(["Block A", "Block B", "Block C"]);
   });
 
   afterEach(async () => {
-    if (app) await unmount(app);
+    await unmountAndRemove(container, app);
     app = undefined;
-    container?.remove();
     const settings = getSettings();
     settings.currentTab = previousTab;
     settingsRemoveTab(settings, noteName);

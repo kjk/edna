@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dbDelDirHandle, dbSetDirHandle } from "../../src/notes";
+import { bootApp } from "./app-ui";
 
 // boot with a notes directory that can't be read (docs/state-machines.md M1, issue 8)
 describe("boot", () => {
@@ -10,10 +11,7 @@ describe("boot", () => {
     await dbSetDirHandle(dir);
     await root.removeEntry("deleted-notes-dir", { recursive: true });
 
-    const div = document.createElement("div");
-    div.id = "app";
-    document.body.appendChild(div);
-    await import("../../src/main");
+    const div = await bootApp();
     await expect.poll(() => div.textContent, { timeout: 5000 }).toContain("Failed to read notes in that directory");
     expect(div.textContent).toContain("Switch to storing notes in browser");
     await dbDelDirHandle();

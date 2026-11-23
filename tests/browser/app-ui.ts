@@ -3,6 +3,15 @@ import { kMetadataName } from "../../src/metadata";
 import { dbDelDirHandle } from "../../src/notes";
 import { modKey, press } from "./editor-ui";
 
+// creates the #app element and boots the app into it (with whatever storage is set up)
+export async function bootApp(): Promise<HTMLElement> {
+  const root = document.createElement("div");
+  root.id = "app";
+  document.body.appendChild(root);
+  await import("../../src/main");
+  return root;
+}
+
 export async function mountApp(notes?: Record<string, string>) {
   // The app's Vite config normally defines these for the Settings dialog.
   vi.stubGlobal("__APP_VERSION__", "test");
@@ -19,10 +28,7 @@ export async function mountApp(notes?: Record<string, string>) {
     localStorage.setItem(kMetadataName, JSON.stringify({ ver: 1, notes: shortcuts, functions: [] }));
   }
 
-  const root = document.createElement("div");
-  root.id = "app";
-  document.body.appendChild(root);
-  await import("../../src/main");
+  const root = await bootApp();
   await vi.waitFor(() => expect(root.firstElementChild).not.toBeNull());
 }
 

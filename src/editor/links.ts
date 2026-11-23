@@ -1,5 +1,6 @@
-import { Decoration, EditorView, ViewPlugin, type DecorationSet } from "@codemirror/view";
+import { Decoration, EditorView, type DecorationSet } from "@codemirror/view";
 import { isModKey, platform } from "../util";
+import { decorationsPlugin } from "./cmutils";
 
 const linkPattern = /https?:\/\/[^\s<>"'`]+/gi;
 
@@ -31,24 +32,16 @@ function linkDecorations(view: EditorView): DecorationSet {
   return Decoration.set(decorations, true);
 }
 
-export const links = ViewPlugin.define(
-  (view) => ({
-    links: linkDecorations(view),
-    update(update) {
-      if (update.docChanged || update.viewportChanged) this.links = linkDecorations(update.view);
-    },
-  }),
+export const links = decorationsPlugin(
+  () => ({ build: linkDecorations, needsRebuild: (update) => update.docChanged || update.viewportChanged }),
   {
-    decorations: (plugin) => plugin.links,
-    eventHandlers: {
-      click(event, view) {
-        if (!isModKey(event) || event.button !== 0) return false;
-        const anchor = (event.target as Element | null)?.closest<HTMLElement>(".edna-link");
-        const href = anchor?.dataset.href;
-        if (!href) return false;
-        view.dom.ownerDocument.defaultView?.open(href, "_blank", "noopener,noreferrer");
-        return true;
-      },
+    click(event, view) {
+      if (!isModKey(event) || event.button !== 0) return false;
+      const anchor = (event.target as Element | null)?.closest<HTMLElement>(".edna-link");
+      const href = anchor?.dataset.href;
+      if (!href) return false;
+      view.dom.ownerDocument.defaultView?.open(href, "_blank", "noopener,noreferrer");
+      return true;
     },
   },
 );

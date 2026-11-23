@@ -1,6 +1,7 @@
 import { foldedRanges } from "@codemirror/language";
-import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet } from "@codemirror/view";
+import { Decoration, EditorView, WidgetType, type DecorationSet } from "@codemirror/view";
 import { kCurrenciesLoaded, transactionsHasAnnotation } from "../annotation";
+import { decorationsPlugin } from "../cmutils";
 import { blockLineRange, getNoteBlocksBetween } from "./block";
 
 interface MathAPI {
@@ -141,19 +142,15 @@ function visibleResults(view: EditorView, results: Result[]): DecorationSet {
   return Decoration.set(decorations);
 }
 
-export const mathBlock = ViewPlugin.define(
-  (view) => {
-    const evaluations = new Map<number, Evaluation>();
-    return {
-      decorations: visibleResults(view, evaluate(view, evaluations)),
-      update(update) {
-        const refresh = update.docChanged || transactionsHasAnnotation(update.transactions, kCurrenciesLoaded);
-        if (refresh) evaluations.clear();
-        if (refresh || update.viewportChanged || foldedRanges(update.state) !== foldedRanges(update.startState)) {
-          this.decorations = visibleResults(update.view, evaluate(update.view, evaluations));
-        }
-      },
-    };
-  },
-  { decorations: (plugin) => plugin.decorations },
-);
+export const mathBlock = decorationsPlugin(() => {
+  // results of evaluated blocks, reused until the document changes
+  const evaluations = new Map<number, Evaluation>();
+  return {
+    build: (view) => visibleResults(view, evaluate(view, evaluations)),
+    needsRebuild(update) {
+      const refresh = update.docChanged || transactionsHasAnnotation(update.transactions, kCurrenciesLoaded);
+      if (refresh) evaluations.clear();
+      return refresh || update.viewportChanged || foldedRanges(update.state) !== foldedRanges(update.startState);
+    },
+  };
+});

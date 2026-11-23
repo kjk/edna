@@ -52,6 +52,11 @@ export function getLastNoteBlock(state: EditorState): Block {
   return getBlocks(state).at(-1)!;
 }
 
+// block whose header starts at from
+export function getBlockStartingAt(state: EditorState, from: number): Block | undefined {
+  return getBlocks(state).find((block) => block.from === from);
+}
+
 export function getBlockN(state: EditorState, n: number): Block {
   return getBlocks(state)[n];
 }
@@ -349,16 +354,26 @@ export function replaceBlockContent(
   });
 }
 
-export function insertAfterActiveBlock(view: EditorView, text: string): boolean {
-  const { state } = view;
-  const active = getEditableActiveBlock(state);
-  if (!active) return false;
-  const insert = state.toText(text);
+// inserts text (starting with a block header) at pos and puts the cursor at its end
+export function insertBlockAt(
+  view: EditorView,
+  pos: number,
+  text: string,
+  spec: Omit<TransactionSpec, "changes" | "selection"> = {},
+) {
+  const insert = view.state.toText(text);
   view.dispatch({
-    changes: { from: active.to, insert },
-    selection: { anchor: active.to + insert.length },
+    changes: { from: pos, insert },
+    selection: { anchor: pos + insert.length },
     annotations: ednaEvent.of(kAddNewBlock),
     scrollIntoView: true,
+    ...spec,
   });
+}
+
+export function insertAfterActiveBlock(view: EditorView, text: string): boolean {
+  const active = getEditableActiveBlock(view.state);
+  if (!active) return false;
+  insertBlockAt(view, active.to, text);
   return true;
 }

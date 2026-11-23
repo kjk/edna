@@ -1,6 +1,6 @@
-import { foldedRanges } from "@codemirror/language";
+import { foldedRanges, syntaxTree } from "@codemirror/language";
 import { EditorSelection, type EditorState } from "@codemirror/state";
-import type { Command, EditorView } from "@codemirror/view";
+import { ViewPlugin, type Command, type DecorationSet, type DOMEventHandlers, type EditorView, type ViewUpdate } from "@codemirror/view";
 import type { SimpleRange } from "./types";
 
 export function isReadOnly(view: EditorView): boolean {
@@ -70,4 +70,31 @@ export function groupToggleTarget(states: boolean[]): boolean {
 export function focusOnGutterMouseDown(view: EditorView): boolean {
   view.focus();
   return true;
+}
+
+// view plugin that shows decorations made by build(); setup() is called for each
+// view and returns build() and needsRebuild() (whether an update changes them)
+export function decorationsPlugin(
+  setup: () => { build: (view: EditorView) => DecorationSet; needsRebuild: (update: ViewUpdate) => boolean },
+  eventHandlers?: DOMEventHandlers<{ decorations: DecorationSet }>,
+) {
+  return ViewPlugin.define(
+    (view) => {
+      const { build, needsRebuild } = setup();
+      return {
+        decorations: build(view),
+        update(update: ViewUpdate) {
+          if (needsRebuild(update)) {
+            this.decorations = build(update.view);
+          }
+        },
+      };
+    },
+    { decorations: (plugin) => plugin.decorations, eventHandlers },
+  );
+}
+
+// update changed the document, the visible part of it or the syntax tree
+export function docViewOrTreeChanged(update: ViewUpdate): boolean {
+  return update.docChanged || update.viewportChanged || syntaxTree(update.state) !== syntaxTree(update.startState);
 }

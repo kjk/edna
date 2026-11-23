@@ -1,5 +1,5 @@
 import { logNoteOp } from "./log";
-import { tryParseJSONObject } from "./util";
+import { startTimer, tryParseJSONObject } from "./util";
 
 export interface Stats {
   appOpenCount: number;
@@ -8,11 +8,7 @@ export interface Stats {
   noteSaveCount: number;
 }
 
-let sessionStart = performance.now();
-
-export function getSessionDurationInMs() {
-  return Math.round(performance.now() - sessionStart);
-}
+export const getSessionDurationInMs = startTimer();
 
 const kStatsKey = "stats.json";
 

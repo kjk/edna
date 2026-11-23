@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"io"
 	"io/fs"
 	"net/http"
 	"net/http/httputil"
@@ -41,16 +40,17 @@ var (
 )
 
 func getCurrencyRates() ([]byte, error) {
-	rsp, err := http.Get(currencyRatesURL1)
+	rsp, d, err := httpGetLimited(currencyRatesURL1, maxCurrencyRatesSize)
 	if err != nil {
 		return nil, err
 	}
-	defer rsp.Body.Close()
 	if rsp.StatusCode == 200 {
-		return io.ReadAll(rsp.Body)
+		return d, nil
 	}
 	return nil, e("getCurrencyRates: got status code %d", rsp.StatusCode)
 }
+
+const maxCurrencyRatesSize = 1024 * 1024
 
 // TODO: implement without using https://currencies.heynote.com/rates.json
 func serverApiCurrencyRates(w http.ResponseWriter, r *http.Request) {

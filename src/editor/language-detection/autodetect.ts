@@ -2,7 +2,7 @@ import { redoDepth } from "@codemirror/commands";
 import { MapMode } from "@codemirror/state";
 import { EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { kLanguageChange, kSetContent, transactionsHasAnnotation } from "../annotation";
-import { blockContentText, getActiveNoteBlock, getBlocks } from "../block/block";
+import { blockContentText, getActiveNoteBlock, getBlocks, getBlockStartingAt } from "../block/block";
 import { changeLanguageTo } from "../block/commands";
 import { kLanguages } from "../languages";
 import { levenshtein_distance } from "./levenshtein";
@@ -31,7 +31,7 @@ function contentSimilar(a: string, b: string): boolean {
 export function applyDetectionResult(view: EditorView, result: DetectionResult, blockFrom: number): boolean {
   const { state } = view;
   if (state.readOnly || redoDepth(state)) return false;
-  const block = getBlocks(state).find(({ from }) => from === blockFrom);
+  const block = getBlockStartingAt(state, blockFrom);
   if (!block?.autoDetect) return false;
   const language = kLanguages.find(({ guesslang }) => guesslang === result.guesslang.language);
   if (!language || language.token === block.language) return false;
@@ -49,6 +49,11 @@ export const languageDetection = ViewPlugin.define((view) => {
   let cancel: (() => void) | undefined;
   let disposed = false;
 
+  // forget detection requests for the block at from
+  function dropPending(from: number) {
+    for (const [id, request] of pending) if (request.from === from) pending.delete(id);
+  }
+
   function detect() {
     cancel = undefined;
     if (disposed) return;
@@ -58,12 +63,12 @@ export const languageDetection = ViewPlugin.define((view) => {
     for (const from of targets) {
       const { state } = view;
       if (state.readOnly || redoDepth(state)) return;
-      const block = getBlocks(state).find((block) => block.from === from);
+      const block = getBlockStartingAt(state, from);
       if (!block?.autoDetect) continue;
       const content = blockContentText(state, block);
       if (!content.trim()) {
         seen.delete(from);
-        for (const [id, request] of pending) if (request.from === from) pending.delete(id);
+        dropPending(from);
         if (block.language !== "text") reset.push(from);
         continue;
       }
@@ -71,13 +76,13 @@ export const languageDetection = ViewPlugin.define((view) => {
       if (!worker || content.length <= 8 || (previous !== undefined && contentSimilar(previous, content))) continue;
       const idx = nextRequest++;
       seen.set(from, content);
-      for (const [id, request] of pending) if (request.from === from) pending.delete(id);
+      dropPending(from);
       pending.set(idx, { from, content });
       worker.postMessage({ content, idx });
     }
     // Work backwards so changing a header does not move the remaining targets.
     for (const from of reset.sort((a, b) => b - a)) {
-      const block = getBlocks(view.state).find((block) => block.from === from);
+      const block = getBlockStartingAt(view.state, from);
       if (block) changeLanguageTo(view.state, view.dispatch, block, "text", true);
     }
   }

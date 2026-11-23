@@ -1,5 +1,5 @@
 import { EditorView } from "@codemirror/view";
-import { getLastNoteBlock } from "./block/block";
+import { getBlockLineFromPos, getLastNoteBlock } from "./block/block";
 
 export function scrollMargin() {
   return [
@@ -9,7 +9,7 @@ export function scrollMargin() {
       const head = state.selection.main.head;
       const linesFromStart =
         last && head >= last.contentFrom
-          ? state.doc.lineAt(head).number - state.doc.lineAt(last.contentFrom).number
+          ? getBlockLineFromPos(state, head)!.line - 1
           : 5;
       return { top: Math.min(5, linesFromStart) * defaultLineHeight, bottom: 5 * defaultLineHeight };
     }),

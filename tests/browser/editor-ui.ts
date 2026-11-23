@@ -45,12 +45,24 @@ export function visibleBlocks(container: HTMLElement): string[] {
   return blocks.map((lines) => lines.join("\n"));
 }
 
+// dispatches a copy / cut / paste event to the editor in container with clipboard
+function clipboardEvent(container: HTMLElement, type: "copy" | "paste", clipboard: DataTransfer) {
+  container
+    .querySelector(".cm-content")!
+    .dispatchEvent(new ClipboardEvent(type, { clipboardData: clipboard, bubbles: true, cancelable: true }));
+}
+
 export function pasteText(container: HTMLElement, text: string) {
   const clipboard = new DataTransfer();
   clipboard.setData("text/plain", text);
-  container.querySelector(".cm-content")!.dispatchEvent(
-    new ClipboardEvent("paste", { clipboardData: clipboard, bubbles: true, cancelable: true }),
-  );
+  clipboardEvent(container, "paste", clipboard);
+}
+
+// copies selection of the editor in container; returns the copied text
+export function copyText(container: HTMLElement): string {
+  const clipboard = new DataTransfer();
+  clipboardEvent(container, "copy", clipboard);
+  return clipboard.getData("text/plain");
 }
 
 // creates a test editor and presses keys, e.g. to place the cursor.

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { aiProviders } from "../ai-models";
   import { focus } from "../actions";
   import { getSessionDur } from "../globals";
   import { getGitHash, getSettings, getVersion, kDefaultFontFamily, kDefaultFontSize } from "../settings.svelte";
@@ -163,25 +164,12 @@
     </select>
   </div>
 
-  <label class="flex-col mt-2">
-    <h2 class="font-bold text-left">OpenAI API Key</h2>
-    <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.openAIKey} />
-  </label>
-
-  <label class="flex-col mt-2">
-    <h2 class="font-bold text-left">Anthropic API Key</h2>
-    <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.anthropicKey} />
-  </label>
-
-  <label class="flex-col mt-2">
-    <h2 class="font-bold text-left">xAI (Grok) API Key</h2>
-    <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.xAIKey} />
-  </label>
-
-  <label class="flex-col mt-2">
-    <h2 class="font-bold text-left">OpenRouter API Key</h2>
-    <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings.openRouterKey} />
-  </label>
+  {#each aiProviders as provider (provider.id)}
+    <label class="flex-col mt-2">
+      <h2 class="font-bold text-left">{provider.name} API Key</h2>
+      <input class="w-full mt-0.5 px-1 py-1" type="text" bind:value={settings[provider.keySetting]} />
+    </label>
+  {/each}
 
   <div class="mt-2 flex flex-col">
     <h2>Misc</h2>

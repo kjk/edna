@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { appState } from "../../src/appstate.svelte";
 import { blockHdrMarkdown } from "../../src/constants";
-import { getNoteMeta, getNotesMetadata, loadNotesMetadata, toggleNoteStarred, upgradeMetadata } from "../../src/metadata";
+import { getNoteMeta, getNotesMetadata, toggleNoteStarred } from "../../src/metadata";
 import {
   appendToNote,
   createDefaultNotes,
@@ -14,15 +14,14 @@ import {
   saveNote,
 } from "../../src/notes";
 import { getSettings } from "../../src/settings.svelte";
+import { loadStorageState } from "./fs-utils";
 
 // note lifecycle in localStorage (docs/state-machines.md M4, issue 3)
 describe("notes (localStorage)", () => {
   beforeEach(async () => {
     localStorage.clear();
     getSettings();
-    await upgradeMetadata();
-    await loadNotesMetadata();
-    await loadNoteNames();
+    await loadStorageState();
   });
 
   it("creating a note never overwrites an existing note, ignoring case", async () => {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
-import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
+import { copyText, editorLines, modKey, press, visibleBlocks } from "./editor-ui";
 import { cleanup, createEditor, type TestEditor } from "./utils";
 
 describe("Markdown", () => {
@@ -20,11 +20,7 @@ describe("Markdown", () => {
 
   async function copyBlock() {
     await press("a", modKey);
-    const clipboard = new DataTransfer();
-    te.container
-      .querySelector(".cm-content")!
-      .dispatchEvent(new ClipboardEvent("copy", { clipboardData: clipboard, bubbles: true, cancelable: true }));
-    return clipboard.getData("text/plain");
+    return copyText(te.container);
   }
 
   function toggleWithShortcut() {

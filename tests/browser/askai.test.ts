@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { kModelsCacheKey, providerFromModelsURL } from "../../src/ai-models";
 import AskAI from "../../src/components/AskAI.svelte";
 import { getSettings } from "../../src/settings.svelte";
+import { mountInNewDiv, unmountAndRemove } from "./utils";
 
 const keys = {
   openAIKey: "sk-proj-" + "x".repeat(60),
@@ -28,9 +29,8 @@ describe("Ask AI", () => {
 
   afterEach(() => {
     window.fetch = realFetch;
-    if (comp) unmount(comp);
+    unmountAndRemove(target, comp);
     comp = undefined;
-    target?.remove();
     Object.assign(settings, saved);
     localStorage.removeItem(kModelsCacheKey);
   });
@@ -77,13 +77,12 @@ describe("Ask AI", () => {
   function setup(insertResponse: (s: string) => boolean, s: Partial<typeof settings> = {}) {
     localStorage.removeItem(kModelsCacheKey);
     Object.assign(settings, { openAIKey: "", anthropicKey: "", xAIKey: "", openRouterKey: keys.openRouterKey, aiModelID: "" }, s);
-    target = document.createElement("div");
-    document.body.appendChild(target);
     const closed = { v: false };
-    comp = mount(AskAI, {
-      target,
-      props: { close: () => (closed.v = true), startText: "question", insertResponse },
-    });
+    ({ target, comp } = mountInNewDiv(AskAI, {
+      close: () => (closed.v = true),
+      startText: "question",
+      insertResponse,
+    }));
     flushSync();
     return closed;
   }
