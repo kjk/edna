@@ -5,6 +5,12 @@ export const modKey = /Mac/.test(navigator.platform) ? "Meta" : "Control";
 export function press(key: string, ...modifiers: string[]) {
   const down = modifiers.map((modifier) => `{${modifier}>}`).join("");
   const up = modifiers.toReversed().map((modifier) => `{/${modifier}}`).join("");
+  // A real keyboard reports a shifted letter in upper case, which `{k}` does
+  // not. Outside macOS, CodeMirror resolves a lower case "k" with Shift held
+  // as Mod-k before Mod-Shift-k.
+  if (modifiers.includes("Shift") && modifiers.includes(modKey) && /^[a-z]$/.test(key)) {
+    key = `Key${key.toUpperCase()}`;
+  }
   return userEvent.keyboard(`${down}{${key}}${up}`);
 }
 

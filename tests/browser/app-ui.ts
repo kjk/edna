@@ -2,8 +2,7 @@ import { expect, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { kMetadataName } from "../../src/metadata";
 import { dbDelDirHandle } from "../../src/notes";
-
-const modKey = /Mac/.test(navigator.platform) ? "Meta" : "Control";
+import { modKey, press } from "./editor-ui";
 
 export async function mountApp(notes?: Record<string, string>) {
   // The app's Vite config normally defines these for the Settings dialog.
@@ -43,7 +42,7 @@ export function editorText() {
 }
 
 export async function pressMod(key: string, shift = false) {
-  await userEvent.keyboard(`{${modKey}>}${shift ? "{Shift>}" : ""}{${key}}${shift ? "{/Shift}" : ""}{/${modKey}}`);
+  await press(key, modKey, ...(shift ? ["Shift"] : []));
 }
 
 export async function openNoteShortcut(shortcut: number, name: string) {
