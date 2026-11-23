@@ -104,8 +104,7 @@
     // if nothing is selected, we can create with just Enter
     // otherwise we need Ctrl + Enter
     let canCreateWithEnter = canCreate && !canOpenSelected;
-    // can't delete scratch note or system notes
-    let canDeleteSelected = !!selected && selected.name !== kScratchNoteName && !isSystemNoteName(selected.name);
+    let canDeleteSelected = !!selected && canDeleteNote(selected.name);
     return { canOpenSelected, canCreate, canCreateWithEnter, canDeleteSelected };
   }
 
@@ -236,13 +235,10 @@
 
     // keydown handler for the selector: shortcuts, then list navigation
     onkeydown = (ev: KeyboardEvent) => {
-      if (this.handleKeydown(ev)) {
-        return;
-      }
       let input = this.input;
       let cursorAtEnd = !!input && input.selectionStart === input.value.length;
       let allowLeftRight = this.filter === "" || (!!this.getCallbacks().leftRightAtInputEnd && cursorAtEnd);
-      this.listbox?.onkeydown(ev, allowLeftRight);
+      handleListKeydown(ev, this.listbox, allowLeftRight, (ev) => this.handleKeydown(ev));
     };
   }
 
@@ -260,8 +256,7 @@
     toggleNoteStarred,
     unArchiveNote,
   } from "../metadata";
-  import { kScratchNoteName } from "../constants";
-  import { findNoteIgnoreCase, isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
+  import { canDeleteNote, findNoteIgnoreCase, isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
   import { noteNameError } from "../note-name";
   import {
     altShortcutStr,
@@ -270,6 +265,7 @@
     findMatchingItems,
     getAltChar,
     handleEnter,
+    handleListKeydown,
     handleToggleStarKey,
     hilightText,
     isAltNumEvent,

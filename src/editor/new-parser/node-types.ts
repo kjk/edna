@@ -34,6 +34,11 @@ export const nodeSet = new NodeSet(nodeTypes);
 // Delimiter pattern: ∞∞∞ (three infinity symbols)
 export const kDelimiterPrefix = "\u221e\u221e\u221e";
 
+// block header line for language token, e.g. "\n\u221e\u221e\u221etext-a\n" (-a: language is auto-detected)
+export function getBlockDelimiter(token: string, autoDetect: boolean): string {
+  return "\n" + kDelimiterPrefix + token + (autoDetect ? "-a" : "") + "\n";
+}
+
 // This is the single definition of a valid block delimiter. A delimiter is a line
 // ∞∞∞{language}[-a] where language is lowercase ascii letters and -a means
 // auto-detect language. It must be preceded by a newline (except at the

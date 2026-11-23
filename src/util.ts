@@ -18,6 +18,15 @@ export function objectEqualDeep(a: any, b: any): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+// sets obj[key] = value unless it's already equal; returns true if it changed
+export function assignIfChanged<T, K extends keyof T>(obj: T, key: K, value: T[K]): boolean {
+  if (objectEqualDeep(obj[key], value)) {
+    return false;
+  }
+  obj[key] = value;
+  return true;
+}
+
 export let platform = {
   // default to windows
   isMac: false,
@@ -257,12 +266,14 @@ export function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-// value parsed from JSON in s, or undefined if s isn't valid JSON (logged as error about what)
-export function tryParseJSON(s: string, what: string): unknown {
+// value parsed from JSON in s, or undefined if s isn't valid JSON (logged as error
+// about what; onInvalid is called e.g. to keep a copy of the corrupted data)
+export function tryParseJSON(s: string, what: string, onInvalid?: () => void): unknown {
   try {
     return JSON.parse(s);
   } catch (e) {
     console.error(`${what} is not valid JSON`, e);
+    onInvalid?.();
     return undefined;
   }
 }
@@ -462,8 +473,20 @@ export function isKeyCtrlDelete(ev: KeyboardEvent): boolean {
   return (ev.key === "Delete" || ev.key === "Backspace") && ev.ctrlKey;
 }
 
+export function isKeyEnter(ev: KeyboardEvent): boolean {
+  return ev.key === "Enter";
+}
+
+export function isKeyUp(ev: KeyboardEvent): boolean {
+  return ev.key === "ArrowUp" || ev.key === "Up";
+}
+
+export function isKeyDown(ev: KeyboardEvent): boolean {
+  return ev.key === "ArrowDown" || ev.key === "Down";
+}
+
 export function isKeyCtrlEnter(ev: KeyboardEvent): boolean {
-  return ev.key === "Enter" && ev.ctrlKey;
+  return isKeyEnter(ev) && ev.ctrlKey;
 }
 
 // css classes for a toggle button (e.g. "match case" in find)
@@ -483,9 +506,31 @@ export function filteredCountMsg(nFiltered: number, nTotal: number, noun: string
   return `${nFiltered} of ${nTotal} ${noun}`;
 }
 
+// list that handles navigation keys (ListBox)
+export interface KeyNavigableList {
+  onkeydown(ev: KeyboardEvent, allowLeftRight: boolean): boolean;
+}
+
+// keydown in a dialog with a list: the first of handlers that returns true
+// handles ev; otherwise the list does (moves selection, Enter picks the item).
+// allowLeftRight: Left / Right also move selection (e.g. when filter is empty)
+export function handleListKeydown(
+  ev: KeyboardEvent,
+  list: KeyNavigableList | undefined,
+  allowLeftRight: boolean,
+  ...handlers: ((ev: KeyboardEvent) => boolean)[]
+) {
+  for (let handler of handlers) {
+    if (handler(ev)) {
+      return;
+    }
+  }
+  list?.onkeydown(ev, allowLeftRight);
+}
+
 // if ev is Enter: prevent default (and propagation if stop), call fn and return true
 export function handleEnter(ev: KeyboardEvent, fn: (ev: KeyboardEvent) => void, stop = false): boolean {
-  if (ev.key !== "Enter") {
+  if (!isKeyEnter(ev)) {
     return false;
   }
   ev.preventDefault();
@@ -496,10 +541,11 @@ export function handleEnter(ev: KeyboardEvent, fn: (ev: KeyboardEvent) => void, 
   return true;
 }
 
-// keydown handler for dialogs: Enter calls submit() if canSubmit and swallows the event
-export function submitOnEnter(ev: KeyboardEvent, canSubmit: boolean, submit: () => void) {
-  if (canSubmit) {
-    handleEnter(ev, submit, true);
+// keydown handler for dialogs: Enter calls submit() if canSubmit and swallows the
+// event (also when it can't submit if alwaysSwallow)
+export function submitOnEnter(ev: KeyboardEvent, canSubmit: boolean, submit: () => void, alwaysSwallow = false) {
+  if (canSubmit || alwaysSwallow) {
+    handleEnter(ev, () => canSubmit && submit(), true);
   }
 }
 
@@ -543,4 +589,39 @@ export function humanPrice(price: number): string {
     res = res.slice(0, -3);
   }
   return res;
+}
+
+// runs task after prev settles; returns task's promise and a never-rejecting
+// promise that settles with it (the next prev)
+function chainTask<T>(prev: Promise<unknown>, task: () => Promise<T>): [Promise<T>, Promise<unknown>] {
+  let p = prev.then(task);
+  return [p, p.catch(() => {})];
+}
+
+// runs tasks one at a time, in the order they were added. A failed task
+// doesn't stop the ones after it
+export class SerialQueue {
+  private last: Promise<unknown> = Promise.resolve();
+
+  run<T>(task: () => Promise<T>): Promise<T> {
+    let p: Promise<T>;
+    [p, this.last] = chainTask(this.last, task);
+    return p;
+  }
+}
+
+// like SerialQueue but with a separate queue for each key
+export class KeyedSerialQueue {
+  private queues = new Map<string, Promise<unknown>>();
+
+  run<T>(key: string, task: () => Promise<T>): Promise<T> {
+    let [p, done] = chainTask(this.queues.get(key) ?? Promise.resolve(), task);
+    this.queues.set(key, done);
+    done.then(() => {
+      if (this.queues.get(key) === done) {
+        this.queues.delete(key);
+      }
+    });
+    return p;
+  }
 }

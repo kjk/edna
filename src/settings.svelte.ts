@@ -167,12 +167,8 @@ export function getSettings(): Settings {
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
   // console.log("getSettings: loaded from localStorage:", d);
-  let settingsRaw: any = tryParseJSON(d, "settings");
-  if (settingsRaw === undefined) {
-    // corrupt settings must not leave the app blank (U8): use defaults, keep a copy
-    settingsRaw = {};
-    localStorage.setItem(kSettingsPath + ".corrupted", d);
-  }
+  // corrupt settings must not leave the app blank (U8): use defaults, keep a copy
+  let settingsRaw: any = tryParseJSON(d, "settings", () => localStorage.setItem(kSettingsPath + ".corrupted", d)) ?? {};
   let settings = createSettings(settingsRaw);
   settings.tabSize = validateTabSize(settings.tabSize || 2);
   settings.fontSize = validateFontSize(settings.fontSize || kDefaultFontSize);

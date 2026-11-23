@@ -9,7 +9,7 @@
 <script lang="ts">
   import { focus } from "../actions";
   import type { NoteBlock } from "../editor/block/block-parsing";
-  import { findMatchingItems, handleDigitPick, hilightText, len, makeHilightRegExp } from "../util";
+  import { findMatchingItems, handleDigitPick, handleListKeydown, hilightText, len, makeHilightRegExp } from "../util";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
@@ -53,11 +53,13 @@
   function onkeydown(ev: KeyboardEvent) {
     // Ctrl + '0' ... '9' picks an item
     // TODO: extend it to `a` .. `z` ?
-    if (ev.ctrlKey && handleDigitPick(ev, len(itemsFiltered), (idx) => selectBlock(itemsFiltered[idx]!.item.block))) {
-      return;
-    }
+    handleListKeydown(
+      ev,
+      listboxRef,
+      filter === "",
+      (ev) => ev.ctrlKey && handleDigitPick(ev, len(itemsFiltered), (idx) => selectBlock(itemsFiltered[idx]!.item.block)),
+    );
 
-    listboxRef.onkeydown(ev, filter === "");
   }
 
   let listboxRef: ListBox;

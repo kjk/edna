@@ -25,6 +25,7 @@
   import {
     getActiveNoteBlock,
     getBlockN,
+    blockContentText,
     getBlocksInfo,
     getEditableActiveBlock,
     insertAfterActiveBlock,
@@ -101,6 +102,7 @@
     PasswordCancelledError,
     getStorageFS,
     isNoteArchivable,
+    isProtectedNote,
     isSystemNoteName,
     loadNote,
     loadNoteIfExists,
@@ -132,7 +134,9 @@
     keySpecMatches,
     len,
     noOp,
+    arrayReplace,
     platform,
+    SerialQueue,
     stringSizeInUtf8Bytes,
     throwIf,
     toggleFlag,
@@ -145,7 +149,7 @@
   import type { Item as BlockItem } from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
-  import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
+  import PasswordPrompt from "./PasswordPrompt.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
   import { closeFindPanel } from "./Find.svelte";
   import FindInNotes from "./FindInNotes.svelte";
@@ -499,18 +503,15 @@
     return (await checkSingleInstance()) && (await saveBeforeStorageSwitch());
   }
 
-  async function pickAnotherDirectory2() {
-    if (!(await canSwitchStorage())) {
-      return;
+  // runs a storage switch if only this instance is running and the current note was saved
+  async function switchStorage(doSwitch: () => Promise<void>) {
+    if (await canSwitchStorage()) {
+      await doSwitch();
     }
-    await switchToDirectory();
   }
 
-  function noOpStr(s: string): void {
-    // do nothing
-  }
   let closeDecryptPassword: () => void = $state(noOp);
-  let onDecryptPassword: (pwd: string) => void = $state(noOpStr);
+  let onDecryptPassword: (pwd: string) => void = $state(noOp);
 
   async function getPasswordFromUser(msg: string = ""): Promise<string> {
     appState.showingDecryptPassword = true;
@@ -527,20 +528,15 @@
     });
   }
 
-  function noOpBool(v: boolean): void {
-    // do nothing
-  }
   let fileWritePermissionsFileHandle: FileSystemFileHandle | undefined = $state();
-  let askFileWritePermissionsClose: (ok: boolean) => void = $state(noOpBool);
+  let askFileWritePermissionsClose: (ok: boolean) => void = $state(noOp);
 
   // one permission dialog at a time: a second request waits for the first
   // instead of replacing its resolver (which would never resolve the first)
-  let permissionQueue: Promise<unknown> = Promise.resolve();
+  const permissionQueue = new SerialQueue();
 
   function requestFileWritePermission(fh: FileSystemFileHandle): Promise<boolean> {
-    let p = permissionQueue.then(() => requestFileWritePermissionNow(fh));
-    permissionQueue = p.catch(() => {});
-    return p;
+    return permissionQueue.run(() => requestFileWritePermissionNow(fh));
   }
 
   async function requestFileWritePermissionNow(fh: FileSystemFileHandle): Promise<boolean> {
@@ -690,9 +686,7 @@
     let block = getActiveNoteBlock(editor.view.state)!;
     let ext = extForLang(block.language);
     let name = toFileName(noteName!) + `-${bi.active}.` + ext;
-    let from = block.contentFrom,
-      to = block.to;
-    let s = editor.view.state.sliceDoc(from, to);
+    let s = blockContentText(editor.view.state, block);
     console.log("exportCurrentBlock:", name);
     await exportTextToFile(s, name);
   }
@@ -712,16 +706,13 @@
   async function createScratchNote() {
     let name = await createNewScratchNote();
     await onOpenNote(name);
-    // TODO: add a way to undo creation of the note
-    showToast(`Created scratch note '${name}'`);
-    logNoteOp("noteCreate");
+    didCreateNote(name, "scratch note");
   }
 
-  async function switchToBrowserStorage2() {
-    if (!(await canSwitchStorage())) {
-      return;
-    }
-    await switchToBrowserStorage();
+  // TODO: add a way to undo creation of the note
+  function didCreateNote(name: string, what: string) {
+    showToast(`Created ${what} '${name}'`);
+    logNoteOp("noteCreate");
   }
 
   function extractBlockTitle(c: string, from: number, to: number): string {
@@ -766,27 +757,13 @@
     console.log("openBlockSelector");
     fnSelectBlock = fn;
     let editor = getEditor();
-    let blocks = editor.getBlocks();
-    let activeBlock = getActiveNoteBlock(editor.view.state);
+    let { blocks, active } = getBlocksInfo(editor.view.state);
     let content = editor.getContent();
-    let items: BlockItem[] = [];
-    let blockNo = 0;
-    let currBlockNo = 0;
-    for (let b of blocks) {
-      let title = extractBlockTitle(content, b.contentFrom, b.to);
-      let bi = {
-        block: b,
-        text: title,
-        key: blockNo,
-      };
-      items.push(bi);
-      if (b == activeBlock) {
-        currBlockNo = blockNo;
-      }
-      blockNo++;
-    }
-    blockItems = items;
-    initialBlockSelection = currBlockNo;
+    blockItems = blocks.map((b): BlockItem => ({
+      block: b,
+      text: extractBlockTitle(content, b.contentFrom, b.to),
+    }));
+    initialBlockSelection = active;
     showingBlockSelector = true;
   }
 
@@ -829,13 +806,8 @@
     });
   }
 
-  function switchToWideNoteSelector() {
-    settings.useWideSelectors = true;
-    reOpenNoteSelector();
-  }
-
-  async function switchToRegularNoteSelector() {
-    settings.useWideSelectors = false;
+  function setUseWideSelectors(wide: boolean) {
+    settings.useWideSelectors = wide;
     reOpenNoteSelector();
   }
 
@@ -969,7 +941,7 @@
     const { state } = view;
     const block = getActiveNoteBlock(state)!;
     const cursorPos = state.selection.asSingle().ranges[0]!.head;
-    const content = state.sliceDoc(block.contentFrom, block.to);
+    const content = blockContentText(state, block);
     let res = await boopResult(fdef, content);
 
     // block offsets are only valid if it's still the same document (the editor
@@ -1420,11 +1392,8 @@
       if (!langSupportsRun(lang)) {
         return kMenuStatusDisabled;
       }
-    } else if (mid === kCmdRunBlockWithAnotherBlock) {
-      if (lang?.token !== "javascript") {
-        return kMenuStatusDisabled;
-      }
-    } else if (mid === kCmdRunBlockWithClipboard) {
+    } else if (mid === kCmdRunBlockWithAnotherBlock || mid === kCmdRunBlockWithClipboard) {
+      // only JavaScript functions take an argument
       if (lang?.token !== "javascript") {
         return kMenuStatusDisabled;
       }
@@ -1455,10 +1424,7 @@
       }
       return hasEncryptedNotes() ? kMenuStatusNormal : kMenuStatusDisabled;
     } else if (mid === kCmdRenameCurrentNote) {
-      if (noteName === kScratchNoteName) {
-        return kMenuStatusDisabled;
-      }
-      if (isSystemNoteName(noteName)) {
+      if (isProtectedNote(noteName)) {
         return kMenuStatusDisabled;
       }
     } else if (mid === kCmdRunFunctionWithBlockContent || mid === kCmdRunFunctionWithSelection) {
@@ -1673,9 +1639,9 @@
     } else if (cmdId === kCmdMoveNotesToDirectory) {
       storeNotesOnDisk();
     } else if (cmdId === kCmdSwitchToNotesInDir) {
-      await pickAnotherDirectory2();
+      await switchStorage(switchToDirectory);
     } else if (cmdId === kCmdSwitchToLocalStorage) {
-      await switchToBrowserStorage2();
+      await switchStorage(switchToBrowserStorage);
     } else if (cmdId === kCmdExportNotes) {
       exportNotesToZipFile();
     } else if (cmdId === kCmdExportCurrentNote) {
@@ -1863,10 +1829,8 @@
   function openAskAI() {
     let view = getEditorView();
     let b = getActiveNoteBlock(view.state)!;
-    let from = b.contentFrom,
-      to = b.to;
     let { selectedText } = getCurrentSelection(view.state);
-    askAIStartText = selectedText ? selectedText : view.state.sliceDoc(from, to);
+    askAIStartText = selectedText ? selectedText : blockContentText(view.state, b);
     appState.showingAskAI = true;
   }
 
@@ -1925,7 +1889,7 @@
     if (!block || !blockLanguageSupportsRun(block.language)) {
       return false;
     }
-    const content = state.sliceDoc(block.contentFrom, block.to);
+    const content = blockContentText(state, block);
     let res = await withRun(editor, async (run) => {
       showModalMessageHTML("running code", 300, "run");
       let res = await evaluate(block.language, content);
@@ -1970,10 +1934,13 @@
     let editor = getEditor();
     let state = editor.view.state;
     let blockArg = getBlockN(state, n);
-    let arg = state.sliceDoc(blockArg.contentFrom, blockArg.to);
+    runWithArgAndFocus(editor, blockContentText(state, blockArg), "runBlockWithBlock");
+  }
+
+  function runWithArgAndFocus(editor: MultiBlockEditor, arg: string, logOp: string) {
     runBlockContentWithArg(editor, arg);
     editor.focus();
-    logNoteOp("runBlockWithBlock");
+    logNoteOp(logOp);
   }
 
   function currentBlockSupportsRun(state: EditorState): boolean {
@@ -1993,10 +1960,7 @@
     if (!currentBlockSupportsRun(editor.view.state)) {
       return;
     }
-    let arg = await getClipboardText();
-    runBlockContentWithArg(editor, arg);
-    editor.focus();
-    logNoteOp("runBlockWithClipboard");
+    runWithArgAndFocus(editor, await getClipboardText(), "runBlockWithClipboard");
   }
 
   // if have a selection, run function with selection
@@ -2146,7 +2110,7 @@
     let state = getEditorView().state;
     let block = getActiveNoteBlock(state)!;
     let delim = state.sliceDoc(block.from, block.contentFrom);
-    let content = state.sliceDoc(block.contentFrom, block.to);
+    let content = blockContentText(state, block);
     try {
       await appendToNote(name, delim + content);
     } catch (e) {
@@ -2169,9 +2133,7 @@
       return;
     }
     openNote(name);
-    // TODO: add a way to undo creation of the note
-    showToast(`Created note '${name}'`);
-    logNoteOp("noteCreate");
+    didCreateNote(name, "note");
   }
 
   async function deleteNotePermanently(name: string, showNotif: boolean) {
@@ -2250,12 +2212,9 @@
     throwIf(!name);
     if (replaceTab && !settings.tabs.includes(name) && !isTabHome(settings.currentTab)) {
       // replace current tab with the new note
-      let idx = settings.tabs.indexOf(settings.currentTab);
-      if (idx >= 0) {
-        settings.tabs[idx] = name;
-      }
+      arrayReplace(settings.tabs, settings.currentTab, name);
     }
-    let editor = editorComp.getEditor();
+    let editor = getEditor();
     let readOnly = isSystemNoteName(name);
     editor.setReadOnly(readOnly);
     window.document.title = name;
@@ -2400,7 +2359,7 @@
   {#if settings.useWideSelectors}
     <Overlay onclose={closeDialogs} blur={true}>
       <NoteSelectorWide
-        {switchToRegularNoteSelector}
+        switchToRegularNoteSelector={() => setUseWideSelectors(false)}
         {switchToCommandPalette}
         openNote={onOpenNote}
         deleteNote={deleteNotePermanently}
@@ -2410,7 +2369,7 @@
   {:else}
     <Overlay onclose={closeDialogs} blur={true}>
       <NoteSelector
-        {switchToWideNoteSelector}
+        switchToWideNoteSelector={() => setUseWideSelectors(true)}
         {switchToCommandPalette}
         openNote={onOpenNote}
         createNote={onCreateNote}
@@ -2469,9 +2428,7 @@
 {/if}
 
 {#if appState.showingDecryptPassword}
-  <Overlay onclose={closeDecryptPassword} blur={true}>
-    <EnterDecryptPassword msg={showingDecryptMessage} onpassword={onDecryptPassword}></EnterDecryptPassword>
-  </Overlay>
+  <PasswordPrompt msg={showingDecryptMessage} onpassword={onDecryptPassword} onclose={closeDecryptPassword} />
 {/if}
 
 {#if appState.showingAskFileWritePermissions}

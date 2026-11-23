@@ -5,6 +5,7 @@
     compareTrueFirst,
     filteredCountMsg,
     findMatchingItemsFn,
+    handleListKeydown,
     hilightText,
     humanPrice,
     len,
@@ -55,19 +56,20 @@
   let listboxComp: ListBox;
 
   function onkeydown(ev: KeyboardEvent) {
-    if (ev.code === "Escape") {
-      ev.stopPropagation();
-      close();
-      return;
-    }
-
-    // hack: space closes the drop-down
-    if (ev.code === "Space") {
-      ev.preventDefault();
-      filter += " ";
-      return;
-    }
-    listboxComp.onkeydown(ev, true);
+    handleListKeydown(ev, listboxComp, true, (ev) => {
+      if (ev.code === "Escape") {
+        ev.stopPropagation();
+        close();
+        return true;
+      }
+      // hack: space closes the drop-down
+      if (ev.code === "Space") {
+        ev.preventDefault();
+        filter += " ";
+        return true;
+      }
+      return false;
+    });
   }
 
   function toggleModelStarred(model: AiModel) {

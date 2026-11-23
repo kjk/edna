@@ -1,7 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
   import { kLanguages } from "../editor/languages";
-  import { findMatchingItems, hilightText, len, makeHilightRegExp } from "../util";
+  import { findMatchingItems, handleListKeydown, hilightText, len, makeHilightRegExp } from "../util";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
@@ -44,7 +44,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
   onkeydown={(ev) => {
-    listboxRef?.onkeydown(ev, filter === "");
+    handleListKeydown(ev, listboxRef, filter === "");
   }}
   tabindex="-1"
   class="dlg z-20 absolute center-x-with-translate top-8 max-h-[94vh] flex flex-col p-2"

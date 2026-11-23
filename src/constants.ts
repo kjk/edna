@@ -1,4 +1,6 @@
 // helps avoid circular references
+import { getBlockDelimiter } from "./editor/new-parser/node-types";
+
 export const kScratchNoteName = "scratch";
 export const kDailyJournalNoteName = "daily journal";
 export const kInboxNoteName = "inbox";
@@ -10,8 +12,8 @@ export const kWelcomeSystemNoteName = "system:welcome";
 export const kWelcomeDevSystemNoteName = "system:welcome dev";
 export const kBuiltInFunctionsNoteName = "system:built in functions";
 
-export const blockHdrMarkdown = "\n∞∞∞markdown\n";
-export const blockHdrJavaScript = "\n∞∞∞javascript\n";
+export const blockHdrMarkdown = getBlockDelimiter("markdown", false);
+export const blockHdrJavaScript = getBlockDelimiter("javascript", false);
 
 export const kSettingsPath = "settings.json";
 

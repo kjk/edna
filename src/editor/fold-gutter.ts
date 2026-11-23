@@ -10,7 +10,7 @@ import {
 import { EditorSelection, EditorState, type StateEffect, type Transaction } from "@codemirror/state";
 import { BlockType, gutter, GutterMarker, type BlockInfo, type EditorView } from "@codemirror/view";
 import { isStructuralChange } from "./annotation";
-import { groupToggleTarget } from "./cmutils";
+import { focusOnGutterMouseDown, groupToggleTarget } from "./cmutils";
 import { getBlocks, getNoteBlockFromPos, getNoteBlocksFromRangeSet, type Block } from "./block/block";
 import { contentFoldRange } from "./constants";
 import type { MultiBlockEditor } from "./editor";
@@ -128,10 +128,7 @@ export function foldGutterExtension() {
         );
       },
       domEventHandlers: {
-        mousedown(view) {
-          view.focus();
-          return true;
-        },
+        mousedown: focusOnGutterMouseDown,
         click(view, line) {
           if (Array.isArray(line.type)) {
             const part = line.type.find((item) => item.type === BlockType.Text);

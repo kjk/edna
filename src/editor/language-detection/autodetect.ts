@@ -1,8 +1,8 @@
 import { redoDepth } from "@codemirror/commands";
 import { MapMode } from "@codemirror/state";
 import { EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
-import { ednaEvent, kLanguageChange, kSetContent, transactionsHasAnnotation } from "../annotation";
-import { getActiveNoteBlock, getBlocks } from "../block/block";
+import { kLanguageChange, kSetContent, transactionsHasAnnotation } from "../annotation";
+import { blockContentText, getActiveNoteBlock, getBlocks } from "../block/block";
 import { changeLanguageTo } from "../block/commands";
 import { kLanguages } from "../languages";
 import { levenshtein_distance } from "./levenshtein";
@@ -35,7 +35,7 @@ export function applyDetectionResult(view: EditorView, result: DetectionResult, 
   if (!block?.autoDetect) return false;
   const language = kLanguages.find(({ guesslang }) => guesslang === result.guesslang.language);
   if (!language || language.token === block.language) return false;
-  if (!contentSimilar(state.sliceDoc(block.contentFrom, block.to), result.content)) return false;
+  if (!contentSimilar(blockContentText(state, block), result.content)) return false;
   changeLanguageTo(state, view.dispatch, block, language.token, true);
   return true;
 }
@@ -60,7 +60,7 @@ export const languageDetection = ViewPlugin.define((view) => {
       if (state.readOnly || redoDepth(state)) return;
       const block = getBlocks(state).find((block) => block.from === from);
       if (!block?.autoDetect) continue;
-      const content = state.sliceDoc(block.contentFrom, block.to);
+      const content = blockContentText(state, block);
       if (!content.trim()) {
         seen.delete(from);
         for (const [id, request] of pending) if (request.from === from) pending.delete(id);
@@ -135,7 +135,7 @@ export const languageDetection = ViewPlugin.define((view) => {
       if (mapped !== null) seen.set(mapped, content);
     }
     changed = new Set([...changed].flatMap((from) => mapStart(from) ?? []));
-    const changedLanguage = update.transactions.some((tr) => tr.annotation(ednaEvent) === kLanguageChange);
+    const changedLanguage = transactionsHasAnnotation(update.transactions, kLanguageChange);
     if (changedLanguage) {
       const previousAuto = new Set(
         getBlocks(update.startState).flatMap((block) => (block.autoDetect ? (mapStart(block.from) ?? []) : [])),

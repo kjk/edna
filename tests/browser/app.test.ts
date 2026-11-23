@@ -4,7 +4,19 @@ import { appState } from "../../src/appstate.svelte";
 import { createNoteWithName, loadNote, saveNote } from "../../src/notes";
 import { getSettings } from "../../src/settings.svelte";
 import { kTabHome } from "../../src/constants";
-import { altDigit, editorElement, editorInput, editorText, mountApp, openNoteShortcut, pressMod } from "./app-ui";
+import {
+  altDigit,
+  editorElement,
+  editorInput,
+  editorText,
+  mountApp,
+  openNoteShortcut,
+  popStateTo,
+  pressEnterIn,
+  pressMod,
+  setInputValue,
+  waitForInput,
+} from "./app-ui";
 
 // Integration tests: boot the whole app (docs/state-machines.md M8 dialogs)
 
@@ -17,10 +29,8 @@ describe("app", () => {
   // open note selector and type text into its filter input
   async function typeInNoteSelector(text: string): Promise<HTMLInputElement> {
     appState.showingNoteSelector = true;
-    await expect.poll(() => document.querySelector<HTMLInputElement>("form input")).not.toBeNull();
-    const input = document.querySelector<HTMLInputElement>("form input")!;
-    input.value = text;
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    const input = await waitForInput("form input");
+    setInputValue(input, text);
     return input;
   }
 
@@ -31,7 +41,7 @@ describe("app", () => {
 
   async function openFixture(name: string, content: string, visibleText: string) {
     await createNoteWithName(name, content);
-    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: name } }));
+    popStateTo(name);
     await expect.poll(() => document.title).toBe(name);
     await expect.poll(editorText).toContain(visibleText);
     editorInput().focus();
@@ -61,7 +71,7 @@ describe("app", () => {
     await openWithShortcut(1, "scratch");
     await openWithShortcut(3, "inbox");
     appState.showingRenameNote = true;
-    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: "scratch" } }));
+    popStateTo("scratch");
     expect(appState.showingRenameNote).toBe(false);
     await expect.poll(() => appState.currentNoteName).toBe("scratch");
   });
@@ -93,12 +103,9 @@ describe("app", () => {
     await saveNote("inbox", inbox + "\nsome text " + word + "\n");
 
     appState.showingFindInNotes = true;
-    await expect.poll(() => document.querySelector<HTMLInputElement>("input[placeholder^=\x27Find in notes\x27]")).not.toBeNull();
-    const input = document.querySelector<HTMLInputElement>("input[placeholder^=\x27Find in notes\x27]")!;
-    input.value = word;
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    const enter = () =>
-      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    const input = await waitForInput("input[placeholder^='Find in notes']");
+    setInputValue(input, word);
+    const enter = () => pressEnterIn(input);
     enter();
     await expect.poll(() => document.querySelector(".dlg-colors")?.textContent ?? "").toContain(word);
     enter();
@@ -119,13 +126,10 @@ describe("app", () => {
     await saveNote("inbox", ((await loadNote("inbox")) ?? "") + "\nonly-first-search-term\n");
 
     appState.showingFindInNotes = true;
-    const sel = "input[placeholder^='Find in notes']";
-    await expect.poll(() => document.querySelector<HTMLInputElement>(sel)).not.toBeNull();
-    const input = document.querySelector<HTMLInputElement>(sel)!;
+    const input = await waitForInput("input[placeholder^='Find in notes']");
     const search = (term: string) => {
-      input.value = term;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+      setInputValue(input, term);
+      pressEnterIn(input);
     };
     search("first-search-term");
     search("second-search-term");
@@ -141,11 +145,9 @@ describe("app", () => {
     await openWithShortcut(3, "inbox");
     await appendText("{Enter}edit-before-rename");
     appState.showingRenameNote = true;
-    await expect.poll(() => document.querySelector<HTMLInputElement>(".dlg input, form input")).not.toBeNull();
-    const input = document.querySelector<HTMLInputElement>(".dlg input, form input")!;
-    input.value = "inbox-renamed";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    const input = await waitForInput(".dlg input, form input");
+    setInputValue(input, "inbox-renamed");
+    pressEnterIn(input);
     await expect.poll(() => appState.currentNoteName).toBe("inbox-renamed");
     // wait for the auto-save delay
     await new Promise((r) => setTimeout(r, 2500));
@@ -174,16 +176,16 @@ describe("app", () => {
     expect(history.state?.noteName).toBe(kTabHome);
 
     // Back from Home to the note
-    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: "scratch" } }));
+    popStateTo("scratch");
     await expect.poll(() => appState.currentNoteName).toBe("scratch");
 
     // Back to Home entry
-    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: kTabHome } }));
+    popStateTo(kTabHome);
     await expect.poll(() => settings.currentTab).toBe(kTabHome);
 
     await openWithShortcut(1, "scratch");
     const nTabs = settings.tabs.length;
-    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: "daily journal" } }));
+    popStateTo("daily journal");
     await expect.poll(() => appState.currentNoteName).toBe("daily journal");
     expect(settings.tabs.length).toBe(nTabs);
   });
@@ -251,7 +253,7 @@ describe("app", () => {
   it("deleting the current note when switching to scratch fails keeps the note (U19)", async () => {
     const { loadNoteNames } = await import("../../src/notes");
     await createNoteWithName("todel", "\n\u221E\u221E\u221Emarkdown\nkeep me\n");
-    window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: "todel" } }));
+    popStateTo("todel");
     await expect.poll(() => appState.currentNoteName).toBe("todel");
 
     // make loading scratch fail: it's gone from storage

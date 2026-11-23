@@ -1,4 +1,4 @@
-import { getAltChar, getModChar, platformName } from "./util.js";
+import { arrayRemoveAt, getAltChar, getModChar, platformName, throwIf } from "./util.js";
 
 // replace Alt and Mod with platform-specific key names
 export function fixUpShortcuts(s: string, platform = platformName): string {
@@ -55,16 +55,9 @@ function getKeyHelp(platform = platformName): string[][] {
   ];
   // remove Alt + N for mac
   if (isMac) {
-    function removeAltN() {
-      for (let i = 0; i < res.length; i++) {
-        if (res[i][0] === "Alt + N") {
-          res.splice(i, 1);
-          return;
-        }
-      }
-      throw new Error("Could not find Alt + N in key help");
-    }
-    removeAltN();
+    let altNIdx = res.findIndex((el) => el[0] === "Alt + N");
+    throwIf(altNIdx < 0, "Could not find Alt + N in key help");
+    arrayRemoveAt(res, altNIdx);
 
     function updateMacKeyBindings() {
       // replace Ctrl with Mod

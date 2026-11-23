@@ -88,7 +88,7 @@
   import { onMount } from "svelte";
   import { ensurevisible, focus } from "../actions";
   import { splitCommandLabel } from "../keys";
-  import { len } from "../util";
+  import { isKeyDown, isKeyEnter, isKeyUp, len } from "../util";
 
   interface Props {
     menuDef: MenuDef;
@@ -123,17 +123,21 @@
     }
   }
 
-  function findMenuItemForElement(el: HTMLElement): MenuItem | undefined {
+  // first menu item (in any sub-menu) for which pred is true
+  function findMenuItemWhere(pred: (mi: MenuItem) => boolean): MenuItem | undefined {
     let found: MenuItem | undefined;
-    function visit(mi: MenuItem) {
-      if (mi.element === el) {
+    forEachMenuItem((mi) => {
+      if (pred(mi)) {
         found = mi;
         return false;
       }
       return true;
-    }
-    forEachMenuItem(visit);
+    });
     return found;
+  }
+
+  function findMenuItemForElement(el: HTMLElement): MenuItem | undefined {
+    return findMenuItemWhere((mi) => mi.element === el);
   }
 
   const kMenuShowDelay = 300;
@@ -243,7 +247,7 @@
         return;
       }
       mi = items[idx] as MenuItem;
-      if (!mi.isDisabled && !mi.isRemoved) {
+      if (isSelectable(mi)) {
         return mi;
       }
     }
@@ -299,15 +303,8 @@
   function handleKeydown(ev: KeyboardEvent) {
     let key = ev.key;
     // console.log("key:", key);
-    if (key === "Enter") {
-      let found: MenuItem | undefined;
-      forEachMenuItem((mi) => {
-        if (mi.isSelected && !mi.isSubMenu) {
-          found = mi;
-          return false;
-        }
-        return true;
-      });
+    if (isKeyEnter(ev)) {
+      let found = findMenuItemWhere((mi) => mi.isSelected && !mi.isSubMenu);
       if (found) {
         ev.preventDefault();
         ev.stopPropagation();
@@ -326,11 +323,11 @@
       return;
     }
 
-    if (key === "ArrowUp") {
+    if (isKeyUp(ev)) {
       selectSibling(-1);
       return;
     }
-    if (key === "ArrowDown") {
+    if (isKeyDown(ev)) {
       selectSibling(1);
       return;
     }

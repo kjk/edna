@@ -1,9 +1,7 @@
 package server
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -52,16 +50,8 @@ func doRequest(method, url, contentType string, body io.Reader) ([]byte, error) 
 		return nil, err
 	}
 
-	var bodyBytes bytes.Buffer
-	_, err = io.Copy(&bodyBytes, io.LimitReader(response.Body, maxSnippetSize+1))
-	response.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-	if bodyBytes.Len() > maxSnippetSize {
-		return nil, errors.New("snippet is too large")
-	}
-	return bodyBytes.Bytes(), nil
+	defer response.Body.Close()
+	return readAllLimited(response.Body, maxSnippetSize)
 }
 
 func postForm(url string, data url.Values) ([]byte, error) {
@@ -129,11 +119,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmtResponse := FmtResponse{}
-
-	err := json.Unmarshal(bodyBytes, &fmtResponse)
-	if err != nil {
-		logf("fmtResponse unmarshal error: %v", err)
-		http.Error(w, "Failed to decode upstream server response", http.StatusInternalServerError)
+	if !decodeUpstreamJSON(w, bodyBytes, &fmtResponse, "fmtResponse") {
 		return
 	}
 
@@ -144,7 +130,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 
 	bodyUpdated := fmtResponse.Body != body
 
-	bodyBytes, err = runCompile(&fmtResponse.Body)
+	bodyBytes, err := runCompile(&fmtResponse.Body)
 	if err != nil {
 		logf("runCompile() error: %v", err)
 		http.Error(w, "Failed to compile source code", http.StatusInternalServerError)
@@ -160,10 +146,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 
 	compileResponse := CompileResponse{}
 
-	err = json.Unmarshal(bodyBytes, &compileResponse)
-	if err != nil {
-		logf("compileResponse unmarshal error: %v", err)
-		http.Error(w, "Failed to decode upstream server response", http.StatusInternalServerError)
+	if !decodeUpstreamJSON(w, bodyBytes, &compileResponse, "compileResponse") {
 		return
 	}
 

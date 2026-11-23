@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import { len } from "../util";
+  import { isKeyDown, isKeyEnter, isKeyUp, len } from "../util";
   import "overlayscrollbars/overlayscrollbars.css";
   import { onMount, untrack } from "svelte";
   import { OverlayScrollbars } from "overlayscrollbars";
@@ -133,14 +133,14 @@
 
   export function onkeydown(ev: KeyboardEvent, allowLeftRight: boolean = false): boolean {
     let key = ev.key;
-    let isUp = key === "ArrowUp" || (key === "ArrowLeft" && allowLeftRight);
+    let isUp = isKeyUp(ev) || (key === "ArrowLeft" && allowLeftRight);
     if (isInline && isUp && selectedIdx <= 0) {
       // don't block cursor going left if input box has cursor at the end
       // of text and we're at first item
       return false;
     }
-    let isDown = key === "ArrowDown" || (key === "ArrowRight" && allowLeftRight);
-    let isEnter = selectedItem && key === "Enter";
+    let isDown = isKeyDown(ev) || (key === "ArrowRight" && allowLeftRight);
+    let isEnter = selectedItem && isKeyEnter(ev);
     let res = true;
     if (isEnter) {
       let metaPressed = ev.ctrlKey || ev.metaKey;

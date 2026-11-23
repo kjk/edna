@@ -18,19 +18,17 @@ import {
   preLoadAllNotes,
 } from "./notes";
 import { getSettings, settingsAddTab } from "./settings.svelte";
-import { isDev } from "./util";
+import { isDev, SerialQueue } from "./util";
 
 // window.onunhandledrejection = console.warn;
 
 let appSvelte: ReturnType<typeof mount> | undefined;
 
 // boots are serialized: e.g. double-clicking "Allow" doesn't run two boots at once
-let bootQueue: Promise<void> = Promise.resolve();
+const bootQueue = new SerialQueue();
 
 export function boot(): Promise<void> {
-  let p = bootQueue.then(bootNow);
-  bootQueue = p.catch(() => {});
-  return p;
+  return bootQueue.run(bootNow);
 }
 
 // let the user pick a directory for storing notes and re-boot using it

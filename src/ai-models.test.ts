@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import {
+  providerFromModelsURL,
   kModelsCacheKey,
   loadModels,
   modelKey,
@@ -84,9 +85,8 @@ function fakeFetch(responses: Record<string, { status: number; body: unknown }>)
   const fn = (async (url: string, init?: RequestInit) => {
     const key = (init?.headers as Record<string, string>)["X-Api-Key"]!;
     calls.push({ url, key });
-    const provider = new URL(url, "http://x").searchParams.get("provider")!;
-    const r = responses[provider]!;
-    return new Response(JSON.stringify(r.body), { status: r.status });
+    const r = responses[providerFromModelsURL(url)!]!;
+    return Response.json(r.body, { status: r.status });
   }) as unknown as typeof fetch;
   return { fn, calls };
 }

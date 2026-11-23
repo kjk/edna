@@ -1,3 +1,5 @@
+import { tryParseJSON } from "./util";
+
 declare const math: {
   createUnit: (name: string, definition: object, options?: object) => void;
   unit: (value: number, unit: string) => unknown;
@@ -17,12 +19,7 @@ let currencyDataFetchedAt = 0;
 // returns data with valid rates or undefined if the response doesn't have the
 // expected shape (U21): bad data must not be cached for hours
 export function parseCurrencyData(s: string): CurrencyData | undefined {
-  let v: any;
-  try {
-    v = JSON.parse(s);
-  } catch {
-    return undefined;
-  }
+  let v: any = tryParseJSON(s, "currency data");
   if (!v || typeof v !== "object" || typeof v.base_code !== "string" || !/^[A-Z]+$/.test(v.base_code)) {
     return undefined;
   }

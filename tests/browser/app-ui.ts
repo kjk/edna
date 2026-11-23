@@ -65,3 +65,24 @@ export async function openNoteShortcut(shortcut: number, name: string) {
   await expect.poll(() => document.title).toBe(name);
   await expect.poll(editorElement).not.toBeNull();
 }
+
+// waits for an <input> matching selector to appear
+export async function waitForInput(selector: string): Promise<HTMLInputElement> {
+  await expect.poll(() => document.querySelector<HTMLInputElement>(selector)).not.toBeNull();
+  return document.querySelector<HTMLInputElement>(selector)!;
+}
+
+// sets value of input as if the user typed it
+export function setInputValue(input: HTMLInputElement, text: string) {
+  input.value = text;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+export function pressEnterIn(el: HTMLElement) {
+  el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+}
+
+// browser back / forward to the history entry of note (or tab) name
+export function popStateTo(name: string) {
+  window.dispatchEvent(new PopStateEvent("popstate", { state: { noteName: name } }));
+}

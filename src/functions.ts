@@ -1,6 +1,8 @@
 // based mostly on https://github.com/IvanMathy/Boop/tree/main/Scripts
 
-import { len } from "./util";
+import { getBlocksFromString } from "./editor/block/block-parsing";
+import { fixUpNoteContent } from "./note-content";
+import { len, tryParseJSON } from "./util";
 
 export interface BoopFunction {
   api: number;
@@ -27,12 +29,7 @@ export function parseBoopFunction(s: string): BoopFunction | null {
     return null;
   }
   let metaStr = s.substring(metaStart + 3, metaEnd);
-  let meta = null;
-  try {
-    meta = JSON.parse(metaStr);
-  } catch (e) {
-    return null;
-  }
+  let meta: any = tryParseJSON(metaStr, "function metadata");
   // user-editable: e.g. /**null**/ or a non-string description (U17)
   if (!meta || typeof meta !== "object" || !meta.name || typeof meta.name !== "string") {
     return null;
@@ -76,9 +73,9 @@ export function parseBuiltInFunctions(s: string): BoopFunction[] {
 }
 
 export function parseUserFunctions(s: string): BoopFunction[] {
-  // each block is a function; skip the block header line (the type of the block)
-  let parts = s.split("\n∞∞∞").map((p) => p.split("\n").slice(1).join("\n"));
-  return parseBoopFunctions(parts);
+  // each block is a function
+  s = fixUpNoteContent(s);
+  return parseBoopFunctions(getBlocksFromString(s).map((b) => s.slice(b.contentFrom, b.to)));
 }
 
 export async function runBoopFunction(f: BoopFunction, arg: BoopFunctionArg): Promise<void> {

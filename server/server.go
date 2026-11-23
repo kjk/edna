@@ -281,7 +281,7 @@ func runServerDev() {
 	// must be same as vite.config.js
 
 	logf("runServerDev\n")
-	runLoggedInDir(".", "bun", "install")
+	u.RunLoggedInDir(".", "bun", "install")
 	closeDev, err := startLoggedInDir(".", "bun", "run", "dev")
 	must(err)
 	defer closeDev()

@@ -197,8 +197,21 @@ export interface LoadModelsOptions {
   now?: number;
 }
 
+const kModelsPath = "/api/ai/models";
+
+// URL of our server's endpoint that lists models of a provider
+export function modelsURL(providerID: string): string {
+  return `${kModelsPath}?provider=${providerID}`;
+}
+
+// provider id from a modelsURL() url, or null if url is something else
+export function providerFromModelsURL(url: string): string | null {
+  let u = new URL(url, "http://localhost");
+  return u.pathname === kModelsPath ? u.searchParams.get("provider") : null;
+}
+
 async function fetchProviderModels(provider: AiProvider, key: string, fetchFn: typeof fetch): Promise<AiModel[]> {
-  let rsp = await fetchFn(`/api/ai/models?provider=${provider.id}`, {
+  let rsp = await fetchFn(modelsURL(provider.id), {
     headers: { "X-Api-Key": key },
   });
   if (rsp.status === 401 || rsp.status === 403) {

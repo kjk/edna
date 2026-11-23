@@ -29,26 +29,14 @@ export function smartfocus(node: HTMLElement) {
 
 // return {x, y} position that ensures that rect is visible inside window
 export function ensureRectVisibleInWindow(rect: DOMRect): { x: number; y: number } {
-  let x = rect.x;
-  const winDx = window.innerWidth;
-  const rEndX = x + rect.width;
-  if (rEndX > winDx) {
-    x = winDx - rect.width - 15;
+  // start of a span of size that fits in winSize (with margins)
+  function fit(start: number, size: number, winSize: number): number {
+    if (start + size > winSize) {
+      start = winSize - size - 15;
+    }
+    return Math.max(start, 4);
   }
-  if (x < 4) {
-    x = 4;
-  }
-
-  let y = rect.y;
-  const winDy = window.innerHeight;
-  const rEndY = y + rect.height;
-  if (rEndY > winDy) {
-    y = winDy - rect.height - 15;
-  }
-  if (y < 4) {
-    y = 4;
-  }
-  return { x: x, y: y };
+  return { x: fit(rect.x, rect.width, window.innerWidth), y: fit(rect.y, rect.height, window.innerHeight) };
 }
 
 // action that ensures that the node is fully visible in the window

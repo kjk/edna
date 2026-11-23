@@ -1,6 +1,6 @@
 import { isolateHistory } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
-import { getEditableActiveBlock, replaceBlockContent } from "./editor/block/block";
+import { blockContentText, getEditableActiveBlock, replaceBlockContent } from "./editor/block/block";
 import type { MultiBlockEditor } from "./editor/editor";
 import { getLanguage, langGetPrettierInfo } from "./editor/languages";
 
@@ -20,7 +20,7 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   if (!block || block.contentFrom === block.to) {
     return false;
   }
-  const source = state.sliceDoc(block.contentFrom, block.to);
+  const source = blockContentText(state, block);
   const offset = Math.max(0, state.selection.main.head - block.contentFrom);
   let formatted: string | null;
   let cursor = offset;

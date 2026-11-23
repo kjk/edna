@@ -1,7 +1,6 @@
 package server
 
 import (
-	"io"
 	"net/http"
 	"time"
 )
@@ -77,7 +76,7 @@ func handleAIModels(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer rsp.Body.Close()
-	d, err := io.ReadAll(io.LimitReader(rsp.Body, maxAIModelsResponseSize))
+	d, err := readAllLimited(rsp.Body, maxAIModelsResponseSize)
 	if err != nil {
 		http.Error(w, "reading provider response failed", http.StatusBadGateway)
 		return

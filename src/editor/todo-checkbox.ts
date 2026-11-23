@@ -1,5 +1,5 @@
 import { syntaxTree } from "@codemirror/language";
-import type { EditorState } from "@codemirror/state";
+import type { ChangeSpec, EditorState } from "@codemirror/state";
 import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet } from "@codemirror/view";
 import { NodeProp } from "@lezer/common";
 import { getNoteBlocksBetween } from "./block/block";
@@ -8,6 +8,11 @@ import { groupToggleTarget } from "./cmutils";
 interface TaskMarker {
   from: number;
   checked: boolean;
+}
+
+// change that sets task checkbox "[ ]" at from to checked or not
+function checkboxChange(from: number, check: boolean): ChangeSpec {
+  return { from: from + 1, to: from + 2, insert: check ? "x" : " " };
 }
 
 function markers(state: EditorState, from: number, to: number): TaskMarker[] {
@@ -60,7 +65,7 @@ class TaskCheckbox extends WidgetType {
       if (view.state.readOnly) return;
       const from = view.posAtDOM(box);
       view.dispatch({
-        changes: { from: from + 1, to: from + 2, insert: this.checked ? " " : "x" },
+        changes: checkboxChange(from, !this.checked),
         userEvent: "input",
       });
       view.focus();
@@ -111,11 +116,7 @@ export function toggleCheckbox(view: EditorView): boolean {
   view.dispatch({
     changes: [...tasks.values()]
       .filter((task) => task.checked !== check)
-      .map(({ from }) => ({
-        from: from + 1,
-        to: from + 2,
-        insert: check ? "x" : " ",
-      })),
+      .map(({ from }) => checkboxChange(from, check)),
     userEvent: "input",
   });
   return true;

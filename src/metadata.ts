@@ -4,7 +4,7 @@ import { fsReadTextFile, fsWriteFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
 import { normalizeMetadata } from "./metadata-merge";
 import { getStorageFS } from "./notes";
-import { tryParseJSON } from "./util";
+import { SerialQueue, tryParseJSON } from "./util";
 
 export const kMetadataName = "__metadata.edna.json";
 
@@ -83,14 +83,14 @@ export async function readMetadataFileFS(dh: FileSystemDirectoryHandle): Promise
 // parses metadata. On corrupted JSON, saves a backup copy of the raw data
 // and returns null
 async function parseMetadata(s: string, dh: FileSystemDirectoryHandle | undefined): Promise<unknown> {
-  let v = tryParseJSON(s, "metadata");
-  if (v === undefined) {
+  let backup: Promise<void> | undefined;
+  let v = tryParseJSON(s, "metadata", () => {
     let backupName = kMetadataName + ".corrupted-" + Date.now();
     console.error(`saving a copy of corrupted metadata as '${backupName}'`);
-    await writeStorageText(dh, backupName, s);
-    return null;
-  }
-  return v;
+    backup = writeStorageText(dh, backupName, s);
+  });
+  await backup;
+  return v ?? null;
 }
 
 export async function loadNotesMetadata(): Promise<Metadata> {
@@ -112,13 +112,13 @@ export async function loadNotesMetadata(): Promise<Metadata> {
 
 // metadata writes are serialized so that an older snapshot can't be written
 // after a newer one
-let metadataWriteQueue: Promise<unknown> = Promise.resolve();
+const metadataWriteQueue = new SerialQueue();
 
 export async function saveNotesMetadata(m: Metadata = metadata!) {
   metadata = m;
   let s = JSON.stringify(m, null, 2);
   let dh = getStorageFS();
-  let p = metadataWriteQueue.then(async () => {
+  await metadataWriteQueue.run(async () => {
     try {
       await writeStorageText(dh, kMetadataName, s);
     } catch (e) {
@@ -128,8 +128,6 @@ export async function saveNotesMetadata(m: Metadata = metadata!) {
       showError(`Failed to save notes metadata (favorites, shortcuts, folds): ${e}`);
     }
   });
-  metadataWriteQueue = p;
-  await p;
   return m;
 }
 

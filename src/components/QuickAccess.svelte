@@ -3,7 +3,7 @@
   import { appState } from "../appstate.svelte";
   import { getSettings } from "../settings.svelte";
   import { toggleNoteStarred } from "../metadata";
-  import { getAltChar, getModChar, handleDigitPick, len, removeDuplicates } from "../util";
+  import { getAltChar, getModChar, handleDigitPick, handleListKeydown, len, removeDuplicates } from "../util";
   import { StarButton } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
   import { buildNoteInfo, buildNoteInfos, noteShortcutStr } from "./NoteSelector.svelte";
@@ -57,11 +57,10 @@
   function onkeydown(ev: KeyboardEvent) {
     // "0" ... "9" picks a note from history
     let nHistory = len(quickAccessNotes) - firstInHistoryIdx;
-    if (handleDigitPick(ev, nHistory, (idx) => openNote(quickAccessNotes[firstInHistoryIdx + idx]!.name, ev.ctrlKey))) {
-      return;
-    }
+    handleListKeydown(ev, listboxRef, true, (ev) =>
+      handleDigitPick(ev, nHistory, (idx) => openNote(quickAccessNotes[firstInHistoryIdx + idx]!.name, ev.ctrlKey)),
+    );
 
-    listboxRef.onkeydown(ev, true);
   }
 
   // if forHistory, showing in absolute position inside overlay

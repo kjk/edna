@@ -7,6 +7,7 @@
   import {
     btnPressedCls,
     handleEnter,
+    handleListKeydown,
     hilightText,
     len,
     makeHilightRegExp,
@@ -25,14 +26,12 @@
   let { openNote, getNoteContent = loadNote }: Props = $props();
 
   let searchTerm = $state("");
-  let replaceTerm = $state("");
 
   let currSearchTerm = "";
   let selectedItem: { note: string; pos?: number } | undefined;
 
   let searchInputRef: HTMLInputElement;
 
-  let replaceInputRef: HTMLInputElement | undefined = $state(undefined);
 
   let results: { key: number; note: string; line?: string; pos?: number }[] = $state([]);
   let noteBeingSearched = $state("");
@@ -109,18 +108,16 @@
   }
 
   function onKeyDown(ev: KeyboardEvent) {
-    let isEnter = handleEnter(ev, () => {
-      let sameSearchTerm = searchTerm == currSearchTerm;
-      if (sameSearchTerm && lastChangeNo == changeNo && len(results) > 0 && selectedItem) {
-        openItem(selectedItem);
-      } else {
-        searchAllNotes(searchTerm);
-      }
-    });
-    if (isEnter) {
-      return;
-    }
-    listboxRef?.onkeydown(ev, searchTerm === "");
+    handleListKeydown(ev, listboxRef, searchTerm === "", (ev) =>
+      handleEnter(ev, () => {
+        let sameSearchTerm = searchTerm == currSearchTerm;
+        if (sameSearchTerm && lastChangeNo == changeNo && len(results) > 0 && selectedItem) {
+          openItem(selectedItem);
+        } else {
+          searchAllNotes(searchTerm);
+        }
+      }),
+    );
   }
 
   function focusInput() {
@@ -178,17 +175,6 @@
     bind:value={searchTerm}
     use:focus
     onkeydown={onKeyDown}
-  />
-{/snippet}
-
-{#snippet InputBottom()}
-  <input
-    bind:this={replaceInputRef}
-    type="text"
-    spellcheck="false"
-    placeholder="Replace"
-    bind:value={replaceTerm}
-    class="w-full"
   />
 {/snippet}
 

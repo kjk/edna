@@ -11,51 +11,41 @@ function removeLineStartingWith(lines: string[], s: string): string[] {
   return lines.filter((line) => !line.startsWith(s));
 }
 
-function replaceJSBlock(lines: string[]): string[] {
-  let res = [];
-  let inJS = false;
+// rewrites blocks of language lang: the header line is replaced by start,
+// content lines are kept if keepContent, and the next header line is replaced
+// by end(header)
+function rewriteBlocks(
+  lines: string[],
+  lang: string,
+  rw: { start: string[]; keepContent: boolean; end: (header: string) => string[] },
+): string[] {
+  let res: string[] = [];
+  let inBlock = false;
   for (let s of lines) {
-    if (!inJS) {
-      if (s.startsWith("∞∞∞javascript")) {
-        inJS = true;
-        // console.log(s);
-        res.push("```js");
+    if (!inBlock) {
+      if (s.startsWith("∞∞∞" + lang)) {
+        inBlock = true;
+        res.push(...rw.start);
       } else {
         res.push(s);
       }
-      continue;
+    } else if (s.startsWith("∞∞∞")) {
+      inBlock = false;
+      res.push(...rw.end(s));
+    } else if (rw.keepContent) {
+      res.push(s);
     }
-
-    // inJS
-    // console.log(s);
-    if (s.startsWith("∞∞∞")) {
-      inJS = false;
-      res.push("```");
-      continue;
-    }
-    res.push(s);
   }
   return res;
 }
 
+// javascript blocks become markdown code blocks
+function replaceJSBlock(lines: string[]): string[] {
+  return rewriteBlocks(lines, "javascript", { start: ["```js"], keepContent: true, end: () => ["```"] });
+}
+
 function removeMathBlock(lines: string[]): string[] {
-  let res = [];
-  let inMath = false;
-  for (let s of lines) {
-    if (inMath) {
-      if (s.startsWith("∞∞∞")) {
-        inMath = false;
-        res.push(s);
-      }
-    } else {
-      if (s.startsWith("∞∞∞math")) {
-        inMath = true;
-      } else {
-        res.push(s);
-      }
-    }
-  }
-  return res;
+  return rewriteBlocks(lines, "math", { start: [], keepContent: false, end: (header) => [header] });
 }
 
 function collapseMultipleEmptyLines(lines: string[]): string[] {
@@ -95,10 +85,7 @@ function getHelp(platform: string): string {
 }
 
 function cleanMd(s: string): string {
-  let lines = s.split("\n");
-  lines = lines.filter((line) => !line.startsWith("∞∞∞"));
-  let res = lines.join("\n");
-  return res;
+  return removeLineStartingWith(s.split("\n"), "∞∞∞").join("\n");
 }
 
 let htmlStart = `

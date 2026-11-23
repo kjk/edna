@@ -65,3 +65,9 @@ export function editCommand(run: Command): Command {
 export function groupToggleTarget(states: boolean[]): boolean {
   return states.filter(Boolean).length * 2 <= states.length;
 }
+
+// gutter mousedown handler: keep focus in the editor (instead of the gutter)
+export function focusOnGutterMouseDown(view: EditorView): boolean {
+  view.focus();
+  return true;
+}

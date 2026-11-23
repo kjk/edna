@@ -2,18 +2,6 @@
 
 import { getAltChar, len, platform, splitMax } from "./util";
 
-export function isEnter(ev: KeyboardEvent): boolean {
-  return ev.key === "Enter";
-}
-
-export function isUp(ev: KeyboardEvent): boolean {
-  return ev.key == "ArrowUp" || ev.key == "Up";
-}
-
-export function isDown(ev: KeyboardEvent): boolean {
-  return ev.key == "ArrowDown" || ev.key == "Down";
-}
-
 function isFuncKey(s: string): boolean {
   return /F\d{1,2}/i.test(s);
 }

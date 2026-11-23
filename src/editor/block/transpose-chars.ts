@@ -1,6 +1,6 @@
 import { EditorSelection, findClusterBreak } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import { getNoteBlockFromPos } from "./block";
+import { blockContentText, getNoteBlockFromPos } from "./block";
 
 export function transposeChars({ state, dispatch }: EditorView): boolean {
   if (state.readOnly) return false;
@@ -8,7 +8,7 @@ export function transposeChars({ state, dispatch }: EditorView): boolean {
     const block = getNoteBlockFromPos(state, range.head);
     if (!range.empty || !block || range.head <= block.contentFrom) return { range };
 
-    const text = state.sliceDoc(block.contentFrom, block.to);
+    const text = blockContentText(state, block);
     const at = range.head - block.contentFrom;
     const middle = at === text.length ? findClusterBreak(text, at, false) : at;
     if (middle <= 0) return { range };

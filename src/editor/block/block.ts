@@ -18,6 +18,7 @@ import {
   type DecorationSet,
 } from "@codemirror/view";
 import { ednaEvent, isStructuralChange, kAddNewBlock, kSetContent } from "../annotation";
+import { focusOnGutterMouseDown } from "../cmutils";
 import type { MultiBlockEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
 import type { SimpleRange } from "../types";
@@ -38,8 +39,9 @@ export function getBlocks(state: EditorState): Block[] {
   return state.field(blockState, false) ?? getBlocksFromSyntaxTree(state);
 }
 
-export function blockContent(block: Block): SimpleRange {
-  return { from: block.contentFrom, to: block.to };
+// text of block's content (without its header)
+export function blockContentText(state: EditorState, block: Block): string {
+  return state.sliceDoc(block.contentFrom, block.to);
 }
 
 export function getFirstNoteBlock(state: EditorState): Block {
@@ -142,10 +144,7 @@ class LineNumber extends GutterMarker {
 export const blockLineNumbers = gutter({
   class: "cm-lineNumbers",
   domEventHandlers: {
-    mousedown(view) {
-      view.focus();
-      return true;
-    },
+    mousedown: focusOnGutterMouseDown,
   },
   lineMarker(view, line) {
     const number = getBlockLineFromPos(view.state, line.from);

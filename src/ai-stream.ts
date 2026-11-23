@@ -1,3 +1,5 @@
+import { tryParseJSON } from "./util";
+
 /**
  * Parses the data of one server-sent event line ("data: {...}") of a streaming
  * chat completion. Returns the text to append (possibly ""). Throws if the
@@ -5,11 +7,8 @@
  * or when the upstream provider failed (U18). Invalid JSON is skipped.
  */
 export function parseChatStreamData(data: string): string {
-  let parsed: any;
-  try {
-    parsed = JSON.parse(data);
-  } catch (e) {
-    console.error("parseChatStreamData: invalid JSON", e);
+  let parsed: any = tryParseJSON(data, "chat stream data");
+  if (parsed === undefined) {
     return "";
   }
   if (parsed && parsed.error) {

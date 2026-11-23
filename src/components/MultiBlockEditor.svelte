@@ -10,7 +10,7 @@
   import { getNoteMeta, saveNotesMetadata } from "../metadata";
   import { getStorageFS, loadNote, noteExists, saveNote } from "../notes";
   import { getSettings, resolveTheme } from "../settings.svelte";
-  import { objectEqualDeep, throwIf } from "../util";
+  import { assignIfChanged, throwIf } from "../util";
   import Find from "./Find.svelte";
   import { saveOrShowError, showError, showSaveError, showWarning } from "./Toaster.svelte";
 
@@ -101,6 +101,11 @@
   // true after selection / folds of current note were restored, so it's safe to save them
   let editorStateRestored = false;
 
+  function onNoteLoaded(name: string, noPushHistory: boolean, replaceTab: boolean) {
+    restoreEditorState(name);
+    didLoadNote(name, noPushHistory, replaceTab);
+  }
+
   function restoreEditorState(noteName: string) {
     let noteMeta = getNoteMeta(noteName, false);
     let defaultPos = noteName.startsWith("scratch") ? editor.view.state.doc.length : 0;
@@ -116,18 +121,9 @@
       return;
     }
     let meta = getNoteMeta(name, true)!;
-    let didChange = false;
-    let foldedRanges = editor.getFoldedRanges();
-    if (!objectEqualDeep(meta.foldedRanges, foldedRanges)) {
-      didChange = true;
-      meta.foldedRanges = foldedRanges;
-    }
-    let selection = editor.getSelectionJSON();
-    if (!objectEqualDeep(meta.selection, selection)) {
-      didChange = true;
-      meta.selection = selection;
-    }
-    if (didChange) {
+    let foldsChanged = assignIfChanged(meta, "foldedRanges", editor.getFoldedRanges());
+    let selectionChanged = assignIfChanged(meta, "selection", editor.getSelectionJSON());
+    if (foldsChanged || selectionChanged) {
       await saveNotesMetadata();
     }
   }
@@ -226,10 +222,7 @@
       },
       isDestroyed: () => destroyed,
     });
-    loader.load(noteToLoad, false, () => {
-      restoreEditorState(noteToLoad);
-      didLoadNote(noteToLoad, false, false);
-    });
+    loader.load(noteToLoad, false, () => onNoteLoaded(noteToLoad, false, false));
 
     startCurrencyRefresh();
 
@@ -319,10 +312,7 @@
     let res = await loader.load(
       name,
       !skipSave,
-      () => {
-        restoreEditorState(name);
-        didLoadNote(name, noPushHistory, replaceTab);
-      },
+      () => onNoteLoaded(name, noPushHistory, replaceTab),
       request,
     );
     return res === "shown";

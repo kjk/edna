@@ -1,7 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
   import { splitCommandLabel } from "../keys";
-  import { findMatchingItems, hilightText, len, makeHilightRegExp, trimPrefix } from "../util";
+  import { findMatchingItems, handleListKeydown, hilightText, len, makeHilightRegExp, trimPrefix } from "../util";
   import ListBox from "./ListBox.svelte";
   import { getCommandArg, type Command } from "./Menu.svelte";
 
@@ -74,9 +74,7 @@
   }
 
   let itemsFiltered = $derived.by(() => {
-    let lc = filter.toLowerCase();
-    lc = trimPrefix(lc, ">");
-    return findMatchingItems(items, lc, "nameLC");
+    return findMatchingItems(items, trimFilter(filter).toLowerCase(), "nameLC");
   });
 
   function emitExecuteCommand(item: Item) {
@@ -90,8 +88,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form
   onkeydown={(ev) => {
-    let allowLeftRight = filter === "";
-    listboxComp.onkeydown(ev, allowLeftRight);
+    handleListKeydown(ev, listboxComp, filter === "");
   }}
   tabindex="-1"
   class="dlg z-20 absolute center-x-with-translate top-8 flex flex-col max-h-[90vh] w-[42em] max-w-[90vw] p-2"

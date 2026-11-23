@@ -1,6 +1,6 @@
 import { flushSync, mount, unmount } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { kModelsCacheKey } from "../../src/ai-models";
+import { kModelsCacheKey, providerFromModelsURL } from "../../src/ai-models";
 import AskAI from "../../src/components/AskAI.svelte";
 import { getSettings } from "../../src/settings.svelte";
 
@@ -49,11 +49,11 @@ describe("Ask AI", () => {
     const modelRequests: string[] = [];
     window.fetch = vi.fn(async (url: unknown, init?: RequestInit) => {
       const u = String(url);
-      if (u.startsWith("/api/ai/models")) {
-        const provider = new URL(u, location.href).searchParams.get("provider")!;
+      const provider = providerFromModelsURL(u);
+      if (provider) {
         modelRequests.push(provider);
         const status = opts.status?.[provider] ?? 200;
-        return new Response(JSON.stringify(status === 200 ? modelLists[provider] : { error: "bad key" }), { status });
+        return Response.json(status === 200 ? modelLists[provider] : { error: "bad key" }, { status });
       }
       if (!u.includes("/chat/completions")) {
         // e.g. usage logging

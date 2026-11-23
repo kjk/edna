@@ -9,6 +9,7 @@
     findMatchingItems,
     getAltChar,
     handleEnter,
+    handleListKeydown,
     handleToggleStarKey,
     hilightText,
     len,
@@ -89,19 +90,18 @@
   }
 
   function onKeydown(ev: KeyboardEvent) {
-    if (handleToggleStarKey(ev, selectedItem, toggleFunctionItemStarred)) {
-      return;
-    }
-
-    let isEnter = handleEnter(ev, () => {
-      if (selectedItem) {
-        emitRunFunction(selectedItem, ev.ctrlKey);
-      }
-    });
-    if (isEnter) {
-      return;
-    }
-    listboxRef?.onkeydown(ev, filter === "");
+    handleListKeydown(
+      ev,
+      listboxRef,
+      filter === "",
+      (ev) => handleToggleStarKey(ev, selectedItem, toggleFunctionItemStarred),
+      (ev) =>
+        handleEnter(ev, () => {
+          if (selectedItem) {
+            emitRunFunction(selectedItem, ev.ctrlKey);
+          }
+        }),
+    );
   }
 
   let itemsCountMsg = $derived(filteredCountMsg(len(itemsFiltered), len(items), "funcs", false));

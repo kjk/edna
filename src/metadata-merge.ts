@@ -18,24 +18,27 @@ export function normalizeMetadata(v: unknown): Metadata {
 }
 
 // merge metadata: for notes / functions present in both, entries in primary win
-export function mergeMetadata(primary: Metadata, secondary: Metadata): Metadata {
-  let notes = [...primary.notes];
-  for (let n of secondary.notes) {
-    if (notes.some((o) => o.name === n.name)) {
-      continue;
+// primary plus entries of secondary whose name isn't in primary (adjusted by adjust())
+function mergeByName<T extends { name: string }>(primary: T[], secondary: T[], adjust = (e: T, merged: T[]) => e): T[] {
+  let merged = [...primary];
+  for (let e of secondary) {
+    if (!merged.some((o) => o.name === e.name)) {
+      merged.push(adjust(e, merged));
     }
-    if (n.altShortcut && notes.some((o) => o.altShortcut === n.altShortcut)) {
+  }
+  return merged;
+}
+
+// merge metadata: for notes / functions present in both, entries in primary win
+export function mergeMetadata(primary: Metadata, secondary: Metadata): Metadata {
+  let notes = mergeByName(primary.notes, secondary.notes, (n, merged) => {
+    if (n.altShortcut && merged.some((o) => o.altShortcut === n.altShortcut)) {
       // shortcut already assigned to a different note
       n = { ...n };
       delete n.altShortcut;
     }
-    notes.push(n);
-  }
-  let functions = [...primary.functions];
-  for (let f of secondary.functions) {
-    if (!functions.some((o) => o.name === f.name)) {
-      functions.push(f);
-    }
-  }
+    return n;
+  });
+  let functions = mergeByName(primary.functions, secondary.functions);
   return { ...primary, notes, functions };
 }

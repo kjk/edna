@@ -2,7 +2,7 @@ import { EditorSelection, Facet, type EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { kAddNewBlock, kCurrenciesLoaded, kDeleteBlock, ednaEvent, kLanguageChange, kMoveBlock } from "../annotation";
 import type { MultiBlockEditor } from "../editor";
-import { kDelimiterPrefix } from "../new-parser/node-types";
+import { getBlockDelimiter, kDelimiterPrefix } from "../new-parser/node-types";
 import {
   blockLineRange,
   getActiveNoteBlock,
@@ -16,9 +16,7 @@ import {
 export { moveLineDown, moveLineUp } from "./move-lines";
 export { selectAll } from "./select-all";
 
-export function getBlockDelimiter(token: string, autoDetect: boolean): string {
-  return "\n" + kDelimiterPrefix + token + (autoDetect ? "-a" : "") + "\n";
-}
+export { getBlockDelimiter };
 
 export const defaultBlockDelimiter = Facet.define<string, string>({
   combine: (values) => values[0] ?? getBlockDelimiter("text", true),
