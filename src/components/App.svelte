@@ -12,7 +12,6 @@
     isTabHome,
     kBuiltInFunctionsNoteName,
     kDailyJournalNoteName,
-    kEdnaFileExt,
     kHelpSystemNoteName,
     kMyFunctionsNoteName,
     kReleaseNotesSystemNoteName,
@@ -107,6 +106,7 @@
     loadNote,
     loadNoteIfExists,
     noteExists,
+    notePathFromNameFS,
     rememberOpenedNote,
     renameNote,
     switchToStoringNotesOnDisk,
@@ -686,7 +686,7 @@
   }
 
   async function exportCurrentNote() {
-    let fileName = toFileName(noteName!) + kEdnaFileExt;
+    let fileName = notePathFromNameFS(noteName!, false);
     let editor = getEditor();
     let s = editor.getContent();
     console.log("exportCurrentNote:", fileName);

@@ -44,30 +44,21 @@ describe("Math mode (browser tests)", () => {
       '\n\u221E\u221E\u221Emath\n_format = format\nformat(x) = _format(x, {notation:"exponential"})\n42\n',
     );
     await expect
-      .poll(() => {
-        const results = getMathResults();
-        return results[results.length - 1];
-      })
+      .poll(() => getMathResults().at(-1))
       .toBe("4.2e+1");
   });
 
   it("previous result in prev variable", async () => {
     te = createEditor("\n\u221E\u221E\u221Emath\n128\nprev * 2 # 256\n");
     await expect
-      .poll(() => {
-        const results = getMathResults();
-        return results[results.length - 1];
-      })
+      .poll(() => getMathResults().at(-1))
       .toBe("256");
   });
 
   it("previous result in prev variable rows with invalid values", async () => {
     te = createEditor("\n\u221E\u221E\u221Emath\n1336\n23 /\n# comment\ntest\nprev+1#comment\nprev\n");
     await expect
-      .poll(() => {
-        const results = getMathResults();
-        return results[results.length - 1];
-      })
+      .poll(() => getMathResults().at(-1))
       .toBe("1337");
   });
 
