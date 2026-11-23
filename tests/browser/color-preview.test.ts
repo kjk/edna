@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { editorInput, mountApp, openNoteShortcut, pressMod } from "./app-ui";
+import { editorInput, mountApp, openNoteShortcut, pressMod, runPaletteCommand } from "./app-ui";
 import { press } from "./editor-ui";
 import { cleanup, createEditor, type TestEditor } from "./utils";
 
@@ -40,10 +40,7 @@ describe("Color preview", () => {
     await expect.poll(() => swatches(input)).toEqual(["#f00"]);
     input.focus();
 
-    await pressMod("p", true);
-    await expect.poll(() => document.activeElement?.matches("form input")).toBe(true);
-    await userEvent.keyboard("Settings");
-    await page.getByRole("option", { name: "Settings", exact: true }).click();
+    await runPaletteCommand("Settings", "Settings");
     const setting = page.getByRole("checkbox", { name: /^Show color previews/ });
     await setting.click();
     await expect.poll(() => swatches(input)).toEqual([]);

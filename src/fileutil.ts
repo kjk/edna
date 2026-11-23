@@ -1,4 +1,4 @@
-import { throwIf } from "./util";
+import { throwIf, valueOrUndefined } from "./util";
 
 function permissionOpts(withWrite: boolean): any {
   return withWrite ? { mode: "readwrite" } : {};
@@ -179,14 +179,10 @@ export async function openDirPicker(writeAccess: boolean): Promise<FileSystemDir
     mutltiple: false,
     ...permissionOpts(writeAccess),
   };
-  try {
-    // @ts-ignore
-    const fh = await window.showDirectoryPicker(opts);
-    return fh;
-  } catch (e) {
-    console.log("openDirPicker: showDirectoryPicker: e:", e);
-  }
-  return null;
+  // fails if the user cancels
+  // @ts-ignore
+  let dh: FileSystemDirectoryHandle | undefined = await valueOrUndefined(window.showDirectoryPicker(opts), "openDirPicker:");
+  return dh ?? null;
 }
 
 export function supportsFileSystem(): boolean {

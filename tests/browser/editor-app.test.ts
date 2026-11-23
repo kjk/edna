@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { loadNote } from "../../src/notes";
-import { editorInput, editorText, mountApp, openNoteShortcut, pressMod, waitForInput } from "./app-ui";
+import { editorInput, editorText, mountApp, openNoteShortcut, pressMod, runPaletteCommand, waitForInput } from "./app-ui";
 import { copyText, pasteText } from "./editor-ui";
 
 describe("editor in the app", () => {
@@ -44,8 +44,7 @@ describe("editor in the app", () => {
     await expect.poll(editorText).toContain("call()");
     await userEvent.keyboard("{Backspace}");
 
-    await pressMod("k", true);
-    await page.getByRole("option", { name: "Settings", exact: true }).click();
+    await runPaletteCommand("Settings");
     const showLineNumbers = page.getByRole("checkbox", { name: "Show line numbers" });
     const autoClose = page.getByRole("checkbox", { name: "Auto-close brackets and quotation marks" });
     await expect.element(showLineNumbers).toBeChecked();
@@ -80,8 +79,7 @@ describe("editor in the app", () => {
     await pressMod("s");
     await expect.poll(() => loadNote("editor tasks")).toContain("- [x] send proposal");
     await pressMod("Home");
-    await pressMod("k", true);
-    await page.getByRole("option", { name: /Edit: Toggle todo checkbox/ }).click();
+    await runPaletteCommand(/Edit: Toggle todo checkbox/);
     await pressMod("s");
     await expect.poll(() => loadNote("editor tasks")).toContain("- [ ] send proposal");
 

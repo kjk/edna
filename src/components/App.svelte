@@ -141,6 +141,7 @@
     throwIf,
     toggleFlag,
     trimPrefix,
+    valueOrUndefined,
     trimSuffix,
   } from "../util";
   import AskAI from "./AskAI.svelte";
@@ -625,12 +626,10 @@
       excludeAcceptAllOption: true,
       multiple: true,
     };
-    let fileHandles = [];
-    try {
-      // @ts-ignore
-      fileHandles = await window.showOpenFilePicker(opts);
-    } catch (e) {
-      console.log(e);
+    // fails if the user cancels
+    // @ts-ignore
+    let fileHandles: FileSystemFileHandle[] | undefined = await valueOrUndefined(window.showOpenFilePicker(opts), "showOpenFilePicker:");
+    if (!fileHandles) {
       return;
     }
     let noteToOpen = null;
@@ -667,15 +666,12 @@
     let opts = {
       suggestedName: fileName,
     };
-    let fh = null;
-    try {
-      // @ts-ignore
-      fh = await window.showSaveFilePicker(opts);
-    } catch (e) {
-      console.log(e);
-      return;
+    // fails if the user cancels
+    // @ts-ignore
+    let fh: FileSystemFileHandle | undefined = await valueOrUndefined(window.showSaveFilePicker(opts), "showSaveFilePicker:");
+    if (fh) {
+      await fsFileHandleWrite(fh, blob);
     }
-    await fsFileHandleWrite(fh, blob);
   }
 
   async function exportCurrentBlock() {

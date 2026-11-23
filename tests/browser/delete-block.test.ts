@@ -5,6 +5,7 @@ import { page, userEvent } from "vitest/browser";
 import App from "../../src/components/App.svelte";
 import { createNoteWithName, deleteNote } from "../../src/notes";
 import { getSettings, settingsAddTab, settingsRemoveTab } from "../../src/settings.svelte";
+import { runPaletteCommand } from "./app-ui";
 import { mountInNewDiv, setEditorHeight, unmountAndRemove } from "./utils";
 import { editorLines, modKey, press, visibleBlocks } from "./editor-ui";
 
@@ -47,9 +48,7 @@ describe("Delete block (browser tests)", () => {
     ["last", 2, ["Block A", "Block B"], ["Block A", "Block BX"]],
   ] as const)("delete the %s block", async (_, index, remaining, afterTyping) => {
     await userEvent.click(editorLines(container)[index], { position: { x: 20, y: 5 } });
-    await press("k", modKey, "Shift");
-    await userEvent.keyboard("Block: Delete");
-    await page.getByRole("option", { name: "Block: Delete", exact: true }).click();
+    await runPaletteCommand("Block: Delete", "Block: Delete");
     await expect.poll(() => visibleBlocks(container)).toEqual(remaining);
 
     await userEvent.keyboard("X");

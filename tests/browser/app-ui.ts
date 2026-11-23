@@ -1,4 +1,5 @@
 import { expect, vi } from "vitest";
+import { page, userEvent } from "vitest/browser";
 import { kMetadataName } from "../../src/metadata";
 import { dbDelDirHandle } from "../../src/notes";
 import { modKey, press } from "./editor-ui";
@@ -71,6 +72,17 @@ export async function openNoteShortcut(shortcut: number, name: string) {
   altDigit(shortcut);
   await expect.poll(() => document.title).toBe(name);
   await expect.poll(editorElement).not.toBeNull();
+}
+
+// runs a command from the command palette: opens it, types search (if given)
+// and clicks the command named name
+export async function runPaletteCommand(name: string | RegExp, search?: string) {
+  await pressMod("k", true);
+  if (search) {
+    await expect.poll(() => document.activeElement?.matches("form input")).toBe(true);
+    await userEvent.keyboard(search);
+  }
+  await page.getByRole("option", typeof name === "string" ? { name, exact: true } : { name }).click();
 }
 
 // waits for an <input> matching selector to appear
