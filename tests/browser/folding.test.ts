@@ -1,6 +1,6 @@
 import { describe, expect, it, afterEach } from "vitest";
 import { userEvent } from "vitest/browser";
-import { editorLines, createEditorAndPress, modKey, press, visibleBlocks } from "./editor-ui";
+import { editorLines, createEditorAndPress, selectWholeNote, modKey, press, visibleBlocks } from "./editor-ui";
 import { cleanup, type TestEditor } from "./utils";
 
 describe("Block folding (browser tests)", () => {
@@ -51,10 +51,6 @@ describe("Block folding (browser tests)", () => {
     return press(".", modKey, "Alt");
   }
 
-  async function selectEntireBuffer() {
-    await press("a", modKey);
-    await press("a", modKey);
-  }
 
   // open editor with content and fold the block with the cursor (the first one)
   async function openWithFirstBlockFolded(content: string) {
@@ -65,7 +61,7 @@ describe("Block folding (browser tests)", () => {
 
   // toggle fold of all blocks and wait for expected number of folded blocks
   async function toggleFoldAll(expectedFolds: number) {
-    await selectEntireBuffer();
+    await selectWholeNote();
     await toggleFold();
     await expect.poll(foldPlaceholderCount).toBe(expectedFolds);
   }
@@ -125,13 +121,13 @@ describe("Block folding (browser tests)", () => {
 
   it("multiple blocks can be folded and unfolded when selection overlaps multiple blocks", async () => {
     await openEditor();
-    await selectEntireBuffer();
+    await selectWholeNote();
     expect(foldPlaceholderCount()).toBe(0);
 
     await fold();
     await expect.poll(foldPlaceholderCount).toBe(3);
 
-    await selectEntireBuffer();
+    await selectWholeNote();
     await unfold();
     await expect.poll(foldPlaceholderCount).toBe(0);
   });
@@ -149,7 +145,7 @@ describe("Block folding (browser tests)", () => {
 
   it("toggleBlockFold works on multiple blocks", async () => {
     await openEditor();
-    await selectEntireBuffer();
+    await selectWholeNote();
     expect(foldPlaceholderCount()).toBe(0);
 
     await toggleFold();

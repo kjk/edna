@@ -1,6 +1,7 @@
 import { EditorSelection, type Line } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import { blockContentText, blockLineRange, getBlockN, getNoteBlockFromPos, type Block } from "./block";
+import { blockContentText, blockLineRange, getBlockN, getNoteBlockFromPos, outOfBlockHeader, type Block } from "./block";
+import { commonPrefixLen } from "../../util";
 import { selectedLines } from "./selected-lines";
 
 function moveLines(view: EditorView, forward: boolean): boolean {
@@ -43,10 +44,9 @@ function moveLines(view: EditorView, forward: boolean): boolean {
   const changes = state.changes(Array.from(blockLines, ([block, lines]) => {
     const original = blockContentText(state, block);
     const updated = lines.map((line) => line.text).join("\n");
-    let prefix = 0;
+    const prefix = commonPrefixLen(original, updated);
     let suffix = 0;
     const limit = Math.min(original.length, updated.length);
-    while (prefix < limit && original[prefix] === updated[prefix]) prefix++;
     while (suffix < limit - prefix && original[original.length - suffix - 1] === updated[updated.length - suffix - 1]) suffix++;
     return {
       from: block.contentFrom + prefix,
@@ -66,8 +66,7 @@ function moveLines(view: EditorView, forward: boolean): boolean {
   }
 
   function movedPosition(pos: number, end: boolean): number {
-    const block = getNoteBlockFromPos(state, pos);
-    if (block) pos = Math.max(pos, block.contentFrom);
+    pos = outOfBlockHeader(getNoteBlockFromPos(state, pos), pos);
     const line = state.doc.lineAt(pos);
     if (end && pos === line.from && line.number > 1) {
       const previous = state.doc.line(line.number - 1);

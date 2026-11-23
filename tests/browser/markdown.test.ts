@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
-import { copyText, editorLines, modKey, press, visibleBlocks } from "./editor-ui";
+import { copyText, editorLines, modKey, press, selectWholeNote, visibleBlocks } from "./editor-ui";
 import { cleanup, createEditor, type TestEditor } from "./utils";
 
 describe("Markdown", () => {
@@ -93,8 +93,7 @@ describe("Markdown", () => {
     te = createEditor("\n∞∞∞markdown\n- [x] one\n- [x] two\n∞∞∞text\n- [x] three\n- [ ] four\n");
     await expect.poll(checked).toEqual([true, true]);
     await press("ArrowRight");
-    await press("a", modKey);
-    await press("a", modKey);
+    await selectWholeNote();
 
     await toggleWithShortcut();
 

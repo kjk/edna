@@ -65,6 +65,12 @@ export function copyText(container: HTMLElement): string {
   return clipboard.getData("text/plain");
 }
 
+// selects the whole note (first Mod + A selects the block, second everything)
+export async function selectWholeNote() {
+  await press("a", modKey);
+  await press("a", modKey);
+}
+
 // creates a test editor and presses keys, e.g. to place the cursor.
 // Each press is [key, ...modifiers]
 export async function createEditorAndPress(content: string, ...presses: string[][]): Promise<TestEditor> {

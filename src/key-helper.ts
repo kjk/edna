@@ -35,11 +35,11 @@ function getKeyHelp(platform = platformName): string[][] {
     [`Mod + Down`, "Goto next block"],
     [`Mod + Up`, "Goto previous block"],
 
-    ["Ctrl + Shift + [", "Fold code"],
-    ["Ctrl + Shift + ]", "Unfold code"],
-    ["Ctrl + Alt + [", "Fold block"],
-    ["Ctrl + Alt + ]", "Unfold block"],
-    ["Ctrl + Alt + .", "Toggle block fold"],
+    [`Mod + Shift + [`, "Fold code"],
+    [`Mod + Shift + ]`, "Unfold code"],
+    [`Mod + Alt + [`, "Fold block"],
+    [`Mod + Alt + ]`, "Unfold block"],
+    [`Mod + Alt + .`, "Toggle block fold"],
 
     [`Mod + A`, "Select all text in a note block"],
     [``, "Press again to select the whole buffer"],
@@ -58,24 +58,6 @@ function getKeyHelp(platform = platformName): string[][] {
     let altNIdx = res.findIndex((el) => el[0] === "Alt + N");
     throwIf(altNIdx < 0, "Could not find Alt + N in key help");
     arrayRemoveAt(res, altNIdx);
-
-    function updateMacKeyBindings() {
-      // replace Ctrl with Mod
-      let changes = [
-        "Ctrl + Shift + [",
-        "Ctrl + Shift + ]",
-        "Ctrl + Alt + [",
-        "Ctrl + Alt + ]",
-        "Ctrl + Alt + .",
-      ];
-      for (let i = 0; i < res.length; i++) {
-        let key = res[i][0];
-        if (changes.includes(key)) {
-          res[i][0] = key.replace("Ctrl", "Mod");
-        }
-      }
-    }
-    updateMacKeyBindings();
   }
   for (let el of res) {
     el[0] = fixUpShortcuts(el[0], platform);

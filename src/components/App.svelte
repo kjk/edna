@@ -1154,17 +1154,9 @@
       ["Export to file", kCmdExportCurrentBlock],
       ["Delete", kCmdBlockDelete],
       ["Move to another note", kCmdMoveBlock],
-      ...(isMac
-        ? ([
-            ["Toggle block fold\tMod + Alt + .", kCmdToggleBlockFold],
-            ["Fold block\tMod + Alt + [", kCmdFoldBlock],
-            ["Unfold block\tMod + Alt + ]", kCmdUnfoldBlock],
-          ] as Command[])
-        : ([
-            ["Toggle block fold\tCtrl + Alt + .", kCmdToggleBlockFold],
-            ["Fold block\tCtrl + Alt + [", kCmdFoldBlock],
-            ["Unfold block\tCtrl + Alt + ]", kCmdUnfoldBlock],
-          ] as Command[])),
+      ["Toggle block fold\tMod + Alt + .", kCmdToggleBlockFold],
+      ["Fold block\tMod + Alt + [", kCmdFoldBlock],
+      ["Unfold block\tMod + Alt + ]", kCmdUnfoldBlock],
     ];
 
     const menuRun: Command[] = [
@@ -1271,15 +1263,8 @@
     ["Edit: Toggle block comment\tAlt-Shift-a", kCmdToggleBlockComment],
     ["Edit: Toggle todo checkbox\tMod-Shift-Space", kCmdToggleCheckbox],
     // ["Export current note", kCmdExportCurrentNote],
-    ...((isMac
-      ? [
-          ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
-          ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
-        ]
-      : [
-          ["Edit: Fold code\tCtrl-Shift-[", kCmdFoldCode],
-          ["Edit: Unfold code\tCtrl-Shift-]", kCmdUnfoldColde],
-        ]) as Command[]),
+    ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
+    ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
   ];
 
   // commands that work when there's no editor (e.g. on Home tab)

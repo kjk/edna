@@ -301,6 +301,14 @@ export function compareTrueFirst(a: boolean | undefined, b: boolean | undefined)
   return Number(!!b) - Number(!!a);
 }
 
+// number of characters at the start of a and b that are the same
+export function commonPrefixLen(a: string, b: string): number {
+  let n = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < n && a[i] === b[i]) i++;
+  return i;
+}
+
 // items of a without repeats, in order of first appearance
 export function removeDuplicates<T>(a: T[]): T[] {
   return [...new Set(a)];

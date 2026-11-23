@@ -34,6 +34,11 @@ describe("app", () => {
     return input;
   }
 
+  // appends text to note name in storage (not through the editor)
+  async function appendToStoredNote(name: string, text: string) {
+    await saveNote(name, ((await loadNote(name)) ?? "") + text);
+  }
+
   function openFindInNotes(): Promise<HTMLInputElement> {
     return openDialogInput(() => (appState.showingFindInNotes = true), "input[placeholder^='Find in notes']");
   }
@@ -103,8 +108,7 @@ describe("app", () => {
   it("opening a 'find in notes' result moves the cursor to the match", async () => {
     await openWithShortcut(1, "scratch");
     const word = "find-in-notes-target";
-    const inbox = (await loadNote("inbox"))!;
-    await saveNote("inbox", inbox + "\nsome text " + word + "\n");
+    await appendToStoredNote("inbox", "\nsome text " + word + "\n");
 
     const input = await openFindInNotes();
     setInputValue(input, word);
@@ -123,10 +127,9 @@ describe("app", () => {
   it("starting a new 'find in notes' search stops the previous one", async () => {
     await openWithShortcut(1, "scratch");
     for (const name of ["inbox", "scratch", "daily journal"]) {
-      const c = (await loadNote(name)) ?? "";
-      await saveNote(name, c + "\nfirst-search-term second-search-term-" + name + "\n");
+      await appendToStoredNote(name, "\nfirst-search-term second-search-term-" + name + "\n");
     }
-    await saveNote("inbox", ((await loadNote("inbox")) ?? "") + "\nonly-first-search-term\n");
+    await appendToStoredNote("inbox", "\nonly-first-search-term\n");
 
     const input = await openFindInNotes();
     const search = (term: string) => enterText(input, term);

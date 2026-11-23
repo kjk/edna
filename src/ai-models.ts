@@ -1,7 +1,7 @@
 // Lists of AI models, downloaded from each AI provider for which the user has
 // an API key (through our server: /api/ai/models), cached in localStorage.
 
-import { tryParseJSONObject } from "./util";
+import { commonPrefixLen, tryParseJSONObject } from "./util";
 
 export type AiProviderID = "openai" | "anthropic" | "xai" | "openrouter";
 
@@ -274,13 +274,6 @@ function baseModelID(id: string): string {
   let idx = s.indexOf(":");
   s = (idx >= 0 ? s.slice(0, idx) : s).toLowerCase();
   return s.replace(/-(\d{4}-\d{2}-\d{2}|\d{8}|latest)$/, "");
-}
-
-function commonPrefixLen(a: string, b: string): number {
-  let n = Math.min(a.length, b.length);
-  let i = 0;
-  while (i < n && a[i] === b[i]) i++;
-  return i;
 }
 
 // direct providers are preferred over OpenRouter (no extra fee)

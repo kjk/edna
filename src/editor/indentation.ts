@@ -2,7 +2,7 @@ import { indentMore } from "@codemirror/commands";
 import { indentService, indentUnit } from "@codemirror/language";
 import { countColumn, EditorSelection, EditorState, type Extension } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import { getNoteBlockFromPos } from "./block/block";
+import { getNoteBlockFromPos, outOfBlockHeader } from "./block/block";
 import { hasSelection } from "./cmutils";
 import { getLanguage } from "./languages";
 
@@ -31,8 +31,7 @@ export function insertIndentation(view: EditorView): boolean {
   }
   const tabs = state.facet(indentUnit) === "\t";
   const changes = state.changeByRange((range) => {
-    const block = getNoteBlockFromPos(state, range.from);
-    const from = Math.max(range.from, block?.contentFrom ?? 0);
+    const from = outOfBlockHeader(getNoteBlockFromPos(state, range.from), range.from);
     const line = state.doc.lineAt(from);
     const column = countColumn(state.sliceDoc(line.from, from), state.tabSize);
     const insert = tabs ? "\t" : " ".repeat(state.tabSize - (column % state.tabSize));

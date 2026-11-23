@@ -118,11 +118,17 @@ export function getNoteBlocksFromRangeSet(state: EditorState, ranges: Iterable<S
   return [...matches].sort((a, b) => a.index - b.index);
 }
 
+// pos, moved to the start of block's content if it's in block's header line
+// (pos as is if there's no block)
+export function outOfBlockHeader(block: Block | undefined, pos: number): number {
+  return block ? Math.max(pos, block.contentFrom) : pos;
+}
+
 export function getBlockLineFromPos(state: EditorState, pos: number): { line: number; col: number; length: number } | null {
   const block = getNoteBlockFromPos(state, pos);
   if (!block) return null;
 
-  const contentPos = Math.max(pos, block.contentFrom);
+  const contentPos = outOfBlockHeader(block, pos);
   const line = state.doc.lineAt(contentPos);
   const startLine = state.doc.lineAt(block.contentFrom);
   return {
@@ -276,8 +282,7 @@ const normalizeSelection = EditorState.transactionFilter.of((tr) => {
 
   function normalize(pos: number): number {
     if (pos < blocks[0].contentFrom) return blocks[0].contentFrom;
-    const block = findBlock(blocks, pos);
-    return block ? Math.max(pos, block.contentFrom) : pos;
+    return outOfBlockHeader(findBlock(blocks, pos), pos);
   }
 
   let changed = false;

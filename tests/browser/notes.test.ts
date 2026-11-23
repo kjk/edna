@@ -16,6 +16,17 @@ import {
 import { setupLocalStorage } from "./fs-utils";
 
 // note lifecycle in localStorage (docs/state-machines.md M4, issue 3)
+// runs fn with a file named name in the origin private file system, then removes it
+async function withTempFile(name: string, fn: (fh: FileSystemFileHandle) => Promise<void>) {
+  const root = await navigator.storage.getDirectory();
+  const fh = await root.getFileHandle(name, { create: true });
+  try {
+    await fn(fh);
+  } finally {
+    await root.removeEntry(name);
+  }
+}
+
 describe("notes (localStorage)", () => {
   beforeEach(async () => {
     await setupLocalStorage();
@@ -81,14 +92,13 @@ describe("notes (localStorage)", () => {
 
   it("notes opened from disk: unique ignoring case, forgotten when storage changes (U4, U6)", async () => {
     await createNoteWithName("foo", blockHdrMarkdown + "browser foo");
-    const root = await navigator.storage.getDirectory();
-    const fh = await root.getFileHandle("Foo.edna.txt", { create: true });
-    expect(rememberOpenedNote(fh)).toBe("Foo-1");
-    expect(appState.allNotes).toContain("Foo-1");
-    await dbDelDirHandle();
-    await loadNoteNames();
-    expect(appState.allNotes).toEqual(["foo"]);
-    await root.removeEntry("Foo.edna.txt");
+    await withTempFile("Foo.edna.txt", async (fh) => {
+      expect(rememberOpenedNote(fh)).toBe("Foo-1");
+      expect(appState.allNotes).toContain("Foo-1");
+      await dbDelDirHandle();
+      await loadNoteNames();
+      expect(appState.allNotes).toEqual(["foo"]);
+    });
   });
 
   it("a new note doesn't inherit metadata of a deleted note with that name (U7)", async () => {
@@ -112,9 +122,8 @@ describe("notes (localStorage)", () => {
   });
 
   it("opening a file that isn't a .edna.txt note is refused, not a crash", async () => {
-    const root = await navigator.storage.getDirectory();
-    const fh = await root.getFileHandle("notes.txt", { create: true });
-    expect(rememberOpenedNote(fh)).toBeNull();
-    await root.removeEntry("notes.txt");
+    await withTempFile("notes.txt", async (fh) => {
+      expect(rememberOpenedNote(fh)).toBeNull();
+    });
   });
 });

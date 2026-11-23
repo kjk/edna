@@ -1,6 +1,6 @@
 import { EditorSelection } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import { getNoteBlockFromPos } from "./block";
+import { getNoteBlockFromPos, outOfBlockHeader } from "./block";
 import { selectedLines } from "./selected-lines";
 
 export function deleteLine(view: EditorView): boolean {
@@ -16,7 +16,7 @@ export function deleteLine(view: EditorView): boolean {
   const ranges = state.selection.ranges.map((range) => {
     const block = getNoteBlockFromPos(state, range.head);
     if (!block) return range;
-    const line = state.doc.lineAt(Math.max(block.contentFrom, range.head));
+    const line = state.doc.lineAt(outOfBlockHeader(block, range.head));
     const nextLine = line.to < block.to ? state.doc.line(line.number + 1) : line;
     return EditorSelection.cursor(nextLine.from + Math.min(nextLine.length, Math.max(0, range.head - line.from)));
   });
