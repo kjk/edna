@@ -1,6 +1,6 @@
 import { isolateHistory } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
-import { getActiveNoteBlock } from "./editor/block/block";
+import { getEditableActiveBlock, replaceBlockContent } from "./editor/block/block";
 import type { MultiBlockEditor } from "./editor/editor";
 import { getLanguage, langGetPrettierInfo } from "./editor/languages";
 
@@ -16,8 +16,8 @@ async function formatGo(source: string): Promise<string | null> {
 export async function formatBlockContent(editor: MultiBlockEditor): Promise<boolean> {
   const { view, contentGen } = editor;
   const { state } = view;
-  const block = getActiveNoteBlock(state);
-  if (state.readOnly || !block || block.contentFrom === block.to) {
+  const block = getEditableActiveBlock(state);
+  if (!block || block.contentFrom === block.to) {
     return false;
   }
   const source = state.sliceDoc(block.contentFrom, block.to);
@@ -57,10 +57,7 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   } else if (offset === source.length) {
     cursor = formatted.length;
   }
-  view.dispatch({
-    changes: { from: block.contentFrom, to: block.to, insert: formatted },
-    selection: { anchor: block.contentFrom + Math.min(formatted.length, Math.max(0, cursor)) },
-    scrollIntoView: true,
+  replaceBlockContent(view, block, formatted, cursor, {
     annotations: isolateHistory.of("full"),
     userEvent: "input.format",
   });

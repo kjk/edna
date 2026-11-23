@@ -36,52 +36,42 @@ export interface DelimiterInfo {
 // also used by getBlocksFromString() so that both ways of getting blocks agree (U26)
 export function findDelimiters(text: string): DelimiterInfo[] {
   const delimiters: DelimiterInfo[] = [];
-  let pos = 0;
 
-  // Check for delimiter at document start (no leading newline)
+  // delimiter on the line starting at lineStart; start is where it begins
+  // (the newline before ∞∞∞, except at document start)
+  const delimiterAt = (lineStart: number, start: number): DelimiterInfo | null => {
+    if (!text.startsWith(kDelimiterPrefix, lineStart)) return null;
+    const lineEnd = text.indexOf("\n", lineStart);
+    if (lineEnd === -1) return null;
+    const delim = parseDelimiterLine(text.slice(lineStart, lineEnd));
+    if (!delim) return null;
+    const langStart = lineStart + kDelimiterPrefix.length;
+    return {
+      start,
+      end: lineEnd + 1, // Include the newline after language
+      langStart,
+      langEnd: langStart + delim.language.length,
+      autoDetect: delim.autoDetect,
+    };
+  };
+
+  // delimiter at document start (no leading newline)
+  let pos = 0;
   if (text.startsWith(kDelimiterPrefix)) {
-    const lineEnd = text.indexOf("\n");
-    if (lineEnd !== -1) {
-      const delim = parseDelimiterLine(text.slice(0, lineEnd));
-      if (delim) {
-        delimiters.push({
-          start: 0,
-          end: lineEnd + 1,
-          langStart: kDelimiterPrefix.length,
-          langEnd: kDelimiterPrefix.length + delim.language.length,
-          autoDetect: delim.autoDetect,
-        });
-      }
-    }
+    const first = delimiterAt(0, 0);
+    if (first) delimiters.push(first);
     pos = text.indexOf("\n") + 1;
   }
 
-  // Find remaining delimiters (with leading newline)
+  // remaining delimiters (with leading newline)
   while (pos < text.length) {
     const nextNewline = text.indexOf("\n", pos);
     if (nextNewline === -1) break;
-
-    // Check if next line starts with delimiter
-    const afterNewline = nextNewline + 1;
-    if (
-      text.slice(afterNewline, afterNewline + kDelimiterPrefix.length) ===
-      kDelimiterPrefix
-    ) {
-      const lineEnd = text.indexOf("\n", afterNewline);
-      if (lineEnd !== -1) {
-        const delim = parseDelimiterLine(text.slice(afterNewline, lineEnd));
-        if (delim) {
-          delimiters.push({
-            start: nextNewline, // Include the newline before ∞∞∞
-            end: lineEnd + 1, // Include the newline after language
-            langStart: afterNewline + kDelimiterPrefix.length,
-            langEnd: afterNewline + kDelimiterPrefix.length + delim.language.length,
-            autoDetect: delim.autoDetect,
-          });
-          pos = lineEnd + 1;
-          continue;
-        }
-      }
+    const delim = delimiterAt(nextNewline + 1, nextNewline);
+    if (delim) {
+      delimiters.push(delim);
+      pos = delim.end;
+      continue;
     }
     pos = nextNewline + 1;
   }

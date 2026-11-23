@@ -1,20 +1,25 @@
 import { throwIf } from "./util";
 
+function permissionOpts(withWrite: boolean): any {
+  return withWrite ? { mode: "readwrite" } : {};
+}
+
 export async function requestHandlePermission(fh: any, withWrite: boolean): Promise<boolean> {
-  const opts: any = {};
-  if (withWrite) {
-    opts.mode = "readwrite";
+  return (await fh.requestPermission(permissionOpts(withWrite))) === "granted";
+}
+
+// asks the user for write permission to a file or directory; errors count as denied
+export async function requestWritePermission(fh: FileSystemHandle | undefined): Promise<boolean> {
+  try {
+    return await requestHandlePermission(fh, true);
+  } catch (e) {
+    console.log("requestWritePermission:", e);
+    return false;
   }
-  return (await fh.requestPermission(opts)) === "granted";
 }
 
 export async function hasHandlePermission(fh: any, withWrite: boolean): Promise<boolean> {
-  const opts: any = {};
-  if (withWrite) {
-    opts.mode = "readwrite";
-  }
-  let res = await fh.queryPermission(opts);
-  return res === "granted";
+  return (await fh.queryPermission(permissionOpts(withWrite))) === "granted";
 }
 
 export function isIFrame(): boolean {
@@ -191,28 +196,16 @@ export function supportsFileSystem(): boolean {
   return ok;
 }
 
-export async function fsFileHandleWriteText(fh: FileSystemFileHandle, content: string) {
+export async function fsFileHandleWrite(fh: FileSystemFileHandle, data: string | Blob) {
   const writable = await fh.createWritable();
-  await writable.write(content);
+  await writable.write(data);
   await writable.close();
 }
 
-export async function fsWriteTextFile(dh: FileSystemDirectoryHandle, fileName: string, content: string) {
-  console.log("writing to file:", fileName, content.length);
+export async function fsWriteFile(dh: FileSystemDirectoryHandle, fileName: string, data: string | Blob) {
+  console.log("writing to file:", fileName, typeof data === "string" ? data.length : data.size);
   let fh = await dh.getFileHandle(fileName, { create: true });
-  await fsFileHandleWriteText(fh, content);
-}
-
-export async function fsFileHandleWriteBlob(fh: FileSystemFileHandle, blob: Blob) {
-  const writable = await fh.createWritable();
-  await writable.write(blob);
-  await writable.close();
-}
-
-export async function fsWriteBlob(dh: FileSystemDirectoryHandle, fileName: string, blob: Blob) {
-  console.log("writing to file:", fileName, blob.size);
-  let fh = await dh.getFileHandle(fileName, { create: true });
-  await fsFileHandleWriteBlob(fh, blob);
+  await fsFileHandleWrite(fh, data);
 }
 
 export async function fsFileHandleReadTextFile(fh: FileSystemFileHandle): Promise<string> {

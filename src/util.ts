@@ -63,6 +63,28 @@ export function getAltChar(platform = platformName): string {
   return platform === "darwin" ? "⌥" : "Alt";
 }
 
+// e.g. "Alt + 3" for quick access shortcut n
+// Mod key (Command on Mac, Ctrl elsewhere) is pressed
+export function isModKey(ev: KeyboardEvent | MouseEvent): boolean {
+  return platform.isMac ? ev.metaKey : ev.ctrlKey;
+}
+
+// true if ev is the key described by a CodeMirror-style spec like "Mod-Shift-k"
+export function keySpecMatches(spec: string, ev: KeyboardEvent): boolean {
+  let parts = spec.split("-");
+  let key = parts.pop()!;
+  return (
+    ev.key.toLowerCase() === key.toLowerCase() &&
+    isModKey(ev) === parts.includes("Mod") &&
+    ev.shiftKey === parts.includes("Shift") &&
+    ev.altKey === parts.includes("Alt")
+  );
+}
+
+export function altShortcutStr(n: number | string): string {
+  return getAltChar() + " + " + n;
+}
+
 const utf8Encoder = new TextEncoder(); // perf: a single globar encoder
 
 export function toUtf8(text: string): Uint8Array {
@@ -133,13 +155,7 @@ const daysOfWeek = [
 ];
 
 export function formatDateYYYYMMDDDay(date = new Date()): string {
-  let year = date.getFullYear();
-  let month = ("0" + (date.getMonth() + 1)).slice(-2); // Months are zero based
-  let day = ("0" + date.getDate()).slice(-2);
-  let dayOfWeek = date.getDay();
-  let dayName = daysOfWeek[dayOfWeek];
-  let formattedDate = `${year}-${month}-${day} ${dayName}`;
-  return formattedDate;
+  return `${formatDateYYYYMMDD(date)} ${daysOfWeek[date.getDay()]}`;
 }
 
 export function isAltNumEvent(e: KeyboardEvent): string | null {
@@ -182,6 +198,11 @@ export function addNoteToBrowserHistory(noteName: string) {
 }
 
 let cachedScrollbarDx = 0;
+
+// style that keeps a fixed, right-aligned element clear of the vertical scrollbar
+export function scrollbarOffsetStyle(): string {
+  return `right: ${getScrollbarWidth()}px`;
+}
 
 export function getScrollbarWidth(): number {
   /*
@@ -231,18 +252,35 @@ export function trimSuffix(s: string, suffix: string): string {
   return s.substring(0, s.length - suffix.length);
 }
 
-export function removeDuplicates(a: string[]): string[] {
-  let res = new Array(a.length);
-  let n = 0;
-  for (let s of a) {
-    if (res.includes(s)) {
-      console.log(`filterDuplicates: found duplicate '${s}'`);
-      continue;
-    }
-    res[n++] = s;
+// message of an Error, or e as a string for anything else that was thrown
+export function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+// value parsed from JSON in s, or undefined if s isn't valid JSON (logged as error about what)
+export function tryParseJSON(s: string, what: string): unknown {
+  try {
+    return JSON.parse(s);
+  } catch (e) {
+    console.error(`${what} is not valid JSON`, e);
+    return undefined;
   }
-  res.length = n;
-  return res;
+}
+
+// like tryParseJSON() but {} unless s is a JSON object
+export function tryParseJSONObject(s: string, what: string): Record<string, any> {
+  let v = tryParseJSON(s, what);
+  return v && typeof v === "object" ? v : {};
+}
+
+// sort comparator part: items with a true flag go first (0 if both are the same)
+export function compareTrueFirst(a: boolean | undefined, b: boolean | undefined): number {
+  return Number(!!b) - Number(!!a);
+}
+
+// items of a without repeats, in order of first appearance
+export function removeDuplicates<T>(a: T[]): T[] {
+  return [...new Set(a)];
 }
 
 export function stringMatchesParts(s: string, parts: string[]): boolean {
@@ -299,6 +337,17 @@ export function getKeyEventNumber(ev: KeyboardEvent): number {
     return -1;
   }
   return n;
+}
+
+// if ev is a digit key '0' ... '9' less than nItems, calls pick(digit) and returns true
+export function handleDigitPick(ev: KeyboardEvent, nItems: number, pick: (idx: number) => void): boolean {
+  let idx = getKeyEventNumber(ev);
+  if (idx < 0 || idx >= nItems) {
+    return false;
+  }
+  ev.preventDefault();
+  pick(idx);
+  return true;
 }
 
 export async function getClipboardText(): Promise<string> {
@@ -390,10 +439,22 @@ export function pushIfNotExists(arr: any[], item: any) {
   }
 }
 
-export function arrayRemove(arr: any[], item: any) {
-  let i = arr.indexOf(item);
-  if (i >= 0) {
+// removes arr[i] if i is a valid index (e.g. not -1 from indexOf)
+export function arrayRemoveAt(arr: any[], i: number) {
+  if (i >= 0 && i < arr.length) {
     arr.splice(i, 1);
+  }
+}
+
+export function arrayRemove(arr: any[], item: any) {
+  arrayRemoveAt(arr, arr.indexOf(item));
+}
+
+// replaces first item equal to oldItem with newItem
+export function arrayReplace<T>(arr: T[], oldItem: T, newItem: T) {
+  let i = arr.indexOf(oldItem);
+  if (i >= 0) {
+    arr[i] = newItem;
   }
 }
 
@@ -410,12 +471,65 @@ export function btnPressedCls(isPressed: boolean): string {
   return isPressed ? "bg-gray-100 border-1 border-gray-300" : "bg-white border-1 border-white";
 }
 
+// e.g. "12 notes" or "3 of 12 notes"; "" if nothing matches and hideWhenNone
+// (so the count doesn't obscure a long name the user is typing)
+export function filteredCountMsg(nFiltered: number, nTotal: number, noun: string, hideWhenNone = true): string {
+  if (nFiltered === 0 && hideWhenNone) {
+    return "";
+  }
+  if (nFiltered === nTotal) {
+    return `${nTotal} ${noun}`;
+  }
+  return `${nFiltered} of ${nTotal} ${noun}`;
+}
+
+// if ev is Enter: prevent default (and propagation if stop), call fn and return true
+export function handleEnter(ev: KeyboardEvent, fn: (ev: KeyboardEvent) => void, stop = false): boolean {
+  if (ev.key !== "Enter") {
+    return false;
+  }
+  ev.preventDefault();
+  if (stop) {
+    ev.stopPropagation();
+  }
+  fn(ev);
+  return true;
+}
+
 // keydown handler for dialogs: Enter calls submit() if canSubmit and swallows the event
 export function submitOnEnter(ev: KeyboardEvent, canSubmit: boolean, submit: () => void) {
-  if (canSubmit && ev.key === "Enter") {
-    submit();
+  if (canSubmit) {
+    handleEnter(ev, submit, true);
+  }
+}
+
+// if ev is Alt + S and there's a selected item, toggles its star; returns true if handled
+export function handleToggleStarKey<T>(ev: KeyboardEvent, selected: T | undefined | null, toggle: (item: T) => void) {
+  if (ev.key === "s" && ev.altKey && selected) {
     ev.preventDefault();
-    ev.stopPropagation();
+    toggle(selected);
+    return true;
+  }
+  return false;
+}
+
+// runs toggle() (e.g. toggling star of an item) and then gives focus back to focusEl
+export async function toggleStarredAndFocus(toggle: () => unknown, focusEl?: HTMLElement) {
+  await toggle();
+  focusEl?.focus();
+}
+
+// flips boolean property obj[key]
+export function toggleFlag<T, K extends { [P in keyof T]: T[P] extends boolean ? P : never }[keyof T]>(obj: T, key: K) {
+  (obj as any)[key] = !obj[key];
+}
+
+// removes item from arr if present, adds it otherwise
+export function toggleInArray<T>(arr: T[], item: T) {
+  if (arr.includes(item)) {
+    arrayRemove(arr, item);
+  } else {
+    arr.push(item);
   }
 }
 

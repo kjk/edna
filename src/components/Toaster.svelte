@@ -16,18 +16,24 @@
   let nextId = 0;
 
   function removeToast(id: number) {
-    let idx = -1;
-    for (let i = 0; i < len(toasts); i++) {
-      if (toasts[i].id === id) {
-        idx = i;
-        break;
-      }
+    // it's ok if not found: can be called by timer after it was removed manually
+    arrayRemoveAt(toasts, toasts.findIndex((t) => t.id === id));
+  }
+
+  // runs save(); on failure shows an error (naming the note if given) and returns false
+  export async function saveOrShowError(save: () => Promise<unknown>, noteName?: string): Promise<boolean> {
+    try {
+      await save();
+      return true;
+    } catch (e) {
+      showSaveError(e, noteName);
+      return false;
     }
-    if (idx === -1) {
-      // it's ok, can be called by timer but was removed manually
-      return;
-    }
-    toasts.splice(idx, 1);
+  }
+
+  export function showSaveError(e: unknown, noteName?: string) {
+    let name = noteName ? ` '${noteName}'` : "";
+    showError(`Failed to save note${name}: ${e}`);
   }
 
   // messages of toasts currently shown (for tests)
@@ -70,12 +76,11 @@
 </script>
 
 <script lang="ts">
-  import { getScrollbarWidth, len } from "../util";
+  import { arrayRemoveAt, len, scrollbarOffsetStyle } from "../util";
 
   let style = $state("");
   $effect(() => {
-    let dx = getScrollbarWidth();
-    style = `right: ${dx}px`;
+    style = scrollbarOffsetStyle();
   });
   function bgClass(type: number) {
     let res = "bg-white dark:bg-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500";

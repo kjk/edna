@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { requestHandlePermission } from "../fileutil";
+  import { requestWritePermission } from "../fileutil";
   import { boot, switchToBrowserStorage, switchToDirectory } from "../main";
   import { clearStorageFS, dbGetDirHandle } from "../notes";
 
@@ -18,10 +18,8 @@
       dirName = dh.name;
     });
   });
-  async function requestPermissions() {
-    let dh = await dbGetDirHandle();
-    let ok = await requestHandlePermission(dh, true);
-    if (ok) {
+  async function allowDirAccess() {
+    if (await requestWritePermission(await dbGetDirHandle())) {
       console.log("trying to mount app now");
       await boot();
     } else {
@@ -45,7 +43,7 @@
       {#if error}
         <button onclick={() => boot()} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100">Try again</button>
       {:else}
-        <button onclick={requestPermissions} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100"
+        <button onclick={allowDirAccess} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100"
           >Allow Edna to access files in directory <span class="font-bold">{dirName}</span></button
         >
       {/if}

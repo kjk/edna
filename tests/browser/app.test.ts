@@ -4,7 +4,7 @@ import { appState } from "../../src/appstate.svelte";
 import { createNoteWithName, loadNote, saveNote } from "../../src/notes";
 import { getSettings } from "../../src/settings.svelte";
 import { kTabHome } from "../../src/constants";
-import { editorElement, editorInput, editorText, mountApp, pressMod } from "./app-ui";
+import { editorElement, editorInput, editorText, mountApp, openNoteShortcut, pressMod } from "./app-ui";
 
 // Integration tests: boot the whole app (docs/state-machines.md M8 dialogs)
 
@@ -38,9 +38,8 @@ describe("app", () => {
   }
 
   async function openWithShortcut(n: number, name: string) {
-    altDigit(n);
+    await openNoteShortcut(n, name);
     await expect.poll(() => appState.currentNoteName).toBe(name);
-    await expect.poll(() => document.title).toBe(name);
   }
 
   async function openFixture(name: string, content: string, visibleText: string) {

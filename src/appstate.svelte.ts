@@ -1,5 +1,5 @@
 import { noteNameFromTab } from "./constants";
-import { getNoteMeta } from "./metadata";
+import { getNoteMeta, isNoteArchived } from "./metadata";
 import { defaultSettings, type Settings } from "./settings.svelte";
 
 class AppState {
@@ -52,27 +52,11 @@ class AppState {
 }
 
 function calcRegular(noteNames: string[]): string[] {
-  let res: string[] = [];
-  for (let name of noteNames) {
-    let m = getNoteMeta(name, false);
-    if (m && m.isArchived) {
-      continue;
-    }
-    res.push(name);
-  }
-  return res;
+  return noteNames.filter((name) => !isNoteArchived(name));
 }
 
-function calcWithBoolKey(noteNames: string[], key: string): string[] {
-  let res: string[] = [];
-  for (let name of noteNames) {
-    let m = getNoteMeta(name, false);
-    // @ts-ignore
-    if (m && m[key]) {
-      res.push(name);
-    }
-  }
-  return res;
+function calcWithBoolKey(noteNames: string[], key: "isStarred" | "altShortcut"): string[] {
+  return noteNames.filter((name) => !!getNoteMeta(name, false)?.[key]);
 }
 
 function calcStarred(noteNames: string[]): string[] {
@@ -80,7 +64,7 @@ function calcStarred(noteNames: string[]): string[] {
 }
 
 function calcArchived(noteNames: string[]): string[] {
-  return calcWithBoolKey(noteNames, "isArchived");
+  return noteNames.filter(isNoteArchived);
 }
 
 function callcWithShortcuts(noteNames: string[]): string[] {

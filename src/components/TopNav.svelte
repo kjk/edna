@@ -5,7 +5,7 @@
   import { getNoteMeta } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
   import { getSettings } from "../settings.svelte";
-  import { getAltChar, len } from "../util";
+  import { altShortcutStr, len, toggleFlag } from "../util";
   import HelpDropDown from "./HelpDropDown.svelte";
   import {
     IconGrokIconDown,
@@ -25,6 +25,7 @@
     openNote: (name: string, newTab: boolean) => void;
     closeTab: (name: string) => void;
     openNoteSelector: () => void;
+    openNoteSelectorInNewTab: () => void;
     buildMenuDef: () => MenuDef;
     menuItemStatus?: (mi: Command) => number;
     executeCommand: (cmdId: number, arg: any) => void;
@@ -34,17 +35,17 @@
     openNote,
     closeTab,
     openNoteSelector,
+    openNoteSelectorInNewTab,
     buildMenuDef,
     menuItemStatus,
     executeCommand,
   }: Props = $props();
 
-  let altChar = getAltChar();
 
   function getNameWithShortcut(noteName: string): string {
     let m = getNoteMeta(noteName);
     if (m && m.altShortcut) {
-      return `${noteName}  (${altChar} + ${m.altShortcut})`;
+      return `${noteName}  (${altShortcutStr(m.altShortcut)})`;
     }
     return noteName;
   }
@@ -126,15 +127,13 @@
 <div
   class="flex bg-gray-200 text-sm px-1 select-none text-gray-900 dark:bg-gray-500 dark:text-gray-300 items-center {cls} hover:visible {klass}"
 >
-  {#if settings.showSidebar}
-    <button onclick={() => (settings.showSidebar = false)} class="clickable-icon" title={"Hide Sidebar"}>
-      {@render IconMdiArrowCollapseLeft()}
-    </button>
-  {:else}
-    <button onclick={() => (settings.showSidebar = true)} class="clickable-icon" title={"Show Sidebar"}>
-      {@render IconMdiArrowCollapseRight()}
-    </button>
-  {/if}
+  <button
+    onclick={() => toggleFlag(settings, "showSidebar")}
+    class="clickable-icon"
+    title={settings.showSidebar ? "Hide Sidebar" : "Show Sidebar"}
+  >
+    {@render collapseIcon(settings.showSidebar)}
+  </button>
 
   <button
     onmouseenter={(ev) => {
@@ -226,10 +225,7 @@
   {/key}
 
   <button
-    onclick={() => {
-      appState.forceNewTab = true;
-      openNoteSelector();
-    }}
+    onclick={() => openNoteSelectorInNewTab()}
     class="clickable-icon ml-1 px-1!"
     title={"Open note in a new tab"}
   >
@@ -272,23 +268,24 @@
       target="_blank"
       >Edna
     </a>
-    <button
-      onclick={() => (settings.alwaysShowTopNav = false)}
-      class="clickable-icon"
-      title={"Make Navigation Bar Smaller"}
-    >
-      {@render IconMdiArrowCollapseRight()}
-    </button>
-  {:else}
-    <button
-      onclick={() => (settings.alwaysShowTopNav = true)}
-      class="clickable-icon"
-      title={"Make Navigation Bar Full Size"}
-    >
-      {@render IconMdiArrowCollapseLeft()}
-    </button>
   {/if}
+  <button
+    onclick={() => toggleFlag(settings, "alwaysShowTopNav")}
+    class="clickable-icon"
+    title={settings.alwaysShowTopNav ? "Make Navigation Bar Smaller" : "Make Navigation Bar Full Size"}
+  >
+    {@render collapseIcon(!settings.alwaysShowTopNav)}
+  </button>
 </div>
+
+<!-- arrow pointing left (collapse) or right (expand) -->
+{#snippet collapseIcon(left: boolean)}
+  {#if left}
+    {@render IconMdiArrowCollapseLeft()}
+  {:else}
+    {@render IconMdiArrowCollapseRight()}
+  {/if}
+{/snippet}
 
 <style lang="postcss">
   @reference "tailwindcss";

@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { getLanguage, getLanguageNameFromToken, langSupportsFormat, langSupportsRun } from "../editor/languages";
+  import { getLanguage, getLanguageNameFromToken, langSupportsFormat } from "../editor/languages";
+  import { smartRunAction, smartRunLabels } from "../smart-run";
   import { fixUpShortcuts } from "../key-helper";
-  import { fmtSize, getScrollbarWidth } from "../util";
+  import { fmtSize, scrollbarOffsetStyle } from "../util";
   import CurrentTime from "./CurrentTime.svelte";
 
   interface Props {
@@ -33,29 +34,16 @@
 
   let style = $state("");
   $effect(() => {
-    let dx = getScrollbarWidth();
-    style = `right: ${dx}px`;
+    style = scrollbarOffsetStyle();
   });
 
   let languageName = $derived(getLanguageNameFromToken(language));
 
   let lang = $derived(getLanguage(language));
   let supportsFormat = $derived(langSupportsFormat(lang));
-  let supportsRun = $derived(langSupportsRun(lang));
   // TODO: depend on platform
   let formatBlockTitle = $derived(fixUpShortcuts(`Format Block (Alt + Shift + F)`));
-  let runBlockTitle = $derived.by(() => {
-    let s = "Smart Run";
-    if (selectionSize > 0) {
-      s = "Run Function With Selection";
-    } else if (supportsRun) {
-      s = "Run Code Block";
-    } else {
-      s = "Run Function With Block Content";
-    }
-    s += fixUpShortcuts(` (Mod + E)`);
-    return s;
-  });
+  let runBlockTitle = $derived(smartRunLabels[smartRunAction(selectionSize > 0, language)] + fixUpShortcuts(` (Mod + E)`));
   let formatSize = $derived(fmtSize(docSize));
   let changeLanguageTitle = $derived(fixUpShortcuts(`Change language for current block (Mod + L)`));
 </script>

@@ -1,6 +1,6 @@
 import { EditorSelection, type Line } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import { getBlockN, getNoteBlockFromPos, type Block } from "./block";
+import { blockLineRange, getBlockN, getNoteBlockFromPos, type Block } from "./block";
 import { selectedLines } from "./selected-lines";
 
 function moveLines(view: EditorView, forward: boolean): boolean {
@@ -13,8 +13,7 @@ function moveLines(view: EditorView, forward: boolean): boolean {
   function linesOf(block: Block): Line[] {
     const cached = blockLines.get(block);
     if (cached) return cached;
-    const first = state.doc.lineAt(block.contentFrom).number;
-    const last = state.doc.lineAt(block.to).number;
+    const { first, last } = blockLineRange(state.doc, block);
     const lines = Array.from({ length: last - first + 1 }, (_, i) => state.doc.line(first + i));
     blockLines.set(block, lines);
     return lines;

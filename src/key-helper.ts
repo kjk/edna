@@ -15,8 +15,6 @@ export function fixUpShortcutsInCode(s: string, platform = platformName): string
 }
 
 function getKeyHelp(platform = platformName): string[][] {
-  const modChar = getModChar(platform);
-  const altChar = getAltChar(platform);
   let isMac = platform === "darwin";
   let res = [
     [`Mod + K`, "Open, create or delete a note"],
@@ -87,10 +85,8 @@ function getKeyHelp(platform = platformName): string[][] {
     updateMacKeyBindings();
   }
   for (let el of res) {
-    el[0] = el[0].replaceAll("Mod", modChar);
-    el[1] = el[1].replaceAll("Mod", modChar);
-    el[0] = el[0].replaceAll("Alt", altChar);
-    el[1] = el[1].replaceAll("Alt", altChar);
+    el[0] = fixUpShortcuts(el[0], platform);
+    el[1] = fixUpShortcuts(el[1], platform);
   }
   return res;
 }

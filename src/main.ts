@@ -12,8 +12,8 @@ import {
   createDefaultNotes,
   dbDelDirHandle,
   dbGetDirHandle,
-  isSystemNoteName,
   loadNoteNames,
+  noteExists,
   pickAnotherDirectory,
   preLoadAllNotes,
 } from "./notes";
@@ -121,7 +121,7 @@ async function bootNow() {
     if (!name) {
       return false;
     }
-    return noteNames.includes(name) || isSystemNoteName(name);
+    return noteExists(name);
   }
 
   function isValidTab(tab: string): boolean {

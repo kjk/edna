@@ -63,38 +63,22 @@ export function boopFunctionResult(input: { text: unknown; fullText: unknown }, 
   return input.text as string;
 }
 
+// separates functions in the built-in functions file
+export const kBuiltInFunctionsSeparator = "// ----------------------------";
+
+// boop functions parsed from parts, skipping parts that aren't functions
+function parseBoopFunctions(parts: string[]): BoopFunction[] {
+  return parts.map(parseBoopFunction).filter((f) => !!f) as BoopFunction[];
+}
+
 export function parseBuiltInFunctions(s: string): BoopFunction[] {
-  let parts = s.split("// ----------------------------");
-  let n = len(parts);
-  let res: BoopFunction[] = Array(n);
-  let i = 0;
-  for (let p of parts) {
-    let meta = parseBoopFunction(p);
-    if (meta) {
-      res[i++] = meta;
-    }
-  }
-  res.length = i;
-  return res;
+  return parseBoopFunctions(s.split(kBuiltInFunctionsSeparator));
 }
 
 export function parseUserFunctions(s: string): BoopFunction[] {
-  let parts = s.split("\n∞∞∞");
-  let n = len(parts);
-  let res: BoopFunction[] = Array(n);
-  let i = 0;
-  for (let p of parts) {
-    let lines = p.split("\n");
-    // skip the type of the block
-    lines = lines.slice(1);
-    p = lines.join("\n");
-    let meta = parseBoopFunction(p);
-    if (meta) {
-      res[i++] = meta;
-    }
-  }
-  res.length = i;
-  return res;
+  // each block is a function; skip the block header line (the type of the block)
+  let parts = s.split("\n∞∞∞").map((p) => p.split("\n").slice(1).join("\n"));
+  return parseBoopFunctions(parts);
 }
 
 export async function runBoopFunction(f: BoopFunction, arg: BoopFunctionArg): Promise<void> {

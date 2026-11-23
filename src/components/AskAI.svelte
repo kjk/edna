@@ -1,14 +1,21 @@
 <script lang="ts">
   import { tick } from "svelte";
   import hljs from "highlight.js";
-  import markdownIt, { type MarkdownIt } from "markdown-it";
-  import { aiProviders, findModel, getAiProvider, modelKey, type AiModel, type AiProvider } from "../ai-models";
+  import type { MarkdownIt } from "markdown-it";
+  import {
+    aiProviders,
+    findModel,
+    getAiProvider,
+    modelKey,
+    providerKey,
+    type AiModel,
+    type AiProvider,
+  } from "../ai-models";
   import { aiModelsState, refreshAiModels } from "../ai-models-state.svelte";
   import { parseChatStreamData } from "../ai-stream";
-  import markdownItAnchor from "markdown-it-anchor";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";
-  import { addTargetBlank } from "../markdown-util";
+  import { newMarkdownIt } from "../markdown-util";
   import { getSettings } from "../settings.svelte";
   import { isKeyCtrlEnter, len } from "../util";
   import AiModels from "./AiModels.svelte";
@@ -34,9 +41,9 @@
   let aiModel: AiModel | undefined = $derived(findModel(settings.aiModelID, aiModelsState.models));
   let aiModelName = $derived(aiModel ? aiModel.name : aiModelsState.loading ? "loading..." : "no model");
   let aiProvider = $derived(aiModel ? getAiProvider(aiModel.provider) : undefined);
-  let apiKey = $derived(aiProvider ? (settings[aiProvider.keySetting] || "").trim() : "");
+  let apiKey = $derived(aiProvider ? providerKey(settings, aiProvider) : "");
   let hasAPIKey = $derived(aiProvider !== undefined && aiProvider.looksValidKey(apiKey));
-  let hasAnyAPIKey = $derived(aiProviders.some((p) => p.looksValidKey((settings[p.keySetting] || "").trim())));
+  let hasAnyAPIKey = $derived(aiProviders.some((p) => p.looksValidKey(providerKey(settings, p))));
 
   // lists of models depend on API keys: (re-)load when they change. Lists
   // are cached for a day so this usually doesn't make requests
@@ -198,8 +205,7 @@
     if (mdItCached) {
       return mdItCached;
     }
-    let mdIt: MarkdownIt = markdownIt({
-      linkify: true,
+    let mdIt: MarkdownIt = newMarkdownIt({
       highlight: function (str: string, lang: string) {
         try {
           if (lang && hljs && hljs.getLanguage(lang)) {
@@ -209,10 +215,6 @@
         // fallback: escape HTML
         return `<pre class="hljs"><code>${mdIt.utils.escapeHtml(str)}</code></pre>`;
       },
-    });
-    mdIt.use(addTargetBlank);
-    mdIt.use(markdownItAnchor, {
-      permalink: markdownItAnchor.permalink.headerLink(),
     });
     mdItCached = mdIt;
     return mdIt;

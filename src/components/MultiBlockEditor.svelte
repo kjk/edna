@@ -12,7 +12,7 @@
   import { getSettings, resolveTheme } from "../settings.svelte";
   import { objectEqualDeep, throwIf } from "../util";
   import Find from "./Find.svelte";
-  import { showError, showWarning } from "./Toaster.svelte";
+  import { saveOrShowError, showError, showSaveError, showWarning } from "./Toaster.svelte";
 
   function createFindPanel(view: EditorView) {
     const dom = document.createElement("div");
@@ -63,31 +63,35 @@
 
   let editorRef: HTMLElement;
 
+  // editor config that comes from settings
+  function editorConfigFromSettings() {
+    return {
+      theme: resolveTheme(settings.theme),
+      keymap: settings.keymap as "default" | "emacs",
+      emacsMetaKey: settings.emacsMetaKey as "meta" | "alt" | "ctrl",
+      showLineNumberGutter: settings.showLineNumberGutter,
+      showFoldGutter: settings.showFoldGutter,
+      bracketClosing: settings.bracketClosing,
+      showColorPreview: settings.showColorPreview,
+      fontFamily: settings.fontFamily!,
+      fontSize: settings.fontSize!,
+      tabSize: settings.tabSize,
+      useTabs: settings.indentType == "tabs",
+    };
+  }
+
   $effect(() => {
-    /* TODO: it's not reactive if I do:
-      editor?.setLineNumberGutter(settings.showLineNumberGutter);
-      also, reactive breaks if I do:
-      if (!editor) { return; }
-    */
-    let showLineNumberGutter = settings.showLineNumberGutter;
-    editor?.setLineNumberGutter(showLineNumberGutter);
-    let showFoldGutter = settings.showFoldGutter;
-    editor?.setFoldGutter(showFoldGutter);
-    let theme = resolveTheme(settings.theme);
-    editor?.setTheme(theme);
-    let keymap = settings.keymap;
-    let emacsMetaKey = settings.emacsMetaKey;
-    editor?.setKeymap(keymap, emacsMetaKey);
-    let bracketClosing = settings.bracketClosing;
-    editor?.setBracketClosing(bracketClosing);
-    let showColorPreview = settings.showColorPreview;
-    editor?.setColorPreview(showColorPreview);
-    let fontFamily = settings.fontFamily!;
-    let fontSize = settings.fontSize!;
-    editor?.setFont(fontFamily, fontSize);
-    let tabSize = settings.tabSize;
-    let useTabs = settings.indentType == "tabs";
-    editor?.setTabsState(useTabs, tabSize);
+    // note: read all settings before checking editor so that the effect
+    // re-runs when any of them changes
+    let c = editorConfigFromSettings();
+    editor?.setLineNumberGutter(c.showLineNumberGutter);
+    editor?.setFoldGutter(c.showFoldGutter);
+    editor?.setTheme(c.theme);
+    editor?.setKeymap(c.keymap, c.emacsMetaKey);
+    editor?.setBracketClosing(c.bracketClosing);
+    editor?.setColorPreview(c.showColorPreview);
+    editor?.setFont(c.fontFamily, c.fontSize);
+    editor?.setTabsState(c.useTabs, c.tabSize);
   });
 
   function didLoadCurrencies() {
@@ -138,7 +142,7 @@
       if (isCtrlS) {
         e.preventDefault();
         if (appState.isDirty) {
-          editor.save().catch((e) => showError(`Failed to save note: ${e}`));
+          saveOrShowError(() => editor.save());
         }
         saveEditorState();
       }
@@ -158,17 +162,7 @@
     editorRef.addEventListener("docChanged", onDocChanged);
 
     throwIf(!settings);
-    let showLineNumberGutter = settings.showLineNumberGutter;
-    let keymap = settings.keymap;
-    let emacsMetaKey = settings.emacsMetaKey;
-    let showFoldGutter = settings.showFoldGutter;
-    let bracketClosing = settings.bracketClosing;
-    let fontFamily = settings.fontFamily!;
-    let fontSize = settings.fontSize!;
-
     let noteToLoad = appState.currentNoteName!;
-    let useTabs = settings.indentType == "tabs";
-    let tabSize = settings.tabSize;
 
     // note: must capture loader.current synchronously (see NoteLoader)
     function saveCurrentNote(content: string): Promise<void> {
@@ -206,17 +200,7 @@
       setIsDirty: setIsDirty,
       createFindPanel: createFindPanel,
       extraKeymap: extraKeymap,
-      theme: resolveTheme(settings.theme),
-      keymap: keymap as "default" | "emacs",
-      emacsMetaKey: emacsMetaKey as "meta" | "alt" | "ctrl",
-      showLineNumberGutter: showLineNumberGutter,
-      showFoldGutter: showFoldGutter,
-      bracketClosing: bracketClosing,
-      showColorPreview: settings.showColorPreview,
-      fontFamily: fontFamily,
-      fontSize: fontSize,
-      tabSize: tabSize,
-      useTabs: useTabs,
+      ...editorConfigFromSettings(),
       // TODO: add a setting for this
       defaultBlockToken: "text",
       defaultBlockAutoDetect: true,
@@ -238,7 +222,7 @@
         }
       },
       saveFailed: (name, e) => {
-        showError(`Failed to save note '${name}': ${e}`);
+        showSaveError(e, name);
       },
       isDestroyed: () => destroyed,
     });
@@ -281,7 +265,7 @@
   // unsaved edits here, show the new content (issue 15g)
   export async function reloadIfChangedElsewhere() {
     let name = loader?.current;
-    if (!name || editor.getContent() !== editor.diskContent) {
+    if (!name || editor.isDirty()) {
       return;
     }
     let gen = editor.contentGen;
@@ -294,7 +278,7 @@
     if (stored === undefined || stored === editor.diskContent) {
       return;
     }
-    if (destroyed || gen !== editor.contentGen || loader.current !== name || editor.getContent() !== editor.diskContent) {
+    if (destroyed || gen !== editor.contentGen || loader.current !== name || editor.isDirty()) {
       // changed while reading
       return;
     }
@@ -326,11 +310,8 @@
     console.log("openNote:", name);
     let request = loader.newRequest();
     if (!skipSave) {
-      try {
-        await editor.save();
-      } catch (e) {
-        // don't switch away from a note with edits we couldn't save
-        showError(`Failed to save note '${loader.current}': ${e}`);
+      // don't switch away from a note with edits we couldn't save
+      if (!(await saveOrShowError(() => editor.save(), loader.current))) {
         return false;
       }
       await saveEditorState();

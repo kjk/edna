@@ -1,4 +1,15 @@
-import type { MarkdownIt } from "markdown-it";
+import markdownIt, { type MarkdownIt } from "markdown-it";
+import markdownItAnchor from "markdown-it-anchor";
+
+// markdown-it with linkify, links opening in a new tab and anchors for headers
+export function newMarkdownIt(opts: { highlight?: (str: string, lang: string) => string } = {}): MarkdownIt {
+  let md = markdownIt({ linkify: true, ...opts });
+  md.use(addTargetBlank);
+  md.use(markdownItAnchor, {
+    permalink: markdownItAnchor.permalink.headerLink(),
+  });
+  return md;
+}
 
 // markdown-it plugin: add target="_blank" to links except the internal #foo links
 export function addTargetBlank(md: MarkdownIt) {

@@ -1,7 +1,7 @@
 import { foldedRanges } from "@codemirror/language";
 import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet } from "@codemirror/view";
 import { kCurrenciesLoaded, transactionsHasAnnotation } from "../annotation";
-import { getNoteBlocksBetween } from "./block";
+import { blockLineRange, getNoteBlocksBetween } from "./block";
 
 interface MathAPI {
   evaluate(expression: string, scope: Map<string, unknown>): unknown;
@@ -49,7 +49,7 @@ function evaluate(view: EditorView, evaluations: Map<number, Evaluation>): Resul
     if (block.language !== "math") continue;
     let evaluation = evaluations.get(block.from);
     if (!evaluation) {
-      evaluation = { scope: new Map(), nextLine: state.doc.lineAt(block.contentFrom).number, results: [] };
+      evaluation = { scope: new Map(), nextLine: blockLineRange(state.doc, block).first, results: [] };
       evaluations.set(block.from, evaluation);
     }
 

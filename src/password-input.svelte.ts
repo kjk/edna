@@ -1,4 +1,4 @@
-import { len } from "./util";
+import { handleEnter, len } from "./util";
 
 // state and keyboard handling shared by password entry dialogs
 export class PasswordInput {
@@ -19,12 +19,14 @@ export class PasswordInput {
 
   // Enter submits a valid password and is always swallowed
   onkeydown = (ev: KeyboardEvent) => {
-    if (ev.key === "Enter") {
-      if (this.valid) {
-        this.submit();
-      }
-      ev.preventDefault();
-      ev.stopPropagation();
-    }
+    handleEnter(
+      ev,
+      () => {
+        if (this.valid) {
+          this.submit();
+        }
+      },
+      true,
+    );
   };
 }

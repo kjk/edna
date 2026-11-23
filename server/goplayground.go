@@ -92,8 +92,7 @@ func runCompile(body *string) ([]byte, error) {
 // playground's goimports formatter. It returns the original source and the
 // formatter's response. On failure it writes an HTTP error and returns ok == false.
 func readAndFormatBody(w http.ResponseWriter, r *http.Request) (body string, formatted []byte, ok bool) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodPost) {
 		return "", nil, false
 	}
 	bodyBytes, err := io.ReadAll(r.Body)
@@ -183,8 +182,7 @@ func compileHandler(w http.ResponseWriter, r *http.Request) {
 func shareHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
 
@@ -201,8 +199,7 @@ func shareHandler(w http.ResponseWriter, r *http.Request) {
 func loadHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
 

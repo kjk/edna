@@ -11,7 +11,7 @@ import {
   languageDataProp,
   foldNodeProp,
 } from "@codemirror/language";
-import { kFoldLabelLength } from "../constants";
+import { contentFoldRange } from "../constants";
 import { parser } from "./parser";
 import { configureNesting } from "./nested";
 
@@ -25,14 +25,7 @@ const parserWithProps = parser.configure({
   props: [
     foldNodeProp.add({
       NoteContent(node, state) {
-        if (node.from >= node.to) return null;
-
-        const firstLine = state.doc.lineAt(node.from);
-        const foldFrom = Math.min(firstLine.to, node.from + kFoldLabelLength);
-
-        if (foldFrom >= node.to) return null;
-
-        return { from: foldFrom, to: node.to };
+        return contentFoldRange(state.doc, node.from, node.to, true);
       },
     }),
     languageDataProp.add({

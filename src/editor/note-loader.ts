@@ -71,7 +71,7 @@ export class NoteLoader {
           if (gen !== this.gen || this.opts.isDestroyed()) {
             return "superseded";
           }
-        } while (editor.getContent() !== editor.diskContent);
+        } while (editor.isDirty());
       } catch (e) {
         if (gen !== this.gen || this.opts.isDestroyed()) {
           return "superseded";

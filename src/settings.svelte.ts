@@ -1,6 +1,6 @@
 import { appState } from "./appstate.svelte";
 import { kSettingsPath, kTabHome } from "./constants";
-import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf } from "./util";
+import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf, tryParseJSON } from "./util";
 
 const settingsKeys = [
   "bracketClosing",
@@ -167,12 +167,10 @@ export function getSettings(): Settings {
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
   // console.log("getSettings: loaded from localStorage:", d);
-  let settingsRaw: any = {};
-  try {
-    settingsRaw = JSON.parse(d);
-  } catch (e) {
-    // corrupt settings must not leave the app blank (U8); keep a copy
-    console.error("getSettings: settings are not valid JSON, using defaults", e);
+  let settingsRaw: any = tryParseJSON(d, "settings");
+  if (settingsRaw === undefined) {
+    // corrupt settings must not leave the app blank (U8): use defaults, keep a copy
+    settingsRaw = {};
     localStorage.setItem(kSettingsPath + ".corrupted", d);
   }
   let settings = createSettings(settingsRaw);
@@ -181,11 +179,6 @@ export function getSettings(): Settings {
   settings.fontFamily = settings.fontFamily || kDefaultFontFamily;
 
   // console.log("getSettings: settings:", app
-  // backward compat: migrate currentNoteName -> currentTab
-  if ((settings as any).currentNoteName && !settings.currentTab) {
-    settings.currentTab = (settings as any).currentNoteName;
-    delete (settings as any).currentNoteName;
-  }
   if (!settings.currentTab) {
     settings.currentTab = kTabHome;
   }

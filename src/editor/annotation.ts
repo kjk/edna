@@ -13,13 +13,24 @@ export function transactionsHasAnnotation(transactions: readonly Transaction[], 
   return transactions.some((tr) => tr.annotation(ednaEvent) === annotation);
 }
 
+function hasAnnotationAny(tr: Transaction, annotations: string[]): boolean {
+  const annotation = tr.annotation(ednaEvent);
+  return annotation !== undefined && annotations.includes(annotation);
+}
+
 export function transactionsHasAnnotationsAny(transactions: readonly Transaction[], annotations: string[]): boolean {
-  return transactions.some((tr) => {
-    const annotation = tr.annotation(ednaEvent);
-    return annotation !== undefined && annotations.includes(annotation);
-  });
+  return transactions.some((tr) => hasAnnotationAny(tr, annotations));
+}
+
+function isHistoryEvent(tr: Transaction): boolean {
+  return tr.isUserEvent("undo") || tr.isUserEvent("redo");
 }
 
 export function transactionsHasHistoryEvent(transactions: readonly Transaction[]): boolean {
-  return transactions.some((tr) => tr.isUserEvent("undo") || tr.isUserEvent("redo"));
+  return transactions.some(isHistoryEvent);
+}
+
+// undo / redo or a change made by a block command or by loading content (not by typing)
+export function isStructuralChange(tr: Transaction): boolean {
+  return isHistoryEvent(tr) || hasAnnotationAny(tr, [kSetContent, kLanguageChange, kAddNewBlock, kMoveBlock, kDeleteBlock]);
 }

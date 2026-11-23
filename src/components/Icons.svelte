@@ -4,6 +4,7 @@
     IconCommandPalette,
     IconLucideTextSelect,
     IconTablerStar,
+    StarButton,
     IconTablerArrowUp,
     IconTablerArrowDown,
     IconTablerLetterCase,
@@ -29,6 +30,21 @@
   <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" class={klass}
     ><path {fill} stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" {d} /></svg
   >
+{/snippet}
+
+<!-- star toggle button in list items; click doesn't propagate to the list -->
+{#snippet StarButton(isStarred: boolean, onclick: () => void, cls = "-ml-1.5")}
+  <button
+    tabindex="-1"
+    class="{cls} cursor-pointer hover:text-yellow-600"
+    onclick={(ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      onclick();
+    }}
+  >
+    {@render IconTablerStar(isStarred ? "var(--color-yellow-300)" : "none")}
+  </button>
 {/snippet}
 
 <!-- single-path filled icon -->

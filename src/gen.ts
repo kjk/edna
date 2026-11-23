@@ -1,9 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import markdownIt, { type MarkdownIt } from "markdown-it";
-import markdownItAnchor from "markdown-it-anchor";
 import { expandKeyHelp } from "./key-helper.js";
-import { addTargetBlank } from "./markdown-util.js";
+import { newMarkdownIt } from "./markdown-util.js";
 
 console.log(
   "Generating help-win.html and help-mac.html from note-help.edna.txt",
@@ -128,29 +126,14 @@ let htmlEnd = `
 `;
 
 function genHTMLFromMarkdown() {
-  let md = markdownIt({
-    linkify: true,
-  });
-  md.use(addTargetBlank);
-  md.use(markdownItAnchor, {
-    // Here you can pass options to markdown-it-anchor
-    // For example, setting the permalink option:
-    permalink: markdownItAnchor.permalink.headerLink(),
-  });
-
-  {
-    let mdText = cleanMd(getHelp("windows"));
-    let htmlText = md.render(mdText);
-    htmlText = htmlStart + htmlText + htmlEnd;
-    let fpath = path.join("src", "public", "help-win.html");
-    fs.writeFileSync(fpath, htmlText);
-    console.log("wrote", fpath);
-  }
-  {
-    let mdText = cleanMd(getHelp("darwin"));
-    let htmlText = md.render(mdText);
-    htmlText = htmlStart + htmlText + htmlEnd;
-    let fpath = path.join("src", "public", "help-mac.html");
+  let md = newMarkdownIt();
+  for (let [platform, fileName] of [
+    ["windows", "help-win.html"],
+    ["darwin", "help-mac.html"],
+  ]) {
+    let mdText = cleanMd(getHelp(platform!));
+    let htmlText = htmlStart + md.render(mdText) + htmlEnd;
+    let fpath = path.join("src", "public", fileName!);
     fs.writeFileSync(fpath, htmlText);
     console.log("wrote", fpath);
   }

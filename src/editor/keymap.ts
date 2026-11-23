@@ -34,20 +34,14 @@ import {
   selectPreviousParagraph,
 } from "./block/commands";
 import { deleteLine } from "./block/delete-line";
-import { isMac } from "./cmutils";
+import { platform } from "../util";
+import { consume, editCommand } from "./cmutils";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
 import { insertDateAndTime, insertTime } from "./date-time";
 import type { KeymapSpec, MultiBlockEditor } from "./editor";
 import { foldBlock, toggleBlockFold, unfoldBlock } from "./fold-gutter";
 import { insertIndentation } from "./indentation";
 import { toggleCheckbox } from "./todo-checkbox";
-
-function consume(run: (view: Parameters<Command>[0]) => void): Command {
-  return (view) => {
-    run(view);
-    return true;
-  };
-}
 
 export function keymapFromSpec(specs: KeymapSpec): Extension {
   return keymap.of(
@@ -66,7 +60,7 @@ const optionShortcuts = Prec.high(
   EditorView.domEventHandlers({
     keydown(event, view) {
       if (
-        !isMac() ||
+        !platform.isMac ||
         !event.altKey ||
         event.ctrlKey ||
         event.metaKey ||
@@ -94,10 +88,7 @@ const optionShortcuts = Prec.high(
 );
 
 export function ednaKeymap(editor: MultiBlockEditor): Extension {
-  const edit = (run: Command): Command =>
-    consume((view) => {
-      if (!view.state.readOnly) run(view);
-    });
+  const edit = editCommand;
   return [
     optionShortcuts,
     keymap.of([

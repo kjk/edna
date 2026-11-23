@@ -27,17 +27,11 @@
     }
     s = s.replace("&", "");
     // remove keyboard shortcut
-    let parts = s.split("\t");
-    return parts[0] as string;
+    return splitCommandLabel(s).name;
   }
 
   function getShortcut(mi: Command): string {
-    let s = mi[0];
-    let parts = splitMax(s, "\t", 2);
-    if (len(parts) > 1) {
-      return extractShortcut(parts[1]!);
-    }
-    return "";
+    return splitCommandLabel(mi[0]).shortcut;
   }
 
   class MenuItem {
@@ -93,8 +87,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { ensurevisible, focus } from "../actions";
-  import { extractShortcut } from "../keys";
-  import { len, splitMax } from "../util";
+  import { splitCommandLabel } from "../keys";
+  import { len } from "../util";
 
   interface Props {
     menuDef: MenuDef;

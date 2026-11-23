@@ -22,11 +22,10 @@ import {
   blobFromUint8Array,
   fsDeleteFile,
   fsFileHandleReadTextFile,
-  fsFileHandleWriteText,
+  fsFileHandleWrite,
   fsReadBinaryFile,
   fsReadTextFile,
-  fsWriteBlob,
-  fsWriteTextFile,
+  fsWriteFile,
   openDirPicker,
   readDir,
 } from "./fileutil";
@@ -56,7 +55,7 @@ import {
   getWelcomeNote,
   getWelcomeNoteDev,
 } from "./system-notes";
-import { escapeHTML, html, len, removeDuplicates, throwIf, trimSuffix } from "./util";
+import { arrayReplace, escapeHTML, html, len, removeDuplicates, throwIf, trimSuffix, tryParseJSON } from "./util";
 
 // is set if we store notes on disk, null if in localStorage
 let storageFS: FileSystemDirectoryHandle | undefined;
@@ -398,7 +397,7 @@ function getOpenedNote(noteName: string): OpenedNote | null {
 }
 
 export function rememberOpenedNote(fh: FileSystemFileHandle): string | null {
-  if (fh.name.endsWith(kEdnaEncrFileExt)) {
+  if (isEncryptedEdnaFile(fh.name)) {
     // we don't support encrypted notes
     return null;
   }
@@ -457,7 +456,7 @@ export async function forEachNoteFileFS(
     if (name === null || name === "") {
       continue;
     }
-    let isEncr = fileName.endsWith(kEdnaEncrFileExt);
+    let isEncr = isEncryptedEdnaFile(fileName);
     await fn(fileName, name, isEncr);
   }
 }
@@ -504,6 +503,11 @@ export function startsWithBlockHeader(s: string): boolean {
   return s.startsWith("\n∞∞∞");
 }
 
+// s as content of a new block: prepends an auto-detected text block header if s has no header
+export function ensureBlockHeader(s: string): string {
+  return startsWithBlockHeader(s) ? s : "\n∞∞∞text-a\n" + s;
+}
+
 export { fixUpNoteContent };
 
 function getSystemNoteContent(name: string): string {
@@ -534,14 +538,7 @@ function getSystemNoteContent(name: string): string {
 // returns base or base-N that is not in existingNames, ignoring case because
 // names are unique ignoring case (U4)
 function pickUniqueName(base: string, existingNames: string[]): string {
-  let used = new Set(existingNames.map((n) => n.toLowerCase()));
-  let name = base;
-  let i = 1;
-  while (used.has(name.toLowerCase())) {
-    name = base + "-" + i;
-    i++;
-  }
-  return name;
+  return pickUniqueNameIgnoreCase(base, new Set(existingNames.map((n) => n.toLowerCase())));
 }
 
 // writes to the same note are serialized so that they complete in order
@@ -617,7 +614,7 @@ async function saveNoteNow(
     if (!ok) {
       throw new Error(`no permission to write file '${fh.name}'`);
     }
-    await fsFileHandleWriteText(fh, content);
+    await fsFileHandleWrite(fh, content);
   } else if (!dh) {
     let path = notePathFromNameLS(name);
     localStorage.setItem(path, content);
@@ -627,13 +624,17 @@ async function saveNoteNow(
   incNoteSaveCount();
 }
 
-// creates a new note. Throws if a note with this name (ignoring case) already
-// exists, to never overwrite an existing note (N-I1)
-export async function createNoteWithName(name: string, content: string | null = null) {
+function assertValidNoteName(name: string) {
   let nameErr = noteNameError(name);
   if (nameErr) {
     throw new Error(`invalid note name '${name}': ${nameErr}`);
   }
+}
+
+// creates a new note. Throws if a note with this name (ignoring case) already
+// exists, to never overwrite an existing note (N-I1)
+export async function createNoteWithName(name: string, content: string | null = null) {
+  assertValidNoteName(name);
   // re-read names: a note created by another tab or a sync tool since they
   // were last read would be overwritten (U30)
   await loadNoteNames();
@@ -666,10 +667,7 @@ export async function appendToNote(name: string, content: string) {
   name = findNoteIgnoreCase(name) || name;
   // system notes "exist" but their content is built in
   if (isSystemNoteName(name) || !noteExists(name)) {
-    let nameErr = noteNameError(name);
-    if (nameErr) {
-      throw new Error(`invalid note name '${name}': ${nameErr}`);
-    }
+    assertValidNoteName(name);
     await removeStaleNoteMeta(name);
   }
 
@@ -719,11 +717,7 @@ function isEncryptedNote(name: string): boolean {
 }
 
 function loadNoteLS(name: string): string | undefined {
-  let key = kLSKeyPrefix + name;
-  if (isEncryptedNote(name)) {
-    key = kLSKeyEncrPrefix + name;
-  }
-  let res = localStorage.getItem(key);
+  let res = localStorage.getItem(notePathFromNameLS(name));
   return res ?? undefined;
 }
 
@@ -786,13 +780,15 @@ export async function loadNote(name: string): Promise<string | undefined> {
 }
 
 async function readMaybeEncryptedNoteFS(dh: FileSystemDirectoryHandle, name: string): Promise<string> {
-  let path = notePathFromNameFS(name);
-  if (!isEncryptedEdnaFile(path)) {
-    let res = await fsReadTextFile(dh, path);
-    return res;
+  return readTextFS(dh, notePathFromNameFS(name));
+}
+
+// reads note file, decrypting it if it's an encrypted note file
+async function readTextFS(dh: FileSystemDirectoryHandle, path: string): Promise<string> {
+  if (isEncryptedEdnaFile(path)) {
+    return readEncryptedFS(dh, path);
   }
-  let res = await readEncryptedFS(dh, path);
-  return res;
+  return fsReadTextFile(dh, path);
 }
 
 async function readEncryptedFS(dh: FileSystemDirectoryHandle, fileName: string): Promise<string> {
@@ -831,18 +827,20 @@ async function writeMaybeEncryptedFS(dh: FileSystemDirectoryHandle, name: string
   await writeTextFS(dh, notePathFromNameFS(name), content, isEncryptedNote(name));
 }
 
-// write content to path, encrypted with the user's password if encrypt is true
+// write content to path, encrypted if encrypt is true (with pwdHash or,
+// if not given, the user's password)
 async function writeTextFS(
   dh: FileSystemDirectoryHandle,
   path: string,
   content: string,
   encrypt: boolean,
+  pwdHash?: string,
 ): Promise<void> {
   if (!encrypt) {
-    await fsWriteTextFile(dh, path, content);
+    await fsWriteFile(dh, path, content);
     return;
   }
-  let pwdHash = await getPasswordHashMust("");
+  pwdHash ??= await getPasswordHashMust("");
   await writeEncryptedFS(dh, pwdHash, path, content);
 }
 
@@ -854,7 +852,7 @@ async function writeEncryptedFS(
 ): Promise<void> {
   let d = await encryptStringAsBlob({ key: pwdHash, plaintext: s });
   let blob = blobFromUint8Array(d);
-  await fsWriteBlob(dh, fileName, blob);
+  await fsWriteFile(dh, fileName, blob);
 }
 
 export async function writeNoteFS(dh: FileSystemDirectoryHandle, name: string, content: string) {
@@ -912,10 +910,7 @@ export async function deleteNote(name: string) {
 }
 
 export async function renameNote(oldName: string, newName: string, content: string) {
-  let nameErr = noteNameError(newName);
-  if (nameErr) {
-    throw new Error(`invalid note name '${newName}': ${nameErr}`);
-  }
+  assertValidNoteName(newName);
   let dh = getStorageFS();
   if (oldName !== newName && oldName.toLowerCase() === newName.toLowerCase()) {
     await renameNoteCaseOnly(dh, oldName, newName, content);
@@ -932,11 +927,7 @@ export async function renameNote(oldName: string, newName: string, content: stri
 async function renameNoteReferences(oldName: string, newName: string) {
   await renameNoteInMetadata(oldName, newName);
   renameNoteInHistory(oldName, newName);
-  let settings = getSettings();
-  let idx = settings.tabs.indexOf(oldName);
-  if (idx >= 0) {
-    settings.tabs[idx] = newName;
-  }
+  arrayReplace(getSettings().tabs, oldName, newName);
 }
 
 // on case-insensitive file systems (macOS, Windows) "Foo" and "foo" are the same
@@ -990,12 +981,7 @@ function parseMetadataLenient(s: string | null): Metadata {
   if (s === null) {
     return normalizeMetadata(null);
   }
-  try {
-    return normalizeMetadata(JSON.parse(s));
-  } catch (e) {
-    console.error("failed to parse metadata:", e);
-    return normalizeMetadata(null);
-  }
+  return normalizeMetadata(tryParseJSON(s, "metadata") ?? null);
 }
 
 // returns a name not in `used` (compared case-insensitively)
@@ -1009,12 +995,8 @@ function pickUniqueNameIgnoreCase(base: string, used: Set<string>): string {
 
 // password hash that decrypts the notes in dh (remembered or asked for)
 async function getPasswordHashForDir(dh: FileSystemDirectoryHandle): Promise<string> {
-  let pwdHash = getPasswordHash();
-  if (pwdHash && (await passwordHashDecryptsNotes(dh, pwdHash))) {
-    return pwdHash;
-  }
-  removePassword();
-  return askForPasswordHash("Please enter password of notes in this directory", dh);
+  let pwdHash = await getVerifiedPasswordHash(dh);
+  return pwdHash ?? (await askForPasswordHash("Please enter password of notes in this directory", dh));
 }
 
 /**
@@ -1047,13 +1029,17 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
     for (let name of lsNames) {
       let content = loadNoteLS(name) || "";
       let lsName = name;
-      if (noteNameError(name)) {
-        // e.g. "foo.encr" would become encrypted note "foo" in the directory (U2)
+      // moves the note under a unique name
+      let moveAsUnique = (why: string) => {
         let newName = pickUniqueNameIgnoreCase(name, used);
         used.add(newName.toLowerCase());
-        renamed.set(name, newName);
-        console.log(`switchToStoringNotesOnDisk: '${name}' is not a valid name, moving as '${newName}'`);
+        renamed.set(lsName, newName);
+        console.log(`switchToStoringNotesOnDisk: '${name}' ${why}, moving as '${newName}'`);
         name = newName;
+      };
+      if (noteNameError(name)) {
+        // e.g. "foo.encr" would become encrypted note "foo" in the directory (U2)
+        moveAsUnique("is not a valid name");
       }
       let diskName = diskByLC.get(name.toLowerCase());
       if (diskName !== undefined) {
@@ -1068,26 +1054,13 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
             continue;
           }
         }
-        let newName = pickUniqueNameIgnoreCase(name, used);
-        used.add(newName.toLowerCase());
-        renamed.set(lsName, newName);
-        console.log(`switchToStoringNotesOnDisk: '${name}' exists, moving as '${newName}'`);
-        name = newName;
+        moveAsUnique("exists");
       } else if (written.has(name.toLowerCase())) {
-        let newName = pickUniqueNameIgnoreCase(name, used);
-        used.add(newName.toLowerCase());
-        renamed.set(lsName, newName);
-        console.log(`switchToStoringNotesOnDisk: '${name}' differs only in case from a moved note, moving as '${newName}'`);
-        name = newName;
+        moveAsUnique("differs only in case from a moved note");
       }
       written.add(name.toLowerCase());
       showModalMessageHTML(html`Moving <b>${name}</b>`, 0, "storage");
-      let fileName = notePathFromNameFS(name, encrypt);
-      if (encrypt) {
-        await writeEncryptedFS(dh, pwdHash, fileName, content);
-      } else {
-        await fsWriteTextFile(dh, fileName, content);
-      }
+      await writeTextFS(dh, notePathFromNameFS(name, encrypt), content, encrypt, pwdHash);
     }
 
     // merge metadata (metadata of renamed notes moves with them)
@@ -1097,7 +1070,7 @@ export async function switchToStoringNotesOnDisk(dh: FileSystemDirectoryHandle):
     }
     let diskMeta = parseMetadataLenient(await readMetadataFileFS(dh));
     let merged = mergeMetadata(diskMeta, lsMeta);
-    await fsWriteTextFile(dh, kMetadataName, JSON.stringify(merged, null, 2));
+    await fsWriteFile(dh, kMetadataName, JSON.stringify(merged, null, 2));
 
     // everything is in the directory: switch to it and remove from localStorage
     await dbSetDirHandle(dh);
@@ -1169,52 +1142,29 @@ async function pickUniqueNoteNameFS(dh: FileSystemDirectoryHandle, name: string)
 // operation, sync conflict): E-I1 doesn't hold. Encrypting / decrypting one
 // must not overwrite the other (U5): a copy with different content gets a
 // unique name, an identical copy is removed
-async function encryptNoteFS(dh: FileSystemDirectoryHandle, oldFileName: string, pwdHash: string) {
-  if (isEncryptedEdnaFile(oldFileName)) {
-    console.log("encryptNoteFS:", oldFileName, "already encrypted");
+// encrypts (encrypt = true, with pwdHash) or decrypts note file oldFileName
+async function convertNoteFS(dh: FileSystemDirectoryHandle, oldFileName: string, encrypt: boolean, pwdHash = "") {
+  let what = encrypt ? "encrypt" : "decrypt";
+  if (isEncryptedEdnaFile(oldFileName) === encrypt) {
+    console.log(`${what}NoteFS:`, oldFileName, `already ${what}ed`);
     return;
   }
-  console.log("encryptNoteFS:", oldFileName);
-  let s = await fsReadTextFile(dh, oldFileName);
+  console.log(`${what}NoteFS:`, oldFileName);
+  let s = await readTextFS(dh, oldFileName);
   let name = noteNameFromFileNameFS(oldFileName)!;
-  let newFileName = notePathFromNameFS(name, true);
+  let newFileName = notePathFromNameFS(name, encrypt);
   if (await fileExistsFS(dh, newFileName)) {
-    let existing = await readEncryptedFS(dh, newFileName);
+    let existing = await readTextFS(dh, newFileName);
     if (existing !== s) {
       let newName = await pickUniqueNoteNameFS(dh, name);
-      console.log(`encryptNoteFS: '${newFileName}' exists, encrypting as '${newName}'`);
-      newFileName = notePathFromNameFS(newName, true);
+      console.log(`${what}NoteFS: '${newFileName}' exists, ${what}ing as '${newName}'`);
+      newFileName = notePathFromNameFS(newName, encrypt);
     } else {
       newFileName = "";
     }
   }
   if (newFileName) {
-    await writeEncryptedFS(dh, pwdHash, newFileName, s);
-  }
-  await dh.removeEntry(oldFileName);
-}
-
-async function decryptNoteFS(dh: FileSystemDirectoryHandle, oldFileName: string) {
-  if (!isEncryptedEdnaFile(oldFileName)) {
-    console.log("encryptNoteFS:", oldFileName, "already decrypted");
-    return;
-  }
-  console.log("decryptNoteFS:", oldFileName);
-  let s = await readEncryptedFS(dh, oldFileName);
-  let name = noteNameFromFileNameFS(oldFileName)!;
-  let newFileName = notePathFromNameFS(name, false);
-  if (await fileExistsFS(dh, newFileName)) {
-    let existing = await fsReadTextFile(dh, newFileName);
-    if (existing !== s) {
-      let newName = await pickUniqueNoteNameFS(dh, name);
-      console.log(`decryptNoteFS: '${newFileName}' exists, decrypting as '${newName}'`);
-      newFileName = notePathFromNameFS(newName, false);
-    } else {
-      newFileName = "";
-    }
-  }
-  if (newFileName) {
-    await fsWriteTextFile(dh, newFileName, s);
+    await writeTextFS(dh, newFileName, s, encrypt, pwdHash);
   }
   await dh.removeEntry(oldFileName);
 }
@@ -1272,19 +1222,7 @@ export async function encryptAllNotes(pwd: string) {
       throw new Error("password doesn't match the password of already encrypted notes");
     }
     rememberPassword(pwd);
-    try {
-      await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-        if (isEncr) {
-          return;
-        }
-        let msg = html`Encrypting <b>${name}</b>`;
-        showModalMessageHTML(msg, 0, "storage");
-        await encryptNoteFS(dh, fileName, pwdHash);
-      });
-    } finally {
-      // also after a failure: names must match files (E-I3)
-      await loadNoteNames();
-    }
+    await convertAllNotesFS(dh, true, pwdHash);
   });
 }
 
@@ -1295,18 +1233,24 @@ export async function decryptAllNotes() {
     return;
   }
   await exclusiveStorageOp("decrypt notes", async () => {
-    try {
-      await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
-        if (!isEncr) {
-          return;
-        }
-        let msg = html`Decrypting <b>${name}</b>`;
-        showModalMessageHTML(msg, 0, "storage");
-        await decryptNoteFS(dh, fileName);
-      });
-      removePassword();
-    } finally {
-      await loadNoteNames();
-    }
+    await convertAllNotesFS(dh, false);
+    removePassword();
   });
+}
+
+// encrypts (encrypt = true) or decrypts all note files that aren't yet
+async function convertAllNotesFS(dh: FileSystemDirectoryHandle, encrypt: boolean, pwdHash = "") {
+  try {
+    await forEachNoteFileFS(dh, async (fileName, name, isEncr) => {
+      if (isEncr === encrypt) {
+        return;
+      }
+      let msg = encrypt ? html`Encrypting <b>${name}</b>` : html`Decrypting <b>${name}</b>`;
+      showModalMessageHTML(msg, 0, "storage");
+      await convertNoteFS(dh, fileName, encrypt, pwdHash);
+    });
+  } finally {
+    // also after a failure: names must match files (E-I3)
+    await loadNoteNames();
+  }
 }

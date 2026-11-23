@@ -49,8 +49,7 @@ var aiModelsClient = &http.Client{Timeout: 30 * time.Second}
 // client parses it and a 401 tells it the key is not valid.
 // Note: never log the API key.
 func handleAIModels(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
 	providerName := r.URL.Query().Get("provider")
@@ -84,8 +83,6 @@ func handleAIModels(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logf("handleAIModels: provider '%s' status %d, %d bytes\n", providerName, rsp.StatusCode, len(d))
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(rsp.StatusCode)
-	w.Write(d)
+	serveJSONDataWithStatus(w, rsp.StatusCode, d)
 }

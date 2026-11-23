@@ -294,7 +294,12 @@ func runServerDev() {
 	serveOpts := mkServeFileOptions(fsys)
 	serveOpts.DirPrefix = "./"
 	httpSrv := makeHTTPServer(serveOpts, proxyHandler)
+	runServerAndWait(httpSrv)
+}
 
+// runServerAndWait serves until the server stops; when running locally
+// (Windows, Mac) it also opens the app in a browser
+func runServerAndWait(httpSrv *http.Server) {
 	waitFn := serverListenAndWait(httpSrv)
 	if isWinOrMac() {
 		openBrowserForServerMust(httpSrv)
@@ -303,16 +308,9 @@ func runServerDev() {
 }
 
 func runServerProd() {
-	testingProd := isWinOrMac()
-
 	panicIf(u.CountFilesInFS(DistFS) < 5)
 
 	serveOpts := mkServeFileOptions(DistFS)
 	httpSrv := makeHTTPServer(serveOpts, nil)
-
-	waitFn := serverListenAndWait(httpSrv)
-	if testingProd {
-		openBrowserForServerMust(httpSrv)
-	}
-	waitFn()
+	runServerAndWait(httpSrv)
 }

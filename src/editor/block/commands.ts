@@ -4,6 +4,7 @@ import { kAddNewBlock, kCurrenciesLoaded, kDeleteBlock, ednaEvent, kLanguageChan
 import type { MultiBlockEditor } from "../editor";
 import { kDelimiterPrefix } from "../new-parser/node-types";
 import {
+  blockLineRange,
   getActiveNoteBlock,
   getBlockN,
   getEditableActiveBlock,
@@ -135,15 +136,13 @@ function blockEdge(state: EditorState, block: Block, pos: number, forward: boole
 function paragraphEdge(state: EditorState, block: Block, pos: number, forward: boolean): number {
   const { doc } = state;
   let target = block;
-  let first = doc.lineAt(target.contentFrom).number;
-  let last = doc.lineAt(target.to).number;
+  let { first, last } = blockLineRange(doc, target);
   let current = doc.lineAt(Math.max(target.contentFrom, pos)).number;
   if (forward ? current === last : current === first) {
     const neighbor = getBlockN(state, target.index + (forward ? 1 : -1));
     if (!neighbor) return forward ? target.to : target.contentFrom;
     target = neighbor;
-    first = doc.lineAt(target.contentFrom).number;
-    last = doc.lineAt(target.to).number;
+    ({ first, last } = blockLineRange(doc, target));
     current = forward ? first : last;
   }
 
@@ -235,8 +234,8 @@ export const moveCurrentBlockDown = (view: EditorView): boolean => moveBlock(vie
 
 export const deleteBlock = (_editor: MultiBlockEditor) => (view: EditorView): boolean => {
   const { state } = view;
-  const block = getActiveNoteBlock(state);
-  if (!block || state.readOnly) return false;
+  const block = getEditableActiveBlock(state);
+  if (!block) return false;
   const next = getBlockN(state, block.index + 1);
   const previous = getBlockN(state, block.index - 1);
   const insert = next || previous ? "" : state.facet(defaultBlockDelimiter);

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { blockHdrMarkdown } from "../../src/constants";
-import { fsWriteTextFile } from "../../src/fileutil";
+import { fsWriteFile } from "../../src/fileutil";
 import {
   createNoteWithName,
   decryptAllNotes,
@@ -35,7 +35,7 @@ describe("encrypt / decrypt all notes", () => {
   it("an interrupted encryption can be finished, with the same password only", async () => {
     await encryptAllNotes("goodpassword");
     // simulate a note that wasn't encrypted because encryption was interrupted
-    await fsWriteTextFile(dh, "c.edna.txt", content);
+    await fsWriteFile(dh, "c.edna.txt", content);
     await loadNoteNames();
     expect(hasEncryptedNotes()).toBe(true);
     expect(hasUnencryptedNotes()).toBe(true);
@@ -52,14 +52,14 @@ describe("encrypt / decrypt all notes", () => {
   it("a note stored both plain and encrypted: neither copy is overwritten (U5)", async () => {
     await encryptAllNotes("goodpassword");
     // e.g. a sync tool restored the plain version of "a"
-    await fsWriteTextFile(dh, "a.edna.txt", blockHdrMarkdown + "plain copy");
+    await fsWriteFile(dh, "a.edna.txt", blockHdrMarkdown + "plain copy");
     await loadNoteNames();
     await encryptAllNotes("goodpassword");
     expect(await listFiles(dh)).toEqual(["__metadata.edna.json", "a-1.encr.edna.txt", "a.encr.edna.txt", "b.encr.edna.txt"]);
     expect(await loadNote("a")).toBe(content);
     expect(await loadNote("a-1")).toBe(blockHdrMarkdown + "plain copy");
 
-    await fsWriteTextFile(dh, "b.edna.txt", blockHdrMarkdown + "plain b");
+    await fsWriteFile(dh, "b.edna.txt", blockHdrMarkdown + "plain b");
     await loadNoteNames();
     await decryptAllNotes();
     expect(await listFiles(dh)).toEqual(["__metadata.edna.json", "a-1.edna.txt", "a.edna.txt", "b-1.edna.txt", "b.edna.txt"]);
@@ -130,7 +130,7 @@ describe("encryption is a property of the directory", () => {
     const { dh, ui } = await setupFSStorage();
     await createNoteWithName("a", blockHdrMarkdown + "a");
     await encryptAllNotes("goodpassword");
-    await fsWriteTextFile(dh, "zz.encr.edna.txt", "not encrypted");
+    await fsWriteFile(dh, "zz.encr.edna.txt", "not encrypted");
     await loadNoteNames();
     await expect(loadNote("zz")).rejects.toThrow("can't decrypt");
     expect(ui.prompts.length).toBe(0);

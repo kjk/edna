@@ -1,9 +1,10 @@
 // @ts-ignore: tsc can't see exports of .svelte modules (svelte-check does)
 import { showError } from "./components/Toaster.svelte";
-import { fsReadTextFile, fsWriteTextFile } from "./fileutil";
+import { fsReadTextFile, fsWriteFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
 import { normalizeMetadata } from "./metadata-merge";
 import { getStorageFS } from "./notes";
+import { tryParseJSON } from "./util";
 
 export const kMetadataName = "__metadata.edna.json";
 
@@ -31,14 +32,38 @@ let metadata: Metadata | null = null;
 // storage metadata was loaded from (undefined: localStorage)
 let metadataStorage: FileSystemDirectoryHandle | undefined | null = null;
 
+// metadata.notes or metadata.functions, created if missing
+function metadataList<K extends "notes" | "functions">(key: K): NonNullable<Metadata[K]> {
+  metadata![key] = metadata![key] || ([] as any);
+  return metadata![key]!;
+}
+
 export function getNotesMetadata(): NoteMetadata[] {
-  metadata!.notes = metadata!.notes || [];
-  return metadata!.notes;
+  return metadataList("notes");
 }
 
 function getFunctionsMetadata(): FunctionMetadata[] {
-  metadata!.functions = metadata!.functions || [];
-  return metadata!.functions;
+  return metadataList("functions");
+}
+
+// item named name in list; if not found, adds one if createIfNotExists
+function findOrCreateByName<T extends { name: string }>(list: T[], name: string, createIfNotExists: boolean): T | null {
+  let m = list.find((m) => m.name === name);
+  if (m || !createIfNotExists) {
+    return m ?? null;
+  }
+  m = { name } as T;
+  list.push(m);
+  return m;
+}
+
+// writes s as file name in directory dh, or as localStorage item if no dh
+async function writeStorageText(dh: FileSystemDirectoryHandle | undefined, name: string, s: string) {
+  if (dh) {
+    await fsWriteFile(dh, name, s);
+  } else {
+    localStorage.setItem(name, s);
+  }
 }
 
 // reads metadata file. Returns null if the file doesn't exist.
@@ -58,18 +83,14 @@ export async function readMetadataFileFS(dh: FileSystemDirectoryHandle): Promise
 // parses metadata. On corrupted JSON, saves a backup copy of the raw data
 // and returns null
 async function parseMetadata(s: string, dh: FileSystemDirectoryHandle | undefined): Promise<unknown> {
-  try {
-    return JSON.parse(s);
-  } catch (e) {
+  let v = tryParseJSON(s, "metadata");
+  if (v === undefined) {
     let backupName = kMetadataName + ".corrupted-" + Date.now();
-    console.error(`metadata is not valid JSON, saving a copy as '${backupName}'`, e);
-    if (dh) {
-      await fsWriteTextFile(dh, backupName, s);
-    } else {
-      localStorage.setItem(backupName, s);
-    }
+    console.error(`saving a copy of corrupted metadata as '${backupName}'`);
+    await writeStorageText(dh, backupName, s);
     return null;
   }
+  return v;
 }
 
 export async function loadNotesMetadata(): Promise<Metadata> {
@@ -98,17 +119,13 @@ export async function saveNotesMetadata(m: Metadata = metadata!) {
   let s = JSON.stringify(m, null, 2);
   let dh = getStorageFS();
   let p = metadataWriteQueue.then(async () => {
-    if (dh) {
-      try {
-        await fsWriteTextFile(dh, kMetadataName, s);
-      } catch (e) {
-        // in-memory metadata is ahead of the file until the next successful
-        // save (which writes all metadata); tell the user
-        console.error("saveNotesMetadata failed:", e);
-        showError(`Failed to save notes metadata (favorites, shortcuts, folds): ${e}`);
-      }
-    } else {
-      localStorage.setItem(kMetadataName, s);
+    try {
+      await writeStorageText(dh, kMetadataName, s);
+    } catch (e) {
+      // in-memory metadata is ahead of the file until the next successful
+      // save (which writes all metadata); tell the user
+      console.error("saveNotesMetadata failed:", e);
+      showError(`Failed to save notes metadata (favorites, shortcuts, folds): ${e}`);
     }
   });
   metadataWriteQueue = p;
@@ -117,21 +134,7 @@ export async function saveNotesMetadata(m: Metadata = metadata!) {
 }
 
 export function getNoteMeta(name: string, createIfNotExists = false): NoteMetadata | null {
-  // console.log("getNoteMeta:", name);
-  let notes = getNotesMetadata();
-  for (let m of notes) {
-    if (m.name === name) {
-      return m;
-    }
-  }
-  if (!createIfNotExists) {
-    return null;
-  }
-  let m = {
-    name: name,
-  };
-  notes.push(m);
-  return m;
+  return findOrCreateByName(getNotesMetadata(), name, createIfNotExists);
 }
 
 export async function removeNoteFromMetadata(name: string) {
@@ -193,32 +196,40 @@ export async function reassignNoteShortcut(name: string, altShortcut: string) {
     }
   }
 
-  let meta = getNoteMeta(name, true)!;
-  meta.altShortcut = altShortcut;
+  await updateNoteMeta(name, (m) => (m.altShortcut = altShortcut));
+}
+
+// changes metadata of note name with change(), saves it and updates the UI
+async function updateNoteMeta<T>(name: string, change: (m: NoteMetadata) => T): Promise<T> {
+  let res = change(getNoteMeta(name, true)!);
   await saveNotesMetadata();
   updateAfterNoteStateChange();
+  return res;
+}
+
+export async function setNoteArchived(name: string, isArchived: boolean) {
+  await updateNoteMeta(name, (m) => (m.isArchived = isArchived));
 }
 
 export async function archiveNote(name: string) {
-  let m = getNoteMeta(name, true)!;
-  m.isArchived = true;
-  await saveNotesMetadata();
-  updateAfterNoteStateChange();
+  await setNoteArchived(name, true);
 }
 
 export async function unArchiveNote(name: string) {
-  let m = getNoteMeta(name, true)!;
-  m.isArchived = false;
+  await setNoteArchived(name, false);
+}
+
+// flips isStarred of note or function metadata and saves it
+async function toggleStarredMeta(m: { isStarred?: boolean }): Promise<boolean> {
+  m.isStarred = !m.isStarred;
   await saveNotesMetadata();
-  updateAfterNoteStateChange();
+  return m.isStarred;
 }
 
 export async function toggleNoteStarred(name: string): Promise<boolean> {
-  let meta = getNoteMeta(name, true)!;
-  meta.isStarred = !meta.isStarred;
-  await saveNotesMetadata();
+  let isStarred = await toggleStarredMeta(getNoteMeta(name, true)!);
   updateAfterNoteStateChange();
-  return !!meta.isStarred;
+  return isStarred;
 }
 
 export function isNoteArchived(name: string): boolean {
@@ -230,28 +241,11 @@ export function isNoteArchived(name: string): boolean {
 }
 
 export function getFunctionMeta(name: string, createIfNotExists = false): FunctionMetadata | null {
-  // console.log("getMetadataForFunction:", name);
-  let functions = getFunctionsMetadata();
-  for (let m of functions) {
-    if (m.name === name) {
-      return m;
-    }
-  }
-  if (!createIfNotExists) {
-    return null;
-  }
-  let m = {
-    name: name,
-  };
-  functions.push(m);
-  return m;
+  return findOrCreateByName(getFunctionsMetadata(), name, createIfNotExists);
 }
 
 export async function toggleFunctionStarred(name: string): Promise<boolean> {
-  let m = getFunctionMeta(name, true)!;
-  m.isStarred = !m.isStarred;
-  await saveNotesMetadata();
-  return !!m.isStarred;
+  return await toggleStarredMeta(getFunctionMeta(name, true)!);
 }
 
 // TODO: temporary

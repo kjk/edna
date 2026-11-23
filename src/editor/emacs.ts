@@ -30,7 +30,7 @@ import {
 import { Prec, type Extension } from "@codemirror/state";
 import { keymap, type Command, type KeyBinding } from "@codemirror/view";
 import { transposeChars } from "./block/transpose-chars";
-import { collapseSelectionToHeads } from "./cmutils";
+import { collapseSelectionToHeads, consume, editCommand } from "./cmutils";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
 import type { MultiBlockEditor } from "./editor";
 
@@ -44,22 +44,10 @@ export function emacsKeymap(editor: MultiBlockEditor): Extension[] {
   const meta = editor.emacsMetaKey === "meta" ? "Meta" : editor.emacsMetaKey === "ctrl" ? "Ctrl" : "Alt";
   const movement = (key: string, move: Command, select: Command): KeyBinding => ({
     key,
-    run(view) {
-      (marking ? select : move)(view);
-      return true;
-    },
-    shift(view) {
-      select(view);
-      return true;
-    },
+    run: consume((view) => (marking ? select : move)(view)),
+    shift: consume(select),
   });
-  const edit = (key: string, run: Command): KeyBinding => ({
-    key,
-    run(view) {
-      if (!view.state.readOnly) run(view);
-      return true;
-    },
-  });
+  const edit = (key: string, run: Command): KeyBinding => ({ key, run: editCommand(run) });
 
   const bindings: KeyBinding[] = [
     movement("Ctrl-b", cursorCharLeft, selectCharLeft),
@@ -72,20 +60,13 @@ export function emacsKeymap(editor: MultiBlockEditor): Extension[] {
     movement("Ctrl-ArrowRight", cursorGroupRight, selectGroupRight),
     movement("Ctrl-v", cursorPageDown, selectPageDown),
     movement(meta + "-v", cursorPageUp, selectPageUp),
-    {
-      key: "Ctrl-Space",
-      run() {
-        marking = !marking;
-        return true;
-      },
-    },
+    { key: "Ctrl-Space", run: consume(() => (marking = !marking)) },
     {
       key: "Ctrl-g",
-      run(view) {
+      run: consume((view) => {
         setEmacsMarkMode(false);
         collapseSelectionToHeads(view);
-        return true;
-      },
+      }),
     },
     edit("Ctrl-d", deleteCharForward),
     edit("Ctrl-h", deleteCharBackward),
@@ -93,13 +74,7 @@ export function emacsKeymap(editor: MultiBlockEditor): Extension[] {
     edit("Ctrl-Alt-h", deleteGroupBackward),
     edit("Ctrl-o", splitLine),
     edit("Ctrl-t", transposeChars),
-    {
-      key: "Ctrl-y",
-      run(view) {
-        void pasteCommand(view);
-        return true;
-      },
-    },
+    { key: "Ctrl-y", run: consume((view) => void pasteCommand(view)) },
     { key: "Ctrl-w", run: cutCommand(editor), preventDefault: true },
     { key: meta + "-w", run: copyCommand(editor), preventDefault: true },
     edit("Ctrl-Shift--", undo),

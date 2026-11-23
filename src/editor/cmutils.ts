@@ -1,15 +1,7 @@
 import { foldedRanges } from "@codemirror/language";
 import { EditorSelection, type EditorState } from "@codemirror/state";
-import type { EditorView } from "@codemirror/view";
+import type { Command, EditorView } from "@codemirror/view";
 import type { SimpleRange } from "./types";
-
-export function isMac(): boolean {
-  return typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-}
-
-export function isWindows(): boolean {
-  return typeof navigator !== "undefined" && /Win/.test(navigator.platform);
-}
 
 export function isReadOnly(view: EditorView): boolean {
   return view.state.readOnly;
@@ -51,4 +43,25 @@ export function getFoldedRanges(view: EditorView): SimpleRange[] {
     ranges.push({ from: iter.from, to: iter.to });
   }
   return ranges;
+}
+
+// command that runs run() and always reports the key as handled
+export function consume(run: (view: EditorView) => unknown): Command {
+  return (view) => {
+    run(view);
+    return true;
+  };
+}
+
+// like consume() but doesn't run in a read-only editor
+export function editCommand(run: Command): Command {
+  return consume((view) => {
+    if (!view.state.readOnly) run(view);
+  });
+}
+
+// state to give all items when toggling them as a group (folds, checkboxes):
+// set them if at most half of them are set, otherwise clear them
+export function groupToggleTarget(states: boolean[]): boolean {
+  return states.filter(Boolean).length * 2 <= states.length;
 }

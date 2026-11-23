@@ -9,16 +9,15 @@ import {
 } from "@codemirror/language";
 import { EditorSelection, EditorState, type StateEffect, type Transaction } from "@codemirror/state";
 import { BlockType, gutter, GutterMarker, type BlockInfo, type EditorView } from "@codemirror/view";
-import { kAddNewBlock, kDeleteBlock, ednaEvent, kLanguageChange, kMoveBlock, kSetContent } from "./annotation";
+import { isStructuralChange } from "./annotation";
+import { groupToggleTarget } from "./cmutils";
 import { getBlocks, getNoteBlockFromPos, getNoteBlocksFromRangeSet, type Block } from "./block/block";
-import { kFoldLabelLength } from "./constants";
+import { contentFoldRange } from "./constants";
 import type { MultiBlockEditor } from "./editor";
 import type { SimpleRange } from "./types";
 
 function foldRange(state: EditorState, block: Block): SimpleRange | null {
-  const firstLine = state.doc.lineAt(block.contentFrom);
-  if (firstLine.to >= block.to) return null;
-  return { from: Math.min(firstLine.to, block.contentFrom + kFoldLabelLength), to: block.to };
+  return contentFoldRange(state.doc, block.contentFrom, block.to, false);
 }
 
 const placeholders = codeFolding({
@@ -38,18 +37,7 @@ const placeholders = codeFolding({
 });
 
 function editingUnfolds(tr: Transaction): StateEffect<SimpleRange>[] {
-  const event = tr.annotation(ednaEvent);
-  if (
-    !tr.docChanged ||
-    tr.isUserEvent("undo") ||
-    tr.isUserEvent("redo") ||
-    event === kSetContent ||
-    event === kLanguageChange ||
-    event === kAddNewBlock ||
-    event === kDeleteBlock ||
-    event === kMoveBlock
-  )
-    return [];
+  if (!tr.docChanged || isStructuralChange(tr)) return [];
 
   const effects: StateEffect<SimpleRange>[] = [];
   const { startState, changes } = tr;
@@ -177,8 +165,7 @@ function updateFolds(view: EditorView, blocks: Block[], action: "fold" | "unfold
     });
     return { range, folded };
   });
-  const foldedCount = status.filter(({ folded }) => folded).length;
-  const shouldFold = action === "fold" || (action === "toggle" && foldedCount * 2 <= status.length);
+  const shouldFold = action === "fold" || (action === "toggle" && groupToggleTarget(status.map(({ folded }) => folded)));
   const effect = shouldFold ? foldEffect : unfoldEffect;
   const effects = status.filter(({ folded }) => folded !== shouldFold).map(({ range }) => effect.of(range));
   if (effects.length) view.dispatch({ effects });

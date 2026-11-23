@@ -14,44 +14,18 @@
    * 1 if a > b
    */
   export function sortNotes(a: NoteInfo, b: NoteInfo): number {
-    // first archived
-    if (a.isArchived && !b.isArchived) {
-      return -1;
-    }
-    if (!a.isArchived && b.isArchived) {
-      return 1;
-    }
-    // then those with Alt shortcut
-    if (a.altShortcut && !b.altShortcut) {
-      return -1;
-    }
-    // without shortcut are after (>) those with
-    if (!a.altShortcut && b.altShortcut) {
-      return 1;
-    }
-    // if both have shortcut, sort by shortcut
-    if (a.altShortcut && b.altShortcut) {
-      return a.altShortcut - b.altShortcut;
-    }
-    // then starred
-    if (a.isStarred && !b.isStarred) {
-      return -1;
-    }
-    if (!a.isStarred && b.isStarred) {
-      return 1;
-    }
-
-    let isSysA = isSystemNoteName(a.name);
-    let isSysB = isSystemNoteName(b.name);
-    // system are last
-    if (isSysA && !isSysB) {
-      return 1;
-    }
-    if (!isSysA && isSysB) {
-      return -1;
-    }
-    // if both have no shortcut, sort by name
-    return a.name.localeCompare(b.name);
+    return (
+      // first archived
+      compareTrueFirst(a.isArchived, b.isArchived) ||
+      // then those with Alt shortcut, by shortcut
+      compareTrueFirst(!!a.altShortcut, !!b.altShortcut) ||
+      (a.altShortcut && b.altShortcut ? a.altShortcut - b.altShortcut : 0) ||
+      // then starred
+      compareTrueFirst(a.isStarred, b.isStarred) ||
+      // system notes are last
+      compareTrueFirst(isSystemNoteName(b.name), isSystemNoteName(a.name)) ||
+      a.name.localeCompare(b.name)
+    );
   }
 
   let lastKey = 0;
@@ -103,25 +77,12 @@
 
   // e.g. "Alt + 1" or "" if no shortcut
   export function noteShortcutStr(note: NoteInfo): string {
-    return note.altShortcut ? getAltChar() + " + " + note.altShortcut : "";
+    return note.altShortcut ? altShortcutStr(note.altShortcut) : "";
   }
 
-  // e.g. "12 notes" or "3 of 12 notes"
-  export function notesCountMsg(nFiltered: number, nTotal: number): string {
-    if (nFiltered === 0) {
-      return ""; // don't obscure user entering new, long note name
-    }
-    if (nFiltered === nTotal) {
-      return `${nTotal} notes`;
-    }
-    return `${nFiltered} of ${nTotal} notes`;
-  }
-
-  // system and archived notes are shown in italic
-  export function noteNameCls(name: string): string {
-    let m = getNoteMeta(name);
-    let isArchived = m && m.isArchived;
-    if (isSystemNoteName(name) || isArchived) {
+  // system notes (and archived notes if archivedItalic) are shown in italic
+  export function noteNameCls(name: string, archivedItalic = true): string {
+    if (isSystemNoteName(name) || (archivedItalic && isNoteArchived(name))) {
       return "italic";
     }
     return "";
@@ -146,12 +107,6 @@
     // can't delete scratch note or system notes
     let canDeleteSelected = !!selected && selected.name !== kScratchNoteName && !isSystemNoteName(selected.name);
     return { canOpenSelected, canCreate, canCreateWithEnter, canDeleteSelected };
-  }
-
-  // note: UI is updated via updateAfterNoteStateChange() after metadata is saved
-  export async function toggleStarredAndFocus(noteInfo: NoteInfo, focusEl?: HTMLElement) {
-    await toggleNoteStarred(noteInfo.name);
-    focusEl?.focus();
   }
 
   // props shared by the regular and wide note selectors
@@ -199,7 +154,7 @@
     filtered: NoteInfo[] = $derived(
       this.isCommand() ? [] : findMatchingItems(this.noteInfos, this.sanitizedFilter, "nameLC"),
     );
-    countMsg = $derived(notesCountMsg(len(this.filtered), len(this.noteInfos)));
+    countMsg = $derived(filteredCountMsg(len(this.filtered), len(this.noteInfos), "notes"));
 
     selected: NoteInfo | undefined = $state();
     selectedName = $derived(this.selected ? this.selected.name : "");
@@ -235,7 +190,8 @@
     };
 
     toggleStarred = (noteInfo: NoteInfo) => {
-      toggleStarredAndFocus(noteInfo, this.input);
+      // note: UI is updated via updateAfterNoteStateChange() after metadata is saved
+      toggleStarredAndFocus(() => toggleNoteStarred(noteInfo.name), this.input);
     };
 
     // keyboard shortcuts shared by note selectors:
@@ -252,24 +208,19 @@
           return true;
         }
       }
-      let key = ev.key;
-      if (key === "s" && ev.altKey && selected) {
-        ev.preventDefault();
-        this.toggleStarred(selected);
+      if (handleToggleStarKey(ev, selected, this.toggleStarred)) {
         return true;
       }
-
       let { createNote, deleteNote } = this.getCallbacks();
-      if (key === "Enter") {
-        ev.preventDefault();
+      let isEnter = handleEnter(ev, () => {
         let actions = this.actions;
         if (createNote && (actions.canCreateWithEnter || (ev.ctrlKey && actions.canCreate))) {
           createNote(this.sanitizedFilter);
-          return true;
-        }
-        if (selected) {
+        } else if (selected) {
           this.openNote(selected, false);
         }
+      });
+      if (isEnter) {
         return true;
       }
 
@@ -295,7 +246,7 @@
     };
   }
 
-  export { noteStarButton, noteFilterInput, noteItemRow };
+  export { noteFilterInput, noteItemRow };
 </script>
 
 <script lang="ts">
@@ -313,16 +264,23 @@
   import { findNoteIgnoreCase, isNoteArchivable, isSystemNoteName, sanitizeNoteName } from "../notes";
   import { noteNameError } from "../note-name";
   import {
+    altShortcutStr,
+    compareTrueFirst,
+    filteredCountMsg,
     findMatchingItems,
     getAltChar,
+    handleEnter,
+    handleToggleStarKey,
     hilightText,
     isAltNumEvent,
     isKeyCtrlDelete,
     len,
     makeHilightRegExp,
     noOp,
+    toggleFlag,
+    toggleStarredAndFocus,
   } from "../util";
-  import { IconTablerArchive, IconTablerStar } from "./Icons.svelte";
+  import { IconTablerArchive, StarButton } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   interface Props extends NoteSelectorProps {
@@ -350,30 +308,16 @@
   );
 
   function toggleInfoPanelCollapsed() {
-    appState.noteSelectorInfoCollapsed = !appState.noteSelectorInfoCollapsed;
+    toggleFlag(appState, "noteSelectorInfoCollapsed");
   }
 
   function toggleShowArchived() {
-    appState.showingArchived = !appState.showingArchived;
+    toggleFlag(appState, "showingArchived");
   }
   function showHideTxt(isShowing: boolean) {
     return isShowing ? "hide" : "show";
   }
 </script>
-
-{#snippet noteStarButton(noteInfo: NoteInfo, toggleStarred: (noteInfo: NoteInfo) => void, cls: string)}
-  <button
-    tabindex="-1"
-    class="{cls} cursor-pointer hover:text-yellow-600"
-    onclick={(ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      toggleStarred(noteInfo);
-    }}
-  >
-    {@render IconTablerStar(noteInfo.isStarred ? "var(--color-yellow-300)" : "none")}
-  </button>
-{/snippet}
 
 <!-- filter <input> with "n of m notes" count -->
 {#snippet noteFilterInput(nf: NoteFilter)}
@@ -394,7 +338,7 @@
 <!-- star button, highlighted name and shortcut of a note in ListBox -->
 {#snippet noteItemRow(noteInfo: NoteInfo, nf: NoteFilter, nameCls: string)}
   {@const hili = hilightText(noteInfo.name, nf.hiliRegExp)}
-  {@render noteStarButton(noteInfo, nf.toggleStarred, "-ml-1.5")}
+  {@render StarButton(noteInfo.isStarred, () => nf.toggleStarred(noteInfo))}
   <div class="ml-2 truncate {nameCls}">
     {@html hili}
   </div>

@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { isSystemNoteName } from "../notes";
   import ListBox from "./ListBox.svelte";
-  import { buildVisibleNoteInfos, NoteFilter, noteFilterInput, noteItemRow } from "./NoteSelector.svelte";
-  import type { NoteInfo } from "./NoteSelector.svelte";
+  import { buildVisibleNoteInfos, NoteFilter, noteFilterInput, noteItemRow, noteNameCls } from "./NoteSelector.svelte";
 
   interface Props {
     class?: string;
@@ -11,10 +9,6 @@
   let { class: klass, openNote }: Props = $props();
 
   const nf = new NoteFilter(() => buildVisibleNoteInfos(), () => ({ openNote }));
-
-  function sysNoteCls(note: NoteInfo): string {
-    return isSystemNoteName(note.name) ? "italic" : "";
-  }
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -31,7 +25,7 @@
     onclick={(item, newTab) => nf.openNote(item, newTab)}
   >
     {#snippet renderItem(noteInfo)}
-      {@render noteItemRow(noteInfo, nf, sysNoteCls(noteInfo))}
+      {@render noteItemRow(noteInfo, nf, noteNameCls(noteInfo.name, false))}
     {/snippet}
   </ListBox>
 </form>

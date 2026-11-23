@@ -1,6 +1,8 @@
 // Lists of AI models, downloaded from each AI provider for which the user has
 // an API key (through our server: /api/ai/models), cached in localStorage.
 
+import { tryParseJSONObject } from "./util";
+
 export type AiProviderID = "openai" | "anthropic" | "xai" | "openrouter";
 
 export interface AiProvider {
@@ -56,6 +58,11 @@ export function getAiProvider(id: string): AiProvider | undefined {
 }
 
 export type AiKeys = Partial<Record<AiProvider["keySetting"], string>>;
+
+// API key for provider from keys (e.g. settings), trimmed
+export function providerKey(keys: AiKeys, provider: AiProvider): string {
+  return (keys[provider.keySetting] || "").trim();
+}
 
 export interface AiModel {
   provider: AiProviderID;
@@ -165,12 +172,7 @@ export function keyFingerprint(key: string): string {
 }
 
 function loadCache(storage: Storage): ModelsCache {
-  try {
-    let v = JSON.parse(storage.getItem(kModelsCacheKey) || "{}");
-    return v && typeof v === "object" ? v : {};
-  } catch {
-    return {};
-  }
+  return tryParseJSONObject(storage.getItem(kModelsCacheKey) || "{}", "models cache");
 }
 
 function saveCache(storage: Storage, cache: ModelsCache) {
@@ -222,7 +224,7 @@ export async function loadModels(keys: AiKeys, opts: LoadModelsOptions = {}): Pr
   let cache = loadCache(storage);
   let results = await Promise.all(
     aiProviders.map(async (provider): Promise<ProviderModelsResult | null> => {
-      let key = (keys[provider.keySetting] || "").trim();
+      let key = providerKey(keys, provider);
       if (!provider.looksValidKey(key)) {
         return null;
       }

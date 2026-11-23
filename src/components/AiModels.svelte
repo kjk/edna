@@ -1,10 +1,20 @@
 <script lang="ts">
   import { clickOutside, focus } from "../actions";
   import { appState } from "../appstate.svelte";
-  import { arrayRemove, findMatchingItemsFn, hilightText, humanPrice, len, makeHilightRegExp } from "../util";
+  import {
+    compareTrueFirst,
+    filteredCountMsg,
+    findMatchingItemsFn,
+    hilightText,
+    humanPrice,
+    len,
+    makeHilightRegExp,
+    toggleInArray,
+    toggleStarredAndFocus,
+  } from "../util";
   import { getAiProvider, modelKey, type AiModel } from "../ai-models";
   import { aiModelsState } from "../ai-models-state.svelte";
-  import { IconTablerStar } from "./Icons.svelte";
+  import { StarButton } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
@@ -33,14 +43,11 @@
 
     let res = findMatchingItemsFn(items, filter, modelNameFn);
     res.sort((a, b) => {
-      const aStarred = appState.settings.starredModels.includes(modelKey(a));
-      const bStarred = appState.settings.starredModels.includes(modelKey(b));
-      if (aStarred !== bStarred) {
-        return aStarred ? -1 : 1;
-      }
-      const aName = modelNameFn(a);
-      const bName = modelNameFn(b);
-      return aName.localeCompare(bName);
+      const starred = appState.settings.starredModels;
+      return (
+        compareTrueFirst(starred.includes(modelKey(a)), starred.includes(modelKey(b))) ||
+        modelNameFn(a).localeCompare(modelNameFn(b))
+      );
     });
     return res;
   }
@@ -63,14 +70,11 @@
     listboxComp.onkeydown(ev, true);
   }
 
-  async function toggleStarred(model: AiModel) {
-    let modelID = modelKey(model);
-    if (appState.settings.starredModels.includes(modelID)) {
-      arrayRemove(appState.settings.starredModels, modelID);
-    } else {
-      appState.settings.starredModels.push(modelID);
-    }
-    forceUpdate++;
+  function toggleModelStarred(model: AiModel) {
+    toggleStarredAndFocus(() => {
+      toggleInArray(appState.settings.starredModels, modelKey(model));
+      forceUpdate++;
+    });
   }
 
   function itemKey(item: AiModel) {
@@ -82,17 +86,7 @@
     return price === undefined ? "" : humanPrice(price);
   }
 
-  let modelsCountMsg = $derived.by(() => {
-    let n = len(models);
-    if (n === 0) {
-      return ""; // don't obscure user entering new, long note name
-    }
-    let nItems = len(aiModelsState.models);
-    if (n === nItems) {
-      return `${nItems} models`;
-    }
-    return `${n} of ${nItems} models`;
-  });
+  let modelsCountMsg = $derived(filteredCountMsg(len(models), len(aiModelsState.models), "models"));
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -132,17 +126,7 @@
       {@const nameHili = hilightText(model.name, hiliRegExp)}
       {@const providerHili = hilightText(providerName(model), hiliRegExp)}
 
-      <button
-        tabindex="-1"
-        class="-ml-1.5 cursor-pointer hover:text-yellow-600"
-        onclick={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          toggleStarred(model);
-        }}
-      >
-        {@render IconTablerStar(isStarred ? "var(--color-yellow-300)" : "none")}
-      </button>
+      {@render StarButton(isStarred, () => toggleModelStarred(model))}
 
       <div class="ml-2 min-w-[10ch] whitespace-nowrap text-left">
         {@html providerHili}

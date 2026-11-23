@@ -1,7 +1,7 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import { extractShortcut } from "../keys";
-  import { findMatchingItems, hilightText, len, makeHilightRegExp, splitMax, trimPrefix } from "../util";
+  import { splitCommandLabel } from "../keys";
+  import { findMatchingItems, hilightText, len, makeHilightRegExp, trimPrefix } from "../util";
   import ListBox from "./ListBox.svelte";
   import { getCommandArg, type Command } from "./Menu.svelte";
 
@@ -38,12 +38,7 @@
         continue;
       }
       seen.set(id, s);
-      let parts = splitMax(s, "\t", 2);
-      let name = parts[0] as string;
-      let shortcut = "";
-      if (len(parts) > 1) {
-        shortcut = extractShortcut(parts[1]!);
-      }
+      let { name, shortcut } = splitCommandLabel(s);
       // console.log(`i: ${i}, name: ${name} id: ${id}`);
       let item: Item = {
         key: id,

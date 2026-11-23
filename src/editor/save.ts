@@ -20,7 +20,7 @@ export function autoSaveContent(editor: MultiBlockEditor, interval: number) {
       };
 
       scheduleIfDirty(): void {
-        if (this.timer === undefined && editor.getContent() !== editor.diskContent) {
+        if (this.timer === undefined && editor.isDirty()) {
           this.timer = window.setTimeout(this.save, interval);
         }
       }
@@ -34,7 +34,7 @@ export function autoSaveContent(editor: MultiBlockEditor, interval: number) {
         if (transactionsHasAnnotation(update.transactions, kSetContent)) {
           return;
         }
-        const dirty = update.state.doc.toString() !== editor.diskContent;
+        const dirty = editor.isDirty(update.state.doc.toString());
         editor.setIsDirtyCallback(dirty);
         if (dirty) {
           this.timer = window.setTimeout(this.save, interval);

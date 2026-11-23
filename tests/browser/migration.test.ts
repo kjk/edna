@@ -1,8 +1,8 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { appState } from "../../src/appstate.svelte";
 import { blockHdrMarkdown } from "../../src/constants";
-import { fsReadTextFile, fsWriteTextFile } from "../../src/fileutil";
-import { getNoteMeta, kMetadataName, loadNotesMetadata, toggleNoteStarred, upgradeMetadata } from "../../src/metadata";
+import { fsReadTextFile, fsWriteFile } from "../../src/fileutil";
+import { getNoteMeta, kMetadataName, toggleNoteStarred } from "../../src/metadata";
 import {
   appendToNote,
   createNoteWithName,
@@ -14,7 +14,7 @@ import {
   setStorageFS,
   switchToStoringNotesOnDisk,
 } from "../../src/notes";
-import { forgetPassword, listFiles, setupFSStorage, type FakeUI } from "./fs-utils";
+import { forgetPassword, listFiles, loadStorageState, setupFSStorage, type FakeUI } from "./fs-utils";
 
 const note = (s: string) => blockHdrMarkdown + s;
 
@@ -27,13 +27,11 @@ describe("move notes to directory", () => {
   async function setup(dirNotes: Record<string, string>, lsNotes: Record<string, string>) {
     ({ dh, ui } = await setupFSStorage());
     for (let [name, content] of Object.entries(dirNotes)) {
-      await fsWriteTextFile(dh, name + ".edna.txt", content);
+      await fsWriteFile(dh, name + ".edna.txt", content);
     }
     setStorageFS(undefined);
     localStorage.clear();
-    await loadNoteNames();
-    await upgradeMetadata();
-    await loadNotesMetadata();
+    await loadStorageState();
     for (let [name, content] of Object.entries(lsNotes)) {
       await createNoteWithName(name, content);
     }
@@ -96,7 +94,7 @@ describe("move notes to directory", () => {
 
   it("name collisions don't overwrite notes", async () => {
     await setup({ foo: note("disk foo") }, { foo: note("ls foo"), "foo-1": note("ls foo-1"), Bar: note("ls Bar") });
-    await fsWriteTextFile(dh, "bar.edna.txt", note("disk bar"));
+    await fsWriteFile(dh, "bar.edna.txt", note("disk bar"));
     const renamed = await switchToStoringNotesOnDisk(dh);
     expect(getStorageFS()).toBe(dh);
     const contents = new Set<string>();
@@ -129,7 +127,7 @@ describe("move notes to directory", () => {
 
   it("corrupted metadata in localStorage doesn't lose notes; metadata is reloaded", async () => {
     await setup({ d: note("d") }, { a: note("a") });
-    await fsWriteTextFile(dh, kMetadataName, JSON.stringify({ ver: 1, notes: [{ name: "d", isStarred: true }], functions: [] }));
+    await fsWriteFile(dh, kMetadataName, JSON.stringify({ ver: 1, notes: [{ name: "d", isStarred: true }], functions: [] }));
     await toggleNoteStarred("a");
     await switchToStoringNotesOnDisk(dh);
     // in-memory metadata has both

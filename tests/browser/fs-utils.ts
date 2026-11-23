@@ -30,10 +30,15 @@ export async function setupFSStorage(): Promise<{ dh: FileSystemDirectoryHandle;
   });
   getSettings();
   setStorageFS(dh);
+  await loadStorageState();
+  return { dh, ui };
+}
+
+// loads metadata and note names of the current storage, as the app does when booting
+export async function loadStorageState() {
   await upgradeMetadata();
   await loadNotesMetadata();
   await loadNoteNames();
-  return { dh, ui };
 }
 
 export async function listFiles(dh: FileSystemDirectoryHandle): Promise<string[]> {

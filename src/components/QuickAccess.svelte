@@ -2,15 +2,11 @@
   import { focus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { getSettings } from "../settings.svelte";
-  import { getAltChar, getKeyEventNumber, getModChar, len } from "../util";
+  import { toggleNoteStarred } from "../metadata";
+  import { getAltChar, getModChar, handleDigitPick, len, removeDuplicates } from "../util";
+  import { StarButton } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
-  import {
-    buildNoteInfo,
-    buildNoteInfos,
-    noteShortcutStr,
-    noteStarButton,
-    toggleStarredAndFocus,
-  } from "./NoteSelector.svelte";
+  import { buildNoteInfo, buildNoteInfos, noteShortcutStr } from "./NoteSelector.svelte";
   import type { NoteInfo } from "./NoteSelector.svelte";
 
   interface Props {
@@ -35,8 +31,7 @@
 
   function buildQuickAccessNotes(starred: string[], withShortcuts: string[], history: string[]): NoteInfo[] {
     let notes: string[] = [...starred, ...withShortcuts];
-    // remove duplicate names in notes
-    notes = [...new Set(notes)];
+    notes = removeDuplicates(notes);
     let res = buildNoteInfos(notes);
     firstInHistoryIdx = len(res);
     initialSelection = firstInHistoryIdx;
@@ -60,13 +55,9 @@
   );
 
   function onkeydown(ev: KeyboardEvent) {
-    // '0' ... '9' picks an item
-    let idx = getKeyEventNumber(ev);
-    let lastIdx = len(quickAccessNotes) - firstInHistoryIdx - 1;
-    if (idx >= 0 && idx <= lastIdx) {
-      ev.preventDefault();
-      let item = quickAccessNotes[firstInHistoryIdx + idx];
-      openNote(item.name, ev.ctrlKey);
+    // "0" ... "9" picks a note from history
+    let nHistory = len(quickAccessNotes) - firstInHistoryIdx;
+    if (handleDigitPick(ev, nHistory, (idx) => openNote(quickAccessNotes[firstInHistoryIdx + idx]!.name, ev.ctrlKey))) {
       return;
     }
 
@@ -114,7 +105,7 @@
           {shortcut}
         </div>
       {:else if noteInfo.isStarred && historyTrigger < 0}
-        {@render noteStarButton(noteInfo, toggleStarredAndFocus, "ml-0.5")}
+        {@render StarButton(noteInfo.isStarred, () => toggleNoteStarred(noteInfo.name), "ml-0.5")}
       {:else}
         <div class="px-1 grow text-gray-400 dark:text-gray-400 {cls}">&nbsp;</div>
       {/if}

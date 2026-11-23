@@ -1,4 +1,4 @@
-import { ensureStringEndsWithNL, len } from "./util";
+import { ensureStringEndsWithNL, errorMessage, len } from "./util";
 
 export interface CapturingEval {
   output: any;
@@ -45,7 +45,7 @@ export async function runGo(code: string): Promise<CapturingEval> {
       body: code,
     });
   } catch (e: unknown) {
-    res.exception = e instanceof Error ? e.message : String(e);
+    res.exception = errorMessage(e);
     return res;
   }
 
@@ -57,7 +57,7 @@ export async function runGo(code: string): Promise<CapturingEval> {
   try {
     rspJSON = await rsp.json();
   } catch (e: unknown) {
-    res.exception = `Error: invalid response: ${e instanceof Error ? e.message : String(e)}`;
+    res.exception = `Error: invalid response: ${errorMessage(e)}`;
     return res;
   }
   const err = getError(rspJSON);
@@ -115,7 +115,7 @@ async function evalWithConsoleCapture(code: string): Promise<CapturingEval> {
     let eval2 = [eval][0]!;
     output = await eval2(code);
   } catch (e: unknown) {
-    exception = e instanceof Error ? e.message : String(e);
+    exception = errorMessage(e);
   } finally {
     console.log = originalConsole.log;
     console.debug = originalConsole.debug;

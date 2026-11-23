@@ -1,7 +1,6 @@
 // https://keyjs.dev/ : to see what's what
 
-import browser from "./browser";
-import { len } from "./util";
+import { getAltChar, len, platform, splitMax } from "./util";
 
 export function isEnter(ev: KeyboardEvent): boolean {
   return ev.key === "Enter";
@@ -29,44 +28,22 @@ export interface Shortcut {
 }
 
 export function serializeShortuct(s: Shortcut): string {
+  let mac = platform.isMac;
+  // e.g. "⌥ " on Mac, "Alt + " elsewhere
+  let modifier = (name: string) => name + (mac ? " " : " + ");
   let res = "";
-  if (s.shiftKey) {
-    if (browser.mac) {
-      res += "⇧ ";
-    } else {
-      res += "Shift + ";
-    }
-  }
-  if (s.ctrlKey) {
-    if (browser.mac) {
-      res += "⌃ ";
-    } else {
-      res += "Ctrl + ";
-    }
-  }
-  if (s.altKey) {
-    if (browser.mac) {
-      res += "⌥ ";
-    } else {
-      res += "Alt + ";
-    }
-  }
-  if (s.metaKey) {
-    if (browser.mac) {
-      res += "⌘ ";
-    } else {
-      res += "Meta + ";
-    }
-  }
-  res = res + s.key.toUpperCase();
-  return res;
+  if (s.shiftKey) res += modifier(mac ? "⇧" : "Shift");
+  if (s.ctrlKey) res += modifier(mac ? "⌃" : "Ctrl");
+  if (s.altKey) res += modifier(getAltChar());
+  if (s.metaKey) res += modifier(mac ? "⌘" : "Meta");
+  return res + s.key.toUpperCase();
 }
 
 export function parseShortcut(s: string): Shortcut | null {
   let parts = s.split("\t");
   if (len(parts) > 1) {
     s = parts[0]!;
-    if (browser.mac) {
+    if (platform.isMac) {
       s = parts[1]!;
     }
   }
@@ -104,7 +81,7 @@ export function parseShortcut(s: string): Shortcut | null {
     else if (/^(c|ctrl|control)$/i.test(mod)) res.ctrlKey = true;
     else if (/^s(hift)?$/i.test(mod)) res.shiftKey = true;
     else if (/^mod$/i.test(mod)) {
-      if (browser.mac) res.metaKey = true;
+      if (platform.isMac) res.metaKey = true;
       else res.ctrlKey = true;
     } else {
       // console.log("Unrecognized modifier name: " + mod + " in: " + s);
@@ -170,6 +147,13 @@ export function parseShortcut(s: string): Shortcut | null {
   // TODO: validate more like up/down etc.
   res.key = key;
   return res;
+}
+
+// splits a menu / command label "Name\tShortcut" into name and displayed shortcut ("" if none)
+export function splitCommandLabel(s: string): { name: string; shortcut: string } {
+  let parts = splitMax(s, "\t", 2);
+  let shortcut = len(parts) > 1 ? extractShortcut(parts[1]!) : "";
+  return { name: parts[0] as string, shortcut };
 }
 
 export function extractShortcut(txt: string): string {

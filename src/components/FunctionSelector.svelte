@@ -3,8 +3,19 @@
   import type { BoopFunction } from "../functions";
   import { getFunctionMeta, toggleFunctionStarred } from "../metadata";
   import { getBoopFunctions } from "../system-notes";
-  import { findMatchingItems, getAltChar, hilightText, len, makeHilightRegExp } from "../util";
-  import { IconTablerStar } from "./Icons.svelte";
+  import {
+    compareTrueFirst,
+    filteredCountMsg,
+    findMatchingItems,
+    getAltChar,
+    handleEnter,
+    handleToggleStarKey,
+    hilightText,
+    len,
+    makeHilightRegExp,
+    toggleStarredAndFocus,
+  } from "../util";
+  import { StarButton } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
   interface Props {
@@ -45,14 +56,8 @@
    * 1 if a > b
    */
   function sortItem(a: Item, b: Item): number {
-    // started before not starred
-    if (a.isStarred && !b.isStarred) {
-      return -1;
-    }
-    if (!a.isStarred && b.isStarred) {
-      return 1;
-    }
-    return a.name.localeCompare(b.name);
+    // starred before not starred
+    return compareTrueFirst(a.isStarred, b.isStarred) || a.name.localeCompare(b.name);
   }
 
   function buildItems(): Item[] {
@@ -84,39 +89,25 @@
   }
 
   function onKeydown(ev: KeyboardEvent) {
-    // console.log("onKeyDown:", event);
-    let key = ev.key;
-
-    if (key === "s" && ev.altKey && selectedItem) {
-      toggleStarred(selectedItem);
-      ev.preventDefault();
+    if (handleToggleStarKey(ev, selectedItem, toggleFunctionItemStarred)) {
       return;
     }
 
-    if (key === "Enter") {
-      ev.preventDefault();
+    let isEnter = handleEnter(ev, () => {
       if (selectedItem) {
-        let replace = ev.ctrlKey;
-        emitRunFunction(selectedItem, replace);
+        emitRunFunction(selectedItem, ev.ctrlKey);
       }
+    });
+    if (isEnter) {
       return;
     }
     listboxRef?.onkeydown(ev, filter === "");
   }
 
-  let itemsCountMsg = $derived.by(() => {
-    let n = len(itemsFiltered);
-    let nItems = len(items);
-    if (n === nItems) {
-      return `${nItems} funcs`;
-    }
-    return `${n} of ${nItems} funcs`;
-  });
+  let itemsCountMsg = $derived(filteredCountMsg(len(itemsFiltered), len(items), "funcs", false));
 
-  async function toggleStarred(item: Item) {
-    item.isStarred = await toggleFunctionStarred(item.name);
-    console.log("toggleStarred:", item, "isStarred:", item.isStarred);
-    inputRef.focus();
+  function toggleFunctionItemStarred(item: Item) {
+    toggleStarredAndFocus(async () => (item.isStarred = await toggleFunctionStarred(item.name)), inputRef);
   }
 
   let listboxRef: ListBox;
@@ -157,16 +148,7 @@
   >
     {#snippet renderItem(item)}
       {@const hili = hilightText(item.name, hiliRegExp)}
-      <button
-        class="-ml-1.5 cursor-pointer hover:text-yellow-600"
-        onclick={(ev) => {
-          toggleStarred(item);
-          ev.preventDefault();
-          ev.stopPropagation();
-        }}
-      >
-        {@render IconTablerStar(item.isStarred ? "var(--color-yellow-300)" : "none")}
-      </button>
+      {@render StarButton(item.isStarred, () => toggleFunctionItemStarred(item))}
       <div class="truncate ml-2">
         {@html hili}
       </div>

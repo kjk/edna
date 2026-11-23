@@ -35,6 +35,15 @@ export type KeymapSpec = Array<
     }
 >;
 
+// values of compartments that settings reconfigure (used at creation and in setters)
+const lineNumbersExt = (show: boolean): Extension => (show ? blockLineNumbers : []);
+const foldGutterExt = (show: boolean): Extension => (show ? foldGutterExtension() : []);
+const themeExt = (theme: string): Extension => (theme === "dark" ? ednaDark : ednaLight);
+const closeBracketsExt = (on: boolean): Extension => (on ? createDynamicCloseBracketsExtension() : []);
+const colorPreviewExt = (show: boolean): Extension => (show ? colorPreviewExtension : []);
+const defaultBlockExt = (token: string, autoDetect: boolean): Extension =>
+  defaultBlockDelimiter.of(getBlockDelimiter(token, autoDetect));
+
 interface MultiBlockEditorConfig {
   element: HTMLElement;
   save: (content: string) => Promise<void>;
@@ -123,18 +132,16 @@ export class MultiBlockEditor {
         customSetup(createFindPanel),
         this.historyCompartment.of(history()),
         moveSelectionOutOfNewFolds,
-        this.lineNumberCompartment.of(showLineNumberGutter ? blockLineNumbers : []),
-        this.foldGutterCompartment.of(showFoldGutter ? foldGutterExtension() : []),
+        this.lineNumberCompartment.of(lineNumbersExt(showLineNumberGutter)),
+        this.foldGutterCompartment.of(foldGutterExt(showFoldGutter)),
         ednaBase,
-        this.themeCompartment.of(theme === "dark" ? ednaDark : ednaLight),
+        this.themeCompartment.of(themeExt(theme)),
         this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
         this.keymapCompartment.of(this.bindings(keymap)),
         this.readOnlyCompartment.of([]),
-        this.defaultBlockCompartment.of(
-          defaultBlockDelimiter.of(getBlockDelimiter(this.defaultBlockToken, defaultBlockAutoDetect)),
-        ),
-        this.closeBracketsCompartment.of(bracketClosing ? createDynamicCloseBracketsExtension() : []),
-        this.colorPreviewCompartment.of(showColorPreview ? colorPreviewExtension : []),
+        this.defaultBlockCompartment.of(defaultBlockExt(this.defaultBlockToken, defaultBlockAutoDetect)),
+        this.closeBracketsCompartment.of(closeBracketsExt(bracketClosing)),
+        this.colorPreviewCompartment.of(colorPreviewExt(showColorPreview)),
         this.tabsCompartment.of(indentationExtension(useTabs, tabSize)),
         markdownSelectionWrapping,
         ednaCopyCut(this),
@@ -210,6 +217,11 @@ export class MultiBlockEditor {
 
   getContent(): string {
     return this.view.state.doc.toString();
+  }
+
+  // content (current by default) differs from what was last loaded or saved
+  isDirty(content = this.getContent()): boolean {
+    return content !== this.diskContent;
   }
 
   setContent(content: string): void {
@@ -311,7 +323,7 @@ export class MultiBlockEditor {
   }
 
   setTheme(theme: string): void {
-    this.reconfigure(this.themeCompartment, theme === "dark" ? ednaDark : ednaLight);
+    this.reconfigure(this.themeCompartment, themeExt(theme));
   }
 
   setKeymap(keymap: string, emacsMetaKey: string): void {
@@ -322,24 +334,21 @@ export class MultiBlockEditor {
   }
 
   setLineNumberGutter(show: boolean): void {
-    this.reconfigure(this.lineNumberCompartment, show ? blockLineNumbers : []);
+    this.reconfigure(this.lineNumberCompartment, lineNumbersExt(show));
   }
 
   setColorPreview(show: boolean): void {
-    this.reconfigure(this.colorPreviewCompartment, show ? colorPreviewExtension : []);
+    this.reconfigure(this.colorPreviewCompartment, colorPreviewExt(show));
   }
 
   setFoldGutter(show: boolean): void {
-    this.reconfigure(this.foldGutterCompartment, show ? foldGutterExtension() : []);
+    this.reconfigure(this.foldGutterCompartment, foldGutterExt(show));
   }
 
   setDefaultBlockLanguage(token: string, autoDetect = true): void {
     this.defaultBlockToken = token || "text";
     this.defaultBlockAutoDetect = autoDetect;
-    this.reconfigure(
-      this.defaultBlockCompartment,
-      defaultBlockDelimiter.of(getBlockDelimiter(this.defaultBlockToken, autoDetect)),
-    );
+    this.reconfigure(this.defaultBlockCompartment, defaultBlockExt(this.defaultBlockToken, autoDetect));
   }
 
   didLoadCurrencies(): void {
@@ -347,7 +356,7 @@ export class MultiBlockEditor {
   }
 
   setBracketClosing(value: boolean): void {
-    this.reconfigure(this.closeBracketsCompartment, value ? createDynamicCloseBracketsExtension() : []);
+    this.reconfigure(this.closeBracketsCompartment, closeBracketsExt(value));
   }
 
   setTabsState(useTabs: boolean, tabSpaces: number): void {

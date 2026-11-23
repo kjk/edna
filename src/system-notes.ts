@@ -3,7 +3,7 @@
 // importing ?raw
 import { blockHdrJavaScript, blockHdrMarkdown } from "./constants";
 import type { BoopFunction } from "./functions";
-import { parseBuiltInFunctions } from "./functions.js";
+import { kBuiltInFunctionsSeparator, parseBuiltInFunctions } from "./functions.js";
 import { expandKeyHelp } from "./key-helper.js";
 import { fixUpNoteContent } from "./notes.js";
 // @ts-ignore
@@ -47,7 +47,7 @@ To learn more see http://edna.arslexis.io/help#running-code
 
 export function getBuiltInFunctionsNote(): string {
   let s = builtInFunctionsRaw;
-  let parts = s.split("// ----------------------------");
+  let parts = s.split(kBuiltInFunctionsSeparator);
   let res = [];
   for (let p of parts) {
     p = p.trim();

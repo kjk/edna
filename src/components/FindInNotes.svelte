@@ -4,7 +4,15 @@
   import { appState } from "../appstate.svelte";
   import { loadNote } from "../notes";
   import { findMatchesInNote } from "../find-in-notes";
-  import { btnPressedCls, hilightText, len, makeHilightRegExp, splitStringPreservingQuotes } from "../util";
+  import {
+    btnPressedCls,
+    handleEnter,
+    hilightText,
+    len,
+    makeHilightRegExp,
+    splitStringPreservingQuotes,
+    toggleFlag,
+  } from "../util";
   import { IconFluentWholeWord, IconTablerLetterCase } from "./Icons.svelte";
   import ListBox from "./ListBox.svelte";
 
@@ -101,14 +109,15 @@
   }
 
   function onKeyDown(ev: KeyboardEvent) {
-    if (ev.key == "Enter") {
-      ev.preventDefault();
+    let isEnter = handleEnter(ev, () => {
       let sameSearchTerm = searchTerm == currSearchTerm;
       if (sameSearchTerm && lastChangeNo == changeNo && len(results) > 0 && selectedItem) {
         openItem(selectedItem);
       } else {
         searchAllNotes(searchTerm);
       }
+    });
+    if (isEnter) {
       return;
     }
     listboxRef?.onkeydown(ev, searchTerm === "");
@@ -129,13 +138,8 @@
     };
   });
 
-  function matchCase() {
-    appState.searchNotesMatchCase = !appState.searchNotesMatchCase;
-    changeNo++; // make Enter redo the search
-    focusInput();
-  }
-  function matchWholeWOrd() {
-    appState.searchNotesMatchWholeWord = !appState.searchNotesMatchWholeWord;
+  function toggleOption(option: "searchNotesMatchCase" | "searchNotesMatchWholeWord" | "searchIncludeArchived") {
+    toggleFlag(appState, option);
     changeNo++; // make Enter redo the search
     focusInput();
   }
@@ -155,10 +159,10 @@
 
 {#snippet InsideInput()}
   <div class="absolute right-1 top-1.5 flex">
-    <button class="btn-icon {matchCaseCls}" onclick={matchCase} title="Match Case"
+    <button class="btn-icon {matchCaseCls}" onclick={() => toggleOption("searchNotesMatchCase")} title="Match Case"
       >{@render IconTablerLetterCase()}</button
     >
-    <button class="btn-icon {matchWholeWordCls}" onclick={matchWholeWOrd} title="Match Whole Word"
+    <button class="btn-icon {matchWholeWordCls}" onclick={() => toggleOption("searchNotesMatchWholeWord")} title="Match Whole Word"
       >{@render IconFluentWholeWord()}</button
     >
   </div>
@@ -233,29 +237,15 @@
     class="flex items-baseline gap-4 text-gray-700 text-xs max-w-full dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg px-2 pt-1 pb-1.5 mt-2"
   >
     {#if len(appState.archivedNotes) > 0}
-      {#if appState.searchIncludeArchived}
-        <button
-          onclick={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            appState.searchIncludeArchived = false;
-            changeNo++; // make Enter redo the search
-            searchInputRef.focus();
-          }}
-          class="link">exclude {len(appState.archivedNotes)} archived</button
-        >
-      {:else}
-        <button
-          onclick={(ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            appState.searchIncludeArchived = true;
-            changeNo++; // make Enter redo the search
-            searchInputRef.focus();
-          }}
-          class="link">include {len(appState.archivedNotes)} archived</button
-        >
-      {/if}
+      <button
+        onclick={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          toggleOption("searchIncludeArchived");
+        }}
+        class="link"
+        >{appState.searchIncludeArchived ? "exclude" : "include"} {len(appState.archivedNotes)} archived</button
+      >
     {/if}
 
     <div class="grow"></div>

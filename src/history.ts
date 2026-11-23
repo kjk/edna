@@ -1,4 +1,5 @@
 import { appState } from "./appstate.svelte";
+import { arrayRemove, arrayReplace } from "./util";
 
 // history of opened files
 
@@ -14,15 +15,9 @@ export function addNoteToHistory(name: string) {
 }
 
 export function renameNoteInHistory(oldName: string, newName: string) {
-  let i = appState.history.indexOf(oldName);
-  if (i >= 0) {
-    appState.history[i] = newName;
-  }
+  arrayReplace(appState.history, oldName, newName);
 }
 
 export function removeNoteFromHistory(name: string) {
-  let i = appState.history.indexOf(name);
-  if (i >= 0) {
-    appState.history.splice(i, 1);
-  }
+  arrayRemove(appState.history, name);
 }

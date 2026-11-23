@@ -1,3 +1,10 @@
+<script module lang="ts">
+  export function closeFindPanel(view: EditorView) {
+    isMoving.findPanelOpen = false;
+    closeSearchPanel(view);
+  }
+</script>
+
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import {
@@ -15,7 +22,7 @@
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
   import { isMoving } from "../mouse-track.svelte";
-  import { btnPressedCls } from "../util";
+  import { btnPressedCls, handleEnter, toggleFlag } from "../util";
   import {
     IconFluentWholeWord,
     IconLucideReplace,
@@ -195,15 +202,7 @@
   }
 
   function onKeyDown(ev: KeyboardEvent) {
-    if (ev.key == "Enter") {
-      if (ev.shiftKey) {
-        prev();
-      } else {
-        next();
-      }
-      ev.preventDefault();
-      return;
-    }
+    handleEnter(ev, () => (ev.shiftKey ? prev() : next()));
   }
 
   onMount(() => {
@@ -221,17 +220,7 @@
   });
 
   function close() {
-    isMoving.findPanelOpen = false;
-    closeSearchPanel(view);
-  }
-  function matchCase() {
-    appState.searchMatchCase = !appState.searchMatchCase;
-  }
-  function matchWholeWOrd() {
-    appState.searchMatchWholeWord = !appState.searchMatchWholeWord;
-  }
-  function matchRegex() {
-    appState.searchRegex = !appState.searchRegex;
+    closeFindPanel(view);
   }
   let matchCaseCls = $derived(btnPressedCls(appState.searchMatchCase));
   let matchWholeWordCls = $derived(btnPressedCls(appState.searchMatchWholeWord));
@@ -245,11 +234,11 @@
         {counter.current} of {counter.total}
       </div>
     {/if}
-    <button class={matchCaseCls} onclick={matchCase} title="Match Case">{@render IconTablerLetterCase()}</button>
-    <button class={matchWholeWordCls} onclick={matchWholeWOrd} title="Match Whole Word"
+    <button class={matchCaseCls} onclick={() => toggleFlag(appState, "searchMatchCase")} title="Match Case">{@render IconTablerLetterCase()}</button>
+    <button class={matchWholeWordCls} onclick={() => toggleFlag(appState, "searchMatchWholeWord")} title="Match Whole Word"
       >{@render IconFluentWholeWord()}</button
     >
-    <button class={matchRegexCls} onclick={matchRegex} title="Match Regular Expression"
+    <button class={matchRegexCls} onclick={() => toggleFlag(appState, "searchRegex")} title="Match Regular Expression"
       >{@render IconTablerRegex()}</button
     >
   </div>

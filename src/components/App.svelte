@@ -3,7 +3,7 @@
   import debounce from "debounce";
   import { toggleBlockComment, toggleComment, toggleLineComment } from "@codemirror/commands";
   import { foldCode, unfoldCode } from "@codemirror/language";
-  import { closeSearchPanel, openSearchPanel, searchPanelOpen } from "@codemirror/search";
+  import { openSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorSelection, EditorState } from "@codemirror/state";
   import type { EditorView } from "@codemirror/view";
   import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
@@ -22,7 +22,14 @@
     kWelcomeSystemNoteName,
   } from "../constants";
   import { kAddNewBlock, ednaEvent } from "../editor/annotation";
-  import { getActiveNoteBlock, getBlockN, getBlocksInfo, insertAfterActiveBlock } from "../editor/block/block";
+  import {
+    getActiveNoteBlock,
+    getBlockN,
+    getBlocksInfo,
+    getEditableActiveBlock,
+    insertAfterActiveBlock,
+    replaceBlockContent,
+  } from "../editor/block/block";
   import type { NoteBlock } from "../editor/block/block-parsing";
   import {
     addNewBlockAfterCurrent,
@@ -59,7 +66,7 @@
   import { extForLang, getLanguage, langSupportsFormat, langSupportsRun } from "../editor/languages";
   import { setDefaultFontFamilyAndSize } from "../editor/theme/font-theme";
   import { toFileName } from "../filenamify";
-  import { fsFileHandleWriteBlob, hasHandlePermission, openDirPicker, supportsFileSystem } from "../fileutil";
+  import { fsFileHandleWrite, hasHandlePermission, openDirPicker, supportsFileSystem } from "../fileutil";
   import { formatBlockContent } from "../format-code";
   import { boopFunctionResult, parseUserFunctions, runBoopFunction } from "../functions";
   import type { BoopFunction, BoopFunctionArg } from "../functions";
@@ -77,6 +84,7 @@
     unArchiveNote,
   } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
+  import { blockLanguageSupportsRun, smartRunAction } from "../smart-run";
   import {
     appendToNote,
     canDeleteNote,
@@ -87,6 +95,7 @@
     decryptAllNotes,
     deleteNote,
     encryptAllNotes,
+    ensureBlockHeader,
     hasEncryptedNotes,
     hasUnencryptedNotes,
     PasswordCancelledError,
@@ -119,11 +128,14 @@
     getClipboardText,
     isAltNumEvent,
     isDev,
+    isModKey,
+    keySpecMatches,
     len,
     noOp,
     platform,
     stringSizeInUtf8Bytes,
     throwIf,
+    toggleFlag,
     trimPrefix,
     trimSuffix,
   } from "../util";
@@ -135,6 +147,7 @@
   import CreateNewNote from "./CreateNewNote.svelte";
   import EnterDecryptPassword from "./EnterDecryptPassword.svelte";
   import EnterEncryptPassword from "./EnterEncryptPassword.svelte";
+  import { closeFindPanel } from "./Find.svelte";
   import FindInNotes from "./FindInNotes.svelte";
   import FunctionSelector from "./FunctionSelector.svelte";
   import HomePage from "./HomePage.svelte";
@@ -157,7 +170,7 @@
   import Settings from "./Settings.svelte";
   import Sidebar from "./Sidebar.svelte";
   import StatusBar from "./StatusBar.svelte";
-  import Toaster, { showError, showToast, showWarning } from "./Toaster.svelte";
+  import Toaster, { saveOrShowError, showError, showToast, showWarning } from "./Toaster.svelte";
   import TopNav from "./TopNav.svelte";
 
   const isMac = platform.isMac;
@@ -177,41 +190,33 @@
 
   let showingBlockSelector = $state(false);
   let showingDecryptMessage = $state("");
-  let isShowingDialog = $derived.by(() => {
-    return (
-      appState.showingContextMenu ||
-      appState.showingLanguageSelector ||
-      appState.showingNoteSelector ||
-      appState.showingBlockMoveSelector ||
-      appState.showingCommandPalette ||
-      appState.showingCreateNewNote ||
-      appState.showingFunctionSelector ||
-      appState.showingSettings ||
-      appState.showingRenameNote ||
-      appState.showingQuickAccess ||
-      showingBlockSelector ||
-      appState.showingFindInNotes ||
-      appState.showingDecryptPassword ||
-      appState.showingEncryptPassword ||
-      appState.showingAskFileWritePermissions ||
-      appState.showingAskAI
-    );
-  });
+  // dialogs closed by closeDialogs()
+  const kClosableDialogs = [
+    "showingContextMenu",
+    "showingLanguageSelector",
+    "showingNoteSelector",
+    "showingBlockMoveSelector",
+    "showingCommandPalette",
+    "showingCreateNewNote",
+    "showingFunctionSelector",
+    "showingSettings",
+    "showingRenameNote",
+    "showingQuickAccess",
+    "showingFindInNotes",
+    "showingAskAI",
+  ] as const;
+  // dialogs waiting for an answer: not closed by closeDialogs()
+  const kAnswerDialogs = ["showingDecryptPassword", "showingEncryptPassword", "showingAskFileWritePermissions"] as const;
+
+  let isShowingDialog = $derived(
+    showingBlockSelector || [...kClosableDialogs, ...kAnswerDialogs].some((key) => appState[key]),
+  );
 
   function closeDialogs() {
-    appState.showingContextMenu = false;
-    appState.showingLanguageSelector = false;
-    appState.showingNoteSelector = false;
-    appState.showingBlockMoveSelector = false;
-    appState.showingCommandPalette = false;
-    appState.showingCreateNewNote = false;
-    appState.showingFunctionSelector = false;
-    appState.showingSettings = false;
-    appState.showingRenameNote = false;
-    appState.showingQuickAccess = false;
+    for (let key of kClosableDialogs) {
+      appState[key] = false;
+    }
     showingBlockSelector = false;
-    appState.showingFindInNotes = false;
-    appState.showingAskAI = false;
 
     appState.forceNewTab = false;
 
@@ -255,13 +260,8 @@
   };
   setGlobalFuncs(gf);
 
-  // External keymap bindings that require App-level functions
-  let extraKeymap: KeymapSpec = [
-    ["Alt-Shift-f", () => formatBlockContent(getEditor())],
-    ["Mod-l", openLanguageSelector],
-    ["Mod-e", smartRun],
-    ["Alt-Shift-r", () => openFunctionSelector(false)],
-    ["Mod-b", () => openBlockSelector()],
+  // shortcuts that also work without an editor (e.g. on Home tab)
+  const globalKeymap: [string, () => void][] = [
     ["Mod-k", openNoteSelector],
     ["Mod-o", openNoteSelector],
     ["Mod-p", openNoteSelector],
@@ -270,6 +270,16 @@
     ["Mod-Shift-o", openCommandPalette],
     ["Mod-h", openQuickAccess],
     ["Mod-Shift-f", openFindInNotes],
+  ];
+
+  // External keymap bindings that require App-level functions
+  let extraKeymap: KeymapSpec = [
+    ["Alt-Shift-f", () => formatBlockContent(getEditor())],
+    ["Mod-l", openLanguageSelector],
+    ["Mod-e", smartRun],
+    ["Alt-Shift-r", () => openFunctionSelector(false)],
+    ["Mod-b", () => openBlockSelector()],
+    ...globalKeymap,
   ];
   // Alt-n for create scratch note only on non-Mac (Option-n is used for accented characters on Mac)
   if (!isMac) {
@@ -365,7 +375,7 @@
   });
 
   function onKeyDown(ev: KeyboardEvent) {
-    let mod = isMac ? ev.metaKey : ev.ctrlKey;
+    let mod = isModKey(ev);
 
     // we bind Mod-h in CodeMirror which only works if CodeMirror has
     // focus. We have to prevent it here to disable the default
@@ -393,8 +403,7 @@
       let view = getEditorView();
       if (view && searchPanelOpen(view.state)) {
         console.log("closing search panel on ESC");
-        isMoving.findPanelOpen = false;
-        closeSearchPanel(view);
+        closeFindPanel(view);
         return;
       }
       return;
@@ -403,33 +412,13 @@
     // When there's no editor (e.g. Home tab), handle shortcuts that are
     // normally bound through CodeMirror's extraKeymap
     if (!editorComp && !isShowingDialog) {
-      if (
-        mod &&
-        ev.shiftKey &&
-        (ev.key === "K" || ev.key === "k" || ev.key === "P" || ev.key === "p" || ev.key === "O" || ev.key === "o")
-      ) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        openCommandPalette();
-        return;
-      }
-      if (mod && !ev.shiftKey && (ev.key === "k" || ev.key === "o" || ev.key === "p")) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        openNoteSelector();
-        return;
-      }
-      if (mod && !ev.shiftKey && ev.key === "h") {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        openQuickAccess();
-        return;
-      }
-      if (mod && ev.shiftKey && (ev.key === "F" || ev.key === "f")) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        openFindInNotes();
-        return;
+      for (let [spec, run] of globalKeymap) {
+        if (keySpecMatches(spec, ev)) {
+          ev.preventDefault();
+          ev.stopImmediatePropagation();
+          run();
+          return;
+        }
       }
     }
 
@@ -502,17 +491,16 @@
     if (!editorComp) {
       return true;
     }
-    try {
-      await editorComp.saveAll();
-      return true;
-    } catch (e) {
-      showError(`Failed to save note: ${e}`);
-      return false;
-    }
+    return saveOrShowError(() => editorComp.saveAll());
+  }
+
+  // only one Edna instance can switch storage, after saving the current note
+  async function canSwitchStorage(): Promise<boolean> {
+    return (await checkSingleInstance()) && (await saveBeforeStorageSwitch());
   }
 
   async function pickAnotherDirectory2() {
-    if (!(await checkSingleInstance()) || !(await saveBeforeStorageSwitch())) {
+    if (!(await canSwitchStorage())) {
       return;
     }
     await switchToDirectory();
@@ -603,10 +591,7 @@
     }
     let editor = editorComp ? getEditor() : undefined;
     if (editor) {
-      try {
-        await editor.save();
-      } catch (e) {
-        showError(`Failed to save note: ${e}`);
+      if (!(await saveOrShowError(() => editor.save()))) {
         return;
       }
     }
@@ -676,6 +661,10 @@
     }
   }
 
+  async function exportTextToFile(s: string, fileName: string) {
+    await exportBlobToFile(new Blob([s], { type: "text/plain" }), fileName);
+  }
+
   async function exportBlobToFile(blob: Blob, fileName: string) {
     if (!supportsFileSystem()) {
       browserDownloadBlob(blob, fileName);
@@ -692,11 +681,10 @@
       console.log(e);
       return;
     }
-    await fsFileHandleWriteBlob(fh, blob);
+    await fsFileHandleWrite(fh, blob);
   }
 
   async function exportCurrentBlock() {
-    let settings = getSettings();
     let editor = getEditor();
     let bi = getBlocksInfo(editor.view.state);
     let block = getActiveNoteBlock(editor.view.state)!;
@@ -706,18 +694,15 @@
       to = block.to;
     let s = editor.view.state.sliceDoc(from, to);
     console.log("exportCurrentBlock:", name);
-    const blob = new Blob([s], { type: "text/plain" });
-    await exportBlobToFile(blob, name);
+    await exportTextToFile(s, name);
   }
 
   async function exportCurrentNote() {
-    let settings = getSettings();
     let fileName = toFileName(noteName!) + kEdnaFileExt;
     let editor = getEditor();
     let s = editor.getContent();
     console.log("exportCurrentNote:", fileName);
-    const blob = new Blob([s], { type: "text/plain" });
-    await exportBlobToFile(blob, fileName);
+    await exportTextToFile(s, fileName);
   }
 
   function openSettings() {
@@ -733,7 +718,7 @@
   }
 
   async function switchToBrowserStorage2() {
-    if (!(await checkSingleInstance()) || !(await saveBeforeStorageSwitch())) {
+    if (!(await canSwitchStorage())) {
       return;
     }
     await switchToBrowserStorage();
@@ -830,6 +815,11 @@
 
   function openNoteSelector() {
     appState.showingNoteSelector = true;
+  }
+
+  function openNoteSelectorInNewTab() {
+    appState.forceNewTab = true;
+    openNoteSelector();
   }
 
   function reOpenNoteSelector() {
@@ -950,26 +940,28 @@
   async function runBoopFunctionWithSelection(run: RunContext, fdef: BoopFunction): Promise<boolean> {
     let { selectedText } = getCurrentSelection(run.editor.view.state);
     const content = selectedText;
-    let res = "";
-    try {
-      let input = await runBoopFunctionWithText(fdef, content);
-      res = boopFunctionResult(input, content);
-      if (res === content) {
-        res = "";
-      }
-    } catch (e) {
-      res = `error running ${fdef.name}: ${e}`;
-    }
+    let res = await boopResult(fdef, content);
     // TODO: be more intelligent
-    if (res === "") {
+    if (res === "" || res === content) {
       return false;
     }
-    let text = res;
-    if (!res.startsWith("\n∞∞∞")) {
-      text = "\n∞∞∞text-a\n" + res;
-    }
-    await insertRunOutput(run, text);
+    await insertRunOutputBlock(run, res);
     return true;
+  }
+
+  // result of running boop function fdef on content, or an error message
+  async function boopResult(fdef: BoopFunction, content: string): Promise<string> {
+    try {
+      let input = await runBoopFunctionWithText(fdef, content);
+      return boopFunctionResult(input, content);
+    } catch (e) {
+      return `error running ${fdef.name}: ${e}`;
+    }
+  }
+
+  // inserts output of a run as a new block after the block it was run from
+  async function insertRunOutputBlock(run: RunContext, output: string) {
+    await insertRunOutput(run, ensureBlockHeader(output));
   }
 
   async function runBoopFunctionWithBlockContent(run: RunContext, fdef: BoopFunction, replace: boolean): Promise<boolean> {
@@ -978,41 +970,16 @@
     const block = getActiveNoteBlock(state)!;
     const cursorPos = state.selection.asSingle().ranges[0]!.head;
     const content = state.sliceDoc(block.contentFrom, block.to);
-    let res = "";
-    try {
-      let input = await runBoopFunctionWithText(fdef, content);
-      res = boopFunctionResult(input, content);
-    } catch (e) {
-      res = `error running ${fdef.name}: ${e}`;
-    }
+    let res = await boopResult(fdef, content);
 
     // block offsets are only valid if it's still the same document (the editor
     // is read-only while running so it can't be edited)
     if (replace && isSameDocument(run)) {
       run.editor.setReadOnly(run.wasReadOnly);
-      let cursorOffset = cursorPos - block.contentFrom;
-      const tr = view.state.update(
-        {
-          changes: {
-            from: block.contentFrom,
-            to: block.to,
-            insert: res,
-          },
-          selection: EditorSelection.cursor(block.contentFrom + Math.min(cursorOffset, res.length)),
-        },
-        {
-          userEvent: "input",
-          scrollIntoView: true,
-        },
-      );
-      view.dispatch(tr);
+      replaceBlockContent(view, block, res, cursorPos - block.contentFrom, { userEvent: "input" });
       return true;
     }
-    let text = res;
-    if (!res.startsWith("\n∞∞∞")) {
-      text = "\n∞∞∞text-a\n" + res;
-    }
-    await insertRunOutput(run, text);
+    await insertRunOutputBlock(run, res);
     return true;
   }
 
@@ -1183,14 +1150,14 @@
     return menuHelp;
   }
 
+  // "Add {what}to favorites" or "Remove {what}from favorites" for the current note
+  function toggleFavoriteLabel(what: string): string {
+    let isStarred = !!(noteName && getNoteMeta(noteName)?.isStarred);
+    return isStarred ? `Remove ${what}from favorites` : `Add ${what}to favorites`;
+  }
+
   function buildMenuDefForEditor(): MenuDef {
-    // let starAction = "Star";
-    let starAction = "Add to favorites";
-    let meta = noteName ? getNoteMeta(noteName) : undefined;
-    if (meta && meta.isStarred) {
-      //starAction = "Un-star";
-      starAction = "Remove from favorites";
-    }
+    let starAction = toggleFavoriteLabel("");
 
     const menuNote: Command[] = [
       ["Close tab", kCmdCloseCurrentTab],
@@ -1566,8 +1533,7 @@
     } else if (cmdId === kCmdOpenNote) {
       openNoteSelector();
     } else if (cmdId === kCmdOpenNoteInNewTab) {
-      appState.forceNewTab = true;
-      openNoteSelector();
+      openNoteSelectorInNewTab();
     } else if (cmdId === kCmdCreateNewNote) {
       openCreateNewNote();
     } else if (cmdId === kCmdCloseCurrentTab) {
@@ -1745,7 +1711,7 @@
     } else if (cmdId === kCmdShowBuiltInFunctions) {
       openNote(kBuiltInFunctionsNoteName);
     } else if (cmdId === kCmdToggleSidebar) {
-      settings.showSidebar = !settings.showSidebar;
+      toggleFlag(settings, "showSidebar");
       if (!settings.showSidebar) {
         focusEditor();
       }
@@ -1807,13 +1773,7 @@
       return "Block: " + name;
     }
     if (id === kCmdNoteToggleStarred) {
-      let starAction = "Add current note to favorites";
-      let meta = noteName ? getNoteMeta(noteName) : undefined;
-      if (meta && meta.isStarred) {
-        //starAction = "Un-star";
-        starAction = "Remove current note from favorites";
-      }
-      return starAction;
+      return toggleFavoriteLabel("current note ");
     }
     return name || "";
   }
@@ -1877,10 +1837,7 @@
     }
     // save current editor state before switching away
     if (editorComp) {
-      try {
-        await getEditor().save();
-      } catch (e) {
-        showError(`Failed to save note '${tab}': ${e}`);
+      if (!(await saveOrShowError(() => getEditor().save(), tab))) {
         return;
       }
     }
@@ -1963,29 +1920,17 @@
     editor: MultiBlockEditor,
     evaluate: (token: string, content: string) => Promise<CapturingEval>,
   ): Promise<boolean> {
-    const view = editor.view;
-    const { state } = view;
-    if (isReadOnly(view)) {
-      return false;
-    }
-    const block = getActiveNoteBlock(state)!;
-    const lang = getLanguage(block.language);
-    if (!langSupportsRun(lang)) {
+    const { state } = editor.view;
+    const block = getEditableActiveBlock(state);
+    if (!block || !blockLanguageSupportsRun(block.language)) {
       return false;
     }
     const content = state.sliceDoc(block.contentFrom, block.to);
     let res = await withRun(editor, async (run) => {
       showModalMessageHTML("running code", 300, "run");
-      let res = await evaluate(lang.token, content);
-      let output = evalResultToString(res);
-      if (!output) {
-        output = "executed code returned empty output";
-      }
-      let text = output;
-      if (!output.startsWith("\n∞∞∞")) {
-        text = "\n∞∞∞text-a\n" + output;
-      }
-      await insertRunOutput(run, text);
+      let res = await evaluate(block.language, content);
+      let output = evalResultToString(res) || "executed code returned empty output";
+      await insertRunOutputBlock(run, output);
       return true;
     });
     return !!res;
@@ -2032,10 +1977,7 @@
   }
 
   function currentBlockSupportsRun(state: EditorState): boolean {
-    const block = getActiveNoteBlock(state)!;
-    const lang = getLanguage(block.language);
-    // console.log("runBlockContent: lang:", lang);
-    return langSupportsRun(lang);
+    return blockLanguageSupportsRun(getActiveNoteBlock(state)!.language);
   }
 
   function runCurrentBlockWithAnotherBlock() {
@@ -2066,15 +2008,12 @@
       return;
     }
 
-    let hasSel = editorHasSelection();
-    let supportsRun = currentBlockSupportsRun(view.state);
-    // console.log(`smartRun: hasSelection=${hasSel} supportsRun=${supportsRun}`);
-    if (hasSel) {
-      openFunctionSelector(true);
-    } else if (supportsRun) {
+    let block = getActiveNoteBlock(view.state)!;
+    let action = smartRunAction(editorHasSelection(), block.language);
+    if (action === "codeBlock") {
       runCurrentBlock();
     } else {
-      openFunctionSelector(false);
+      openFunctionSelector(action === "functionWithSelection");
     }
   }
 
@@ -2103,10 +2042,7 @@
     let editor = getEditor();
     // save pending edits now: a pending auto-save of the old name firing
     // after the rename would re-create the old note
-    try {
-      await editor.save();
-    } catch (e) {
-      showError(`Failed to save note '${currentNote}': ${e}`);
+    if (!(await saveOrShowError(() => editor.save(), currentNote))) {
       return;
     }
     let s = editor.getContent() || "";
@@ -2377,6 +2313,7 @@
       openNote={onOpenNote}
       {closeTab}
       {openNoteSelector}
+      {openNoteSelectorInNewTab}
       {menuItemStatus}
       {executeCommand}
       {buildMenuDef}
@@ -2404,7 +2341,7 @@
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav openNote={onOpenNote} {closeTab} {openNoteSelector} {menuItemStatus} {executeCommand} {buildMenuDef} />
+  <TopNav openNote={onOpenNote} {closeTab} {openNoteSelector} {openNoteSelectorInNewTab} {menuItemStatus} {executeCommand} {buildMenuDef} />
 {/if}
 {#if !isTabHome(settings.currentTab)}
   <StatusBar

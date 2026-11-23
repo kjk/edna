@@ -1,5 +1,5 @@
 import { Decoration, EditorView, ViewPlugin, type DecorationSet } from "@codemirror/view";
-import { isMac } from "./cmutils";
+import { isModKey, platform } from "../util";
 
 const linkPattern = /https?:\/\/[^\s<>"'`]+/gi;
 
@@ -23,7 +23,7 @@ function linkDecorations(view: EditorView): DecorationSet {
       decorations.push(
         Decoration.mark({
           class: "edna-link",
-          attributes: { "data-href": link, title: `${isMac() ? "Command" : "Ctrl"}+Click to open link` },
+          attributes: { "data-href": link, title: `${platform.isMac ? "Command" : "Ctrl"}+Click to open link` },
         }).range(start, start + link.length),
       );
     }
@@ -42,7 +42,7 @@ export const links = ViewPlugin.define(
     decorations: (plugin) => plugin.links,
     eventHandlers: {
       click(event, view) {
-        if (!(isMac() ? event.metaKey : event.ctrlKey) || event.button !== 0) return false;
+        if (!isModKey(event) || event.button !== 0) return false;
         const anchor = (event.target as Element | null)?.closest<HTMLElement>(".edna-link");
         const href = anchor?.dataset.href;
         if (!href) return false;

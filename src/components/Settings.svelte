@@ -3,7 +3,7 @@
   import { focus } from "../actions";
   import { getSessionDur } from "../globals";
   import { getGitHash, getSettings, getVersion, kDefaultFontFamily, kDefaultFontSize } from "../settings.svelte";
-  import { platform } from "../util";
+  import { platform, removeDuplicates } from "../util";
 
   let keymaps = [
     { name: "Default", value: "default" },
@@ -54,22 +54,10 @@
     if (!qlf) {
       return;
     }
-    let a = [defFont];
-    let fonts = await qlf();
-    let seen: string[] = []; // queryLocalFonts() returns duplicates
-    for (let f of fonts) {
-      let fam: string = f.family;
-      if (fam === kDefaultFontFamily) {
-        continue;
-      }
-      if (seen.includes(fam)) {
-        continue;
-      }
-      // console.log("fam:", fam);
-      a.push([fam, fam]);
-      seen.push(fam);
-    }
-    systemFonts = a;
+    let fonts: { family: string }[] = await qlf();
+    // queryLocalFonts() returns duplicates
+    let families = removeDuplicates(fonts.map((f) => f.family)).filter((fam) => fam !== kDefaultFontFamily);
+    systemFonts = [defFont, ...families.map((fam) => [fam, fam])];
   }
 </script>
 

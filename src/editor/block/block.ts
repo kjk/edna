@@ -1,4 +1,12 @@
-import { EditorSelection, EditorState, Prec, StateField, type Extension } from "@codemirror/state";
+import {
+  EditorSelection,
+  EditorState,
+  Prec,
+  StateField,
+  type Extension,
+  type Text as DocText,
+  type TransactionSpec,
+} from "@codemirror/state";
 import {
   Decoration,
   EditorView,
@@ -9,7 +17,7 @@ import {
   layer,
   type DecorationSet,
 } from "@codemirror/view";
-import { kAddNewBlock, kDeleteBlock, ednaEvent, kLanguageChange, kMoveBlock, kSetContent } from "../annotation";
+import { ednaEvent, isStructuralChange, kAddNewBlock, kSetContent } from "../annotation";
 import type { MultiBlockEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
 import type { SimpleRange } from "../types";
@@ -65,6 +73,11 @@ export function getNoteBlockFromPos(state: EditorState, pos: number): Block | un
 
 export function getActiveNoteBlock(state: EditorState): Block | undefined {
   return getNoteBlockFromPos(state, state.selection.main.head);
+}
+
+// numbers of the first and last line of block's content
+export function blockLineRange(doc: DocText, block: Block): { first: number; last: number } {
+  return { first: doc.lineAt(block.contentFrom).number, last: doc.lineAt(block.to).number };
 }
 
 // active block, or undefined if the editor is read-only
@@ -143,10 +156,8 @@ export const blockLineNumbers = gutter({
     if (!update.docChanged) return spacer;
     let maxLines = 1;
     for (const block of getBlocks(update.state)) {
-      maxLines = Math.max(
-        maxLines,
-        update.state.doc.lineAt(block.to).number - update.state.doc.lineAt(block.contentFrom).number + 1,
-      );
+      const { first, last } = blockLineRange(update.state.doc, block);
+      maxLines = Math.max(maxLines, last - first + 1);
     }
     return new LineNumber("9".repeat(Math.max(2, String(maxLines).length)));
   },
@@ -244,11 +255,7 @@ const blockStyle = EditorView.baseTheme({
 });
 
 const protectDelimiters = EditorState.changeFilter.of((tr) => {
-  if (!tr.docChanged || tr.isUserEvent("undo") || tr.isUserEvent("redo")) return true;
-  const event = tr.annotation(ednaEvent);
-  if (event === kSetContent || event === kLanguageChange || event === kAddNewBlock || event === kMoveBlock || event === kDeleteBlock) {
-    return true;
-  }
+  if (!tr.docChanged || isStructuralChange(tr)) return true;
 
   const blocks = getBlocks(tr.startState);
   if (!blocks.length) return true;
@@ -324,6 +331,23 @@ export function noteBlockExtension(_editor: MultiBlockEditor): Extension[] {
     selectionEvents,
     mathBlock,
   ];
+}
+
+// replaces content of block with text and puts the cursor cursorOffset characters
+// into it (clamped to the new content)
+export function replaceBlockContent(
+  view: EditorView,
+  block: Block,
+  text: string,
+  cursorOffset: number,
+  spec: Omit<TransactionSpec, "changes" | "selection"> = {},
+) {
+  view.dispatch({
+    changes: { from: block.contentFrom, to: block.to, insert: text },
+    selection: { anchor: block.contentFrom + Math.min(text.length, Math.max(0, cursorOffset)) },
+    scrollIntoView: true,
+    ...spec,
+  });
 }
 
 export function insertAfterActiveBlock(view: EditorView, text: string): boolean {
