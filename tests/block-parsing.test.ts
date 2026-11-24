@@ -37,6 +37,7 @@ describe("getBlocksFromString matches the parser", async () => {
     `\n${D}text`,
     `\n${D}Text\nhi`,
     `\n${D}text\na\n${D}math-a\n1+1\n`,
+    `\n${D}text-ro\na\n${D}math-a-ro\n1+1\n${D}text-ro-a\nb`,
   ];
   for (const s of cases) {
     it(JSON.stringify(s), () => {

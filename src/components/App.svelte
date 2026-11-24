@@ -82,6 +82,7 @@
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
   import { hasOtherInstances, startInstanceDetection } from "../instances";
   import { getMarkdownHeadings } from "../markdown-util";
+  import { toggleBlockReadOnly } from "../editor/read-only-blocks";
   import { boot, switchToBrowserStorage, switchToDirectory } from "../main";
   import {
     archiveNote,
@@ -1143,6 +1144,7 @@
   const kCmdGoToBlock = nmid();
   const kCmdGoToHeading = nmid();
   const kCmdToggleMarkdownPreview = nmid();
+  const kCmdToggleBlockReadOnly = nmid();
   const kCmdNewBlockBeforeCurrent = nmid();
   const kCmdNewBlockAtEnd = nmid();
   const kCmdNewBlockAtStart = nmid();
@@ -1279,6 +1281,7 @@
       ["Go To\tMod + B", kCmdGoToBlock],
       ["Go To Heading\tMod + Shift + B", kCmdGoToHeading],
       ["Markdown preview", kCmdToggleMarkdownPreview],
+      ["Toggle read-only", kCmdToggleBlockReadOnly],
       ["Add after current\tMod + Enter", kCmdNewBlockAfterCurrent],
       ["Add before current\tAlt + Enter", kCmdNewBlockBeforeCurrent],
       ["Add at end\tMod + Shift + Enter", kCmdNewBlockAtEnd],
@@ -1467,6 +1470,7 @@
     let hasSel = view ? editorHasSelection() : false;
 
     let removeIfReadOnly = [
+      kCmdToggleBlockReadOnly,
       kCmdFormatBlock,
       kCmdToggleBlockFold,
       kCmdFoldBlock,
@@ -1663,6 +1667,9 @@
       openHeadingSelector();
     } else if (cmdId === kCmdToggleMarkdownPreview) {
       toggleMarkdownPreview();
+    } else if (cmdId === kCmdToggleBlockReadOnly) {
+      toggleBlockReadOnly(requireView());
+      focusEditor();
     } else if (cmdId === kCmdGoToNextBlock) {
       gotoNextBlock(requireView());
       focusEditor();

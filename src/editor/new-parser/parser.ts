@@ -31,6 +31,7 @@ export interface DelimiterInfo {
   langStart: number; // Start of language token
   langEnd: number; // End of language token
   autoDetect: boolean; // Whether -a suffix is present
+  readOnly: boolean; // Whether -ro suffix is present
 }
 
 // also used by getBlocksFromString() so that both ways of getting blocks agree (U26)
@@ -52,6 +53,7 @@ export function findDelimiters(text: string): DelimiterInfo[] {
       langStart,
       langEnd: langStart + delim.language.length,
       autoDetect: delim.autoDetect,
+      readOnly: delim.readOnly,
     };
   };
 

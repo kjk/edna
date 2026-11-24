@@ -842,6 +842,10 @@ Each block has a type (markdown, text, JavaScript and 40+ programming languages)
 
 Blocks can be folded so that you an focus on the block you're currently editing.
 
+Blocks can be made read-only with `Block: Toggle read-only` (command palette or the `Block` context menu) so that you don't change them by accident. A read-only block shows a `read-only` badge. It can still be moved, but not edited, deleted or have its type changed. Run `Block: Toggle read-only` again to make it editable.
+
+Read-only blocks are stored by adding `-ro` to the block header, e.g. `∞∞∞markdown-ro`. Older versions of Edna (and Heynote) don't understand it and show such block as part of the previous block.
+
 You can quickly navigate between blocks with `Mod + B` and between headings of a markdown block with `Mod + Shift + B`.
 
 ## Scratch note

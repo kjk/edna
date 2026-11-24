@@ -3,7 +3,7 @@ import { delimiterLine, kDelimiterPrefix, parseDelimiterLine } from "./editor/ne
 
 // a line that looks like a delimiter but isn't valid: upper case language or
 // Heynote metadata (∞∞∞text-a;created=...)
-const reFixableDelimiterLine = /\n∞∞∞([A-Za-z]+)(-a)?(;[^\n]*)?(?=\n|$)/g;
+const reFixableDelimiterLine = /\n∞∞∞([A-Za-z]+)(-a)?(-ro)?(;[^\n]*)?(?=\n|$)/g;
 
 /**
  * Makes stored note content a valid document (docs/state-machines.md U9):
@@ -25,8 +25,8 @@ export function fixUpNoteContent(s: string | null): string {
     // legacy: first delimiter without the leading newline
     s = "\n" + s;
   }
-  s = s.replace(reFixableDelimiterLine, (m, lang: string, auto?: string) => {
-    return "\n" + delimiterLine(lang.toLowerCase(), !!auto);
+  s = s.replace(reFixableDelimiterLine, (m, lang: string, auto?: string, ro?: string) => {
+    return "\n" + delimiterLine(lang.toLowerCase(), !!auto, !!ro);
   });
   if (!startsWithValidDelimiter(s)) {
     s = blockHdrMarkdown + s;

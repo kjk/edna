@@ -155,6 +155,16 @@
     // save folds right away so they survive reloading the page (#9).
     // fold-all etc. emits many events, so coalesce them
     let foldsSaveTimer: ReturnType<typeof setTimeout> | undefined;
+    // an edit was rejected because it would change a read-only block (#57).
+    // At most one message per few seconds, e.g. when holding a key
+    let lastReadOnlyMsg = 0;
+    function onReadOnlyBlockEdit() {
+      let now = Date.now();
+      if (now - lastReadOnlyMsg > 3000) {
+        lastReadOnlyMsg = now;
+        showWarning("This block is read-only. Use 'Block: Toggle read-only' to edit it", 3000);
+      }
+    }
     function onFoldsChanged() {
       clearTimeout(foldsSaveTimer);
       foldsSaveTimer = setTimeout(saveEditorState, 500);
@@ -162,6 +172,7 @@
     editorRef.addEventListener("selectionChange", onSelChange);
     editorRef.addEventListener("docChanged", onDocChanged);
     editorRef.addEventListener("foldsChanged", onFoldsChanged);
+    editorRef.addEventListener("readOnlyBlockEdit", onReadOnlyBlockEdit);
 
     throwIf(!settings);
     let noteToLoad = appState.currentNoteName!;
@@ -242,6 +253,7 @@
       editorRef.removeEventListener("selectionChange", onSelChange);
       editorRef.removeEventListener("docChanged", onDocChanged);
       editorRef.removeEventListener("foldsChanged", onFoldsChanged);
+      editorRef.removeEventListener("readOnlyBlockEdit", onReadOnlyBlockEdit);
       clearTimeout(foldsSaveTimer);
       editor.destroy();
     };

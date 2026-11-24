@@ -99,7 +99,7 @@ export function changeLanguageTo(
     changes: {
       from: from + kDelimiterPrefix.length,
       to: block.contentFrom - 1,
-      insert: language + (auto ? "-a" : ""),
+      insert: language + (auto ? "-a" : "") + (block.readOnly ? "-ro" : ""),
     },
     annotations: ednaEvent.of(kLanguageChange),
   }));

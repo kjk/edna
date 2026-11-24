@@ -10,6 +10,8 @@ export interface NoteBlock {
   contentFrom: number;
   language: string;
   autoDetect: boolean;
+  // only set (to true) for read-only blocks (#57)
+  readOnly?: boolean;
 }
 
 export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
@@ -24,14 +26,18 @@ export function getBlocksFromSyntaxTree(state: EditorState): NoteBlock[] {
     const token = delimiter?.getChild(NodeID.NoteLanguage);
     if (!delimiter || !token) continue;
 
-    blocks.push({
+    // e.g. "-a-ro\n"
+    const suffix = state.sliceDoc(token.to, delimiter.to);
+    const block: NoteBlock = {
       index: blocks.length,
       from: note.from,
       to: note.to,
       contentFrom: delimiter.to,
       language: state.sliceDoc(token.from, token.to),
-      autoDetect: state.sliceDoc(token.to, delimiter.to).startsWith("-a"),
-    });
+      autoDetect: suffix.startsWith("-a"),
+    };
+    if (suffix.trimEnd().endsWith("-ro")) block.readOnly = true;
+    blocks.push(block);
   }
   return blocks;
 }
@@ -45,5 +51,6 @@ export function getBlocksFromString(text: string): NoteBlock[] {
     contentFrom: delimiter.end,
     language: text.slice(delimiter.langStart, delimiter.langEnd),
     autoDetect: delimiter.autoDetect,
+    ...(delimiter.readOnly ? { readOnly: true } : {}),
   }));
 }

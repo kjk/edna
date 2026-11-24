@@ -23,6 +23,7 @@ import { ednaBase } from "./theme/base";
 import { ednaDark } from "./theme/dark";
 import { getFontTheme } from "./theme/font-theme";
 import { ednaLight } from "./theme/light";
+import { onReadOnlyBlockEdit, readOnlyBlocks } from "./read-only-blocks";
 import { todoCheckboxPlugin } from "./todo-checkbox";
 import type { SimpleRange } from "./types";
 
@@ -149,6 +150,8 @@ export class MultiBlockEditor {
         languageDetection,
         links,
         todoCheckboxPlugin,
+        readOnlyBlocks(),
+        onReadOnlyBlockEdit.of(() => this.element.dispatchEvent(new Event("readOnlyBlockEdit"))),
         this.autosave,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
