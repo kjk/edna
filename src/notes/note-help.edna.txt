@@ -707,6 +707,27 @@ function main(input) {
 }
 ```
 
+### Asking for arguments
+
+A function can ask the user for values with `await input.getArgumentsFromUser(schema)`. It shows a form and returns an object with the values, or `null` if the user cancelled.
+
+`schema` is a list of `[name, type, description]`. `type` is `string`, `text` (multi-line), `number` or `boolean`.
+
+```javascript
+async function main(input) {
+  const args = await input.getArgumentsFromUser([
+    ["word", "string", "word to repeat"],
+    ["times", "number", "how many times"],
+  ]);
+  if (args === null) {
+    return; // cancelled
+  }
+  input.text = Array(args.times).fill(args.word).join(" ");
+}
+```
+
+If the function doesn't change `input.text`, no output is added.
+
 ### Using external libraries
 
 You can use any JavaScript library available via https://esm.sh or https://www.jsdelivr.com/ (or similar).

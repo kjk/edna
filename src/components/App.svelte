@@ -76,7 +76,7 @@
   } from "../fileutil";
   import { formatBlockContent } from "../format-code";
   import { boopFunctionResult, isCursorFunction, parseUserFunctions, runBoopFunction } from "../functions";
-  import type { BoopFunction, BoopFunctionArg } from "../functions";
+  import { parseArgSchema, type ArgSpec, type BoopFunction, type BoopFunctionArg } from "../functions";
   import { askPassword, askUser, clearGlobalFuncs, setGlobalFuncs, type PasswordPromptProps } from "../globals";
   import { addNoteToHistory } from "../history";
   import { logAppExit, logAppOpen, logNoteOp } from "../log";
@@ -157,6 +157,7 @@
   import AskAI from "./AskAI.svelte";
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";
+  import FunctionArgsDialog from "./FunctionArgsDialog.svelte";
   import type { Item as SelectorItem } from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
@@ -205,6 +206,11 @@
 
   let showingBlockSelector = $state(false);
   // dialogs closed by closeDialogs()
+  // a running function waiting for the user to enter its arguments (#60)
+  let argsRequest:
+    | { title: string; specs: ArgSpec[]; resolve: (v: Record<string, string | number | boolean> | null) => void }
+    | undefined = $state();
+
   const kClosableDialogs = [
     "showingContextMenu",
     "showingLanguageSelector",
@@ -223,7 +229,7 @@
   const kAnswerDialogs = ["showingDecryptPassword", "showingEncryptPassword", "showingAskFileWritePermissions"] as const;
 
   let isShowingDialog = $derived(
-    showingBlockSelector || [...kClosableDialogs, ...kAnswerDialogs].some((key) => appState[key]),
+    showingBlockSelector || !!argsRequest || [...kClosableDialogs, ...kAnswerDialogs].some((key) => appState[key]),
   );
 
   function closeDialogs() {
@@ -520,6 +526,23 @@
   }
 
   let passwordPrompt: PasswordPromptProps | undefined = $state();
+
+  function getFunctionArguments(fnName: string, schema: unknown): Promise<Record<string, string | number | boolean> | null> {
+    // throws for an invalid schema, which fails the function with that error
+    let specs = parseArgSchema(schema);
+    if (argsRequest) {
+      return Promise.reject(new Error("getArgumentsFromUser: already waiting for arguments"));
+    }
+    return new Promise((resolve) => {
+      argsRequest = { title: fnName, specs, resolve };
+    });
+  }
+
+  function answerFunctionArguments(values: Record<string, string | number | boolean> | null) {
+    let req = argsRequest;
+    argsRequest = undefined;
+    req?.resolve(values);
+  }
 
   function getPasswordFromUser(msg: string = ""): Promise<string> {
     return askPassword(
@@ -938,9 +961,10 @@
   }
 
   export async function runBoopFunctionWithText(f: BoopFunction, txt: string): Promise<BoopFunctionArg> {
-    let input = {
+    let input: BoopFunctionArg = {
       text: txt,
       fullText: txt,
+      getArgumentsFromUser: (schema: unknown) => getFunctionArguments(f.name, schema),
       postInfo: (s: string) => {
         console.log("postInfo:", s);
         showToast(s, 0);
@@ -1033,6 +1057,10 @@
     const cursorPos = state.selection.asSingle().ranges[0]!.head;
     const content = blockContentText(state, block);
     let res = await boopResult(fdef, content);
+    if (res === content) {
+      // nothing changed (e.g. the user cancelled entering arguments)
+      return false;
+    }
 
     // block offsets are only valid if it's still the same document (the editor
     // is read-only while running so it can't be edited)
@@ -2486,7 +2514,7 @@
 {/if}
 
 <!-- busy messages are hidden while a prompt (that the operation waits for) is showing -->
-{#if modalMessageState.isShowing && !appState.showingDecryptPassword && !appState.showingAskFileWritePermissions}
+{#if modalMessageState.isShowing && !appState.showingDecryptPassword && !appState.showingAskFileWritePermissions && !argsRequest}
   <ModalMessage />
 {/if}
 
@@ -2529,6 +2557,13 @@
 
 {#if appState.showingDecryptPassword && passwordPrompt}
   <PasswordPrompt {...passwordPrompt} />
+{/if}
+
+{#if argsRequest}
+  <Overlay onclose={() => answerFunctionArguments(null)} blur={true}>
+    <FunctionArgsDialog title={argsRequest.title} specs={argsRequest.specs} onanswer={answerFunctionArguments}
+    ></FunctionArgsDialog>
+  </Overlay>
 {/if}
 
 {#if appState.showingAskFileWritePermissions}

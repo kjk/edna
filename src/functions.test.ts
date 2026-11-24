@@ -1,6 +1,14 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
-import { boopFunctionResult, isCursorFunction, parseBoopFunction, parseBuiltInFunctions, parseUserFunctions } from "./functions";
+import {
+  boopFunctionResult,
+  convertArgValues,
+  isCursorFunction,
+  parseArgSchema,
+  parseBoopFunction,
+  parseBuiltInFunctions,
+  parseUserFunctions,
+} from "./functions";
 import { len } from "./util";
 
 test("parseFunction", async () => {
@@ -66,4 +74,29 @@ test("isCursorFunction (#52)", () => {
   expect(isCursorFunction(mk({ api: 2 }))).toBe(false);
   // user-editable: a non-string value doesn't crash
   expect(isCursorFunction(mk({ api: 2, output: 5 }))).toBe(false);
+});
+
+test("parseArgSchema (#60)", () => {
+  expect(parseArgSchema([["url", "string", "page url"], ["n", "number"], ["dry"]])).toEqual([
+    { name: "url", type: "string", description: "page url" },
+    { name: "n", type: "number", description: "" },
+    { name: "dry", type: "string", description: "" },
+  ]);
+  expect(parseArgSchema(["a", "b"]).map((s) => s.name)).toEqual(["a", "b"]);
+  // user code: invalid schemas give a descriptive error
+  expect(() => parseArgSchema(null)).toThrow("non-empty array");
+  expect(() => parseArgSchema([])).toThrow("non-empty array");
+  expect(() => parseArgSchema([[5]])).toThrow("invalid argument name");
+  expect(() => parseArgSchema([["a", "date"]])).toThrow("invalid type");
+  expect(() => parseArgSchema([["a"], ["a"]])).toThrow("duplicate");
+});
+
+test("convertArgValues (#60)", () => {
+  let specs = parseArgSchema([["s"], ["n", "number"], ["b", "boolean"], ["t", "text"]]);
+  expect(convertArgValues(specs, { s: "x", n: " 2.5 ", b: true, t: "a\nb" })).toEqual({
+    values: { s: "x", n: 2.5, b: true, t: "a\nb" },
+  });
+  expect(convertArgValues(specs, { s: "", n: "0" })).toEqual({ values: { s: "", n: 0, b: false, t: "" } });
+  expect(convertArgValues(specs, { n: "abc" })).toEqual({ error: "'n' must be a number" });
+  expect(convertArgValues(specs, { n: "" })).toEqual({ error: "'n' must be a number" });
 });
