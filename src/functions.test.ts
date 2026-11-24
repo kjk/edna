@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
-import { boopFunctionResult, parseBoopFunction, parseBuiltInFunctions, parseUserFunctions } from "./functions";
+import { boopFunctionResult, isCursorFunction, parseBoopFunction, parseBuiltInFunctions, parseUserFunctions } from "./functions";
 import { len } from "./util";
 
 test("parseFunction", async () => {
@@ -32,7 +32,7 @@ async function main(input) {
 test("parseBuiltInFunctions", async () => {
   let jsRaw = readFileSync("src/notes/note-built-in-functions.js", "utf8");
   let res = parseBuiltInFunctions(jsRaw);
-  expect(len(res)).toBe(66);
+  expect(len(res)).toBe(67);
 });
 
 test("parseCustomFunctions", async () => {
@@ -57,4 +57,13 @@ test("boopFunctionResult", () => {
   expect(boopFunctionResult({ text: "b", fullText: "c" }, "a")).toBe("c");
   expect(() => boopFunctionResult({ text: 42, fullText: "a" }, "a")).toThrow("input.text must be a string, is number");
   expect(() => boopFunctionResult({ text: "a", fullText: undefined }, "a")).toThrow("input.fullText");
+});
+
+test("isCursorFunction (#52)", () => {
+  let mk = (meta: object) => parseBoopFunction(`/**${JSON.stringify({ name: "f", ...meta })}**/ function main(input) {}`)!;
+  expect(isCursorFunction(mk({ api: 2, output: "cursor" }))).toBe(true);
+  expect(isCursorFunction(mk({ api: 1, output: "cursor" }))).toBe(false);
+  expect(isCursorFunction(mk({ api: 2 }))).toBe(false);
+  // user-editable: a non-string value doesn't crash
+  expect(isCursorFunction(mk({ api: 2, output: 5 }))).toBe(false);
 });

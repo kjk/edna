@@ -12,7 +12,16 @@ export interface BoopFunction {
   icon: string;
   tags: string;
   bias?: number;
+  // api 2: "cursor" means input.text is the selection (empty if there's none)
+  // and the output is inserted at cursor position, replacing the selection (#52).
+  // Otherwise the output goes into a new block or replaces block / selection
+  output?: string;
   code: string;
+}
+
+// true if output of f is inserted at cursor position
+export function isCursorFunction(f: BoopFunction): boolean {
+  return f.api >= 2 && f.output === "cursor";
 }
 
 export interface BoopFunctionArg {
@@ -34,7 +43,7 @@ export function parseBoopFunction(s: string): BoopFunction | null {
   if (!meta || typeof meta !== "object" || !meta.name || typeof meta.name !== "string") {
     return null;
   }
-  for (let k of ["author", "description", "icon", "tags"]) {
+  for (let k of ["author", "description", "icon", "tags", "output"]) {
     if (k in meta && typeof meta[k] !== "string") {
       meta[k] = String(meta[k]);
     }

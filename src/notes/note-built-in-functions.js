@@ -1921,3 +1921,19 @@ async function main(input) {
     input.postError("Invalid YAML");
   }
 }
+// ----------------------------
+/**
+{
+  "api":2,
+  "output":"cursor",
+  "name":"Insert UUID",
+  "description":"Inserts a random UUID at cursor position.",
+  "author":"Edna",
+  "icon":"fingerprint",
+  "tags":"uuid,guid,random,insert"
+}
+**/
+
+function main(input) {
+  input.text = crypto.randomUUID();
+}

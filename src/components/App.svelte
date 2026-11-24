@@ -75,7 +75,7 @@
     supportsFileSystem,
   } from "../fileutil";
   import { formatBlockContent } from "../format-code";
-  import { boopFunctionResult, parseUserFunctions, runBoopFunction } from "../functions";
+  import { boopFunctionResult, isCursorFunction, parseUserFunctions, runBoopFunction } from "../functions";
   import type { BoopFunction, BoopFunctionArg } from "../functions";
   import { askPassword, askUser, clearGlobalFuncs, setGlobalFuncs, type PasswordPromptProps } from "../globals";
   import { addNoteToHistory } from "../history";
@@ -955,6 +955,31 @@
     return input;
   }
 
+  // inserts output of fdef at cursor position, replacing the selection (#52)
+  async function runBoopFunctionAtCursor(run: RunContext, fdef: BoopFunction): Promise<boolean> {
+    const view = run.editor.view;
+    let sel = getCurrentSelection(view.state);
+    // the selection is replaced so it must not include block delimiters
+    let { from, to } = rangeInFirstBlock(view.state, sel.from, sel.to);
+    const content = view.state.sliceDoc(from, to);
+    let res = await boopResult(fdef, content);
+    if (res === content) {
+      return false;
+    }
+    let inserted = editIfSameDocument(run, () =>
+      view.dispatch({
+        changes: { from, to, insert: res },
+        selection: { anchor: from + res.length },
+        scrollIntoView: true,
+        userEvent: "input",
+      }),
+    );
+    if (!inserted) {
+      showWarning(`Output of '${fdef.name}' wasn't inserted because the note changed while it was running`);
+    }
+    return inserted;
+  }
+
   // a selection spanning blocks is limited to its part in the first block (#47)
   async function runBoopFunctionWithSelection(run: RunContext, fdef: BoopFunction, replace: boolean): Promise<boolean> {
     const view = run.editor.view;
@@ -1034,7 +1059,10 @@
     await withRun(getEditor(), async (run) => {
       let msg = html`Running <span class="font-bold">${fdef.name}</span>...`;
       showModalMessageHTML(msg, 300, "run");
-      if (onSelection) {
+      if (isCursorFunction(fdef)) {
+        await runBoopFunctionAtCursor(run, fdef);
+        logNoteOp("runFunctionAtCursor");
+      } else if (onSelection) {
         await runBoopFunctionWithSelection(run, fdef, replace);
         logNoteOp("runFunctionWithSelection");
       } else {

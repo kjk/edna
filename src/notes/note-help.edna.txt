@@ -656,7 +656,7 @@ Don't get cute and reformat it any way or change `/**` and `**/` to something el
 
 Currently the important fields are `name`, and `description` because they are shown in function selection dialog.
 
-In future I might add more `api` versions, but at the moment there's just 1.
+There are 2 `api` versions: 1 and 2 (see below).
 
 Here's the simplest function that returns `foo` as a result:
 
@@ -678,6 +678,33 @@ async function main(input) {
 ```
 
 As you can see, we support `async` functions.
+
+### Functions that insert text at cursor
+
+With `"api":2` you can add `"output":"cursor"` to metadata. Such function:
+
+- gets the selection in `input.text` (empty string if nothing is selected)
+- its output is inserted at cursor position, replacing the selection
+
+For example, a function that inserts a random UUID:
+
+```javascript
+/**
+{
+  "api":2,
+  "output":"cursor",
+  "name":"Insert UUID",
+  "description":"Inserts a random UUID at cursor position.",
+  "author":"Edna",
+  "icon":"fingerprint",
+  "tags":"uuid,insert"
+}
+**/
+
+function main(input) {
+  input.text = crypto.randomUUID();
+}
+```
 
 ### Using external libraries
 

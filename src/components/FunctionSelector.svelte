@@ -1,6 +1,6 @@
 <script lang="ts">
   import { focus } from "../actions";
-  import type { BoopFunction } from "../functions";
+  import { isCursorFunction, type BoopFunction } from "../functions";
   import { getFunctionMeta, toggleFunctionStarred } from "../metadata";
   import { getBoopFunctions } from "../system-notes";
   import {
@@ -159,10 +159,15 @@
       {selectedItem.fdef.description}
     </div>
     <div class="dlg-info">
-      <div class="kbd">Enter</div>
-      <div>Run function, output in new block</div>
-      <div class="kbd">Ctrl + Enter</div>
-      <div>Run function, output replaces {context === "selection" ? "selection" : "block content"}</div>
+      {#if isCursorFunction(selectedItem.fdef)}
+        <div class="kbd">Enter</div>
+        <div>Run function, output inserted at cursor</div>
+      {:else}
+        <div class="kbd">Enter</div>
+        <div>Run function, output in new block</div>
+        <div class="kbd">Ctrl + Enter</div>
+        <div>Run function, output replaces {context === "selection" ? "selection" : "block content"}</div>
+      {/if}
       <div class="kbd">{altChar} + S</div>
       <div>toggle favorite</div>
     </div>
