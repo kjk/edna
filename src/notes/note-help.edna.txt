@@ -265,6 +265,7 @@ We support:
 - match case
 - match whole word
 - regular expression
+- limiting search and replace to the current block or selection (`in note` / `in block` / `in selection`). The block or selection is the one at the moment you pick it
 
 ∞∞∞markdown
 # Search across notes

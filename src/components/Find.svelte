@@ -22,6 +22,7 @@
   import type { EditorView, ViewUpdate } from "@codemirror/view";
   import { focus, trapfocus } from "../actions";
   import { appState } from "../appstate.svelte";
+  import { getActiveNoteBlock } from "../editor/block/block";
   import { isMoving } from "../mouse-track.svelte";
   import { btnPressedCls, handleEnter, toggleFlag } from "../util";
   import {
@@ -46,6 +47,36 @@
   let searchTerm = $state("");
   let replaceTerm = $state("");
   let showReplace = $state(false);
+
+  // find / replace in the whole note, current block or selection (#79).
+  // The block / selection is captured when picked because finding changes
+  // the selection; it's mapped through edits (e.g. replacements)
+  type Scope = "note" | "block" | "selection";
+  let scope: Scope = $state("note");
+  let scopeRange: { from: number; to: number } | null = null;
+  // changed on each setScope() so that the query is re-created
+  let scopeGen = $state(0);
+
+  function setScope(s: Scope) {
+    let state = view.state;
+    scopeRange = null;
+    if (s === "selection") {
+      let { from, to } = state.selection.main;
+      if (from === to) {
+        // nothing selected: limit to the block
+        s = "block";
+      } else {
+        scopeRange = { from, to };
+      }
+    }
+    if (s === "block") {
+      let block = getActiveNoteBlock(state);
+      scopeRange = block ? { from: block.contentFrom, to: block.to } : null;
+    }
+    scope = s;
+    scopeGen++;
+    searchInputREf.focus();
+  }
 
   let searchInputREf: HTMLInputElement;
 
@@ -89,6 +120,8 @@
   }
 
   $effect(() => {
+    // re-create the query on each setScope()
+    void scopeGen;
     let q = new SearchQuery({
       search: searchTerm,
       replace: replaceTerm,
@@ -96,6 +129,10 @@
       regexp: appState.searchRegex,
       wholeWord: appState.searchMatchWholeWord,
       literal: true,
+      test:
+        scope === "note"
+          ? undefined
+          : (_match, _state, from, to) => !scopeRange || (from >= scopeRange.from && to <= scopeRange.to),
     });
     if (!q.valid) {
       return;
@@ -116,6 +153,13 @@
 
   export function update(update: ViewUpdate) {
     if (update.docChanged) {
+      if (scopeRange) {
+        // text inserted at the edges (e.g. a replaced match) stays in scope
+        scopeRange = {
+          from: update.changes.mapPos(scopeRange.from, -1),
+          to: update.changes.mapPos(scopeRange.to, 1),
+        };
+      }
       // positions of matches changed
       scheduleCountMatches(300);
     } else if (update.selectionSet) {
@@ -247,6 +291,16 @@
   <button onclick={next} title="Find Next (Enter}" class="ml-2">{@render IconTablerArrowDown()}</button>
   <button onclick={prev} title="Find Previous (Shift + Enter)">{@render IconTablerArrowUp()}</button>
   <button onclick={all} title="Find All">{@render IconLucideTextSelect()}</button>
+  <select
+    class="scope"
+    title="Find in the whole note, current block or selection"
+    value={scope}
+    onchange={(ev) => setScope((ev.currentTarget as HTMLSelectElement).value as Scope)}
+  >
+    <option value="note">in note</option>
+    <option value="block">in block</option>
+    <option value="selection">in selection</option>
+  </select>
   <button onclick={close} title="Close">{@render IconTablerX()}</button>
 {/snippet}
 
@@ -319,5 +373,9 @@
 
   button {
     @apply find-btn;
+  }
+
+  .scope {
+    @apply ml-1 px-1 text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded-xs;
   }
 </style>
