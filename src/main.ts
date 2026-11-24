@@ -195,3 +195,11 @@ if (isDev()) {
     throw new Error("test error");
   };
 }
+
+// service worker makes Edna work offline (#16). Not in development because
+// it would serve cached files instead of the ones vite rebuilds
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch((e) => {
+    console.log("service worker registration failed:", e);
+  });
+}

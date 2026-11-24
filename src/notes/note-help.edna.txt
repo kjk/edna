@@ -44,6 +44,8 @@ Edna is a web-based application but can store notes on disk, like a desktop app 
 
 You can use it offline (without network connection) and for desktop-like experince you can install a desktop shortcut.
 
+After you open Edna once, it works without a network connection. Features that need a server (currency conversion, running Go code, asking AI) don't work offline. A new version of Edna is used after you close all Edna tabs and open it again.
+
 ## Lots of functionality, minimalist UI
 
 UI is optimized for writing. Editor uses most of the space.

@@ -69,11 +69,44 @@ function keepDistGitkeep() {
   };
 }
 
+// writes the version and the list of files to pre-cache into dist/sw.js, the
+// service worker that makes Edna work offline (#16). Source maps and images
+// only used by the help page aren't pre-cached
+function precacheServiceWorker() {
+  return {
+    name: "precache-service-worker",
+    apply: "build",
+    closeBundle() {
+      const skip = (f) =>
+        f.endsWith(".map") ||
+        f === "index.html" ||
+        f === "sw.js" ||
+        f === "gitkeep.txt" ||
+        /^(help-|pwa-shot-).*\.png$/.test(f);
+      const files = fs
+        .readdirSync("./dist", { recursive: true })
+        .map((f) => String(f).replaceAll("\\", "/"))
+        .filter((f) => fs.statSync("./dist/" + f).isFile() && !skip(f))
+        .sort()
+        .map((f) => "/" + f);
+      const version = child.execSync("git rev-parse --short HEAD").toString().trim() + "-" + Date.now();
+      let s = fs.readFileSync("./dist/sw.js", "utf-8");
+      const n = s.length;
+      s = s.replace('"dev"; /*__VERSION__*/', JSON.stringify(version) + ";");
+      s = s.replace("[] /*__PRECACHE__*/", JSON.stringify(files));
+      if (s.length === n || s.includes("__PRECACHE__") || s.includes("__VERSION__")) {
+        throw new Error("precacheServiceWorker: placeholders not found in dist/sw.js");
+      }
+      fs.writeFileSync("./dist/sw.js", s);
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   publicDir: "./src/public",
 
-  plugins: [svelte(), tailwindcss(), keepDistGitkeep()],
+  plugins: [svelte(), tailwindcss(), keepDistGitkeep(), precacheServiceWorker()],
 
   build: {
     outDir: "./dist",
