@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { appState } from "../../src/appstate.svelte";
-import { blockHdrMarkdown } from "../../src/constants";
-import { getNoteMeta, getNotesMetadata, toggleNoteStarred } from "../../src/metadata";
+import { blockHdrMarkdown, kDailyJournalNoteName } from "../../src/constants";
+import { getNoteMeta, getNotesMetadata, noteHasDailyEntry, setNoteDailyEntry, toggleNoteStarred } from "../../src/metadata";
 import {
   appendToNote,
   createDefaultNotes,
@@ -119,6 +119,24 @@ describe("notes (localStorage)", () => {
     await renameNote("b", "c", blockHdrMarkdown + "b");
     expect(getNoteMeta("c")?.isArchived).toBeFalsy();
     expect(getNotesMetadata().filter((m) => m.name === "c").length).toBeLessThanOrEqual(1);
+  });
+
+  it("daily entry: on by default for daily journal only, kept after rename (#25)", async () => {
+    await createNoteWithName(kDailyJournalNoteName, blockHdrMarkdown + "j");
+    await createNoteWithName("log", blockHdrMarkdown + "l");
+    expect(noteHasDailyEntry(kDailyJournalNoteName)).toBe(true);
+    expect(noteHasDailyEntry("log")).toBe(false);
+
+    await renameNote(kDailyJournalNoteName, "my journal", blockHdrMarkdown + "j");
+    expect(noteHasDailyEntry("my journal")).toBe(true);
+
+    await setNoteDailyEntry("log", true);
+    await renameNote("log", "work log", blockHdrMarkdown + "l");
+    expect(noteHasDailyEntry("work log")).toBe(true);
+
+    await setNoteDailyEntry("work log", false);
+    await renameNote("work log", kDailyJournalNoteName, blockHdrMarkdown + "l");
+    expect(noteHasDailyEntry(kDailyJournalNoteName)).toBe(false);
   });
 
   it("opening a file that isn't a .edna.txt note is refused, not a crash", async () => {

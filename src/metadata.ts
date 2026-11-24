@@ -3,6 +3,7 @@ import { showError } from "./components/Toaster.svelte";
 import { fsReadTextFile, fsWriteFile } from "./fileutil";
 import { updateAfterNoteStateChange } from "./globals";
 import { normalizeMetadata } from "./metadata-merge";
+import { kDailyJournalNoteName } from "./constants";
 import { getStorageFS } from "./notes";
 import { SerialQueue, tryParseJSON } from "./util";
 
@@ -15,6 +16,9 @@ export interface NoteMetadata {
   isArchived?: boolean;
   foldedRanges?: { from: number; to: number }[];
   selection?: any;
+  // add "# YYYY-MM-DD Day" block for today when the note is opened.
+  // If not set: true only for the daily journal note (#25)
+  dailyEntry?: boolean;
 }
 
 export interface FunctionMetadata {
@@ -159,8 +163,13 @@ export async function renameNoteInMetadata(oldName: string, newName: string) {
   metadata!.notes = notes;
   for (let o of notes) {
     if (o.name === oldName) {
+      // daily journal keeps adding daily entries after a rename (#25)
+      o.dailyEntry = o.dailyEntry ?? (oldName === kDailyJournalNoteName || undefined);
       o.name = newName;
     }
+  }
+  if (oldName === kDailyJournalNoteName && !notes.some((o) => o.name === newName)) {
+    notes.push({ name: newName, dailyEntry: true });
   }
   await saveNotesMetadata();
 }
@@ -236,6 +245,15 @@ function flipStarred(m: { isStarred?: boolean }): boolean {
 
 export async function toggleNoteStarred(name: string): Promise<boolean> {
   return updateNoteMeta(name, flipStarred);
+}
+
+// true if a block for today is added to note name when it's opened (#25)
+export function noteHasDailyEntry(name: string): boolean {
+  return getNoteMeta(name)?.dailyEntry ?? name === kDailyJournalNoteName;
+}
+
+export async function setNoteDailyEntry(name: string, dailyEntry: boolean) {
+  await updateNoteMeta(name, (m) => (m.dailyEntry = dailyEntry));
 }
 
 export function isNoteArchived(name: string): boolean {

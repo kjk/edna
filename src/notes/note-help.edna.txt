@@ -855,6 +855,8 @@ You can write and [run JavaScript functions](#run-javascript-functions-over-cont
 
 The intent of `daily journal` note (`Alt + 2`) is to record things you do. We auto-create a new markdown block for each day.
 
+Any note can get a block for each day: use `Note: add a block for today when opened` from command palette (`Mod + Shift + K`) or the context menu. The setting is kept when you rename the note.
+
 # Inbox
 
 The intent of `inbox` note (`Alt + 3`) is to jot things you want to process in short term future, like a link to an article you want to read or a link to a video you want to watch.

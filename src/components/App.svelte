@@ -11,7 +11,6 @@
     blockHdrMarkdown,
     isTabHome,
     kBuiltInFunctionsNoteName,
-    kDailyJournalNoteName,
     kHelpSystemNoteName,
     kMyFunctionsNoteName,
     kReleaseNotesSystemNoteName,
@@ -88,6 +87,8 @@
     getNoteMeta,
     getNotesMetadata,
     isNoteArchived,
+    noteHasDailyEntry,
+    setNoteDailyEntry,
     toggleNoteStarred,
     unArchiveNote,
   } from "../metadata";
@@ -1123,6 +1124,7 @@
   const kCmdRunHelp = nmid();
   const kCmdExportCurrentBlock = nmid();
   const kCmdNoteToggleStarred = nmid();
+  const kCmdNoteToggleDailyEntry = nmid();
   const kCmdOpenNoteFromDisk = nmid();
   const kCmdToggleSidebar = nmid();
   const kCmdFind = nmid();
@@ -1177,6 +1179,11 @@
     return isStarred ? `Remove ${what}from favorites` : `Add ${what}to favorites`;
   }
 
+  function dailyEntryLabel(): string {
+    let on = !!noteName && noteHasDailyEntry(noteName);
+    return on ? "Stop adding a block for today" : "Add a block for today when opened";
+  }
+
   function buildMenuDefForEditor(): MenuDef {
     let starAction = toggleFavoriteLabel("");
 
@@ -1184,6 +1191,7 @@
       ["Close tab", kCmdCloseCurrentTab],
       ["Rename", kCmdRenameCurrentNote],
       [starAction, kCmdNoteToggleStarred],
+      [dailyEntryLabel(), kCmdNoteToggleDailyEntry],
       ["Archive", kCmdArchiveCurrentNote],
       ["Un-archive", kCmdUnArchiveCurrentNote],
       ["Delete permanently", kCmdPermanentlyDeleteNote],
@@ -1493,6 +1501,10 @@
       if (!isNoteArchived(noteName)) {
         return kMenuStatusRemoved;
       }
+    } else if (mid === kCmdNoteToggleDailyEntry) {
+      if (isSystemNoteName(noteName)) {
+        return kMenuStatusRemoved;
+      }
     }
     return kMenuStatusNormal;
   }
@@ -1685,6 +1697,8 @@
       exportCurrentNote();
     } else if (cmdId === kCmdNoteToggleStarred) {
       toggleCurrentNoteStar();
+    } else if (cmdId === kCmdNoteToggleDailyEntry) {
+      toggleCurrentNoteDailyEntry();
     } else if (cmdId === kCmdShowStorageHelp) {
       showHTMLHelp("#storing-notes-on-disk");
     } else if (cmdId === kCmdSettings) {
@@ -1777,6 +1791,9 @@
     }
     if (id === kCmdNoteToggleStarred) {
       return toggleFavoriteLabel("current note ");
+    }
+    if (id === kCmdNoteToggleDailyEntry) {
+      return "Note: " + dailyEntryLabel().toLowerCase();
     }
     return name || "";
   }
@@ -1903,6 +1920,17 @@
   function toggleCurrentNoteStar() {
     toggleNoteStarred(noteName!);
     getEditor().focus();
+  }
+
+  async function toggleCurrentNoteDailyEntry() {
+    let name = noteName!;
+    let on = !noteHasDailyEntry(name);
+    await setNoteDailyEntry(name, on);
+    let editor = getEditor();
+    if (on) {
+      autoCreateDayInJournal(editor);
+    }
+    editor.focus();
   }
 
   // returns false if the response couldn't be inserted
@@ -2244,7 +2272,7 @@
       addNoteToHistory(name);
     }
     settings.currentTab = name;
-    if (name == kDailyJournalNoteName) {
+    if (noteHasDailyEntry(name) && !readOnly) {
       // doesn't work without delay
       setTimeout(() => autoCreateDayInJournal(editor), 100);
       // console.log("journal, so going to next block");
