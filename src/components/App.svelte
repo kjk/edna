@@ -158,6 +158,7 @@
   import AskFileWritePermissions from "./AskFileWritePermissions.svelte";
   import BlockSelector from "./BlockSelector.svelte";
   import FunctionArgsDialog from "./FunctionArgsDialog.svelte";
+  import MarkdownPreview from "./MarkdownPreview.svelte";
   import type { Item as SelectorItem } from "./BlockSelector.svelte";
   import CommandPalette from "./CommandPalette.svelte";
   import CreateNewNote from "./CreateNewNote.svelte";
@@ -1141,6 +1142,7 @@
   const kCmdBlockFirst = kCmdNewBlockAfterCurrent;
   const kCmdGoToBlock = nmid();
   const kCmdGoToHeading = nmid();
+  const kCmdToggleMarkdownPreview = nmid();
   const kCmdNewBlockBeforeCurrent = nmid();
   const kCmdNewBlockAtEnd = nmid();
   const kCmdNewBlockAtStart = nmid();
@@ -1276,6 +1278,7 @@
     const menuBlock: Command[] = [
       ["Go To\tMod + B", kCmdGoToBlock],
       ["Go To Heading\tMod + Shift + B", kCmdGoToHeading],
+      ["Markdown preview", kCmdToggleMarkdownPreview],
       ["Add after current\tMod + Enter", kCmdNewBlockAfterCurrent],
       ["Add before current\tAlt + Enter", kCmdNewBlockBeforeCurrent],
       ["Add at end\tMod + Shift + Enter", kCmdNewBlockAtEnd],
@@ -1658,6 +1661,8 @@
       openBlockSelector();
     } else if (cmdId === kCmdGoToHeading) {
       openHeadingSelector();
+    } else if (cmdId === kCmdToggleMarkdownPreview) {
+      toggleMarkdownPreview();
     } else if (cmdId === kCmdGoToNextBlock) {
       gotoNextBlock(requireView());
       focusEditor();
@@ -2311,6 +2316,26 @@
     selectionSize = e.selectionSize;
     language = e.language;
     languageAuto = e.languageAuto;
+    updateMarkdownPreview();
+  }
+
+  // floating preview of the markdown block with the cursor (#49)
+  let showingMarkdownPreview = $state(false);
+  let previewMarkdown: string | null = $state(null);
+
+  function updateMarkdownPreview() {
+    if (!showingMarkdownPreview) {
+      return;
+    }
+    let view = editorComp ? getEditorView() : undefined;
+    let block = view ? getActiveNoteBlock(view.state) : undefined;
+    previewMarkdown = block?.language === "markdown" ? view!.state.sliceDoc(block.contentFrom, block.to) : null;
+  }
+
+  function toggleMarkdownPreview() {
+    showingMarkdownPreview = !showingMarkdownPreview;
+    updateMarkdownPreview();
+    focusEditor();
   }
 
   function updateDocSize() {
@@ -2347,6 +2372,7 @@
       addNoteToHistory(name);
     }
     settings.currentTab = name;
+    updateMarkdownPreview();
     if (noteHasDailyEntry(name) && !readOnly) {
       // doesn't work without delay
       setTimeout(() => autoCreateDayInJournal(editor), 100);
@@ -2373,6 +2399,7 @@
 
   function docDidChange() {
     updateDocSizeDebounced();
+    updateMarkdownPreview();
   }
 
   // debug functions to be called from dev tools console as:
@@ -2557,6 +2584,10 @@
 
 {#if appState.showingDecryptPassword && passwordPrompt}
   <PasswordPrompt {...passwordPrompt} />
+{/if}
+
+{#if showingMarkdownPreview && !isTabHome(settings.currentTab)}
+  <MarkdownPreview markdown={previewMarkdown} onclose={toggleMarkdownPreview} />
 {/if}
 
 {#if argsRequest}

@@ -25,6 +25,7 @@ Use:
 - `Mod + L` to assign a type for current block
 - `Mod + B` to navigate between blocks
 - `Mod + Shift + B` to navigate between headings of a markdown block
+- `Block: Markdown preview` in command palette to show the markdown block with the cursor rendered in a panel that updates as you type. Drag its title bar to move it, drag its bottom-right corner to resize it
 - `Mod + A` and `Delete` to delete block (select block text and delete)
 
 Use [keyboard shortcuts](#keyboard-shortcuts) to create blocks, move between blocks.
