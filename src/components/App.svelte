@@ -27,6 +27,7 @@
     getEditableActiveBlock,
     insertAfterActiveBlock,
     insertBlockAt,
+    rangeInFirstBlock,
     replaceBlockContent,
   } from "../editor/block/block";
   import type { NoteBlock } from "../editor/block/block-parsing";
@@ -954,16 +955,34 @@
     return input;
   }
 
-  // note: replace is not supported because selection can cross blocks
-  async function runBoopFunctionWithSelection(run: RunContext, fdef: BoopFunction): Promise<boolean> {
-    let { selectedText } = getCurrentSelection(run.editor.view.state);
-    const content = selectedText;
+  // a selection spanning blocks is limited to its part in the first block (#47)
+  async function runBoopFunctionWithSelection(run: RunContext, fdef: BoopFunction, replace: boolean): Promise<boolean> {
+    const view = run.editor.view;
+    let sel = getCurrentSelection(view.state);
+    let { from, to, clipped } = rangeInFirstBlock(view.state, sel.from, sel.to);
+    if (clipped) {
+      showToast("Selection spans blocks: using only its part in the first block");
+    }
+    const content = view.state.sliceDoc(from, to);
     let res = await boopResult(fdef, content);
     // TODO: be more intelligent
     if (res === "" || res === content) {
       return false;
     }
-    await insertRunOutputBlock(run, res);
+    // offsets are only valid if it's still the same document (the editor
+    // is read-only while running so it can't be edited)
+    let replaced =
+      replace &&
+      editIfSameDocument(run, () =>
+        view.dispatch({
+          changes: { from, to, insert: res },
+          selection: { anchor: from, head: from + res.length },
+          userEvent: "input",
+        }),
+      );
+    if (!replaced) {
+      await insertRunOutputBlock(run, res);
+    }
     return true;
   }
 
@@ -1016,7 +1035,7 @@
       let msg = html`Running <span class="font-bold">${fdef.name}</span>...`;
       showModalMessageHTML(msg, 300, "run");
       if (onSelection) {
-        await runBoopFunctionWithSelection(run, fdef);
+        await runBoopFunctionWithSelection(run, fdef, replace);
         logNoteOp("runFunctionWithSelection");
       } else {
         await runBoopFunctionWithBlockContent(run, fdef, replace);

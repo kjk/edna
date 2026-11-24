@@ -162,7 +162,7 @@
       <div class="kbd">Enter</div>
       <div>Run function, output in new block</div>
       <div class="kbd">Ctrl + Enter</div>
-      <div>Run function, output replaces block content</div>
+      <div>Run function, output replaces {context === "selection" ? "selection" : "block content"}</div>
       <div class="kbd">{altChar} + S</div>
       <div>toggle favorite</div>
     </div>

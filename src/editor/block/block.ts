@@ -84,6 +84,17 @@ export function getNoteBlockFromPos(state: EditorState, pos: number): Block | un
   return findBlock(getBlocks(state), pos);
 }
 
+// part of from..to in the content of the block where it starts. A selection
+// can span blocks but block delimiters shouldn't be passed to functions (#47).
+// clipped: true if from..to was made smaller
+export function rangeInFirstBlock(state: EditorState, from: number, to: number): SimpleRange & { clipped: boolean } {
+  const block = getNoteBlockFromPos(state, from);
+  if (!block) return { from, to, clipped: false };
+  const from2 = Math.max(from, block.contentFrom);
+  const to2 = Math.max(from2, Math.min(to, block.to));
+  return { from: from2, to: to2, clipped: from2 !== from || to2 !== to };
+}
+
 export function getActiveNoteBlock(state: EditorState): Block | undefined {
   return getNoteBlockFromPos(state, state.selection.main.head);
 }

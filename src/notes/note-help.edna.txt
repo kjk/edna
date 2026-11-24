@@ -588,6 +588,10 @@ To run a JavasScript function with selection:
 - command palette: `Run function with selection`
 - pick a function from the list
 
+Pick a function with `Enter` to add its output as a new block, or with `Ctrl + Enter` to replace the block content (or selection) with the output.
+
+If the selection spans blocks, the function only gets the part of the selection in the first block.
+
 If you want to see all built-in functions use:
 
 - context menu: `Run`, `Show built-in functions`
