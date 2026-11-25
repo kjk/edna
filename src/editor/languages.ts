@@ -148,38 +148,23 @@ export function langSupportsRun(lang: Language | undefined): lang is Language {
   return lang?.token === "javascript" || lang?.token === "golang";
 }
 
-export interface PrettierInfo {
-  parser: string;
-  plugins: NonNullable<import("prettier").Options["plugins"]>;
-}
-
-const babel = () => import("prettier/plugins/babel");
-const estree = () => import("prettier/plugins/estree");
-const typescript = () => import("prettier/plugins/typescript");
-const postcss = () => import("prettier/plugins/postcss");
-const prettierHTML = () => import("prettier/plugins/html");
-const prettierMarkdown = () => import("prettier/plugins/markdown");
-const prettierYAML = () => import("prettier/plugins/yaml");
-
-const formatters = new Map<string, { parser: string; plugins: (() => Promise<PrettierInfo["plugins"][number]>)[] }>([
-  ["javascript", { parser: "babel", plugins: [babel, estree] }],
-  ["jsx", { parser: "babel", plugins: [babel, estree] }],
-  ["json", { parser: "json-stringify", plugins: [babel, estree] }],
-  ["typescript", { parser: "typescript", plugins: [typescript, estree] }],
-  ["tsx", { parser: "typescript", plugins: [typescript, estree] }],
-  ["css", { parser: "css", plugins: [postcss] }],
-  ["html", { parser: "html", plugins: [prettierHTML] }],
-  ["markdown", { parser: "markdown", plugins: [prettierMarkdown] }],
-  ["yaml", { parser: "yaml", plugins: [prettierYAML] }],
+const formatTypes = new Map([
+  ["javascript", "js"],
+  ["jsx", "jsx"],
+  ["json", "json"],
+  ["typescript", "ts"],
+  ["tsx", "tsx"],
+  ["css", "css"],
+  ["html", "html"],
+  ["markdown", "md"],
+  ["yaml", "yaml"],
+  ["golang", "go"],
 ]);
 
-export async function langGetPrettierInfo(lang: Language | undefined): Promise<PrettierInfo | null> {
-  const formatter = lang && formatters.get(lang.token);
-  if (!formatter) return null;
-  const plugins = await Promise.all(formatter.plugins.map((load) => load()));
-  return { parser: formatter.parser, plugins };
+export function langFormatType(lang: Language | undefined): string | undefined {
+  return lang && formatTypes.get(lang.token);
 }
 
 export function langSupportsFormat(lang: Language | undefined): boolean {
-  return !!lang && (lang.token === "golang" || formatters.has(lang.token));
+  return langFormatType(lang) !== undefined;
 }

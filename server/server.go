@@ -138,6 +138,9 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		case "/api/ai/models":
 			handleAIModels(w, r)
 			return
+		case "/api/format":
+			handleFormat(w, r)
+			return
 		case "/.well-known/appspecific/com.chrome.devtools.json":
 			serveChromeDevToolsJSON(w, r)
 			return

@@ -137,6 +137,7 @@ func Main() {
 		}
 		log.Init(&logConfig)
 		defer log.Close()
+		initOxfmt()
 		runServer()
 	}
 

@@ -494,7 +494,7 @@ to state machines). Ordered by impact.
   delimiter became visible text. **Fixed**: before a delimiter the preceding line break is cut
   instead (`wholeLineCutRange`).
 - **U11. The document doesn't change while formatting awaits.** `formatBlockContent` used
-  offsets read before awaiting prettier / the Go formatter. **Fixed**: the result is applied only
+  offsets read before awaiting the server formatter. **Fixed**: the result is applied only
   if the document is unchanged; the Go path no longer toggles read-only (it cleared the
   read-only lock of a code run).
 - **U12. Every block language is known.** The delimiter grammar accepts any `[a-z]+`;

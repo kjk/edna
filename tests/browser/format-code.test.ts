@@ -14,9 +14,23 @@ it("formats a block with the status bar button", async () => {
   await openNoteShortcut(1, "scratch");
   await expect.poll(editorText).toContain("let   x=1");
 
-  await page.getByRole("button", { name: /^Format Block/ }).click();
-
-  await expect.poll(() => visibleBlocks(editorInput().parentElement!)).toEqual(["let x = 1;\n"]);
+  const originalFetch = window.fetch;
+  const fetch = vi.spyOn(window, "fetch").mockImplementation((input, init) => {
+    if (typeof input === "string" && input.startsWith("/api/format?")) {
+      return Promise.resolve(new Response("let x = 1;\n"));
+    }
+    return originalFetch(input, init);
+  });
+  try {
+    await page.getByRole("button", { name: /^Format Block/ }).click();
+    await expect.poll(() => visibleBlocks(editorInput().parentElement!)).toEqual(["let x = 1;\n"]);
+    expect(fetch).toHaveBeenCalledWith("/api/format?type=js&tabWidth=2&useTabs=false", {
+      method: "POST",
+      body: "let   x=1",
+    });
+  } finally {
+    fetch.mockRestore();
+  }
 });
 
 it("ignores a formatter result if the document changed while formatting", async () => {

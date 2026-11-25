@@ -5,18 +5,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 function manualChunksFn(id) {
-  const prettierModules = [
-    "prettier",
-    "prettier/standalone",
-    "prettier/plugins/estree.mjs",
-    "prettier/plugins/babel.mjs",
-    "prettier/plugins/postcss.mjs",
-    "prettier/plugins/html.mjs",
-    "prettier/plugins/markdown.mjs",
-    "prettier/plugins/typescript.mjs",
-    "prettier/plugins/yaml.mjs",
-  ];
-
   const langlegacyModules = [
     "@codemirror/legacy-modes/mode/clojure",
     "@codemirror/legacy-modes/mode/diff",
@@ -34,9 +22,6 @@ function manualChunksFn(id) {
     // "@codemirror/legacy-modes/mode/octave",
   ];
 
-  if (prettierModules.some((mod) => id.includes(mod))) {
-    return "prettier";
-  }
   if (id.includes("@codemirror/lang-javascript")) {
     return "langjavascript";
   }

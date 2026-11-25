@@ -1,0 +1,3 @@
+FROM docker.io/library/node:22-alpine
+RUN npm install -g oxfmt@0.80.0
+ENTRYPOINT ["sh", "-ec", "printf '{\"tabWidth\":%s,\"useTabs\":%s,\"printWidth\":80}\\n' \"$2\" \"$3\" > /tmp/oxfmt.json; exec oxfmt --threads=1 --config=/tmp/oxfmt.json --stdin-filepath \"$1\"", "--"]

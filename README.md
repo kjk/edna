@@ -20,6 +20,8 @@ To run: `./edna -run-prod`
 
 Edna runs on port `9325` so visit http://localhost:9325
 
+Block formatting for languages other than Go requires Podman on the Edna server. Edna builds the Oxfmt image at startup and runs it on demand. On Windows and macOS, initialize a Podman machine before starting Edna.
+
 ## Production in docker
 
 ### Build
@@ -33,6 +35,8 @@ docker build -t edna .
 ```
 docker run -p 80:9325 edna -run-prod
 ```
+
+For Oxfmt formatting, run the Edna binary directly on a host with Podman. The Docker image runs Edna without Podman.
 
 ## Credits
 

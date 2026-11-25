@@ -2,7 +2,7 @@ import { isolateHistory } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { blockContentText, getEditableActiveBlock, replaceBlockContent } from "./editor/block/block";
 import type { MultiBlockEditor } from "./editor/editor";
-import { getLanguage, langGetPrettierInfo } from "./editor/languages";
+import { getLanguage, langFormatType } from "./editor/languages";
 
 async function formatGo(source: string): Promise<string | null> {
   const response = await fetch("/api/goplay/fmt", { method: "POST", body: source });
@@ -20,27 +20,24 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   if (!block || block.contentFrom === block.to) {
     return false;
   }
+  const fileType = langFormatType(getLanguage(block.language));
+  if (!fileType) {
+    return false;
+  }
   const source = blockContentText(state, block);
   const offset = Math.max(0, state.selection.main.head - block.contentFrom);
   let formatted: string | null;
-  let cursor = offset;
   try {
-    if (block.language === "golang") {
+    if (fileType === "go") {
       formatted = await formatGo(source);
     } else {
-      const config = await langGetPrettierInfo(getLanguage(block.language));
-      if (!config) {
-        return false;
-      }
-      const { formatWithCursor } = await import("prettier/standalone");
-      const result = await formatWithCursor(source, {
-        ...config,
-        tabWidth: state.tabSize,
-        useTabs: state.facet(indentUnit) === "\t",
-        cursorOffset: offset,
+      const params = new URLSearchParams({
+        type: fileType,
+        tabWidth: String(state.tabSize),
+        useTabs: String(state.facet(indentUnit) === "\t"),
       });
-      formatted = result.formatted;
-      cursor = result.cursorOffset;
+      const response = await fetch(`/api/format?${params}`, { method: "POST", body: source });
+      formatted = response.ok ? await response.text() : null;
     }
   } catch (error) {
     console.error("Failed to format block", error);
@@ -52,11 +49,7 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   if (formatted === source) {
     return true;
   }
-  if (offset === 0) {
-    cursor = 0;
-  } else if (offset === source.length) {
-    cursor = formatted.length;
-  }
+  const cursor = offset === source.length ? formatted.length : Math.min(offset, formatted.length);
   replaceBlockContent(view, block, formatted, cursor, {
     annotations: isolateHistory.of("full"),
     userEvent: "input.format",

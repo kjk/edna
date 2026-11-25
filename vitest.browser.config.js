@@ -7,16 +7,7 @@ export default defineConfig({
   publicDir: "./src/public",
   // A late dependency optimization reloads the live test iframe.
   optimizeDeps: {
-    include: [
-      "@lezer/highlight",
-      "prettier/plugins/babel",
-      "prettier/plugins/estree",
-      "prettier/plugins/html",
-      "prettier/plugins/markdown",
-      "prettier/plugins/postcss",
-      "prettier/plugins/typescript",
-      "prettier/plugins/yaml",
-    ],
+    include: ["@lezer/highlight"],
   },
   test: {
     include: ["tests/browser/**/*.test.ts"],
