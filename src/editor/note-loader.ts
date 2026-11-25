@@ -23,7 +23,8 @@ export interface NoteLoaderOptions {
 export class NoteLoader {
   // note whose content is in the editor; saves go to this note
   current: string | undefined;
-  private gen = 0;
+  private latestRequest = 0;
+  private appliedRequest = 0;
 
   constructor(private opts: NoteLoaderOptions) {}
 
@@ -34,31 +35,31 @@ export class NoteLoader {
    * load() later.
    */
   newRequest(): number {
-    return ++this.gen;
+    return ++this.latestRequest;
   }
 
   /**
    * Loads note `name` into the editor. didShow() is called in the next
-   * animation frame unless another load was requested in the meantime.
+   * animation frame if that load's content is still shown.
    * If saveCurrent, edits made to the current note while loading are saved
    * to the current note before switching.
    */
   async load(name: string, saveCurrent: boolean, didShow: () => void, request?: number): Promise<LoadResult> {
     const { editor } = this.opts;
-    const gen = request ?? ++this.gen;
-    if (gen !== this.gen) {
+    const requestId = request ?? this.newRequest();
+    if (requestId !== this.latestRequest) {
       return "superseded";
     }
     let content: string;
     try {
       content = (await this.opts.loadNote(name)) || "";
     } catch (e) {
-      if (gen === this.gen && !this.opts.isDestroyed()) {
+      if (requestId === this.latestRequest && !this.opts.isDestroyed()) {
         this.opts.loadFailed(name, e);
       }
       return "failed";
     }
-    if (gen !== this.gen || this.opts.isDestroyed()) {
+    if (requestId !== this.latestRequest || this.opts.isDestroyed()) {
       return "superseded";
     }
     const prev = this.current;
@@ -68,12 +69,12 @@ export class NoteLoader {
         // until the write and any edits made during it are both saved.
         do {
           await editor.save();
-          if (gen !== this.gen || this.opts.isDestroyed()) {
+          if (requestId !== this.latestRequest || this.opts.isDestroyed()) {
             return "superseded";
           }
         } while (editor.isDirty());
       } catch (e) {
-        if (gen !== this.gen || this.opts.isDestroyed()) {
+        if (requestId !== this.latestRequest || this.opts.isDestroyed()) {
           return "superseded";
         }
         this.opts.saveFailed(prev, e);
@@ -87,10 +88,11 @@ export class NoteLoader {
     }
     this.opts.willShow(name);
     this.current = name;
+    this.appliedRequest = requestId;
     editor.setContent(content);
     // Use requestAnimationFrame to avoid race condition with scrollIntoView
     requestAnimationFrame(() => {
-      if (gen !== this.gen || this.opts.isDestroyed()) {
+      if (requestId !== this.appliedRequest || this.opts.isDestroyed()) {
         return;
       }
       didShow();

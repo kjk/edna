@@ -1,4 +1,3 @@
-import { getNotesCount } from "./notes";
 import { getSessionDurationInMs, getStats } from "./state";
 import { throwIf } from "./util";
 
@@ -23,8 +22,7 @@ export function logEvent(o: object) {
     });
 }
 
-export function logAppOpen() {
-  let notesCount = getNotesCount();
+export function logAppOpen(notesCount: number) {
   let e = {
     name: "appOpen",
     notesCount: notesCount,
@@ -33,10 +31,10 @@ export function logAppOpen() {
   logEvent(e);
 }
 
-export function logAppExit() {
+export function logAppExit(notesCount: number) {
   let e = {
     name: "appExit",
-    notesCount: getNotesCount(),
+    notesCount,
     sessionDurMs: getSessionDurationInMs(),
     stats: getStats(),
   };
@@ -75,4 +73,16 @@ export function logNoteOp(op: string) {
     name: op,
   };
   logEvent(e);
+}
+
+// Save counts are reported with session stats. Log at most one save per ten minutes.
+const kLogNoteSaveIntervalMs = 10 * 60 * 1000;
+let lastNoteSaveLogTime = 0;
+
+export function logNoteSave() {
+  const now = Date.now();
+  if (now - lastNoteSaveLogTime > kLogNoteSaveIntervalMs) {
+    lastNoteSaveLogTime = now;
+    logNoteOp("noteSave");
+  }
 }

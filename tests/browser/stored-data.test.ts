@@ -1,5 +1,4 @@
 import { expect, it } from "vitest";
-import "../../src/appstate.svelte"; // settings.svelte.ts has a circular import with it
 import { createSettings, defaultSettings } from "../../src/settings.svelte";
 
 // stored data with an unexpected shape (docs/state-machines.md U8)

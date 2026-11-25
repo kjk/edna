@@ -1,10 +1,9 @@
 // read-only blocks: blocks whose delimiter ends with -ro (#57)
 import { Annotation, EditorState, Facet, RangeSetBuilder, Transaction, type Extension } from "@codemirror/state";
 import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet, type ViewUpdate } from "@codemirror/view";
+import { delimiterLine, getBlocksFromString, type NoteBlock } from "../block-format";
 import { ednaEvent, kSetContent } from "./annotation";
-import { getActiveNoteBlock, getBlocks } from "./block/block";
-import { getBlocksFromString, type NoteBlock } from "./block/block-parsing";
-import { delimiterLine } from "./new-parser/node-types";
+import { blockHeaderChange, getActiveNoteBlock, getBlocks } from "./block/block";
 
 // a transaction with this annotation may change read-only blocks
 export const allowReadOnlyBlockEdit = Annotation.define<boolean>();
@@ -14,7 +13,7 @@ export const onReadOnlyBlockEdit = Facet.define<() => void>();
 
 // identifies a read-only block by what must not change: language and content
 function roKeys(blocks: NoteBlock[], doc: (from: number, to: number) => string): string[] {
-  return blocks.filter((b) => b.readOnly).map((b) => `${b.language}${b.autoDetect ? "-a" : ""}\n${doc(b.contentFrom, b.to)}`);
+  return blocks.filter((b) => b.readOnly).map((b) => `${delimiterLine(b.language, b.autoDetect, true)}\n${doc(b.contentFrom, b.to)}`);
 }
 
 /**
@@ -152,11 +151,8 @@ export function toggleBlockReadOnly(view: EditorView): boolean {
   if (state.readOnly || !block) {
     return false;
   }
-  // the delimiter line, without the newlines around it
-  let from = state.sliceDoc(block.from, block.from + 1) === "\n" ? block.from + 1 : block.from;
-  let to = block.contentFrom - 1;
   view.dispatch({
-    changes: { from, to, insert: delimiterLine(block.language, block.autoDetect, !block.readOnly) },
+    changes: blockHeaderChange(state, block, block.language, block.autoDetect, !block.readOnly),
     // not undoable: undo of making a block read-only would be rejected,
     // blocking all undo history before it
     annotations: [allowReadOnlyBlockEdit.of(true), Transaction.addToHistory.of(false)],

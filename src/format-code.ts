@@ -2,7 +2,7 @@ import { isolateHistory } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { blockContentText, getEditableActiveBlock, replaceBlockContent } from "./editor/block/block";
 import type { MultiBlockEditor } from "./editor/editor";
-import { getLanguage, langFormatType } from "./editor/languages";
+import { getLanguage } from "./editor/languages";
 
 async function formatGo(source: string): Promise<string | null> {
   const response = await fetch("/api/goplay/fmt", { method: "POST", body: source });
@@ -20,7 +20,7 @@ export async function formatBlockContent(editor: MultiBlockEditor): Promise<bool
   if (!block || block.contentFrom === block.to) {
     return false;
   }
-  const fileType = langFormatType(getLanguage(block.language));
+  const fileType = getLanguage(block.language)?.formatType;
   if (!fileType) {
     return false;
   }

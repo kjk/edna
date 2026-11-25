@@ -1,11 +1,19 @@
 // this logically belongs in functions.js but I use bun test
 // to test to test functions.js and it doesn't handle
 // importing ?raw
-import { blockHdrJavaScript, blockHdrMarkdown } from "./constants";
+import {
+  blockHdrJavaScript,
+  blockHdrMarkdown,
+  kBuiltInFunctionsNoteName,
+  kHelpSystemNoteName,
+  kReleaseNotesSystemNoteName,
+  kWelcomeDevSystemNoteName,
+  kWelcomeSystemNoteName,
+} from "./constants";
 import type { BoopFunction } from "./functions";
 import { kBuiltInFunctionsSeparator, parseBuiltInFunctions } from "./functions.js";
 import { expandKeyHelp } from "./key-helper.js";
-import { fixUpNoteContent } from "./notes.js";
+import { fixUpNoteContent } from "./note-content";
 // @ts-ignore
 import builtInFunctionsRaw from "./notes/note-built-in-functions.js?raw";
 // @ts-ignore
@@ -24,8 +32,24 @@ import scratchDevRaw from "./notes/note-scratch-dev.edna.txt?raw";
 import scratchRaw from "./notes/note-scratch.edna.txt?raw";
 import { len, platformName } from "./util.js";
 
-export function getHelp(platform = platformName): string {
-  let help = expandKeyHelp(helpRaw, platform);
+const systemNotes = new Map<string, () => string>([
+  [kHelpSystemNoteName, getHelp],
+  [kReleaseNotesSystemNoteName, getReleaseNotes],
+  [kWelcomeSystemNoteName, getWelcomeNote],
+  [kWelcomeDevSystemNoteName, getWelcomeNoteDev],
+  [kBuiltInFunctionsNoteName, getBuiltInFunctionsNote],
+]);
+
+export function isSystemNoteName(name: string): boolean {
+  return systemNotes.has(name);
+}
+
+export function getSystemNoteContent(name: string): string | undefined {
+  return systemNotes.get(name)?.();
+}
+
+function getHelp(): string {
+  let help = expandKeyHelp(helpRaw, platformName);
   // links are for generated html under /help
   // when showing as note, it's just noise
   help = help.replaceAll("[Edna](https://edna.arslexis.io)", "Edna");
@@ -45,7 +69,7 @@ You can write your own functions.
 To learn more see http://edna.arslexis.io/help#running-code
 `;
 
-export function getBuiltInFunctionsNote(): string {
+function getBuiltInFunctionsNote(): string {
   let s = builtInFunctionsRaw;
   let parts = s.split(kBuiltInFunctionsSeparator);
   let res = [];
@@ -59,17 +83,13 @@ export function getBuiltInFunctionsNote(): string {
   return builtInHdr + res.join("\n");
 }
 
-export function getBuiltInFunctionsJS(): string {
-  return builtInFunctionsRaw;
-}
-
 function fixUpNote(s: string): string {
   s = fixUpNoteContent(s);
   s = expandKeyHelp(s);
   return s;
 }
 
-export function getReleaseNotes(): string {
+function getReleaseNotes(): string {
   return fixUpNote(releaseNotesRaw);
 }
 
@@ -85,7 +105,7 @@ export function getWelcomeNote(): string {
   return fixUpNote(scratchRaw);
 }
 
-export function getWelcomeNoteDev(): string {
+function getWelcomeNoteDev(): string {
   return getWelcomeNote() + scratchDevRaw;
 }
 
@@ -93,12 +113,8 @@ export function getMyFunctionsNote(): string {
   return fixUpNote(myFunctionsRaw);
 }
 
-export let boopFunctions: BoopFunction[] = [];
+let boopFunctions: BoopFunction[] | undefined;
 
 export function getBoopFunctions() {
-  if (len(boopFunctions) === 0) {
-    let jsRaw = getBuiltInFunctionsJS();
-    boopFunctions = parseBuiltInFunctions(jsRaw);
-  }
-  return boopFunctions;
+  return (boopFunctions ??= parseBuiltInFunctions(builtInFunctionsRaw));
 }

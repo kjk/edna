@@ -19,67 +19,8 @@ import {
   type Input,
   type ParseWrapper,
 } from "@lezer/common";
-import { NodeID, nodeSet, kDelimiterPrefix, parseDelimiterLine } from "./node-types";
-
-/**
- * Find all delimiter positions in the input text.
- * Returns array of {start, end, langStart, langEnd, autoDetect}
- */
-export interface DelimiterInfo {
-  start: number; // Start of delimiter (including leading newline if present)
-  end: number; // End of delimiter (after trailing newline)
-  langStart: number; // Start of language token
-  langEnd: number; // End of language token
-  autoDetect: boolean; // Whether -a suffix is present
-  readOnly: boolean; // Whether -ro suffix is present
-}
-
-// also used by getBlocksFromString() so that both ways of getting blocks agree (U26)
-export function findDelimiters(text: string): DelimiterInfo[] {
-  const delimiters: DelimiterInfo[] = [];
-
-  // delimiter on the line starting at lineStart; start is where it begins
-  // (the newline before ∞∞∞, except at document start)
-  const delimiterAt = (lineStart: number, start: number): DelimiterInfo | null => {
-    if (!text.startsWith(kDelimiterPrefix, lineStart)) return null;
-    const lineEnd = text.indexOf("\n", lineStart);
-    if (lineEnd === -1) return null;
-    const delim = parseDelimiterLine(text.slice(lineStart, lineEnd));
-    if (!delim) return null;
-    const langStart = lineStart + kDelimiterPrefix.length;
-    return {
-      start,
-      end: lineEnd + 1, // Include the newline after language
-      langStart,
-      langEnd: langStart + delim.language.length,
-      autoDetect: delim.autoDetect,
-      readOnly: delim.readOnly,
-    };
-  };
-
-  // delimiter at document start (no leading newline)
-  let pos = 0;
-  if (text.startsWith(kDelimiterPrefix)) {
-    const first = delimiterAt(0, 0);
-    if (first) delimiters.push(first);
-    pos = text.indexOf("\n") + 1;
-  }
-
-  // remaining delimiters (with leading newline)
-  while (pos < text.length) {
-    const nextNewline = text.indexOf("\n", pos);
-    if (nextNewline === -1) break;
-    const delim = delimiterAt(nextNewline + 1, nextNewline);
-    if (delim) {
-      delimiters.push(delim);
-      pos = delim.end;
-      continue;
-    }
-    pos = nextNewline + 1;
-  }
-
-  return delimiters;
-}
+import { findDelimiters, type DelimiterInfo } from "../../block-format";
+import { NodeID, nodeSet } from "./node-types";
 
 /**
  * Custom partial parse implementation.

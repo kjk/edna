@@ -38,93 +38,51 @@ export interface Language {
   guesslang: string | null;
   ext?: string;
   inheritIndentation?: boolean;
+  parser?: Parser;
+  formatType?: string;
 }
 
 export const kLanguages: Language[] = [
   { token: "text", name: "Plain Text", guesslang: null, ext: "txt", inheritIndentation: true },
-  { token: "math", name: "Math", guesslang: null, ext: "math.txt", inheritIndentation: true },
-  { token: "json", name: "JSON", guesslang: "json" },
-  { token: "python", name: "Python", guesslang: "py" },
-  { token: "html", name: "HTML", guesslang: "html" },
-  { token: "sql", name: "SQL", guesslang: "sql", inheritIndentation: true },
-  { token: "markdown", name: "Markdown", guesslang: "md" },
-  { token: "java", name: "Java", guesslang: "java" },
-  { token: "lezer", name: "Lezer", guesslang: null },
-  { token: "php", name: "PHP", guesslang: "php" },
-  { token: "css", name: "CSS", guesslang: "css" },
-  { token: "xml", name: "XML", guesslang: "xml" },
-  { token: "vue", name: "Vue", guesslang: null },
-  { token: "cpp", name: "C++", guesslang: "cpp" },
-  { token: "rust", name: "Rust", guesslang: "rs" },
-  { token: "csharp", name: "C#", guesslang: "cs" },
-  { token: "svelte", name: "Svelte", guesslang: null },
-  { token: "ruby", name: "Ruby", guesslang: "rb" },
-  { token: "shell", name: "Shell", guesslang: "sh" },
-  { token: "yaml", name: "YAML", guesslang: "yaml" },
-  { token: "toml", name: "TOML", guesslang: "toml" },
-  { token: "golang", name: "Go", guesslang: "go" },
-  { token: "clojure", name: "Clojure", guesslang: "clj" },
-  { token: "erlang", name: "Erlang", guesslang: "erl" },
-  { token: "javascript", name: "JavaScript", guesslang: "js" },
-  { token: "jsx", name: "JSX", guesslang: null },
-  { token: "typescript", name: "TypeScript", guesslang: "ts" },
-  { token: "tsx", name: "TSX", guesslang: null },
-  { token: "swift", name: "Swift", guesslang: "swift" },
-  { token: "kotlin", name: "Kotlin", guesslang: "kt" },
-  { token: "groovy", name: "Groovy", guesslang: "groovy" },
-  { token: "diff", name: "Diff", guesslang: null },
-  { token: "powershell", name: "PowerShell", guesslang: "ps1" },
-  { token: "dart", name: "Dart", guesslang: "dart" },
-  { token: "scala", name: "Scala", guesslang: "scala" },
-  { token: "lua", name: "Lua", guesslang: "lua" },
-  { token: "mermaid", name: "Mermaid", guesslang: null, ext: "mmd" },
+  { token: "math", name: "Math", guesslang: null, ext: "math.txt", inheritIndentation: true, parser: mathjsLanguage.parser },
+  { token: "json", name: "JSON", guesslang: "json", parser: jsonLanguage.parser, formatType: "json" },
+  { token: "python", name: "Python", guesslang: "py", parser: pythonLanguage.parser },
+  { token: "html", name: "HTML", guesslang: "html", parser: htmlLanguage.parser, formatType: "html" },
+  { token: "sql", name: "SQL", guesslang: "sql", inheritIndentation: true, parser: StandardSQL.language.parser },
+  { token: "markdown", name: "Markdown", guesslang: "md", parser: markdownLanguage.parser, formatType: "md" },
+  { token: "java", name: "Java", guesslang: "java", parser: javaLanguage.parser },
+  { token: "lezer", name: "Lezer", guesslang: null, parser: lezerLanguage.parser },
+  { token: "php", name: "PHP", guesslang: "php", parser: phpLanguage.parser },
+  { token: "css", name: "CSS", guesslang: "css", parser: cssLanguage.parser, formatType: "css" },
+  { token: "xml", name: "XML", guesslang: "xml", parser: xmlLanguage.parser },
+  { token: "vue", name: "Vue", guesslang: null, parser: vueLanguage.parser },
+  { token: "cpp", name: "C++", guesslang: "cpp", parser: cppLanguage.parser },
+  { token: "rust", name: "Rust", guesslang: "rs", parser: rustLanguage.parser },
+  { token: "csharp", name: "C#", guesslang: "cs", parser: csharpLanguage.parser },
+  { token: "svelte", name: "Svelte", guesslang: null, parser: svelteLanguage.parser },
+  { token: "ruby", name: "Ruby", guesslang: "rb", parser: StreamLanguage.define(ruby).parser },
+  { token: "shell", name: "Shell", guesslang: "sh", parser: StreamLanguage.define(shell).parser },
+  { token: "yaml", name: "YAML", guesslang: "yaml", parser: StreamLanguage.define(yaml).parser, formatType: "yaml" },
+  { token: "toml", name: "TOML", guesslang: "toml", parser: StreamLanguage.define(toml).parser },
+  { token: "golang", name: "Go", guesslang: "go", parser: StreamLanguage.define(go).parser, formatType: "go" },
+  { token: "clojure", name: "Clojure", guesslang: "clj", parser: StreamLanguage.define(clojure).parser },
+  { token: "erlang", name: "Erlang", guesslang: "erl", parser: StreamLanguage.define(erlang).parser },
+  { token: "javascript", name: "JavaScript", guesslang: "js", parser: javascriptLanguage.parser, formatType: "js" },
+  { token: "jsx", name: "JSX", guesslang: null, parser: jsxLanguage.parser, formatType: "jsx" },
+  { token: "typescript", name: "TypeScript", guesslang: "ts", parser: typescriptLanguage.parser, formatType: "ts" },
+  { token: "tsx", name: "TSX", guesslang: null, parser: tsxLanguage.parser, formatType: "tsx" },
+  { token: "swift", name: "Swift", guesslang: "swift", parser: StreamLanguage.define(swift).parser },
+  { token: "kotlin", name: "Kotlin", guesslang: "kt", parser: StreamLanguage.define(kotlin).parser },
+  { token: "groovy", name: "Groovy", guesslang: "groovy", parser: StreamLanguage.define(groovy).parser },
+  { token: "diff", name: "Diff", guesslang: null, parser: StreamLanguage.define(diff).parser },
+  { token: "powershell", name: "PowerShell", guesslang: "ps1", parser: StreamLanguage.define(powerShell).parser },
+  { token: "dart", name: "Dart", guesslang: "dart", parser: StreamLanguage.define(dart).parser },
+  { token: "scala", name: "Scala", guesslang: "scala", parser: StreamLanguage.define(scala).parser },
+  { token: "lua", name: "Lua", guesslang: "lua", parser: StreamLanguage.define(lua).parser },
+  { token: "mermaid", name: "Mermaid", guesslang: null, ext: "mmd", parser: mermaidLanguage.parser },
 ];
 
 const byToken = new Map(kLanguages.map((language) => [language.token, language]));
-const parsers = new Map(
-  Object.entries({
-    math: mathjsLanguage,
-    json: jsonLanguage,
-    python: pythonLanguage,
-    html: htmlLanguage,
-    sql: StandardSQL.language,
-    markdown: markdownLanguage,
-    java: javaLanguage,
-    lezer: lezerLanguage,
-    php: phpLanguage,
-    css: cssLanguage,
-    xml: xmlLanguage,
-    vue: vueLanguage,
-    cpp: cppLanguage,
-    rust: rustLanguage,
-    csharp: csharpLanguage,
-    svelte: svelteLanguage,
-    javascript: javascriptLanguage,
-    jsx: jsxLanguage,
-    typescript: typescriptLanguage,
-    tsx: tsxLanguage,
-    mermaid: mermaidLanguage,
-  }).map(([token, language]) => [token, language.parser]),
-);
-const streams = new Map(
-  Object.entries({
-    ruby,
-    shell,
-    yaml,
-    toml,
-    golang: go,
-    clojure,
-    erlang,
-    swift,
-    kotlin,
-    groovy,
-    diff,
-    powershell: powerShell,
-    dart,
-    scala,
-    lua,
-  }).map(([token, mode]) => [token, StreamLanguage.define(mode).parser]),
-);
 
 export function getLanguage(token: string): Language | undefined {
   return byToken.get(token);
@@ -137,34 +95,4 @@ export function extForLang(lang: string): string {
 
 export function getLanguageNameFromToken(token: string): string {
   return getLanguage(token)?.name ?? "Unknown";
-}
-
-export function langGetParser(lang: Language | undefined): Parser | null {
-  if (!lang) return null;
-  return parsers.get(lang.token) ?? streams.get(lang.token) ?? null;
-}
-
-export function langSupportsRun(lang: Language | undefined): lang is Language {
-  return lang?.token === "javascript" || lang?.token === "golang";
-}
-
-const formatTypes = new Map([
-  ["javascript", "js"],
-  ["jsx", "jsx"],
-  ["json", "json"],
-  ["typescript", "ts"],
-  ["tsx", "tsx"],
-  ["css", "css"],
-  ["html", "html"],
-  ["markdown", "md"],
-  ["yaml", "yaml"],
-  ["golang", "go"],
-]);
-
-export function langFormatType(lang: Language | undefined): string | undefined {
-  return lang && formatTypes.get(lang.token);
-}
-
-export function langSupportsFormat(lang: Language | undefined): boolean {
-  return langFormatType(lang) !== undefined;
 }

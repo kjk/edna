@@ -2,7 +2,9 @@ import {
   EditorSelection,
   EditorState,
   Prec,
+  StateEffect,
   StateField,
+  type ChangeSpec,
   type Extension,
   type Text as DocText,
   type TransactionSpec,
@@ -17,16 +19,14 @@ import {
   layer,
   type DecorationSet,
 } from "@codemirror/view";
+import { delimiterLine, kDelimiterPrefix, type NoteBlock } from "../../block-format";
 import { ednaEvent, isStructuralChange, kAddNewBlock, kSetContent } from "../annotation";
 import { focusOnGutterMouseDown } from "../cmutils";
-import type { MultiBlockEditor } from "../editor";
 import { SelectionChangeEvent } from "../event";
 import type { SimpleRange } from "../types";
-import { getBlocksFromSyntaxTree, type NoteBlock } from "./block-parsing";
-import { mathBlock } from "./math";
-import { emptyBlockSelected } from "./select-all";
+import { getBlocksFromSyntaxTree } from "./block-parsing";
 
-export interface Block extends NoteBlock {}
+export type Block = NoteBlock;
 
 export const blockState = StateField.define<Block[]>({
   create: getBlocksFromSyntaxTree,
@@ -42,6 +42,21 @@ export function getBlocks(state: EditorState): Block[] {
 // text of block's content (without its header)
 export function blockContentText(state: EditorState, block: Block): string {
   return state.sliceDoc(block.contentFrom, block.to);
+}
+
+export function blockHeaderChange(
+  state: EditorState,
+  block: Block,
+  language: string,
+  autoDetect: boolean,
+  readOnly: boolean,
+): ChangeSpec {
+  const lineFrom = block.from + Number(state.sliceDoc(block.from, block.from + 1) === "\n");
+  return {
+    from: lineFrom + kDelimiterPrefix.length,
+    to: block.contentFrom - 1,
+    insert: delimiterLine(language, autoDetect, readOnly).slice(kDelimiterPrefix.length),
+  };
 }
 
 export function getFirstNoteBlock(state: EditorState): Block {
@@ -187,6 +202,18 @@ export const blockLineNumbers = gutter({
       maxLines = Math.max(maxLines, last - first + 1);
     }
     return new LineNumber("9".repeat(Math.max(2, String(maxLines).length)));
+  },
+});
+
+export const selectEmptyBlock = StateEffect.define<number>();
+
+export const emptyBlockSelected = StateField.define<number | null>({
+  create: () => null,
+  update(selected, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(selectEmptyBlock)) return effect.value;
+    }
+    return tr.docChanged || tr.selection ? null : selected;
   },
 });
 
@@ -344,20 +371,17 @@ const selectionEvents = EditorView.updateListener.of((update) => {
   );
 });
 
-export function noteBlockExtension(_editor: MultiBlockEditor): Extension[] {
-  return [
-    blockState,
-    emptyBlockSelected,
-    headers,
-    atomicHeaders,
-    blockBackgrounds,
-    blockStyle,
-    protectDelimiters,
-    normalizeSelection,
-    selectionEvents,
-    mathBlock,
-  ];
-}
+export const noteBlockExtension: Extension = [
+  blockState,
+  emptyBlockSelected,
+  headers,
+  atomicHeaders,
+  blockBackgrounds,
+  blockStyle,
+  protectDelimiters,
+  normalizeSelection,
+  selectionEvents,
+];
 
 // replaces content of block with text and puts the cursor cursorOffset characters
 // into it (clamped to the new content)

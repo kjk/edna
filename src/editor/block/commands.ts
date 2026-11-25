@@ -1,9 +1,9 @@
 import { EditorSelection, Facet, type EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { getBlockDelimiter, isBlockLanguageToken } from "../../block-format";
 import { kAddNewBlock, kCurrenciesLoaded, kDeleteBlock, ednaEvent, kLanguageChange, kMoveBlock } from "../annotation";
-import type { MultiBlockEditor } from "../editor";
-import { getBlockDelimiter, kDelimiterPrefix } from "../new-parser/node-types";
 import {
+  blockHeaderChange,
   blockLineRange,
   editableRange,
   getActiveNoteBlock,
@@ -16,8 +16,6 @@ import {
 } from "./block";
 export { moveLineDown, moveLineUp } from "./move-lines";
 export { selectAll } from "./select-all";
-
-export { getBlockDelimiter };
 
 export const defaultBlockDelimiter = Facet.define<string, string>({
   combine: (values) => values[0] ?? getBlockDelimiter("text", true),
@@ -90,17 +88,12 @@ export function changeLanguageTo(
   language: string,
   auto: boolean,
 ): void {
-  if (!/^[a-z]+$/.test(language)) {
+  if (!isBlockLanguageToken(language)) {
     throw new Error(`Invalid block language: ${language}`);
   }
   if (state.readOnly || (block.language === language && block.autoDetect === auto)) return;
-  const from = state.sliceDoc(block.from, block.from + 1) === "\n" ? block.from + 1 : block.from;
   dispatch(state.update({
-    changes: {
-      from: from + kDelimiterPrefix.length,
-      to: block.contentFrom - 1,
-      insert: language + (auto ? "-a" : "") + (block.readOnly ? "-ro" : ""),
-    },
+    changes: blockHeaderChange(state, block, language, auto, !!block.readOnly),
     annotations: ednaEvent.of(kLanguageChange),
   }));
 }
@@ -230,10 +223,9 @@ function moveBlock(view: EditorView, direction: -1 | 1): boolean {
 export const moveCurrentBlockUp = (view: EditorView): boolean => moveBlock(view, -1);
 export const moveCurrentBlockDown = (view: EditorView): boolean => moveBlock(view, 1);
 
-export const deleteBlock = (_editor: MultiBlockEditor) => (view: EditorView): boolean => {
+export function deleteBlock(view: EditorView, block = getEditableActiveBlock(view.state)): boolean {
   const { state } = view;
-  const block = getEditableActiveBlock(state);
-  if (!block) return false;
+  if (!block || block.readOnly || state.readOnly) return false;
   const next = getBlockN(state, block.index + 1);
   const previous = getBlockN(state, block.index - 1);
   const insert = next || previous ? "" : state.facet(defaultBlockDelimiter);
@@ -246,4 +238,4 @@ export const deleteBlock = (_editor: MultiBlockEditor) => (view: EditorView): bo
     scrollIntoView: true,
   });
   return true;
-};
+}

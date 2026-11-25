@@ -6,7 +6,7 @@
   import { openSearchPanel, searchPanelOpen } from "@codemirror/search";
   import { EditorState } from "@codemirror/state";
   import { EditorView } from "@codemirror/view";
-  import { appState, appStateUpdateAfterNotesChange } from "../appstate.svelte";
+  import { appState } from "../appstate.svelte";
   import {
     blockHdrMarkdown,
     isTabHome,
@@ -30,7 +30,7 @@
     rangeInFirstBlock,
     replaceBlockContent,
   } from "../editor/block/block";
-  import type { NoteBlock } from "../editor/block/block-parsing";
+  import type { NoteBlock } from "../block-format";
   import {
     addNewBlockAfterCurrent,
     addNewBlockAfterLastAndScrollDown,
@@ -59,12 +59,11 @@
     foldAllBlocks,
     foldBlock,
     toggleBlockFold,
-    unfoldAlBlocks,
+    unfoldAllBlocks,
     unfoldBlock,
     unfoldEverything,
   } from "../editor/fold-gutter";
-  import { extForLang, getLanguage, langSupportsFormat, langSupportsRun } from "../editor/languages";
-  import { setDefaultFontFamilyAndSize } from "../editor/theme/font-theme";
+  import { extForLang, getLanguage } from "../editor/languages";
   import { toFileName } from "../filenamify";
   import {
     fsFileHandleWrite,
@@ -83,7 +82,6 @@
   import { hasOtherInstances, startInstanceDetection } from "../instances";
   import { getMarkdownHeadings } from "../markdown-util";
   import { toggleBlockReadOnly } from "../editor/read-only-blocks";
-  import { boot, switchToBrowserStorage, switchToDirectory } from "../main";
   import {
     archiveNote,
     getNoteMeta,
@@ -95,7 +93,7 @@
     unArchiveNote,
   } from "../metadata";
   import { isMoving } from "../mouse-track.svelte";
-  import { blockLanguageSupportsRun, smartRunAction } from "../smart-run";
+  import { smartRunAction } from "../smart-run";
   import {
     appendToNote,
     canDeleteNote,
@@ -123,12 +121,9 @@
     switchToStoringNotesOnDisk,
   } from "../notes";
   import { browserDownloadBlob, exportNotesToZip } from "../notes-export";
-  import { evalResultToString, runGo, runJS, runJSWithArg } from "../run";
-  import type { CapturingEval } from "../run";
+  import { evalResultToString, getBlockRunner } from "../run";
   import {
     getSettings,
-    kDefaultFontFamily,
-    kDefaultFontSize,
     settingsAddTab,
     settingsRemoveTab,
   } from "../settings.svelte";
@@ -170,14 +165,7 @@
   import FunctionSelector from "./FunctionSelector.svelte";
   import HomePage from "./HomePage.svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
-  import Menu, {
-    kMenuIdJustText,
-    kMenuSeparator,
-    kMenuStatusDisabled,
-    kMenuStatusNormal,
-    kMenuStatusRemoved,
-  } from "./Menu.svelte";
-  import type { Command, MenuDef } from "./Menu.svelte";
+  import Menu, { type Command, type MenuDef } from "./Menu.svelte";
   import ModalMessage, { clearModalMessage, modalMessageState, showModalMessageHTML } from "./ModalMessage.svelte";
   import Editor from "./MultiBlockEditor.svelte";
   import NoteSelector from "./NoteSelector.svelte";
@@ -191,10 +179,15 @@
   import Toaster, { saveOrShowError, showError, showToast, showWarning } from "./Toaster.svelte";
   import TopNav from "./TopNav.svelte";
 
-  const isMac = platform.isMac;
+  interface Props {
+    boot: () => Promise<void>;
+    switchToBrowserStorage: () => Promise<void>;
+    switchToDirectory: () => Promise<void>;
+  }
 
-  // Initialize default font settings for the editor module
-  setDefaultFontFamilyAndSize(kDefaultFontFamily, kDefaultFontSize);
+  let { boot, switchToBrowserStorage, switchToDirectory }: Props = $props();
+
+  const isMac = platform.isMac;
 
   let settings = getSettings();
 
@@ -264,19 +257,10 @@
     appState.showingFindInNotes = true;
   }
 
-  function updateAfterNoteStateChange() {
-    tick().then(() => {
-      appStateUpdateAfterNotesChange();
-      // re-assign tabs to redraw the state of the note in title
-      settings.tabs = [...settings.tabs];
-    });
-  }
-
   let gf = {
     focusEditor: focusEditor,
     getPasswordFromUser: getPasswordFromUser,
     requestFileWritePermission: requestFileWritePermission,
-    updateAfterNoteStateChange: updateAfterNoteStateChange,
   };
   setGlobalFuncs(gf);
 
@@ -294,7 +278,7 @@
 
   // External keymap bindings that require App-level functions
   let extraKeymap: KeymapSpec = [
-    ["Alt-Shift-f", () => formatBlockContent(getEditor())],
+    ["Alt-Shift-f", formatCurrentBlock],
     ["Mod-l", openLanguageSelector],
     ["Mod-e", smartRun],
     ["Alt-Shift-r", () => openFunctionSelector(false)],
@@ -330,7 +314,7 @@
         // @ts-ignore
         ev.returnValue = true;
       } else {
-        logAppExit();
+        logAppExit(appState.allNotes.length);
       }
     };
     window.addEventListener("beforeunload", onBeforeUnload);
@@ -373,7 +357,7 @@
     };
     window.addEventListener("focus", onWindowFocus);
 
-    logAppOpen();
+    logAppOpen(appState.allNotes.length);
 
     startInstanceDetection();
     hasOtherInstances().then((yes) => {
@@ -421,7 +405,7 @@
         return;
       }
       // don't process if codemirror is showing search panel
-      let view = getEditorView();
+      const view = editorComp?.getEditorView();
       if (view && searchPanelOpen(view.state)) {
         console.log("closing search panel on ESC");
         closeFindPanel(view);
@@ -475,25 +459,15 @@
   }
 
   async function storeNotesOnDisk() {
-    if (!(await checkSingleInstance())) {
-      return;
-    }
-    let dh = await openDirPicker(true);
-    if (!dh) {
-      return;
-    }
-    let ok = false;
     await runStorageOp(async () => {
-      let renamed = await switchToStoringNotesOnDisk(dh);
-      for (let [from, to] of renamed) {
+      const directory = await openDirPicker(true);
+      if (!directory) return;
+      const renamed = await switchToStoringNotesOnDisk(directory);
+      for (const [from, to] of renamed) {
         showWarning(`Note '${from}' already exists in the directory, moved as '${to}'`);
       }
-      ok = true;
-    });
-    if (ok) {
-      // re-load everything from the new storage
       await boot();
-    }
+    });
   }
 
   // other Edna tabs / windows don't know about changes to how notes are stored
@@ -513,18 +487,6 @@
       return true;
     }
     return saveOrShowError(() => editorComp.saveAll());
-  }
-
-  // only one Edna instance can switch storage, after saving the current note
-  async function canSwitchStorage(): Promise<boolean> {
-    return (await checkSingleInstance()) && (await saveBeforeStorageSwitch());
-  }
-
-  // runs a storage switch if only this instance is running and the current note was saved
-  async function switchStorage(doSwitch: () => Promise<void>) {
-    if (await canSwitchStorage()) {
-      await doSwitch();
-    }
   }
 
   let passwordPrompt: PasswordPromptProps | undefined = $state();
@@ -606,21 +568,24 @@
     runStorageOp(() => encryptAllNotes(pwd));
   }
 
-  // Runs an operation that changes how / where notes are stored (encrypt,
-  // decrypt, move to directory). The current note is saved first and the
-  // editor is read-only while it runs so that edits can't race with it.
+  let changingStorage = false;
+
   async function runStorageOp(fn: () => Promise<unknown>) {
-    if (!(await canSwitchStorage())) {
+    if (changingStorage || runInProgress) {
+      showWarning("Wait for the current operation to finish before changing storage.");
       return;
     }
-    let editor = editorComp ? getEditor() : undefined;
+    changingStorage = true;
     try {
-      // note: editor might have been destroyed in the meantime
-      await withReadOnlyEditor(editor, () => !!editorComp && getEditor() === editor, fn);
-    } catch (e) {
-      if (!(e instanceof PasswordCancelledError)) {
-        showError(`${e}`);
-      }
+      if (!(await checkSingleInstance())) return;
+      const editor = editorComp?.getEditor();
+      await withReadOnlyEditor(editor, () => editorComp?.getEditor() === editor, async () => {
+        if (await saveBeforeStorageSwitch()) await fn();
+      });
+    } catch (error) {
+      if (!(error instanceof PasswordCancelledError)) showError(`${error}`);
+    } finally {
+      changingStorage = false;
     }
   }
 
@@ -1119,476 +1084,236 @@
     view.focus();
   }
 
-  let nextMenuID = 1000;
-  function nmid() {
-    nextMenuID++;
-    return nextMenuID;
+  function command(label: string, run: Command["run"], options?: Pick<Command, "status" | "paletteLabel">): Command {
+    return { label, run, ...options };
   }
 
-  const kCmdCommandPalette = nmid();
-  const kCmdOpenNote = nmid();
-  const kCmdOpenNoteInNewTab = nmid();
-  const kCmdCreateNewNote = nmid();
-  const kCmdCloseCurrentTab = nmid();
-  const kCmdRenameCurrentNote = nmid();
-  const kCmdArchiveCurrentNote = nmid();
-  const kCmdUnArchiveCurrentNote = nmid();
-  const kCmdPermanentlyDeleteNote = nmid();
-  const kCmdCreateScratchNote = nmid();
-  const kCmdMoveLineUp = nmid();
-  const kCmdMoveLineDown = nmid();
-  const kCmdMoveSelectionUp = nmid();
-  const kCmdMoveSelectionDown = nmid();
-  const kCmdNewBlockAfterCurrent = nmid();
-  const kCmdBlockFirst = kCmdNewBlockAfterCurrent;
-  const kCmdGoToBlock = nmid();
-  const kCmdGoToHeading = nmid();
-  const kCmdToggleMarkdownPreview = nmid();
-  const kCmdToggleBlockReadOnly = nmid();
-  const kCmdNewBlockBeforeCurrent = nmid();
-  const kCmdNewBlockAtEnd = nmid();
-  const kCmdNewBlockAtStart = nmid();
-  const kCmdBlockDelete = nmid();
-  const kCmdSplitBlockAtCursor = nmid();
-  const kCmdGoToNextBlock = nmid();
-  const kCmdGoToPreviousBlock = nmid();
-  const kCmdChangeBlockLanguage = nmid();
-  const kCmdBlockSelectAll = nmid();
-  const kCmdMoveBlock = nmid();
-  const kCmdTransposeChars = nmid();
-  const kCmdInsertDateAndTime = nmid();
-  const kCmdInsertTime = nmid();
-  const kCmdToggleBlockFold = nmid();
-  const kCmdFoldBlock = nmid();
-  const kCmdUnfoldBlock = nmid();
-  const kCmdFoldAllBlocks = nmid();
-  const kCmdUnfoldAllBlocks = nmid();
-  const kCmdFoldCode = nmid();
-  const kCmdUnfoldColde = nmid();
-  const kCmdUnfoldEverything = nmid();
-  const kCmdToggleComment = nmid();
-  const kCmdToggleLineComment = nmid();
-  const kCmdToggleBlockComment = nmid();
-  const kCmdMoveBlockUp = nmid();
-  const kCmdMoveBlockDown = nmid();
-  const kCmdFormatBlock = nmid();
-  const kCmdBlockLast = kCmdFormatBlock;
+  function runAndFocusEditor(run: () => unknown) {
+    return () => {
+      run();
+      focusEditor();
+    };
+  }
 
-  const kCmdShowHelp = nmid();
-  const kCmdShowHelpAsNote = nmid();
-  const kCmdShowReleaseNotes = nmid();
-  const kCmdMoveNotesToDirectory = nmid();
-  const kCmdSwitchToNotesInDir = nmid();
-  const kCmdSwitchToLocalStorage = nmid();
-  const kCmdExportNotes = nmid();
-  const kCmdExportCurrentNote = nmid();
-  const kCmdEncryptNotes = nmid();
-  const kCmdDecryptNotes = nmid();
-  const kCmdEncryptionHelp = nmid();
-  const kCmdToggleSpellChecking = nmid();
-  const kCmdToggleCheckbox = nmid();
-  const kCmdShowStorageHelp = nmid();
-  const kCmdSettings = nmid();
-  const kCmdOpenQuickAccess = nmid();
-  const kCmdShowWelcomeNote = nmid();
-  const kCmdShowWelcomeDevNote = nmid();
-  const kCmdSmartRun = nmid();
-  const kCmdRunBlock = nmid();
-  const kCmdRunBlockWithAnotherBlock = nmid();
-  const kCmdRunBlockWithClipboard = nmid();
-  const kCmdRunFunctionWithBlockContent = nmid();
-  const kCmdRunFunctionWithSelection = nmid();
-  const kCmdCreateYourOwnFunctions = nmid();
-  const kCmdShowBuiltInFunctions = nmid();
-  const kCmdRunHelp = nmid();
-  const kCmdExportCurrentBlock = nmid();
-  const kCmdNoteToggleStarred = nmid();
-  const kCmdNoteToggleDailyEntry = nmid();
-  const kCmdOpenNoteFromDisk = nmid();
-  const kCmdToggleSidebar = nmid();
-  const kCmdFind = nmid();
-  const kCmdFindInNotes = nmid();
-  const kCmdSearch = nmid();
-  const kCmdSearchInNotes = nmid();
-  const kCmdAskAI = nmid();
-  const kCmdTestErrorTracking = nmid();
+  function buildMenus(): { menu: MenuDef; paletteOnly: Command[] } {
+    const name = noteName ?? "";
+    const directory = getStorageFS();
+    const hasFS = supportsFileSystem();
+    const braveNoFS = isBraveWithoutFileSystem();
+    const view = editorComp?.getEditorView();
+    const readOnly = !view || isReadOnly(view);
+    const hasSelectedText = !!view && hasSelection(view.state, true);
+    const lang = getLanguage(language);
+    const needsWritableEditor = readOnly ? "hidden" : undefined;
+    const dev = isDev();
 
-  function buildStorageMenu(): Command[] {
-    let dh = getStorageFS();
-    let currStorage = "Current store: browser (local storage)";
-    if (dh) {
-      currStorage = `Current store: directory ${dh.name}`;
+    function blockCommand(label: string, run: Command["run"], status?: Command["status"]): Command {
+      return command(label, run, { status, paletteLabel: "Block: " + label });
     }
-    return [
-      [currStorage, kMenuIdJustText],
-      ["Move notes from browser to directory", kCmdMoveNotesToDirectory],
-      ["Switch to browser (local storage)", kCmdSwitchToLocalStorage],
-      ["Switch to notes in a directory", kCmdSwitchToNotesInDir],
-      kMenuSeparator,
-      ["Export all notes to .zip file", kCmdExportNotes],
-      kMenuSeparator,
-      ["Help: storage", kCmdShowStorageHelp],
-    ];
-  }
 
-  function buildEncryptMenu(): Command[] {
-    return [
-      ["Encrypt all notes", kCmdEncryptNotes],
-      ["Decrypt all notes", kCmdDecryptNotes],
-      ["Help: encryption", kCmdEncryptionHelp],
-    ];
-  }
-
-  function buildHelpMenu(): Command[] {
-    const menuHelp: Command[] = [
-      ["Show help", kCmdShowHelp],
-      ["Show help as note", kCmdShowHelpAsNote],
-      ["Release notes", kCmdShowReleaseNotes],
-      ["Show Welcome Note", kCmdShowWelcomeNote],
-    ];
-    if (isDev()) {
-      menuHelp.push(["Show Welcome Dev Note", kCmdShowWelcomeDevNote]);
+    function editorAction(run: (editorView: EditorView) => unknown) {
+      return runAndFocusEditor(() => run(getEditorView()));
     }
-    return menuHelp;
+
+    async function chooseStorage(moveNotes: boolean) {
+      if (braveNoFS) {
+        showWarning(kBraveEnableFileSystemMsg, 20000);
+      } else if (moveNotes) {
+        await storeNotesOnDisk();
+      } else {
+        await runStorageOp(switchToDirectory);
+      }
+    }
+
+    const storage: MenuDef = [
+      { label: directory ? "Current store: directory " + directory.name : "Current store: browser (local storage)" },
+      command("Move notes from browser to directory", () => chooseStorage(true), {
+        status: directory || (!hasFS && !braveNoFS) ? "hidden" : undefined,
+      }),
+      command("Switch to browser (local storage)", () => runStorageOp(switchToBrowserStorage), {
+        status: !directory || !hasFS ? "hidden" : undefined,
+      }),
+      command("Switch to notes in a directory", () => chooseStorage(false), {
+        status: !hasFS && !braveNoFS ? "hidden" : undefined,
+      }),
+      { separator: true },
+      command("Export all notes to .zip file", exportNotesToZipFile),
+      { separator: true },
+      command("Help: storage", () => showHTMLHelp("#storing-notes-on-disk")),
+    ];
+
+    const encryption: MenuDef = [
+      command("Encrypt all notes", openEncryptPassword, { status: hasUnencryptedNotes() ? undefined : "disabled" }),
+      command("Decrypt all notes", () => runStorageOp(decryptAllNotes), {
+        status: hasEncryptedNotes() ? undefined : "disabled",
+      }),
+      command("Help: encryption", () => showHTMLHelp("#encryption")),
+    ];
+
+    const help: MenuDef = [
+      command("Show help", () => showHTMLHelp(), { paletteLabel: "Help" }),
+      command("Show help as note", () => openNote(kHelpSystemNoteName), { paletteLabel: "Help as note" }),
+      command("Release notes", () => openNote(kReleaseNotesSystemNoteName)),
+      command("Show Welcome Note", () => openNote(kWelcomeSystemNoteName)),
+    ];
+    if (dev) help.push(command("Show Welcome Dev Note", () => openNote(kWelcomeDevSystemNoteName)));
+
+    const note: MenuDef = [
+      command("Close tab", runAndFocusEditor(closeCurrentTab), { status: settings.tabs.length < 2 ? "disabled" : undefined }),
+      command("Rename", () => (appState.showingRenameNote = true), {
+        paletteLabel: "Rename current note",
+        status: isProtectedNote(name) ? "disabled" : undefined,
+      }),
+      command(toggleFavoriteLabel(""), toggleCurrentNoteStar, { paletteLabel: toggleFavoriteLabel("current note ") }),
+      command(dailyEntryLabel(), toggleCurrentNoteDailyEntry, {
+        paletteLabel: "Note: " + dailyEntryLabel().toLowerCase(),
+        status: isSystemNoteName(name) ? "hidden" : undefined,
+      }),
+      command("Archive", runAndFocusEditor(() => archiveNote(name)), {
+        paletteLabel: "Archive note",
+        status: !isNoteArchivable(name) || isNoteArchived(name) ? "hidden" : undefined,
+      }),
+      command("Un-archive", runAndFocusEditor(() => unArchiveNote(name)), {
+        paletteLabel: "Un-archive note",
+        status: isNoteArchived(name) ? undefined : "hidden",
+      }),
+      command("Delete permanently", runAndFocusEditor(() => deleteNotePermanently(name, true)), {
+        paletteLabel: "Delete note permanently",
+        status: canDeleteNote(name) ? undefined : "hidden",
+      }),
+      command("Export to file", exportCurrentNote, { paletteLabel: "Export current note to a file" }),
+    ];
+
+    const block: MenuDef = [
+      blockCommand("Go To\tMod + B", () => openBlockSelector()),
+      blockCommand("Go To Heading\tMod + Shift + B", openHeadingSelector),
+      blockCommand("Markdown preview", toggleMarkdownPreview),
+      blockCommand("Toggle read-only", editorAction(toggleBlockReadOnly), needsWritableEditor),
+      blockCommand("Add after current\tMod + Enter", editorAction(addNewBlockAfterCurrent)),
+      blockCommand("Add before current\tAlt + Enter", editorAction(addNewBlockBeforeCurrent)),
+      blockCommand("Add at end\tMod + Shift + Enter", editorAction(addNewBlockAfterLastAndScrollDown)),
+      blockCommand("Add at start\tAlt + Shift + Enter", editorAction(addNewBlockBeforeFirst)),
+      blockCommand("Split at cursor position\tMod + Alt + Enter", editorAction(insertNewBlockAtCursor)),
+      blockCommand("Goto next\tMod + Down", editorAction(gotoNextBlock)),
+      blockCommand("Goto previous\tMod + Up", editorAction(gotoPreviousBlock)),
+      blockCommand("Move up\tAlt-Mod-Shift-ArrowUp", editorAction(moveCurrentBlockUp)),
+      blockCommand("Move down\tAlt-Mod-Shift-ArrowDown", editorAction(moveCurrentBlockDown)),
+      blockCommand("Change language\tMod + L", openLanguageSelector),
+      blockCommand("Select all text\tMod + A", editorAction(selectAll)),
+      blockCommand("Format as " + language + "\tAlt + Shift + F", runAndFocusEditor(formatCurrentBlock),
+        readOnly || !lang?.formatType ? "hidden" : undefined),
+      command("Export to file", async () => {
+        await exportCurrentBlock();
+        focusEditor();
+      }, { paletteLabel: "Export current block to a file" }),
+      blockCommand("Delete", async () => {
+        focusEditor();
+        await tick();
+        deleteBlock(getEditorView());
+      }),
+      blockCommand("Move to another note", moveCurrentBlock, needsWritableEditor),
+      blockCommand("Toggle block fold\tMod + Alt + .", editorAction(toggleBlockFold), needsWritableEditor),
+      blockCommand("Fold block\tMod + Alt + [", editorAction(foldBlock), needsWritableEditor),
+      blockCommand("Unfold block\tMod + Alt + ]", editorAction(unfoldBlock), needsWritableEditor),
+    ];
+
+    const run: MenuDef = [
+      command("Smart Run\tMod + E", smartRun, { status: needsWritableEditor }),
+      command("Run this block", runCurrentBlock, {
+        status: needsWritableEditor ?? (getBlockRunner(language) ? undefined : "disabled"),
+      }),
+      command("Run this block with another block", runCurrentBlockWithAnotherBlock, {
+        status: needsWritableEditor ?? (getBlockRunner(language)?.runWithArgument ? undefined : "disabled"),
+      }),
+      command("Run this block with clipboard", runCurrentBlockWithClipboard, {
+        status: needsWritableEditor ?? (getBlockRunner(language)?.runWithArgument ? undefined : "disabled"),
+      }),
+      command("Run function with this block\tAlt + Shift + R", () => openFunctionSelector(false), {
+        status: needsWritableEditor,
+      }),
+      command("Run function with selection", () => openFunctionSelector(true), {
+        status: needsWritableEditor ?? (hasSelectedText ? undefined : "disabled"),
+      }),
+      command("Show built-in functions", () => openNote(kBuiltInFunctionsNoteName)),
+      command("Create your own functions", openCustomFunctionsNote),
+      command("Help", () => showHTMLHelp("#running-code"), { paletteLabel: "Help: running code" }),
+    ];
+
+    const menu: MenuDef = [
+      command("Command Palette\tMod + Shift + K", openCommandPalette, { paletteLabel: false }),
+      command("Open note\tMod + K", openNoteSelector),
+      command("New note", openCreateNewNote),
+    ];
+    if (!isTabHome(settings.currentTab) && view) {
+      menu.push(command("Ask AI", openAskAI), { label: "This note", items: note }, { label: "Block", items: block },
+        { label: "Run code", items: run });
+    }
+    menu.push({ label: "Notes storage", items: storage });
+    if (directory) menu.push({ label: "Encryption", items: encryption });
+    menu.push(command("Settings", openSettings), { label: "Help", items: help },
+      { label: "Tip: Ctrl + click for browser's context menu" });
+
+    const paletteOnly: Command[] = [
+      command("Create New Scratch Note", async () => {
+        await createScratchNote();
+        focusEditor();
+      }),
+      command("Open recent note", openQuickAccess),
+      command("Open note in new tab", openNoteSelectorInNewTab),
+      command("Toggle Sidebar", () => {
+        toggleFlag(settings, "showSidebar");
+        if (!settings.showSidebar) focusEditor();
+      }),
+      command("Find in notes", openFindInNotes),
+      command("Search in notes", openFindInNotes),
+      command("Open note from disk", openNoteFromDisk, { status: hasFS ? undefined : "hidden" }),
+    ];
+    if (view) {
+      paletteOnly.push(
+        command("Find", openFindPanel),
+        command("Search", openFindPanel),
+        command((isSpellChecking ? "Disable" : "Enable") + " spell checking", runAndFocusEditor(toggleSpellCheck)),
+        command("Edit: Insert date\tAlt-Shift-d", editorAction(insertDateAndTime)),
+        command("Edit: Insert time\tAlt-Shift-t", editorAction(insertTime)),
+      );
+    }
+    if (view && !readOnly) {
+      paletteOnly.push(
+        blockCommand("Fold all blocks", editorAction(foldAllBlocks)),
+        blockCommand("Unfold all blocks", editorAction(unfoldAllBlocks)),
+        command("Edit: Transpose chars", editorAction(transposeChars)),
+        command("Edit: Move " + (hasSelectedText ? "selection" : "line") + " up\tAlt-ArrowUp", editorAction(moveLineUp)),
+        command("Edit: Move " + (hasSelectedText ? "selection" : "line") + " down\tAlt-ArrowDown", editorAction(moveLineDown)),
+        command("Edit: Unfold everything", editorAction(unfoldEverything)),
+        command("Edit: Toggle comment\tMod-/", editorAction(toggleComment)),
+        command("Edit: Toggle line comment", editorAction(toggleLineComment)),
+        command("Edit: Toggle block comment\tAlt-Shift-a", editorAction(toggleBlockComment)),
+        command("Edit: Toggle todo checkbox\tMod-Shift-Space", editorAction(toggleCheckbox)),
+        command("Edit: Fold code\tMod-Shift-[", editorAction(foldCode)),
+        command("Edit: Unfold code\tMod-Shift-]", editorAction(unfoldCode)),
+      );
+    }
+    if (dev) {
+      paletteOnly.push(command("Test error tracking", () => {
+        console.error("test console error");
+        throw new Error("test error from menu");
+      }));
+    }
+
+    return { menu, paletteOnly };
   }
 
-  // "Add {what}to favorites" or "Remove {what}from favorites" for the current note
+  function buildMenuDef(): MenuDef {
+    return buildMenus().menu;
+  }
+
   function toggleFavoriteLabel(what: string): string {
-    let isStarred = !!(noteName && getNoteMeta(noteName)?.isStarred);
+    const isStarred = !!(noteName && getNoteMeta(noteName)?.isStarred);
     return isStarred ? `Remove ${what}from favorites` : `Add ${what}to favorites`;
   }
 
   function dailyEntryLabel(): string {
-    let on = !!noteName && noteHasDailyEntry(noteName);
-    return on ? "Stop adding a block for today" : "Add a block for today when opened";
-  }
-
-  function buildMenuDefForEditor(): MenuDef {
-    let starAction = toggleFavoriteLabel("");
-
-    const menuNote: Command[] = [
-      ["Close tab", kCmdCloseCurrentTab],
-      ["Rename", kCmdRenameCurrentNote],
-      [starAction, kCmdNoteToggleStarred],
-      [dailyEntryLabel(), kCmdNoteToggleDailyEntry],
-      ["Archive", kCmdArchiveCurrentNote],
-      ["Un-archive", kCmdUnArchiveCurrentNote],
-      ["Delete permanently", kCmdPermanentlyDeleteNote],
-      ["Export to file", kCmdExportCurrentNote],
-    ];
-
-    const menuBlock: Command[] = [
-      ["Go To\tMod + B", kCmdGoToBlock],
-      ["Go To Heading\tMod + Shift + B", kCmdGoToHeading],
-      ["Markdown preview", kCmdToggleMarkdownPreview],
-      ["Toggle read-only", kCmdToggleBlockReadOnly],
-      ["Add after current\tMod + Enter", kCmdNewBlockAfterCurrent],
-      ["Add before current\tAlt + Enter", kCmdNewBlockBeforeCurrent],
-      ["Add at end\tMod + Shift + Enter", kCmdNewBlockAtEnd],
-      ["Add at start\tAlt + Shift + Enter", kCmdNewBlockAtStart],
-      ["Split at cursor position\tMod + Alt + Enter", kCmdSplitBlockAtCursor],
-      ["Goto next\tMod + Down", kCmdGoToNextBlock],
-      ["Goto previous\tMod + Up", kCmdGoToPreviousBlock],
-      ["Move up\tAlt-Mod-Shift-ArrowUp", kCmdMoveBlockUp],
-      ["Move down\tAlt-Mod-Shift-ArrowDown", kCmdMoveBlockDown],
-      ["Change language\tMod + L", kCmdChangeBlockLanguage],
-      ["Select all text\tMod + A", kCmdBlockSelectAll],
-      ["Format as " + language + "\tAlt + Shift + F", kCmdFormatBlock],
-      ["Export to file", kCmdExportCurrentBlock],
-      ["Delete", kCmdBlockDelete],
-      ["Move to another note", kCmdMoveBlock],
-      ["Toggle block fold\tMod + Alt + .", kCmdToggleBlockFold],
-      ["Fold block\tMod + Alt + [", kCmdFoldBlock],
-      ["Unfold block\tMod + Alt + ]", kCmdUnfoldBlock],
-    ];
-
-    const menuRun: Command[] = [
-      ["Smart Run\tMod + E", kCmdSmartRun],
-      ["Run this block", kCmdRunBlock],
-      ["Run this block with another block", kCmdRunBlockWithAnotherBlock],
-      ["Run this block with clipboard", kCmdRunBlockWithClipboard],
-      ["Run function with this block\tAlt + Shift + R", kCmdRunFunctionWithBlockContent],
-      ["Run function with selection", kCmdRunFunctionWithSelection],
-      ["Show built-in functions", kCmdShowBuiltInFunctions],
-      ["Create your own functions", kCmdCreateYourOwnFunctions],
-      ["Help", kCmdRunHelp],
-    ];
-
-    return buildTopLevelMenu([
-      ["Ask AI", kCmdAskAI],
-      ["This note", menuNote],
-      ["Block", menuBlock],
-      ["Run code", menuRun],
-    ]);
-  }
-
-  // menu items shared by editor and home page menus, with editorItems in the middle
-  function buildTopLevelMenu(editorItems: MenuDef): MenuDef {
-    const menu: MenuDef = [
-      ["Command Palette\tMod + Shift + K", kCmdCommandPalette],
-      ["Open note\tMod + K", kCmdOpenNote],
-      ["New note", kCmdCreateNewNote],
-      ...editorItems,
-      ["Notes storage", buildStorageMenu()],
-    ];
-    if (getStorageFS()) {
-      // encryption only for files stored on disk
-      menu.push(["Encryption", buildEncryptMenu()]);
-    }
-    menu.push(
-      ["Settings", kCmdSettings],
-      ["Help", buildHelpMenu()],
-      ["Tip: Ctrl + click for browser's context menu", kMenuIdJustText],
-    );
-    return menu;
-  }
-
-  function buildMenuDefHomePage(): MenuDef {
-    return buildTopLevelMenu([]);
-  }
-
-  function buildMenuDef(): MenuDef {
-    if (isTabHome(settings.currentTab)) {
-      return buildMenuDefHomePage();
-    }
-    return buildMenuDefForEditor();
-  }
-
-  const commandNameOverrides = [
-    kCmdRenameCurrentNote,
-    "Rename current note",
-    kCmdPermanentlyDeleteNote,
-    "Delete note permanently",
-    kCmdExportCurrentNote,
-    "Export current note to a file",
-    kCmdExportCurrentBlock,
-    "Export current block to a file",
-    kCmdShowStorageHelp,
-    "Help: storage",
-    kCmdRunHelp,
-    "Help: running code",
-    kCmdShowHelp,
-    "Help",
-    kCmdShowHelpAsNote,
-    "Help as note",
-    kCmdCloseCurrentTab,
-    "Close tab",
-    kCmdArchiveCurrentNote,
-    "Archive note",
-    kCmdUnArchiveCurrentNote,
-    "Un-archive note",
-  ];
-
-  const commandPaletteAdditions: Command[] = [
-    ...(isDev() ? [["Test error tracking", kCmdTestErrorTracking] as Command] : []),
-    ["Create New Scratch Note", kCmdCreateScratchNote],
-    // ["Create New Note", kCmdCreateNewNote],
-    ["Open recent note", kCmdOpenQuickAccess],
-    ["Open note in new tab", kCmdOpenNoteInNewTab],
-    ["Toggle Sidebar", kCmdToggleSidebar],
-    ["Find", kCmdFind],
-    ["Find in notes", kCmdFindInNotes],
-    ["Search", kCmdSearch],
-    ["Search in notes", kCmdSearchInNotes],
-    ["Open note from disk", kCmdOpenNoteFromDisk],
-    ["Block: Fold all blocks", kCmdFoldAllBlocks],
-    ["Block: Unfold all blocks", kCmdUnfoldAllBlocks],
-    ["Edit: Transpose chars", kCmdTransposeChars],
-    ["Edit: Move line up\tAlt-ArrowUp", kCmdMoveLineUp],
-    ["Edit: Move line down\tAlt-ArrowDown", kCmdMoveLineDown],
-    ["Edit: Move selection up\tAlt-ArrowUp", kCmdMoveSelectionUp],
-    ["Edit: Move selection down\tAlt-ArrowDown", kCmdMoveSelectionDown],
-    ["Edit: Insert date\tAlt-Shift-d", kCmdInsertDateAndTime],
-    ["Edit: Insert time\tAlt-Shift-t", kCmdInsertTime],
-    ["Edit: Unfold everything", kCmdUnfoldEverything],
-    ["Edit: Toggle comment\tMod-/", kCmdToggleComment],
-    ["Edit: Toggle line comment", kCmdToggleLineComment],
-    ["Edit: Toggle block comment\tAlt-Shift-a", kCmdToggleBlockComment],
-    ["Edit: Toggle todo checkbox\tMod-Shift-Space", kCmdToggleCheckbox],
-    // ["Export current note", kCmdExportCurrentNote],
-    ["Edit: Fold code\tMod-Shift-[", kCmdFoldCode],
-    ["Edit: Unfold code\tMod-Shift-]", kCmdUnfoldColde],
-  ];
-
-  // commands that work when there's no editor (e.g. on Home tab)
-  const cmdsWithoutEditor = [
-    kCmdCommandPalette,
-    kCmdOpenNote,
-    kCmdOpenNoteInNewTab,
-    kCmdCreateNewNote,
-    kCmdCreateScratchNote,
-    kCmdShowHelp,
-    kCmdShowHelpAsNote,
-    kCmdShowReleaseNotes,
-    kCmdMoveNotesToDirectory,
-    kCmdSwitchToNotesInDir,
-    kCmdSwitchToLocalStorage,
-    kCmdExportNotes,
-    kCmdEncryptNotes,
-    kCmdDecryptNotes,
-    kCmdEncryptionHelp,
-    kCmdShowStorageHelp,
-    kCmdSettings,
-    kCmdOpenQuickAccess,
-    kCmdShowWelcomeNote,
-    kCmdShowWelcomeDevNote,
-    kCmdCreateYourOwnFunctions,
-    kCmdShowBuiltInFunctions,
-    kCmdRunHelp,
-    kCmdOpenNoteFromDisk,
-    kCmdToggleSidebar,
-    kCmdFindInNotes,
-    kCmdSearchInNotes,
-    kCmdTestErrorTracking,
-  ];
-
-  function menuItemStatus(mi: Command): number {
-    if (Array.isArray(mi[1])) {
-      // submenu: its items have their own status (U15)
-      return kMenuStatusNormal;
-    }
-    let mid = mi[1];
-    if (mid === kMenuIdJustText) {
-      return kMenuStatusDisabled;
-    }
-    if (!editorComp && !cmdsWithoutEditor.includes(mid)) {
-      return kMenuStatusRemoved;
-    }
-    let noteName = appState.currentNoteName || "";
-    // console.log("menuItemStatus:", mi);
-    // console.log("s:", s, "mid:", mid);
-    // note: this is called for each menu item so should be fast
-    // undefined for an unknown block language (U12)
-    let lang = getLanguage(language);
-    let dh = getStorageFS();
-    // console.log("dh:", dh);
-    let hasFS = supportsFileSystem();
-    // in Brave, keep them visible so that running them explains how to enable it
-    let braveNoFS = isBraveWithoutFileSystem();
-    let view = getEditorView();
-    let readOnly = view ? isReadOnly(view) : true;
-    let hasSel = view ? editorHasSelection() : false;
-
-    let removeIfReadOnly = [
-      kCmdToggleBlockReadOnly,
-      kCmdFormatBlock,
-      kCmdToggleBlockFold,
-      kCmdFoldBlock,
-      kCmdUnfoldBlock,
-      kCmdFoldAllBlocks,
-      kCmdUnfoldAllBlocks,
-      kCmdUnfoldEverything,
-      kCmdFoldCode,
-      kCmdUnfoldColde,
-      kCmdMoveBlock, // disable?
-      kCmdRunBlock, // disable?
-      kCmdRunBlockWithAnotherBlock, // disable?
-      kCmdRunBlockWithClipboard, // disable?
-      kCmdSmartRun, // disable?
-      kCmdRunFunctionWithBlockContent, // disable?
-      kCmdRunFunctionWithSelection, // disable?
-      kCmdTransposeChars,
-      kCmdToggleComment,
-      kCmdToggleLineComment,
-      kCmdToggleBlockComment,
-      kCmdToggleCheckbox,
-      kCmdMoveLineUp,
-      kCmdMoveLineDown,
-      kCmdMoveSelectionUp,
-      kCmdMoveSelectionDown,
-    ];
-    let removedfNeedsFS = [
-      kCmdOpenNoteFromDisk,
-      kCmdMoveNotesToDirectory,
-      kCmdSwitchToLocalStorage,
-      kCmdSwitchToNotesInDir,
-    ];
-
-    if (readOnly && removeIfReadOnly.includes(mid)) {
-      return kMenuStatusRemoved;
-    }
-    let braveExplains = braveNoFS && (mid === kCmdMoveNotesToDirectory || mid === kCmdSwitchToNotesInDir);
-    if (!hasFS && removedfNeedsFS.includes(mid) && !braveExplains) {
-      return kMenuStatusRemoved;
-    }
-
-    if (mid === kCmdFormatBlock) {
-      if (!langSupportsFormat(lang)) {
-        return kMenuStatusRemoved;
-      }
-    } else if (mid === kCmdRunBlock) {
-      if (!langSupportsRun(lang)) {
-        return kMenuStatusDisabled;
-      }
-    } else if (mid === kCmdRunBlockWithAnotherBlock || mid === kCmdRunBlockWithClipboard) {
-      // only JavaScript functions take an argument
-      if (lang?.token !== "javascript") {
-        return kMenuStatusDisabled;
-      }
-      // it would be nice to check clipboard for empty text but that triggers clipboard
-      // permissions dialog https://github.com/kjk/edna/issues/81
-      // if (!mostRecentHasClipboardText) {
-      //   return kMenuStatusDisabled;
-      // }
-    } else if (mid === kCmdMoveNotesToDirectory) {
-      if (dh) {
-        // currently using directory
-        return kMenuStatusRemoved;
-      }
-    } else if (mid == kCmdSwitchToLocalStorage) {
-      if (!dh) {
-        // currently using local storage
-        return kMenuStatusRemoved;
-      }
-    } else if (mid === kCmdEncryptNotes) {
-      // also enabled when some notes are encrypted, to finish an interrupted encryption
-      if (!dh) {
-        return kMenuStatusRemoved;
-      }
-      return hasUnencryptedNotes() ? kMenuStatusNormal : kMenuStatusDisabled;
-    } else if (mid === kCmdDecryptNotes) {
-      if (!dh) {
-        return kMenuStatusRemoved;
-      }
-      return hasEncryptedNotes() ? kMenuStatusNormal : kMenuStatusDisabled;
-    } else if (mid === kCmdRenameCurrentNote) {
-      if (isProtectedNote(noteName)) {
-        return kMenuStatusDisabled;
-      }
-    } else if (mid === kCmdRunFunctionWithBlockContent || mid === kCmdRunFunctionWithSelection) {
-      if (mid === kCmdRunFunctionWithSelection && !hasSel) {
-        return kMenuStatusDisabled;
-      }
-    } else if (mid === kCmdMoveLineUp || mid == kCmdMoveLineDown) {
-      if (hasSel) {
-        return kMenuStatusRemoved;
-      }
-    } else if (mid === kCmdMoveSelectionUp || mid == kCmdMoveSelectionDown) {
-      if (!hasSel) {
-        return kMenuStatusRemoved;
-      }
-    } else if (mid === kCmdCloseCurrentTab) {
-      if (len(settings.tabs) < 2) {
-        return kMenuStatusDisabled;
-      }
-    } else if (mid === kCmdPermanentlyDeleteNote) {
-      if (!canDeleteNote(noteName)) {
-        return kMenuStatusRemoved;
-      }
-    } else if (mid === kCmdArchiveCurrentNote) {
-      if (!isNoteArchivable(noteName) || isNoteArchived(noteName)) {
-        return kMenuStatusRemoved;
-      }
-    } else if (mid === kCmdUnArchiveCurrentNote) {
-      if (!isNoteArchived(noteName)) {
-        return kMenuStatusRemoved;
-      }
-    } else if (mid === kCmdNoteToggleDailyEntry) {
-      if (isSystemNoteName(noteName)) {
-        return kMenuStatusRemoved;
-      }
-    }
-    return kMenuStatusNormal;
+    return noteName && noteHasDailyEntry(noteName) ? "Stop adding a block for today" : "Add a block for today when opened";
   }
 
   function editorHasSelection(): boolean {
@@ -1596,239 +1321,13 @@
   }
 
   function openFindPanel() {
-    let view = getEditorView();
-    openSearchPanel(view);
+    openSearchPanel(getEditorView());
   }
 
-  async function executeCommand(cmdId: number, arg: any) {
-    // console.log("cmd:", cmdId);
+  async function executeCommand(run: Command["run"]) {
     appState.showingContextMenu = false;
     appState.showingCommandPalette = false;
-
-    if (typeof arg == "function") {
-      await arg();
-      return;
-    }
-
-    // lazy — only call when a branch actually needs the editor
-    let view: EditorView;
-    let ednaEditor: MultiBlockEditor;
-    function requireView(): EditorView {
-      if (!view) view = getEditorView();
-      return view;
-    }
-    function requireEditor(): MultiBlockEditor {
-      if (!ednaEditor) ednaEditor = getEditor();
-      return ednaEditor;
-    }
-    if (cmdId === kCmdCommandPalette) {
-      openCommandPalette();
-    } else if (cmdId === kCmdOpenNote) {
-      openNoteSelector();
-    } else if (cmdId === kCmdOpenNoteInNewTab) {
-      openNoteSelectorInNewTab();
-    } else if (cmdId === kCmdCreateNewNote) {
-      openCreateNewNote();
-    } else if (cmdId === kCmdCloseCurrentTab) {
-      closeCurrentTab();
-      focusEditor();
-    } else if (cmdId === kCmdRenameCurrentNote) {
-      appState.showingRenameNote = true;
-    } else if (cmdId == kCmdPermanentlyDeleteNote) {
-      deleteNotePermanently(noteName!, true);
-      focusEditor();
-    } else if (cmdId === kCmdArchiveCurrentNote) {
-      archiveNote(noteName!);
-      focusEditor();
-    } else if (cmdId === kCmdUnArchiveCurrentNote) {
-      unArchiveNote(noteName!);
-      focusEditor();
-    } else if (cmdId === kCmdCreateScratchNote) {
-      await createScratchNote();
-      focusEditor();
-    } else if (cmdId === kCmdNewBlockAfterCurrent) {
-      addNewBlockAfterCurrent(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdNewBlockBeforeCurrent) {
-      addNewBlockBeforeCurrent(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdNewBlockAtEnd) {
-      addNewBlockAfterLastAndScrollDown(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdNewBlockAtStart) {
-      addNewBlockBeforeFirst(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdSplitBlockAtCursor) {
-      insertNewBlockAtCursor(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdGoToBlock) {
-      openBlockSelector();
-    } else if (cmdId === kCmdGoToHeading) {
-      openHeadingSelector();
-    } else if (cmdId === kCmdToggleMarkdownPreview) {
-      toggleMarkdownPreview();
-    } else if (cmdId === kCmdToggleBlockReadOnly) {
-      toggleBlockReadOnly(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdGoToNextBlock) {
-      gotoNextBlock(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdTransposeChars) {
-      transposeChars(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdToggleComment) {
-      toggleComment(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdToggleLineComment) {
-      toggleLineComment(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdToggleBlockComment) {
-      toggleBlockComment(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdToggleCheckbox) {
-      toggleCheckbox(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdInsertDateAndTime) {
-      insertDateAndTime(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdInsertTime) {
-      insertTime(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdGoToPreviousBlock) {
-      gotoPreviousBlock(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdMoveBlockUp) {
-      moveCurrentBlockUp(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdMoveBlockDown) {
-      moveCurrentBlockDown(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdChangeBlockLanguage) {
-      openLanguageSelector();
-    } else if (cmdId === kCmdBlockSelectAll) {
-      selectAll(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdFormatBlock) {
-      formatCurrentBlock();
-      focusEditor();
-    } else if (cmdId === kCmdMoveBlock) {
-      moveCurrentBlock();
-    } else if (cmdId === kCmdFoldCode) {
-      foldCode(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdUnfoldColde) {
-      unfoldCode(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdFoldBlock) {
-      foldBlock(requireEditor())(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdUnfoldBlock) {
-      unfoldBlock(requireEditor())(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdMoveLineUp || cmdId === kCmdMoveSelectionUp) {
-      moveLineUp(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdMoveLineDown || cmdId === kCmdMoveSelectionDown) {
-      moveLineDown(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdFoldAllBlocks) {
-      foldAllBlocks(requireEditor())(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdUnfoldAllBlocks) {
-      unfoldAlBlocks(requireEditor())(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdUnfoldEverything) {
-      unfoldEverything(requireEditor())(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdToggleBlockFold) {
-      toggleBlockFold(requireEditor())(requireView());
-      focusEditor();
-    } else if (cmdId === kCmdExportCurrentBlock) {
-      await exportCurrentBlock();
-      focusEditor();
-    } else if (cmdId === kCmdBlockDelete) {
-      focusEditor();
-      tick().then(() => {
-        deleteBlock(requireEditor())(requireView());
-      });
-    } else if (cmdId === kCmdOpenNoteFromDisk) {
-      openNoteFromDisk();
-    } else if (cmdId === kCmdAskAI) {
-      openAskAI();
-    } else if (cmdId === kCmdToggleSpellChecking) {
-      toggleSpellCheck();
-      focusEditor();
-    } else if (cmdId === kCmdShowHelp) {
-      showHTMLHelp();
-    } else if (cmdId === kCmdShowHelpAsNote) {
-      openNote(kHelpSystemNoteName);
-    } else if (cmdId === kCmdShowReleaseNotes) {
-      openNote(kReleaseNotesSystemNoteName);
-    } else if (cmdId === kCmdShowWelcomeNote) {
-      openNote(kWelcomeSystemNoteName);
-    } else if (cmdId === kCmdRunHelp) {
-      showHTMLHelp("#running-code");
-    } else if (cmdId == kCmdShowWelcomeDevNote) {
-      openNote(kWelcomeDevSystemNoteName);
-    } else if ((cmdId === kCmdMoveNotesToDirectory || cmdId === kCmdSwitchToNotesInDir) && isBraveWithoutFileSystem()) {
-      showWarning(kBraveEnableFileSystemMsg, 20000);
-    } else if (cmdId === kCmdMoveNotesToDirectory) {
-      storeNotesOnDisk();
-    } else if (cmdId === kCmdSwitchToNotesInDir) {
-      await switchStorage(switchToDirectory);
-    } else if (cmdId === kCmdSwitchToLocalStorage) {
-      await switchStorage(switchToBrowserStorage);
-    } else if (cmdId === kCmdExportNotes) {
-      exportNotesToZipFile();
-    } else if (cmdId === kCmdExportCurrentNote) {
-      exportCurrentNote();
-    } else if (cmdId === kCmdNoteToggleStarred) {
-      toggleCurrentNoteStar();
-    } else if (cmdId === kCmdNoteToggleDailyEntry) {
-      toggleCurrentNoteDailyEntry();
-    } else if (cmdId === kCmdShowStorageHelp) {
-      showHTMLHelp("#storing-notes-on-disk");
-    } else if (cmdId === kCmdSettings) {
-      openSettings();
-    } else if (cmdId === kCmdEncryptNotes) {
-      openEncryptPassword();
-    } else if (cmdId === kCmdDecryptNotes) {
-      runStorageOp(decryptAllNotes);
-    } else if (cmdId === kCmdEncryptionHelp) {
-      showHTMLHelp("#encryption");
-    } else if (cmdId === kCmdOpenQuickAccess) {
-      openQuickAccess();
-    } else if (cmdId === kCmdRunBlock) {
-      runCurrentBlock();
-    } else if (cmdId === kCmdRunBlockWithAnotherBlock) {
-      runCurrentBlockWithAnotherBlock();
-    } else if (cmdId === kCmdRunBlockWithClipboard) {
-      runCurrentBlockWithClipboard();
-    } else if (cmdId === kCmdSmartRun) {
-      smartRun();
-    } else if (cmdId === kCmdRunFunctionWithBlockContent) {
-      openFunctionSelector(false);
-    } else if (cmdId === kCmdRunFunctionWithSelection) {
-      openFunctionSelector(true);
-    } else if (cmdId === kCmdCreateYourOwnFunctions) {
-      openCustomFunctionsNote();
-    } else if (cmdId === kCmdShowBuiltInFunctions) {
-      openNote(kBuiltInFunctionsNoteName);
-    } else if (cmdId === kCmdToggleSidebar) {
-      toggleFlag(settings, "showSidebar");
-      if (!settings.showSidebar) {
-        focusEditor();
-      }
-    } else if (cmdId === kCmdFind || cmdId == kCmdSearch) {
-      openFindPanel();
-    } else if (cmdId === kCmdFindInNotes || cmdId == kCmdSearchInNotes) {
-      openFindInNotes();
-    } else if (cmdId === kCmdTestErrorTracking) {
-      console.error("test console error");
-      throw new Error("test error from menu");
-    } else {
-      console.error("unknown menu cmd id");
-    }
+    await run();
   }
 
   async function openCustomFunctionsNote() {
@@ -1863,78 +1362,23 @@
     appState.showingContextMenu = true;
   }
 
-  function commandNameOverride(id: number, name?: string): string {
-    if (id === kCmdToggleSpellChecking) {
-      return (isSpellChecking ? "Disable" : "Enable") + " spell checking";
-    }
-    let n = len(commandNameOverrides);
-    for (let i = 0; i < n; i += 2) {
-      if (id == commandNameOverrides[i]) {
-        return commandNameOverrides[i + 1] as string;
+  function commandPaletteCommands(): Command[] {
+    const { menu, paletteOnly } = buildMenus();
+    const commands: Command[] = [];
+
+    function collect(items: MenuDef) {
+      for (const item of items) {
+        if ("items" in item && item.items) {
+          collect(item.items);
+        } else if ("run" in item && !item.status && item.paletteLabel !== false) {
+          commands.push({ ...item, label: item.paletteLabel ?? item.label });
+        }
       }
     }
-    if (id >= kCmdBlockFirst && id <= kCmdBlockLast) {
-      return "Block: " + name;
-    }
-    if (id === kCmdNoteToggleStarred) {
-      return toggleFavoriteLabel("current note ");
-    }
-    if (id === kCmdNoteToggleDailyEntry) {
-      return "Note: " + dailyEntryLabel().toLowerCase();
-    }
-    return name || "";
-  }
 
-  function buildCommandsDef(): Command[] {
-    let a: Command[] = [];
-    function addMenuItems(items: Command[]) {
-      for (let mi of items) {
-        // console.log(mi);
-        let name = mi[0];
-        let idOrSubMenu = mi[1];
-        if (Array.isArray(idOrSubMenu)) {
-          addMenuItems(idOrSubMenu);
-          continue;
-        }
-        let id = idOrSubMenu;
-        if (id <= 0) {
-          // separator and static items
-          continue;
-        }
-        if (id === kCmdCommandPalette) {
-          continue;
-        }
-        const miStatus = menuItemStatus(mi);
-        if (miStatus != kMenuStatusNormal) {
-          // filter out disabled and removed
-          continue;
-        }
-        name = commandNameOverride(id, name);
-        let el: Command = [name, id];
-        a.push(el);
-      }
-    }
-    let mdef = buildMenuDef();
-    addMenuItems(mdef);
-    return a;
-  }
-
-  let commandsDef: Command[] = $state([]);
-
-  function buildCommandPaletteDef() {
-    commandsDef = buildCommandsDef();
-    for (let mi of commandPaletteAdditions) {
-      let status = menuItemStatus(mi);
-      if (status != kMenuStatusNormal) {
-        continue;
-      }
-      commandsDef.push(mi);
-    }
-    // console.log("commandPaletteAdditions:", commandPaletteAdditions);
-    if (editorComp) {
-      let name = commandNameOverride(kCmdToggleSpellChecking);
-      commandsDef.push([name, kCmdToggleSpellChecking]);
-    }
+    collect(menu);
+    collect(paletteOnly);
+    return commands;
   }
 
   async function closeTab(tab: string) {
@@ -1976,7 +1420,6 @@
   }
 
   function openCommandPalette() {
-    buildCommandPaletteDef();
     appState.showingCommandPalette = true;
   }
 
@@ -1989,14 +1432,7 @@
   }
 
   function getEditorView(): EditorView {
-    if (!editorComp) {
-      // TODO: change result type to EditorView | undefined but it'll
-      // require fixing a lot of callers
-      // @ts-ignore
-      return;
-    }
-    let view = editorComp.getEditorView();
-    return view;
+    return getEditor().view;
   }
 
   function formatCurrentBlock() {
@@ -2013,6 +1449,7 @@
     let name = noteName!;
     let on = !noteHasDailyEntry(name);
     await setNoteDailyEntry(name, on);
+    if (noteName !== name || !editorComp) return;
     let editor = getEditor();
     if (on) {
       autoCreateDayInJournal(editor);
@@ -2022,7 +1459,7 @@
 
   // returns false if the response couldn't be inserted
   function insertAskAIResponse(s: string): boolean {
-    let view = getEditorView();
+    const view = editorComp?.getEditorView();
     if (!view || isReadOnly(view)) {
       return false;
     }
@@ -2030,45 +1467,25 @@
     return insertAfterActiveBlock(view, text);
   }
 
-  // runs the content of the active block with evaluate() and inserts the output
-  // as a new block after it
-  async function runActiveBlock(
-    editor: MultiBlockEditor,
-    evaluate: (token: string, content: string) => Promise<CapturingEval>,
-  ): Promise<boolean> {
+  export async function runBlockContent(editor: MultiBlockEditor, argument?: string): Promise<boolean> {
     const { state } = editor.view;
     const block = getEditableActiveBlock(state);
-    if (!block || !blockLanguageSupportsRun(block.language)) {
-      return false;
-    }
+    if (!block) return false;
+
+    const runner = getBlockRunner(block.language);
+    const runWithArgument = runner?.runWithArgument;
+    const evaluate = argument === undefined ? runner?.run : runWithArgument && ((code: string) => runWithArgument(code, argument));
+    if (!evaluate) return false;
+
     const content = blockContentText(state, block);
-    let res = await withRun(editor, async (run) => {
+    const result = await withRun(editor, async (run) => {
       showModalMessageHTML("running code", 300, "run");
-      let res = await evaluate(block.language, content);
-      let output = evalResultToString(res) || "executed code returned empty output";
+      const result = await evaluate(content);
+      const output = evalResultToString(result) || "executed code returned empty output";
       await insertRunOutputBlock(run, output);
       return true;
     });
-    return !!res;
-  }
-
-  export async function runBlockContent(editor: MultiBlockEditor): Promise<boolean> {
-    return runActiveBlock(editor, (token, content) => {
-      return token === "golang" ? runGo(content) : runJS(content);
-    });
-  }
-
-  export async function runBlockContentWithArg(editor: MultiBlockEditor, arg: string): Promise<boolean> {
-    return runActiveBlock(editor, async (token, content) => {
-      if (token === "javascript") {
-        return runJSWithArg(content, arg);
-      }
-      return {
-        output: "",
-        consoleLogs: [],
-        exception: `Error: unspported language '${token}'`,
-      };
-    });
+    return !!result;
   }
 
   function runCurrentBlock() {
@@ -2083,7 +1500,7 @@
     let state = editor.view.state;
     let blockArg = getBlockN(state, n);
     let arg = blockContentText(state, blockArg);
-    runAndFocus(editor, () => runBlockContentWithArg(editor, arg), "runBlockWithBlock");
+    runAndFocus(editor, () => runBlockContent(editor, arg), "runBlockWithBlock");
   }
 
   // starts run() (running code of the current block), focuses the editor and logs logOp
@@ -2093,25 +1510,27 @@
     logNoteOp(logOp);
   }
 
-  function currentBlockSupportsRun(state: EditorState): boolean {
-    return blockLanguageSupportsRun(getActiveNoteBlock(state)!.language);
+  function canRunBlockWithArgument(state: EditorState): boolean {
+    const block = getEditableActiveBlock(state);
+    return !!block && !!getBlockRunner(block.language)?.runWithArgument;
   }
 
   function runCurrentBlockWithAnotherBlock() {
-    let view = getEditorView();
-    if (!currentBlockSupportsRun(view.state)) {
-      return;
+    if (canRunBlockWithArgument(getEditorView().state)) {
+      openBlockSelector(runBlockWithAnotherBlock);
     }
-    openBlockSelector(runBlockWithAnotherBlock);
   }
 
   async function runCurrentBlockWithClipboard() {
-    let editor = getEditor();
-    if (!currentBlockSupportsRun(editor.view.state)) {
-      return;
+    const editor = getEditor();
+    const { state } = editor.view;
+    const { contentGen } = editor;
+    if (!canRunBlockWithArgument(state)) return;
+
+    const arg = await getClipboardText();
+    if (editorComp?.getEditor() === editor && editor.contentGen === contentGen && editor.view.state === state) {
+      runAndFocus(editor, () => runBlockContent(editor, arg), "runBlockWithClipboard");
     }
-    let arg = await getClipboardText();
-    runAndFocus(editor, () => runBlockContentWithArg(editor, arg), "runBlockWithClipboard");
   }
 
   // if have a selection, run function with selection
@@ -2241,7 +1660,7 @@
 
   // positions past the end (e.g. the note changed since pos was found) are ignored
   function setCursorPos(pos: number) {
-    let view = getEditorView();
+    const view = editorComp?.getEditorView();
     if (view && pos <= view.state.doc.length) {
       getEditor().setCursorPosition(pos);
     }
@@ -2259,20 +1678,22 @@
       return;
     }
     // name can be new or existing note
-    let state = getEditorView().state;
-    let block = getActiveNoteBlock(state)!;
-    let delim = state.sliceDoc(block.from, block.contentFrom);
-    let content = blockContentText(state, block);
+    const editor = getEditor();
+    const { view, contentGen } = editor;
+    const { state } = view;
+    const block = getEditableActiveBlock(state);
+    if (!block) return;
     try {
-      await appendToNote(name, delim + content);
+      await appendToNote(name, state.sliceDoc(block.from, block.to));
     } catch (e) {
       // e.g. invalid name or a system note: the block stays where it is
       showError(`${e}`);
       return;
     }
-    let view = getEditorView();
-    let ednaEditor = getEditor();
-    deleteBlock(ednaEditor)(view);
+    if (editorComp?.getEditor() !== editor || editor.contentGen !== contentGen || view.state.doc !== state.doc || !deleteBlock(view, block)) {
+      showWarning("Copied the block. The original could not be removed because the source note changed.");
+      return;
+    }
     view.focus();
   }
 
@@ -2334,7 +1755,7 @@
     if (!showingMarkdownPreview) {
       return;
     }
-    let view = editorComp ? getEditorView() : undefined;
+    const view = editorComp?.getEditorView();
     let block = view ? getActiveNoteBlock(view.state) : undefined;
     previewMarkdown = block?.language === "markdown" ? view!.state.sliceDoc(block.contentFrom, block.to) : null;
   }
@@ -2353,7 +1774,7 @@
 
   function autoCreateDayInJournal(editor: MultiBlockEditor) {
     // create block for a current day if doesn't exist
-    let s = blockHdrMarkdown + "# " + formatDateYYYYMMDDDay();
+    const s = blockHdrMarkdown + "# " + formatDateYYYYMMDDDay();
     let content = editor.getContent();
     if (content.includes(s)) {
       return;
@@ -2381,10 +1802,7 @@
     settings.currentTab = name;
     updateMarkdownPreview();
     if (noteHasDailyEntry(name) && !readOnly) {
-      // doesn't work without delay
-      setTimeout(() => autoCreateDayInJournal(editor), 100);
-      // console.log("journal, so going to next block");
-      // editor.gotoNextBlock();
+      autoCreateDayInJournal(editor);
     }
     settingsAddTab(settings, name);
     updateDocSize();
@@ -2431,7 +1849,6 @@
       {closeTab}
       {openNoteSelector}
       {openNoteSelectorInNewTab}
-      {menuItemStatus}
       {executeCommand}
       {buildMenuDef}
     />
@@ -2458,7 +1875,7 @@
 </div>
 
 {#if !settings.alwaysShowTopNav}
-  <TopNav openNote={onOpenNote} {closeTab} {openNoteSelector} {openNoteSelectorInNewTab} {menuItemStatus} {executeCommand} {buildMenuDef} />
+  <TopNav openNote={onOpenNote} {closeTab} {openNoteSelector} {openNoteSelectorInNewTab} {executeCommand} {buildMenuDef} />
 {/if}
 {#if !isTabHome(settings.currentTab)}
   <StatusBar
@@ -2567,13 +1984,13 @@
 
 {#if appState.showingCommandPalette}
   <Overlay onclose={closeDialogs} blur={true}>
-    <CommandPalette {commandsDef} {executeCommand} {switchToNoteSelector} />
+    <CommandPalette commandsDef={commandPaletteCommands()} {executeCommand} {switchToNoteSelector} />
   </Overlay>
 {/if}
 
 {#if appState.showingContextMenu}
   <Overlay onclose={closeDialogs}>
-    <Menu {menuItemStatus} {executeCommand} menuDef={contextMenuDef} pos={contextMenuPos} />
+    <Menu {executeCommand} menuDef={contextMenuDef} pos={contextMenuPos} />
   </Overlay>
 {/if}
 

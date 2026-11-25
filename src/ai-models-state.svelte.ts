@@ -1,14 +1,4 @@
-import {
-  aiProviders,
-  loadModels,
-  modelKey,
-  parseModelKey,
-  pickClosestModel,
-  type AiKeys,
-  type AiModel,
-  type LoadModelsOptions,
-  type ProviderModelsResult,
-} from "./ai-models";
+import { loadModels, modelKey, parseModelKey, pickClosestModel, type AiModel } from "./ai-models";
 import type { Settings } from "./settings.svelte";
 import { assignIfChanged, pushIfNotExists } from "./util";
 
@@ -22,39 +12,49 @@ class AiModelsState {
 
 export const aiModelsState = new AiModelsState();
 
-function keysFromSettings(settings: Settings): AiKeys {
-  let keys: AiKeys = {};
-  for (let p of aiProviders) {
-    keys[p.keySetting] = settings[p.keySetting];
-  }
-  return keys;
-}
-
-// the latest load wins: a load for older keys must not overwrite a newer one
-let loadGen = 0;
+let cancelModelLoad: (() => void) | undefined;
 
 /**
- * Loads lists of models (from the cache if not older than a day) for providers
- * with a valid looking API key in settings, then validates the AI model
- * settings against them.
+ * Debounces typing and pasting API keys. Cancellation covers the timer, any
+ * requests it started, and the resulting cache and settings updates.
  */
-export async function refreshAiModels(settings: Settings, opts: LoadModelsOptions = {}): Promise<void> {
-  let gen = ++loadGen;
-  aiModelsState.loading = true;
-  let results: ProviderModelsResult[];
-  try {
-    results = await loadModels(keysFromSettings(settings), opts);
-  } finally {
-    if (gen === loadGen) {
+export function scheduleAiModelRefresh(settings: Settings): () => void {
+  cancelModelLoad?.();
+  const controller = new AbortController();
+  const { signal } = controller;
+  const timer = setTimeout(async () => {
+    aiModelsState.loading = true;
+    try {
+      const results = await loadModels(settings, { signal });
+      signal.throwIfAborted();
+      aiModelsState.models = results.flatMap((r) => r.models);
+      aiModelsState.errors = results.flatMap((r) => (r.error ? [r.error] : []));
+      validateAiModelSettings(settings, aiModelsState.models);
+    } catch (error) {
+      if (!signal.aborted) {
+        console.error("Failed to load AI models", error);
+        aiModelsState.errors = [String(error)];
+      }
+    } finally {
+      finish();
+    }
+  }, 300);
+
+  function finish() {
+    if (cancelModelLoad === cancel) {
+      cancelModelLoad = undefined;
       aiModelsState.loading = false;
     }
   }
-  if (gen !== loadGen) {
-    return;
+
+  function cancel() {
+    clearTimeout(timer);
+    controller.abort();
+    finish();
   }
-  aiModelsState.models = results.flatMap((r) => r.models);
-  aiModelsState.errors = results.filter((r) => r.error).map((r) => r.error!);
-  validateAiModelSettings(settings, aiModelsState.models);
+
+  cancelModelLoad = cancel;
+  return cancel;
 }
 
 /**
@@ -63,7 +63,7 @@ export async function refreshAiModels(settings: Settings, opts: LoadModelsOption
  * version of Edna (no provider) become the key of the matching model.
  * Does nothing without models: lists might not be loaded (e.g. offline).
  */
-export function validateAiModelSettings(settings: Settings, models: AiModel[]) {
+function validateAiModelSettings(settings: Settings, models: AiModel[]) {
   if (models.length === 0) {
     return;
   }

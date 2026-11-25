@@ -27,6 +27,17 @@ describe("low impact fixes", () => {
     const m = JSON.parse(await fsReadTextFile(dh, kMetadataName));
     expect(m.notes[0].name).toBe("n9");
   });
+
+  it("metadata writes persist the state queued at the call site", async () => {
+    const { dh } = await setupFSStorage();
+    const metadata = { ver: 1, notes: [{ name: "queued" }], functions: [] };
+    const write = saveNotesMetadata(metadata);
+    metadata.notes[0]!.name = "changed";
+    await write;
+
+    const stored = JSON.parse(await fsReadTextFile(dh, kMetadataName));
+    expect(stored.notes[0].name).toBe("queued");
+  });
 });
 
 describe("metadata write failure", () => {

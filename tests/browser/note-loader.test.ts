@@ -118,6 +118,22 @@ describe("NoteLoader", () => {
     await expect.poll(() => shown).toEqual(["C"]);
   });
 
+  it("reports the visible note if the next load fails before the frame", async () => {
+    const { loader, pending, editor } = setup();
+    const shown: string[] = [];
+    const pB = loader.load("B", true, () => shown.push("B"));
+    pending.get("B")!.resolve(doc("B"));
+    expect(await pB).toBe("shown");
+
+    const pC = loader.load("C", true, () => shown.push("C"));
+    pending.get("C")!.reject(new Error("read error"));
+    expect(await pC).toBe("failed");
+
+    await expect.poll(() => shown).toEqual(["B"]);
+    expect(loader.current).toBe("B");
+    expect(editor.getContent()).toBe(doc("B"));
+  });
+
   it("latest requested note wins even if an earlier request starts loading later", async () => {
     const { loader, pending, editor } = setup();
     const reqB = loader.newRequest();

@@ -13,7 +13,6 @@ import { isStructuralChange } from "./annotation";
 import { focusOnGutterMouseDown, groupToggleTarget } from "./cmutils";
 import { getBlocks, getNoteBlockFromPos, getNoteBlocksFromRangeSet, type Block } from "./block/block";
 import { contentFoldRange } from "./constants";
-import type { MultiBlockEditor } from "./editor";
 import type { SimpleRange } from "./types";
 
 function foldRange(state: EditorState, block: Block): SimpleRange | null {
@@ -168,16 +167,9 @@ function updateFolds(view: EditorView, blocks: Block[], action: "fold" | "unfold
   if (effects.length) view.dispatch({ effects });
 }
 
-export const toggleBlockFold = (_editor: MultiBlockEditor) => (view: EditorView) =>
-  updateFolds(view, selectedBlocks(view), "toggle");
-export const foldBlock = (_editor: MultiBlockEditor) => (view: EditorView) =>
-  updateFolds(view, selectedBlocks(view), "fold");
-export const unfoldBlock = (_editor: MultiBlockEditor) => (view: EditorView) =>
-  updateFolds(view, selectedBlocks(view), "unfold");
-export const foldAllBlocks = (_editor: MultiBlockEditor) => (view: EditorView) =>
-  updateFolds(view, getBlocks(view.state), "fold");
-export const unfoldAlBlocks = (_editor: MultiBlockEditor) => (view: EditorView) =>
-  updateFolds(view, getBlocks(view.state), "unfold");
-export const unfoldEverything = (_editor: MultiBlockEditor) => (view: EditorView) => {
-  unfoldAll(view);
-};
+export const toggleBlockFold = (view: EditorView) => updateFolds(view, selectedBlocks(view), "toggle");
+export const foldBlock = (view: EditorView) => updateFolds(view, selectedBlocks(view), "fold");
+export const unfoldBlock = (view: EditorView) => updateFolds(view, selectedBlocks(view), "unfold");
+export const foldAllBlocks = (view: EditorView) => updateFolds(view, getBlocks(view.state), "fold");
+export const unfoldAllBlocks = (view: EditorView) => updateFolds(view, getBlocks(view.state), "unfold");
+export const unfoldEverything = unfoldAll;

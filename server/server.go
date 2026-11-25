@@ -2,7 +2,7 @@ package server
 
 import (
 	"bytes"
-	"embed"
+	"context"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -21,10 +21,6 @@ import (
 	hutil "github.com/kjk/common/httputil"
 	"github.com/kjk/common/log"
 	"github.com/kjk/common/u"
-)
-
-var (
-	DistFS embed.FS
 )
 
 var (
@@ -117,7 +113,7 @@ func serveChromeDevToolsJSON(w http.ResponseWriter, r *http.Request) {
 	serveJSONData(w, []byte(s))
 }
 
-func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.ReverseProxy) *http.Server {
+func makeHTTPServer(port int, serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.ReverseProxy) *http.Server {
 	panicIf(serveOpts == nil, "must provide serveOpts")
 
 	mainHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -189,26 +185,13 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 		http.NotFound(w, r)
 	}
 
-	handlerWithMetrics := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		m := httpsnoop.CaptureMetrics(http.HandlerFunc(mainHandler), w, r)
-		defer func() {
-			if p := recover(); p != nil {
-				logErrorf("handlerWithMetrics: panicked with with %v\n", p)
-				errStr := fmt.Sprintf("Error: %v", p)
-				http.Error(w, errStr, http.StatusInternalServerError)
-				return
-			}
-			log.HTTPRequest(r, m.Code, m.Written, m.Duration)
-		}()
-	})
-
 	httpSrv := &http.Server{
 		ReadTimeout:  120 * time.Second,
 		WriteTimeout: 120 * time.Second,
 		IdleTimeout:  120 * time.Second,
-		Handler:      http.HandlerFunc(handlerWithMetrics),
+		Handler:      withRequestMetrics(http.HandlerFunc(mainHandler)),
 	}
-	httpAddr := fmt.Sprintf(":%d", deployConfig.HTTPPort)
+	httpAddr := fmt.Sprintf(":%d", port)
 	if isWinOrMac() {
 		httpAddr = "localhost" + httpAddr
 	}
@@ -216,10 +199,37 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 	return httpSrv
 }
 
-func serverListenAndWait(httpSrv *http.Server) func() {
-	logf("serverListenAndWait: listening on '%s', isDevOrLocal: %v\n", httpSrv.Addr, isDevOrLocal())
+func withRequestMetrics(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var m httpsnoop.Metrics
+		m.CaptureMetrics(w, func(w http.ResponseWriter) {
+			defer func() {
+				if p := recover(); p != nil {
+					// ReverseProxy uses this to abort a partially written response.
+					if p == http.ErrAbortHandler {
+						panic(p)
+					}
+					logErrorf("HTTP handler panicked: %v\n", p)
+					if m.Code != 0 || m.Written != 0 {
+						panic(http.ErrAbortHandler)
+					}
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				}
+			}()
+			next.ServeHTTP(w, r)
+		})
+		status := m.Code
+		if status == 0 {
+			status = http.StatusOK
+		}
+		log.HTTPRequest(r, status, m.Written, m.Duration)
+	})
+}
 
-	chServerClosed := make(chan bool, 1)
+func serverListenAndWait(httpSrv *http.Server) func() {
+	logf("serverListenAndWait: listening on '%s'\n", httpSrv.Addr)
+
+	chServerClosed := make(chan struct{})
 	go func() {
 		err := httpSrv.ListenAndServe()
 		// mute error caused by Shutdown()
@@ -228,39 +238,36 @@ func serverListenAndWait(httpSrv *http.Server) func() {
 		} else {
 			logf("httpSrv.ListenAndServe error '%s'\n", err)
 		}
-		chServerClosed <- true
+		close(chServerClosed)
 	}()
 
 	return func() {
-		sctx, stop := signal.NotifyContext(ctx(), os.Interrupt /*SIGINT*/, syscall.SIGTERM)
+		sctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 
 		select {
 		case <-sctx.Done():
 			logf("Got Ctrl+C stop signal. Shutting down http server\n")
-			_ = httpSrv.Shutdown(ctx())
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := httpSrv.Shutdown(shutdownCtx); err != nil {
+				logf("HTTP server shutdown: %v\n", err)
+				_ = httpSrv.Close()
+			}
 		case <-chServerClosed:
 			logf("server stopped")
 			return
 		}
-
-		// got ctrl-c signal, wait for server to close
-		select {
-		case <-chServerClosed:
-			// do nothing
-		case <-time.After(time.Second * 5):
-			// timeout
-			logf("timed out trying to shut down http server")
-		}
+		<-chServerClosed
 	}
 }
 
-func openBrowserForServerMust(httpSrv *http.Server) {
+func openBrowserForServerMust(httpSrv *http.Server, devURL string) {
 	// wait for go server
 	must(u.WaitForServerReady("http://" + httpSrv.Addr + "/ping.txt"))
-	if flgRunDev {
+	if devURL != "" {
 		// wait for vite dev server
-		must(u.WaitForServerReady(proxyURLStr + "/"))
+		must(u.WaitForServerReady(devURL + "/"))
 	}
 	u.OpenBrowser("http://" + httpSrv.Addr)
 }
@@ -276,44 +283,39 @@ func mkServeFileOptions(fsys fs.FS) *hutil.ServeFileOptions {
 	}
 }
 
-var (
-	proxyURLStr = "http://localhost:3035"
-)
-
-func runServerDev() {
-	// must be same as vite.config.js
+func runServerDev(port int) {
+	const vitePort = "3035"
+	proxyURL := &url.URL{Scheme: "http", Host: "localhost:" + vitePort}
 
 	logf("runServerDev\n")
 	u.RunLoggedInDir(".", "bun", "install")
-	closeDev, err := startLoggedInDir(".", "bun", "run", "dev")
+	closeDev, err := startLoggedInDir(".", "bun", "run", "dev", "--port", vitePort, "--strictPort")
 	must(err)
 	defer closeDev()
 
-	proxyURL, err := url.Parse(proxyURLStr)
-	must(err)
 	proxyHandler := httputil.NewSingleHostReverseProxy(proxyURL)
 
 	fsys := os.DirFS(filepath.Join("src", "public"))
 	serveOpts := mkServeFileOptions(fsys)
 	serveOpts.DirPrefix = "./"
-	httpSrv := makeHTTPServer(serveOpts, proxyHandler)
-	runServerAndWait(httpSrv)
+	httpSrv := makeHTTPServer(port, serveOpts, proxyHandler)
+	runServerAndWait(httpSrv, proxyURL.String())
 }
 
 // runServerAndWait serves until the server stops; when running locally
 // (Windows, Mac) it also opens the app in a browser
-func runServerAndWait(httpSrv *http.Server) {
+func runServerAndWait(httpSrv *http.Server, devURL string) {
 	waitFn := serverListenAndWait(httpSrv)
 	if isWinOrMac() {
-		openBrowserForServerMust(httpSrv)
+		openBrowserForServerMust(httpSrv, devURL)
 	}
 	waitFn()
 }
 
-func runServerProd() {
-	panicIf(u.CountFilesInFS(DistFS) < 5)
+func runServerProd(port int, distFS fs.ReadDirFS) {
+	panicIf(u.CountFilesInFS(distFS) < 5)
 
-	serveOpts := mkServeFileOptions(DistFS)
-	httpSrv := makeHTTPServer(serveOpts, nil)
-	runServerAndWait(httpSrv)
+	serveOpts := mkServeFileOptions(distFS)
+	httpSrv := makeHTTPServer(port, serveOpts, nil)
+	runServerAndWait(httpSrv, "")
 }

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -18,10 +17,6 @@ var (
 	logf       = log.Logf
 	logErrorf  = log.Errorf
 )
-
-func ctx() context.Context {
-	return context.Background()
-}
 
 // startLoggedInDir starts a command in dir, with output going to our
 // stdout / stderr (like u.RunLoggedInDir but doesn't wait). Returns a

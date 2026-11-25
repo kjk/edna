@@ -5,7 +5,7 @@
 
 import { parseMixed } from "@lezer/common";
 import { NodeID } from "./node-types";
-import { getLanguage, langGetParser } from "../languages";
+import { getLanguage } from "../languages";
 
 /**
  * Configure nested language parsing.
@@ -47,8 +47,7 @@ export function configureNesting() {
     const langName = input.read(langNode.from, langNode.to);
 
     // Look up the parser for this language
-    const language = getLanguage(langName);
-    const parser = language ? langGetParser(language) : null;
+    const parser = getLanguage(langName)?.parser;
     if (!parser) {
       return null;
     }

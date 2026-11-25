@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { getBlocksFromString } from "./editor/block/block-parsing";
+import { getBlocksFromString } from "./block-format";
 import { fixUpNoteContent } from "./note-content";
 
 const D = "∞∞∞";

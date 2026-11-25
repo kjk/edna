@@ -3,10 +3,10 @@
   import { splitCommandLabel } from "../keys";
   import { findMatchingItems, handleListKeydown, hilightText, len, makeHilightRegExp, trimPrefix } from "../util";
   import ListBox from "./ListBox.svelte";
-  import { getCommandArg, type Command } from "./Menu.svelte";
+  import { type Command } from "./Menu.svelte";
 
   interface Props {
-    executeCommand: (cmdId: number, arg: any) => void;
+    executeCommand: (run: Command["run"]) => void;
     switchToNoteSelector: () => void;
     commandsDef: Command[];
   }
@@ -14,48 +14,19 @@
 
   interface Item {
     key: number;
-    cmdArg: any;
+    run: Command["run"];
     name: string;
     nameLC: string;
     shortcut: string;
   }
 
   function buildCommands(): Item[] {
-    // console.log("rebuildCommands:", commands);
-    let res: Item[] = [];
-    // the list is keyed by command id: ids must be unique (U25). A duplicate
-    // (e.g. a command in a menu and in commandPaletteAdditions) is dropped
-    let seen = new Map<number, string>();
-    for (let i = 0; i < len(commandsDef); i++) {
-      let cmd = commandsDef[i];
-      if (!cmd) {
-        continue;
-      }
-      let s = cmd[0];
-      let id = cmd[1] as number;
-      if (seen.has(id)) {
-        console.error(`CommandPalette: duplicate command id ${id}: '${s}' and '${seen.get(id)}'`);
-        continue;
-      }
-      seen.set(id, s);
-      let { name, shortcut } = splitCommandLabel(s);
-      // console.log(`i: ${i}, name: ${name} id: ${id}`);
-      let item: Item = {
-        key: id,
-        cmdArg: getCommandArg(cmd),
-        name: name,
-        nameLC: name.toLowerCase(),
-        shortcut: shortcut,
-      };
-      res.push(item);
-    }
-    // -1 if a < b
-    // 0 if a = b
-    // 1 if a > b
-    res.sort((a, b) => {
-      return a.name.localeCompare(b.name);
-    });
-    return res;
+    return commandsDef
+      .map((command, key) => {
+        const { name, shortcut } = splitCommandLabel(command.label);
+        return { key, run: command.run, name, nameLC: name.toLowerCase(), shortcut };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
   let items = $state(buildCommands());
   let cmdCountMsg = `${len(items)} commands`;
@@ -79,7 +50,7 @@
 
   function emitExecuteCommand(item: Item) {
     // console.log("emitOpenNote", item);
-    executeCommand(item.key, item.cmdArg);
+    executeCommand(item.run);
   }
 
   let listboxComp: ListBox;

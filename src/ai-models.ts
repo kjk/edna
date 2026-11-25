@@ -12,6 +12,8 @@ export interface AiProvider {
   keySetting: "openAIKey" | "anthropicKey" | "xAIKey" | "openRouterKey";
   // OpenAI-compatible chat completions endpoint
   chatURL: string;
+  maxTokensField?: "max_completion_tokens";
+  chatHeaders?: Record<string, string>;
   helpURL: string;
   looksValidKey: (key: string) => boolean;
 }
@@ -23,6 +25,7 @@ export const aiProviders: AiProvider[] = [
     name: "OpenAI",
     keySetting: "openAIKey",
     chatURL: "https://api.openai.com/v1/chat/completions",
+    maxTokensField: "max_completion_tokens",
     helpURL: "/help#getting-openai-api-key",
     // Anthropic / OpenRouter keys also start with "sk-"
     looksValidKey: (k) => k.startsWith("sk-") && !/^sk-(ant|or)-/.test(k) && k.length > 40,
@@ -32,6 +35,8 @@ export const aiProviders: AiProvider[] = [
     name: "Anthropic",
     keySetting: "anthropicKey",
     chatURL: "https://api.anthropic.com/v1/chat/completions",
+    // Anthropic requires this header to allow CORS requests from browsers.
+    chatHeaders: { "anthropic-dangerous-direct-browser-access": "true" },
     helpURL: "/help#getting-anthropic-api-key",
     looksValidKey: (k) => k.startsWith("sk-ant-") && k.length > 40,
   },
@@ -195,6 +200,7 @@ export interface LoadModelsOptions {
   fetchFn?: typeof fetch;
   storage?: Storage;
   now?: number;
+  signal?: AbortSignal;
 }
 
 const kModelsPath = "/api/ai/models";
@@ -210,9 +216,15 @@ export function providerFromModelsURL(url: string): string | null {
   return u.pathname === kModelsPath ? u.searchParams.get("provider") : null;
 }
 
-async function fetchProviderModels(provider: AiProvider, key: string, fetchFn: typeof fetch): Promise<AiModel[]> {
+async function fetchProviderModels(
+  provider: AiProvider,
+  key: string,
+  fetchFn: typeof fetch,
+  signal: AbortSignal | undefined,
+): Promise<AiModel[]> {
   let rsp = await fetchFn(modelsURL(provider.id), {
     headers: { "X-Api-Key": key },
+    signal,
   });
   if (rsp.status === 401 || rsp.status === 403) {
     let e = new Error(`${provider.name} API key is not valid`);
@@ -234,6 +246,8 @@ export async function loadModels(keys: AiKeys, opts: LoadModelsOptions = {}): Pr
   let fetchFn = opts.fetchFn ?? fetch.bind(window);
   let storage = opts.storage ?? localStorage;
   let now = opts.now ?? Date.now();
+  let signal = opts.signal;
+  signal?.throwIfAborted();
   let cache = loadCache(storage);
   let results = await Promise.all(
     aiProviders.map(async (provider): Promise<ProviderModelsResult | null> => {
@@ -248,10 +262,11 @@ export async function loadModels(keys: AiKeys, opts: LoadModelsOptions = {}): Pr
         return { provider: provider.id, models: cached!.models };
       }
       try {
-        let models = await fetchProviderModels(provider, key, fetchFn);
+        let models = await fetchProviderModels(provider, key, fetchFn, signal);
         cache[provider.id] = { fetchedAt: now, keyHash, models };
         return { provider: provider.id, models };
       } catch (e: any) {
+        signal?.throwIfAborted();
         console.error(`loadModels: ${provider.id}:`, e);
         if (e?.invalidKey) {
           delete cache[provider.id];
@@ -261,6 +276,7 @@ export async function loadModels(keys: AiKeys, opts: LoadModelsOptions = {}): Pr
       }
     }),
   );
+  signal?.throwIfAborted();
   saveCache(storage, cache);
   return results.filter((r) => r !== null);
 }

@@ -31,7 +31,7 @@ function getError(res: GoEvalResult): string {
   return "";
 }
 
-export async function runGo(code: string): Promise<CapturingEval> {
+async function runGo(code: string): Promise<CapturingEval> {
   const uri = "/api/goplay/compile";
   let res: CapturingEval = {
     output: "",
@@ -140,13 +140,23 @@ export function evalResultToString(res: CapturingEval): string {
   return resTxt;
 }
 
-export async function runJS(code: string): Promise<CapturingEval> {
-  return await evalWithConsoleCapture(code);
-}
-
 export async function runJSWithArg(code: string, arg: string): Promise<CapturingEval> {
   let qarg = JSON.stringify(arg);
   code = code + "\n" + `main(${qarg})`;
   // console.log("code:", code);
   return evalWithConsoleCapture(code);
+}
+
+interface BlockRunner {
+  run: (code: string) => Promise<CapturingEval>;
+  runWithArgument?: (code: string, arg: string) => Promise<CapturingEval>;
+}
+
+const blockRunners = new Map<string, BlockRunner>([
+  ["javascript", { run: evalWithConsoleCapture, runWithArgument: runJSWithArg }],
+  ["golang", { run: runGo }],
+]);
+
+export function getBlockRunner(language: string): BlockRunner | undefined {
+  return blockRunners.get(language);
 }

@@ -41,6 +41,31 @@ it("Emacs mark extends movement and transpose swaps neighboring characters", asy
   await press("g", "Control");
 });
 
+it("keeps the Emacs mark in the editor where it was set", async () => {
+  te = createEditor("\n∞∞∞text\nabc");
+  const other = createEditor("\n∞∞∞text\ndef");
+  try {
+    te.editor.setKeymap("emacs", "alt");
+    other.editor.setKeymap("emacs", "alt");
+    await userEvent.click(editorLines(te.container)[0]);
+    await press("a", "Control");
+    await press("Space", "Control");
+
+    await userEvent.click(editorLines(other.container)[0]);
+    await press("a", "Control");
+    await press("f", "Control");
+    await userEvent.keyboard("X");
+    expect(visibleBlocks(other.container)).toEqual(["dXef"]);
+
+    te.editor.focus();
+    await press("f", "Control");
+    await userEvent.keyboard("Y");
+    expect(visibleBlocks(te.container)).toEqual(["Ybc"]);
+  } finally {
+    cleanup(other);
+  }
+});
+
 it("marks complete web links and updates the link as text is edited", async () => {
   te = createEditor("\n∞∞∞text\n(https://example.com/test) plain");
   const link = () => te.container.querySelector<HTMLElement>(".edna-link");

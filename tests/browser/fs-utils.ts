@@ -1,5 +1,5 @@
 import { setGlobalFuncs } from "../../src/globals";
-import { loadNotesMetadata, upgradeMetadata } from "../../src/metadata";
+import { loadNotesMetadata } from "../../src/metadata";
 import { loadNoteNames, setStorageFS } from "../../src/notes";
 import { getSettings } from "../../src/settings.svelte";
 
@@ -21,7 +21,6 @@ export async function setupFSStorage(): Promise<{ dh: FileSystemDirectoryHandle;
   const ui: FakeUI = { passwords: [], prompts: [] };
   setGlobalFuncs({
     focusEditor: () => {},
-    updateAfterNoteStateChange: () => {},
     requestFileWritePermission: async () => true,
     getPasswordFromUser: async (msg: string) => {
       ui.prompts.push(msg);
@@ -53,7 +52,6 @@ export async function useStorage(dh: FileSystemDirectoryHandle | undefined) {
 
 // loads metadata and note names of the current storage, as the app does when booting
 export async function loadStorageState() {
-  await upgradeMetadata();
   await loadNotesMetadata();
   await loadNoteNames();
 }

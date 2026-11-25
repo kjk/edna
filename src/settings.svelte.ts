@@ -1,31 +1,5 @@
-import { appState } from "./appstate.svelte";
 import { kSettingsPath, kTabHome } from "./constants";
 import { arrayRemove, len, objectEqualDeep, platform, pushIfNotExists, throwIf, tryParseJSON } from "./util";
-
-const settingsKeys = [
-  "bracketClosing",
-  "showColorPreview",
-  "currentTab",
-  "tabs",
-  "emacsMetaKey",
-  "fontFamily",
-  "fontSize",
-  "keymap",
-  "showFoldGutter",
-  "showLineNumberGutter",
-  "useWideSelectors",
-  "alwaysShowTopNav",
-  "showSidebar",
-  "tabSize",
-  "indentType",
-  "theme",
-  "openAIKey",
-  "xAIKey",
-  "openRouterKey",
-  "anthropicKey",
-  "aiModelID",
-  "starredModels",
-];
 
 export interface Settings {
   bracketClosing: boolean;
@@ -78,6 +52,8 @@ export const defaultSettings: Settings = {
   aiModelID: "",
   starredModels: [],
 };
+
+const settingsKeys = Object.keys(defaultSettings) as (keyof Settings)[];
 
 export function createSettings(raw?: any): Settings {
   let s: Settings = {
@@ -153,37 +129,41 @@ function validateTabSize(tabSize: number): number {
 
 const mediaMatch = window.matchMedia("(prefers-color-scheme: dark)");
 // OS dark mode, for "system" theme
-// note: can't be in appState because appstate.svelte.ts imports this module
 let systemTheme = $state({ isDark: mediaMatch.matches });
 
+let settings = $state(createSettings());
 let lastSettingsRaw: any;
 let settingsLoaded = false;
+
+export function getCurrentSettings(): Settings {
+  return settings;
+}
 
 export function getSettings(): Settings {
   if (settingsLoaded) {
     // console.log("getSettings: already loaded");
     // logSettings(appState.settings);
-    return appState.settings;
+    return settings;
   }
   let d = localStorage.getItem(kSettingsPath) || "{}";
   // console.log("getSettings: loaded from localStorage:", d);
   // corrupt settings must not leave the app blank (U8): use defaults, keep a copy
   let settingsRaw: any = tryParseJSON(d, "settings", () => localStorage.setItem(kSettingsPath + ".corrupted", d)) ?? {};
-  let settings = createSettings(settingsRaw);
-  settings.tabSize = validateTabSize(settings.tabSize || 2);
-  settings.fontSize = validateFontSize(settings.fontSize || kDefaultFontSize);
-  settings.fontFamily = settings.fontFamily || kDefaultFontFamily;
+  let loaded = createSettings(settingsRaw);
+  loaded.tabSize = validateTabSize(loaded.tabSize || 2);
+  loaded.fontSize = validateFontSize(loaded.fontSize || kDefaultFontSize);
+  loaded.fontFamily = loaded.fontFamily || kDefaultFontFamily;
 
   // console.log("getSettings: settings:", app
-  if (!settings.currentTab) {
-    settings.currentTab = kTabHome;
+  if (!loaded.currentTab) {
+    loaded.currentTab = kTabHome;
   }
-  lastSettingsRaw = $state.snapshot(settings);
+  lastSettingsRaw = $state.snapshot(loaded);
 
-  appState.settings = settings;
+  settings = loaded;
   settingsLoaded = true;
   updateWebsiteTheme();
-  return appState.settings;
+  return settings;
 }
 
 // resolves "system" theme to "light" or "dark"
@@ -195,7 +175,7 @@ export function resolveTheme(theme: string | undefined): "light" | "dark" {
 }
 
 function updateWebsiteTheme() {
-  let theme = resolveTheme(appState.settings.theme);
+  let theme = resolveTheme(settings.theme);
   let el = document.documentElement;
   if (theme === "dark") {
     el.classList.add("dark");
@@ -215,7 +195,6 @@ function saveSettings(newSettings: Settings): boolean {
   let changed: string[] = [];
   for (let key of settingsKeys) {
     let valLast = lastSettingsRaw[key];
-    // @ts-ignore
     let valNew = settingsRaw[key];
     if (!objectEqualDeep(valNew, valLast)) {
       changed.push(key);
@@ -225,10 +204,7 @@ function saveSettings(newSettings: Settings): boolean {
     console.log("saveSettings: no changes");
     return false;
   }
-  for (let key of changed) {
-    let v = (settingsRaw as any)[key];
-    console.log(`saveSettings: ${key} changed from ${lastSettingsRaw[key]} to ${v}`);
-  }
+  console.log("saveSettings: changed keys", changed);
   // console.log("saveSettings:", s);
   localStorage.setItem(kSettingsPath, JSON.stringify(settingsRaw, null, 2));
   lastSettingsRaw = settingsRaw;
@@ -238,13 +214,13 @@ function saveSettings(newSettings: Settings): boolean {
 
 $effect.root(() => {
   $effect(() => {
-    saveSettings(appState.settings);
+    saveSettings(settings);
   });
 });
 
 // returns "light" or "dark"
 export function getActiveTheme() {
-  return resolveTheme(appState.settings.theme);
+  return resolveTheme(settings.theme);
 }
 
 export function getOverlayScrollbarOptions() {
@@ -260,7 +236,7 @@ export function getOverlayScrollbarOptions() {
 
 mediaMatch.addEventListener("change", () => {
   systemTheme.isDark = mediaMatch.matches;
-  if (appState.settings.theme === "system") {
+  if (settings.theme === "system") {
     updateWebsiteTheme();
   }
 });

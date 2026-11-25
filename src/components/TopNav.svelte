@@ -27,8 +27,7 @@
     openNoteSelector: () => void;
     openNoteSelectorInNewTab: () => void;
     buildMenuDef: () => MenuDef;
-    menuItemStatus?: (mi: Command) => number;
-    executeCommand: (cmdId: number, arg: any) => void;
+    executeCommand: (run: Command["run"]) => void;
   }
   let {
     class: klass = "",
@@ -37,7 +36,6 @@
     openNoteSelector,
     openNoteSelectorInNewTab,
     buildMenuDef,
-    menuItemStatus,
     executeCommand,
   }: Props = $props();
 
@@ -131,10 +129,10 @@
 
   let shwingMenu = $state(false);
   let noFocusEditorOnMenuOut = false;
-  function myExecuteCommand(cmdid: number) {
+  function myExecuteCommand(run: Command["run"]) {
     noFocusEditorOnMenuOut = true;
     shwingMenu = false;
-    executeCommand(cmdid, undefined);
+    executeCommand(run);
   }
 </script>
 
@@ -164,7 +162,7 @@
     {@render IconMenu()}
     {#if shwingMenu}
       {@const menuDef = buildMenuDef()}
-      <Menu {menuItemStatus} executeCommand={myExecuteCommand} {menuDef} pos={null} />
+      <Menu executeCommand={myExecuteCommand} {menuDef} pos={null} />
     {/if}
   </button>
 

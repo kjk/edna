@@ -1,9 +1,9 @@
+import { delimiterLine, kDelimiterPrefix, parseDelimiterLine } from "./block-format";
 import { blockHdrMarkdown } from "./constants";
-import { delimiterLine, kDelimiterPrefix, parseDelimiterLine } from "./editor/new-parser/node-types";
 
 // a line that looks like a delimiter but isn't valid: upper case language or
 // Heynote metadata (∞∞∞text-a;created=...)
-const reFixableDelimiterLine = /\n∞∞∞([A-Za-z]+)(-a)?(-ro)?(;[^\n]*)?(?=\n|$)/g;
+const reFixableDelimiterLine = new RegExp(`\n${kDelimiterPrefix}([A-Za-z]+)(-a)?(-ro)?(;[^\n]*)?(?=\n|$)`, "g");
 
 /**
  * Makes stored note content a valid document (docs/state-machines.md U9):

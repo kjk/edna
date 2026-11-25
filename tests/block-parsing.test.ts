@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { decode } from "@toon-format/toon";
 import { describe, expect, it } from "vitest";
-import { getBlocksFromString, type NoteBlock } from "../src/editor/block/block-parsing";
+import { getBlocksFromString, type NoteBlock } from "../src/block-format";
 
 // generated with: bun run gen:golden
 interface GoldenTestData {

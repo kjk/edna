@@ -2,6 +2,7 @@ package server
 
 import (
 	"flag"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -9,12 +10,6 @@ import (
 	"github.com/kjk/common/deploy"
 	"github.com/kjk/common/log"
 	"github.com/kjk/common/u"
-)
-
-var (
-	dataDirCached = ""
-	deployConfig  = NewDeployConfig()
-	GitCommitHash string // available in production build
 )
 
 func NewDeployConfig() *deploy.Config {
@@ -48,37 +43,15 @@ func rebuildFrontend(c *deploy.Config) {
 	u.RunLoggedInDirMust(".", "bun", "run", "build")
 }
 
-func getDataDirMust() string {
-	if dataDirCached != "" {
-		return dataDirCached
+func getLogsDirMust(projectName string, prod bool) string {
+	dir := "data"
+	if prod && u.IsLinux() {
+		dir = filepath.Join("/home/data", projectName)
 	}
-
-	dataDirCached = "data"
-	if flgRunProd && u.IsLinux() {
-		dataDirCached = "/home/data/" + deployConfig.ProjectName
-	}
-	err := os.MkdirAll(dataDirCached, 0755)
-	must(err)
-
-	return dataDirCached
-}
-
-func getLogsDirMust() string {
-	res := filepath.Join(getDataDirMust(), "logs")
+	res := filepath.Join(dir, "logs")
 	err := os.MkdirAll(res, 0755)
 	must(err)
 	return res
-}
-
-var (
-	// assets being served on-demand by vite
-	flgRunDev bool
-	// compiled assets embedded in the binary
-	flgRunProd bool
-)
-
-func isDevOrLocal() bool {
-	return flgRunDev || isWinOrMac()
 }
 
 func measureDuration() func() {
@@ -88,8 +61,10 @@ func measureDuration() func() {
 	}
 }
 
-func Main() {
+func Main(distFS fs.ReadDirFS, gitCommitHash string) {
 	var (
+		flgRunDev        bool
+		flgRunProd       bool
 		flgDeployHetzner bool
 		flgSetupAndRun   bool
 		flgGen           bool
@@ -109,10 +84,11 @@ func Main() {
 		return
 	}
 
-	if GitCommitHash != "" {
+	if gitCommitHash != "" {
 		uriBase := "https://github.com/kjk/edna/commit/"
-		logf("edna.arslexis.io, build: %s (%s)\n", GitCommitHash, uriBase+GitCommitHash)
+		logf("edna.arslexis.io, build: %s (%s)\n", gitCommitHash, uriBase+gitCommitHash)
 	}
+	deployConfig := NewDeployConfig()
 
 	// runs a deploy step and logs how long it took
 	timed := func(step func()) {
@@ -133,7 +109,7 @@ func Main() {
 	// runs the server with logging to files
 	withLog := func(runServer func()) {
 		logConfig := log.Config{
-			Dir: getLogsDirMust(),
+			Dir: getLogsDirMust(deployConfig.ProjectName, flgRunProd),
 		}
 		log.Init(&logConfig)
 		defer log.Close()
@@ -142,12 +118,12 @@ func Main() {
 	}
 
 	if flgRunDev {
-		withLog(runServerDev)
+		withLog(func() { runServerDev(deployConfig.HTTPPort) })
 		return
 	}
 
 	if flgRunProd {
-		withLog(runServerProd)
+		withLog(func() { runServerProd(deployConfig.HTTPPort, distFS) })
 		return
 	}
 

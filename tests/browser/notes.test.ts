@@ -1,7 +1,16 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { appState } from "../../src/appstate.svelte";
 import { blockHdrMarkdown, kDailyJournalNoteName } from "../../src/constants";
-import { getNoteMeta, getNotesMetadata, noteHasDailyEntry, setNoteDailyEntry, toggleNoteStarred } from "../../src/metadata";
+import { fsFileHandleReadTextFile, fsFileHandleWrite } from "../../src/fileutil";
+import {
+  getNoteMeta,
+  getNotesMetadata,
+  noteHasDailyEntry,
+  reassignNoteShortcut,
+  setNoteArchived,
+  setNoteDailyEntry,
+  toggleNoteStarred,
+} from "../../src/metadata";
 import {
   appendToNote,
   createDefaultNotes,
@@ -12,8 +21,9 @@ import {
   rememberOpenedNote,
   renameNote,
   saveNote,
+  setStorageFS,
 } from "../../src/notes";
-import { setupLocalStorage } from "./fs-utils";
+import { listFiles, setupFSStorage, setupLocalStorage, useStorage } from "./fs-utils";
 
 // note lifecycle in localStorage (docs/state-machines.md M4, issue 3)
 // runs fn with a file named name in the origin private file system, then removes it
@@ -26,6 +36,57 @@ async function withTempFile(name: string, fn: (fh: FileSystemFileHandle) => Prom
     await root.removeEntry(name);
   }
 }
+
+it.each(["browser", "directory"])("appending writes to a separately opened file with %s storage", async (storage) => {
+  const { dh } = await setupFSStorage();
+  if (storage === "browser") {
+    await useStorage(undefined);
+  }
+  const external = await dh.getDirectoryHandle("external", { create: true });
+  const file = await external.getFileHandle("outside.edna.txt", { create: true });
+  try {
+    const initial = blockHdrMarkdown + "first";
+    const appended = blockHdrMarkdown + "second";
+    await fsFileHandleWrite(file, initial);
+    expect(rememberOpenedNote(file)).toBe("outside");
+
+    await appendToNote("outside", appended);
+
+    expect(await fsFileHandleReadTextFile(file)).toBe(initial + appended);
+    expect(localStorage.getItem("note:outside")).toBeNull();
+    expect(await listFiles(dh)).not.toContain("outside.edna.txt");
+  } finally {
+    await dbDelDirHandle();
+    await dh.removeEntry("external", { recursive: true });
+  }
+});
+
+it("retains both blocks when appends to a file overlap", async () => {
+  await setupFSStorage();
+  const initial = blockHdrMarkdown + "original";
+  const first = blockHdrMarkdown + "first";
+  const second = blockHdrMarkdown + "second";
+  await createNoteWithName("appended", initial);
+  await Promise.all([appendToNote("appended", first), appendToNote("appended", second)]);
+  const saved = await loadNote("appended");
+  expect([initial + first + second, initial + second + first]).toContain(saved);
+});
+
+it("checks for conflicts in the workspace where the save was queued", async () => {
+  const { dh } = await setupFSStorage();
+  const base = blockHdrMarkdown + "directory version";
+  await createNoteWithName("same-name", base);
+  localStorage.setItem("note:same-name", blockHdrMarkdown + "browser version");
+
+  const saving = saveNote("same-name", base + " edited", base);
+  setStorageFS(undefined);
+  expect(await saving).toEqual({});
+  expect(await loadNote("same-name")).toContain("browser version");
+
+  await useStorage(dh);
+  expect(await loadNote("same-name")).toBe(base + " edited");
+  expect((await listFiles(dh)).filter((name) => name.endsWith(".edna.txt"))).toEqual(["same-name.edna.txt"]);
+});
 
 describe("notes (localStorage)", () => {
   beforeEach(async () => {
@@ -119,6 +180,23 @@ describe("notes (localStorage)", () => {
     await renameNote("b", "c", blockHdrMarkdown + "b");
     expect(getNoteMeta("c")?.isArchived).toBeFalsy();
     expect(getNotesMetadata().filter((m) => m.name === "c").length).toBeLessThanOrEqual(1);
+  });
+
+  it("note lists follow metadata updates", async () => {
+    await createNoteWithName("note");
+    expect(appState.regularNotes).toEqual(["note"]);
+    expect(appState.archivedNotes).toEqual([]);
+    expect(appState.starredNotes).toEqual([]);
+    expect(appState.withShortcuts).toEqual([]);
+
+    await setNoteArchived("note", true);
+    await toggleNoteStarred("note");
+    await reassignNoteShortcut("note", "1");
+
+    expect(appState.regularNotes).toEqual([]);
+    expect(appState.archivedNotes).toEqual(["note"]);
+    expect(appState.starredNotes).toEqual(["note"]);
+    expect(appState.withShortcuts).toEqual(["note"]);
   });
 
   it("daily entry: on by default for daily journal only, kept after rename (#25)", async () => {

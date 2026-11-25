@@ -1,8 +1,8 @@
 import { syntaxTreeAvailable } from "@codemirror/language";
 import { decode } from "@toon-format/toon";
 import { beforeAll, describe, expect, it } from "vitest";
-import { getBlocksFromString, getBlocksFromSyntaxTree } from "../../src/editor/block/block-parsing";
-import type { NoteBlock } from "../../src/editor/block/block-parsing";
+import { getBlocksFromString, type NoteBlock } from "../../src/block-format";
+import { getBlocksFromSyntaxTree } from "../../src/editor/block/block-parsing";
 import { cleanup, createEditor } from "./utils";
 
 // generated with: bun run gen:golden

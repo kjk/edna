@@ -9,10 +9,9 @@
     modelKey,
     providerKey,
     type AiModel,
-    type AiProvider,
   } from "../ai-models";
-  import { aiModelsState, refreshAiModels } from "../ai-models-state.svelte";
-  import { parseChatStreamData } from "../ai-stream";
+  import { aiModelsState, scheduleAiModelRefresh } from "../ai-models-state.svelte";
+  import { streamChatResponse } from "../ai-stream";
   import { focus, trapfocus } from "../actions";
   import { logAskAI } from "../log";
   import { newMarkdownIt } from "../markdown-util";
@@ -27,10 +26,6 @@
     insertResponse: (s: string) => boolean;
   }
   let { close, startText, insertResponse }: Props = $props();
-
-  let outputMarkdownToHTML = true;
-
-  let forceBadApiKey = false; // for ad-hoc testing
 
   let settings = getSettings();
   // svelte-ignore state_referenced_locally
@@ -50,12 +45,8 @@
   let keysSig = $derived(aiProviders.map((p) => settings[p.keySetting] || "").join("\n"));
   $effect(() => {
     keysSig;
-    // debounce typing / pasting a key
-    let timer = setTimeout(() => refreshAiModels(settings), 300);
-    return () => clearTimeout(timer);
+    return scheduleAiModelRefresh(settings);
   });
-
-  const maxTokens = 10000;
 
   // aborted when the dialog closes (A-I1)
   let abortController: AbortController | undefined;
@@ -84,24 +75,14 @@
     try {
       reqFinished = false;
       reqInProgress = true;
-      await streamChatGPTResponse(questionText, model, provider, apiKey, signal);
+      await streamChatResponse(provider, apiKey, model.id, questionText, signal, (text) => (responseText += text));
       reqFinished = true;
-    } catch (e: any) {
+    } catch (e) {
       if (signal.aborted) {
         return;
       }
       console.error(e);
-      console.error(e.cause ? e.cause : "");
-      err = e.toString();
-      if (e.cause) {
-        let r = e.cause as Response;
-        try {
-          let rsp = await r.text();
-          err += rsp;
-        } catch (e) {
-          console.error(e);
-        }
-      }
+      err = String(e);
     } finally {
       reqInProgress = false;
     }
@@ -125,78 +106,6 @@
       return;
     }
     close();
-  }
-
-  async function streamChatGPTResponse(
-    prompt: string,
-    model: AiModel,
-    provider: AiProvider,
-    apiKey: string,
-    signal: AbortSignal,
-  ) {
-    if (forceBadApiKey) {
-      apiKey = "g" + apiKey;
-    }
-
-    // model ids come from the provider's list of models so they're valid for it
-    const requestBody: Record<string, unknown> = {
-      model: model.id,
-      messages: [{ role: "user", content: prompt }],
-      stream: true,
-    };
-
-    // openai api uses max_completion_tokens, others max_tokens
-    // https://platform.openai.com/docs/api-reference/chat/create#chat_create-max_completion_tokens
-    if (provider.id === "openai") {
-      requestBody.max_completion_tokens = maxTokens;
-    } else {
-      requestBody.max_tokens = maxTokens;
-    }
-
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    };
-    if (provider.id === "anthropic") {
-      // Anthropic's API only allows requests from a browser (CORS) with this header
-      headers["anthropic-dangerous-direct-browser-access"] = "true";
-    }
-    const response = await fetch(provider.chatURL, {
-      signal,
-      method: "POST",
-      headers,
-      body: JSON.stringify(requestBody),
-    });
-    if (!response.ok) {
-      let e = new Error(`HTTP error! status: ${response.status}`);
-      e.cause = response;
-      throw e;
-    }
-
-    const reader = response.body!.getReader();
-    const decoder = new TextDecoder();
-    // a chunk can end in the middle of a line (or a multi-byte character)
-    // so we keep the incomplete last line for the next chunk
-    let pending = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      pending += decoder.decode(value, { stream: true });
-      const lines = pending.split("\n");
-      pending = lines.pop()!;
-
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const data = line.slice(6);
-          if (data === "[DONE]") return;
-
-          // throws on an error sent in the stream
-          responseText += parseChatStreamData(data);
-        }
-      }
-    }
   }
 
   // creating markdown-it instance is expensive and mdToHTML() is called for every streamed token
@@ -317,21 +226,12 @@
     class="mt-1 w-full min-h-40 max-h-[70vh] field-sizing-content border border-gray-950/20 outline-gray-950/50 p-1.5"
   ></textarea>
   {#if len(responseText) > 0}
-    {#if outputMarkdownToHTML}
-      <div
-        tabindex="-1"
-        class="markdown-body mt-2 h-auto w-full overflow-auto border border-gray-950/20 outline-gray-950/20 p-1.5"
-      >
-        {@html mdToHTML(responseText)}
-      </div>
-    {:else}
-      <div
-        tabindex="-1"
-        class="mt-2 font-mono whitespace-pre-wrap h-auto w-full overflow-auto border border-gray-950/20 outline-gray-950/20 p-1.5"
-      >
-        {responseText}
-      </div>
-    {/if}
+    <div
+      tabindex="-1"
+      class="markdown-body mt-2 h-auto w-full overflow-auto border border-gray-950/20 outline-gray-950/20 p-1.5"
+    >
+      {@html mdToHTML(responseText)}
+    </div>
   {/if}
   {#if err}
     <div class="flex mt-2 text-red-600 px-2 py-0.5 whitespace-pre-line overflow-auto">

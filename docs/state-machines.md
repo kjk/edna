@@ -27,7 +27,7 @@ Keep this document updated when changing any of the flows below.
 
 ## M1. Storage mode
 
-Representation: module var `storageFS` (`notes.ts`), IndexedDB `edna/keyval["storageDirHandle"]`,
+Representation: module var `storageFS` (`note-storage.ts`), IndexedDB `edna/keyval["storageDirHandle"]`,
 the mounted root component (`appSvelte` in `main.ts`: `App` or `AskFSPermissions`).
 
 | State | Representation |
@@ -39,7 +39,7 @@ the mounted root component (`appSvelte` in `main.ts`: `App` or `AskFSPermissions
 | `MIGRATING` | LS → FS migration in progress (`switchToStoringNotesOnDisk`, holds the storage-op lock `storageOpInProgress`) |
 
 `boot()` calls are serialized (`bootQueue` in `main.ts`) and always unmount the previous root
-component (`mountRoot`). Storage operations are refused while another Edna instance is open
+component (`mountRoot`). The permission screen receives the saved handle and boot activates it after the permission check. Storage operations are refused while another Edna instance is open
 (`instances.ts`, `App checkSingleInstance`).
 
 Invariants:
@@ -47,6 +47,8 @@ Invariants:
 - **S-I2** a note lives in exactly one store; migration never loses or overwrites a note.
 - **S-I3** at most one storage operation (migration, encrypt-all, decrypt-all, switch) runs at a time.
 - **S-I4** pending edits of the open note are written to the store they were loaded from.
+  Queued saves use the same captured location for conflict checks and writes. Metadata writes
+  keep the data and the workspace captured when queued.
 
 | From | Event | Guard | To | Code |
 |---|---|---|---|---|
@@ -159,6 +161,7 @@ Invariants:
   (or start loading) later are discarded.
 - **O-I3** a failed load leaves the editor on the previous note (E, C, T unchanged).
 - **O-I4** selection / folds are saved to E only after they were restored for E.
+- **O-I5** a scheduled presentation belongs to the most recently applied load. A pending or failed request leaves that presentation valid.
 
 | From | Event | To | Code |
 |---|---|---|---|
@@ -265,7 +268,7 @@ Invariants:
   is used. Invariants: **AM-I1** `settings.aiModelID` (`provider/id`) is a downloaded model once
   lists are loaded; if it's not, the closest available model is picked (`pickClosestModel`:
   same model from another provider, else most similar id). Without any lists (offline, no keys)
-  settings are left alone. **AM-I2** only the latest load updates the lists (`loadGen`).
+  settings are left alone. **AM-I2** a superseded load cannot update the lists or cache.
 - **Language auto-detection**: a request remembers the start of its block, mapped through later
   edits; the reply is applied to the block starting there if the editor still shows the same
   note (pending requests are dropped on load) and the block's content is similar (Levenshtein).
@@ -500,7 +503,7 @@ to state machines). Ordered by impact.
 - **U12. Every block language is known.** The delimiter grammar accepts any `[a-z]+`;
   `menuItemStatus` did `getLanguage(language)!` and crashed the menu / command palette.
   `changeLanguageTo` didn't validate the token.
-  **Fixed**: `menuItemStatus` handles an unknown language; `getLanguage` uses a `Map` (token
+  **Fixed**: menus tolerate an unknown language; `getLanguage` uses a `Map` (token
   `constructor` found `Object.prototype.constructor`); `changeLanguageTo` rejects invalid tokens.
 - **U13. Restored folds / selections fit the document.** Stored as offsets; not checked
   against the current document length (note changed elsewhere). **Fixed**: only folds inside
@@ -509,7 +512,7 @@ to state machines). Ordered by impact.
   spanning two blocks produced positions outside the document. **Fixed**: the selection is
   clamped to the moved block.
 - **U15. Menu entries are commands.** `menuItemStatus` treated a submenu as a command id; on the
-  Home tab every submenu (Notes storage, Encryption, Help) was removed. **Fixed**.
+  Home tab every submenu (Notes storage, Encryption, Help) was removed. **Fixed**: the menu represents submenus, labels, separators, and commands explicitly.
 - **U16. A selection is never inside a delimiter (after the first block).** Atomic ranges only
   constrain cursor motion; programmatic selections (find, restored selection) could land
   inside, and typing changed the language or broke the delimiter. **Fixed**: a transaction filter
@@ -541,9 +544,9 @@ to state machines). Ordered by impact.
   `:free` / `:extended` variants, `o4-mini-high`, `gpt-oss-*` were sent to api.openai.com.
   **Fixed** (superseded): lists of models are now downloaded from each provider (see Ask AI
   models in M10), so a model's provider is part of its id and ids are valid for it.
-- **U25. Command palette ids are unique.** The list is keyed by id; uniqueness was only checked
-  (and only logged) in dev builds. **Fixed**: duplicates are dropped (and logged) in all builds;
-  a test checks there are none.
+- **U25. Command palette entries are unique.** The palette collects enabled actions from
+  the menu and adds palette-only actions. It runs the same callbacks as the menu. A browser
+  test checks for duplicate entries.
 - **U26. The parser and `getBlocksFromString` find the same blocks.** They disagreed on a
   delimiter at position 0 without a leading newline and on text before the first delimiter, so
   the block list changed when parsing finished. **Fixed**: both use `findDelimiters`.

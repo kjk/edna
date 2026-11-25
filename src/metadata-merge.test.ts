@@ -39,4 +39,5 @@ test("normalizeMetadata: invalid shapes (U8)", () => {
   expect(normalizeMetadata(5)).toEqual({ ver: 1, notes: [], functions: [] });
   expect(normalizeMetadata({ notes: "x", functions: {} })).toEqual({ ver: 1, notes: [], functions: [] });
   expect(normalizeMetadata({ notes: [null, 3, { name: "a" }, { noName: 1 }] }).notes).toEqual([{ name: "a" }]);
+  expect(normalizeMetadata([null, 3, { name: "a" }, { noName: 1 }]).notes).toEqual([{ name: "a" }]);
 });

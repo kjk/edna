@@ -1,85 +1,57 @@
 <script module lang="ts">
-  export type CommandNoArg = [string, number | Command[]];
-  export type CommandWithArg = [string, number, any];
-  export type Command = CommandNoArg | CommandWithArg;
-  export type MenuDef = Command[];
-
-  // when used as menu id this will show as a text, not a menu item
-  export const kMenuIdJustText = -1;
-
-  export const kMenuStatusNormal = 0;
-  export const kMenuStatusDisabled = 1;
-  export const kMenuStatusRemoved = 2;
-
-  export const kMenuSeparator: Command = ["---", 0];
-
-  export function getCommandArg(cmd: Command): any {
-    if (len(cmd) != 3) return;
-    let c = cmd as CommandWithArg;
-    return c[2];
+  export interface Command {
+    label: string;
+    run: () => unknown;
+    status?: "disabled" | "hidden";
+    paletteLabel?: string | false;
   }
 
-  export function fixMenuName(s: string): string {
-    if (!s) {
-      if (s === "") {
-        return "";
-      }
-    }
-    s = s.replace("&", "");
-    // remove keyboard shortcut
-    return splitCommandLabel(s).name;
-  }
-
-  function getShortcut(mi: Command): string {
-    return splitCommandLabel(mi[0]).shortcut;
-  }
+  type MenuEntry = Command | { label: string; items?: MenuDef } | { separator: true };
+  export type MenuDef = MenuEntry[];
 
   class MenuItem {
     text = "";
     shortcut = "";
     children?: MenuItem[];
-    cmdId = 0;
-    arg = undefined;
+    run?: Command["run"];
     element?: HTMLElement = $state();
     submenuElement?: HTMLElement;
     parent?: MenuItem;
     zIndex = 30;
 
     isSeparator = false;
-    isRemoved = false;
     isDisabled = false;
     isSubMenu = false;
     isSelected = $state(false);
   }
 
-  function buildMenuFromDef(menuDef: MenuDef, nest: number, menuItemStatus: (mi: Command) => number): MenuItem[] {
-    let res: MenuItem[] = [];
-    for (let cmd of menuDef) {
-      let i = new MenuItem();
-      res.push(i);
-      i.text = fixMenuName(cmd[0]);
-      i.shortcut = getShortcut(cmd);
-      const miStatus = menuItemStatus(cmd);
-      i.isDisabled = miStatus === kMenuStatusDisabled;
-      i.isRemoved = miStatus === kMenuStatusRemoved;
-      i.isSeparator = cmd[0] === kMenuSeparator[0];
-      if (i.isSeparator) {
-        i.isDisabled = true;
+  function buildMenuFromDef(menuDef: MenuDef, nest: number): MenuItem[] {
+    const items: MenuItem[] = [];
+    for (const entry of menuDef) {
+      if ("run" in entry && entry.status === "hidden") continue;
+      const item = new MenuItem();
+      items.push(item);
+      if ("separator" in entry) {
+        item.isSeparator = true;
+        item.isDisabled = true;
+        continue;
       }
-      let idOrSubMenu = cmd[1];
-      if (Array.isArray(idOrSubMenu)) {
-        i.isSubMenu = true;
-        i.zIndex += nest;
-        i.children = buildMenuFromDef(idOrSubMenu, nest + 1, menuItemStatus);
-        for (let c of i.children) {
-          c.parent = i;
-        }
+      const { name, shortcut } = splitCommandLabel(entry.label);
+      item.text = name.replace("&", "");
+      item.shortcut = shortcut;
+      if ("items" in entry && entry.items) {
+        item.isSubMenu = true;
+        item.zIndex += nest;
+        item.children = buildMenuFromDef(entry.items, nest + 1);
+        for (const child of item.children) child.parent = item;
+      } else if ("run" in entry) {
+        item.run = entry.run;
+        item.isDisabled = entry.status === "disabled";
       } else {
-        i.cmdId = idOrSubMenu;
-        i.arg = getCommandArg(cmd);
+        item.isDisabled = true;
       }
     }
-    return res;
+    return items;
   }
 </script>
 
@@ -93,16 +65,11 @@
   interface Props {
     menuDef: MenuDef;
     pos: { x: number; y: number } | null;
-    menuItemStatus?: (mi: Command) => number;
-    executeCommand: (cmdId: number, arg: any) => void;
+    executeCommand: (run: Command["run"]) => void;
   }
-  let { menuDef, pos, menuItemStatus = undefined, executeCommand }: Props = $props();
+  let { menuDef, pos, executeCommand }: Props = $props();
 
-  function menuItemStatusDefault(mid: Command): number {
-    return kMenuStatusNormal;
-  }
-
-  let rootMenu = buildMenuFromDef(menuDef, 1, menuItemStatus || menuItemStatusDefault);
+  let rootMenu = buildMenuFromDef(menuDef, 1);
 
   function forEachMenuItem(visit: (mi: MenuItem) => boolean) {
     let toVisit: MenuItem[][] = [rootMenu];
@@ -201,10 +168,10 @@
 
   function handleClicked(ev: MouseEvent) {
     let mi = findMenuItem(ev);
-    if (!mi || mi.cmdId <= 0 || mi.isDisabled) {
+    if (!mi?.run || mi.isDisabled) {
       return;
     }
-    executeCommand(mi.cmdId, mi.arg);
+    executeCommand(mi.run);
     ev.stopPropagation();
   }
 
@@ -254,7 +221,7 @@
   }
 
   function isSelectable(mi: MenuItem): boolean {
-    if (mi.isRemoved || mi.isDisabled || mi.isSeparator) {
+    if (mi.isDisabled || mi.isSeparator) {
       return false;
     }
     return true;
@@ -305,10 +272,10 @@
     // console.log("key:", key);
     if (isKeyEnter(ev)) {
       let found = findMenuItemWhere((mi) => mi.isSelected && !mi.isSubMenu);
-      if (found) {
+      if (found?.run) {
         ev.preventDefault();
         ev.stopPropagation();
-        executeCommand(found.cmdId, found.arg);
+        executeCommand(found.run);
       }
       return;
     }
@@ -433,12 +400,10 @@
 
 {#snippet menuItems(items: MenuItem[])}
   {#each items as mi}
-    {#if !mi.isRemoved}
-      {#if mi.isSubMenu}
-        {@render submenu(mi)}
-      {:else}
-        {@render menuItem(mi)}
-      {/if}
+    {#if mi.isSubMenu}
+      {@render submenu(mi)}
+    {:else}
+      {@render menuItem(mi)}
     {/if}
   {/each}
 {/snippet}

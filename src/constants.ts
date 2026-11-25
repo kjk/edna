@@ -1,5 +1,5 @@
 // helps avoid circular references
-import { getBlockDelimiter } from "./editor/new-parser/node-types";
+import { getBlockDelimiter } from "./block-format";
 
 export const kScratchNoteName = "scratch";
 export const kDailyJournalNoteName = "daily journal";

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
 import { encode } from "@toon-format/toon";
-import { getBlocksFromString } from "../src/editor/block/block-parsing";
+import { getBlocksFromString } from "../src/block-format";
 
 interface GoldenTestData {
   file: string;

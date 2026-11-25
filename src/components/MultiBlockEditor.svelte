@@ -260,17 +260,8 @@
   }
 
   export function setSpellChecking(value: boolean) {
-    // console.log("setSpellChecking:", value)
-    let ce = document.querySelector('[contenteditable="true"]');
-    if (!ce) {
-      // console.log("no content editable found")
-      return;
-    }
-    // console.log("found content editable")
-    if (value) {
-      ce.setAttribute("spellcheck", "true");
-    } else {
-      ce.setAttribute("spellcheck", "false");
+    if (editor) {
+      editor.view.contentDOM.spellcheck = value;
     }
   }
 

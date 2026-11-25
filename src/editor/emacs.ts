@@ -34,17 +34,11 @@ import { collapseSelectionToHeads, consume, editCommand } from "./cmutils";
 import { copyCommand, cutCommand, pasteCommand } from "./copy-paste";
 import type { MultiBlockEditor } from "./editor";
 
-let marking = false;
-
-export function setEmacsMarkMode(value: boolean): void {
-  marking = value;
-}
-
 export function emacsKeymap(editor: MultiBlockEditor): Extension[] {
   const meta = editor.emacsMetaKey === "meta" ? "Meta" : editor.emacsMetaKey === "ctrl" ? "Ctrl" : "Alt";
   const movement = (key: string, move: Command, select: Command): KeyBinding => ({
     key,
-    run: consume((view) => (marking ? select : move)(view)),
+    run: consume((view) => (editor.emacsMarkMode ? select : move)(view)),
     shift: consume(select),
   });
   const edit = (key: string, run: Command): KeyBinding => ({ key, run: editCommand(run) });
@@ -60,11 +54,11 @@ export function emacsKeymap(editor: MultiBlockEditor): Extension[] {
     movement("Ctrl-ArrowRight", cursorGroupRight, selectGroupRight),
     movement("Ctrl-v", cursorPageDown, selectPageDown),
     movement(meta + "-v", cursorPageUp, selectPageUp),
-    { key: "Ctrl-Space", run: consume(() => (marking = !marking)) },
+    { key: "Ctrl-Space", run: consume(() => (editor.emacsMarkMode = !editor.emacsMarkMode)) },
     {
       key: "Ctrl-g",
       run: consume((view) => {
-        setEmacsMarkMode(false);
+        editor.emacsMarkMode = false;
         collapseSelectionToHeads(view);
       }),
     },

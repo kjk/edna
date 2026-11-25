@@ -1,6 +1,5 @@
 import { expect, test } from "vitest";
-import { parseDelimiterLine } from "../new-parser/node-types";
-import { getBlocksFromString } from "./block-parsing";
+import { getBlocksFromString, parseDelimiterLine } from "./block-format";
 
 test("parseDelimiterLine", () => {
   expect(parseDelimiterLine("∞∞∞text")).toEqual({ language: "text", autoDetect: false, readOnly: false });

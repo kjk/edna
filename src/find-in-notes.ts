@@ -1,4 +1,4 @@
-import { parseDelimiterLine } from "./editor/new-parser/node-types";
+import { parseDelimiterLine } from "./block-format";
 import { isWholeWord, len, stringMatchesParts } from "./util";
 
 export interface NoteMatch {

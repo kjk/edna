@@ -7,12 +7,11 @@ import {
   type SelectionRange,
 } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { parseDelimiterLine } from "../block-format";
 import { editableRange, getFirstNoteBlock, getNoteBlockFromPos } from "./block/block";
 import { pushOrMerge } from "../util";
 import { collapseSelectionToHeads } from "./cmutils";
 import type { MultiBlockEditor } from "./editor";
-import { setEmacsMarkMode } from "./emacs";
-import { parseDelimiterLine } from "./new-parser/node-types";
 import type { SimpleRange } from "./types";
 
 export function removeDelimitersFromPastedText(text: string, atLineStart = true, atLineEnd = true): string {
@@ -60,7 +59,7 @@ function writeSelection(view: EditorView, editor: MultiBlockEditor, cut: boolean
     }
   }
   write(text.join(state.lineBreak));
-  setEmacsMarkMode(false);
+  editor.emacsMarkMode = false;
   if (cut && !state.readOnly) {
     // Two selected ranges can include the same line break when one is a whole-line cut.
     cuts.sort((a, b) => a.from - b.from);

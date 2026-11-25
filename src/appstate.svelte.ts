@@ -1,18 +1,18 @@
 import { noteNameFromTab } from "./constants";
 import { getNoteMeta, isNoteArchived } from "./metadata";
-import { defaultSettings, type Settings } from "./settings.svelte";
+import { getCurrentSettings, type Settings } from "./settings.svelte";
 
 class AppState {
   /* regular, arhived, deleted notes */
   allNotes: string[] = $state([]);
 
   /* regular notes, not archived or deleted */
-  regularNotes: string[] = $derived(calcRegular(this.allNotes));
+  regularNotes = $derived(this.allNotes.filter((name) => !isNoteArchived(name)));
 
-  archivedNotes: string[] = $derived(calcArchived(this.allNotes));
+  archivedNotes = $derived(this.allNotes.filter(isNoteArchived));
 
-  starredNotes: string[] = $derived(calcStarred(this.allNotes)); // starred notes
-  withShortcuts: string[] = $derived(callcWithShortcuts(this.allNotes)); // notes with shortcuts
+  starredNotes = $derived(this.allNotes.filter((name) => !!getNoteMeta(name)?.isStarred));
+  withShortcuts = $derived(this.allNotes.filter((name) => !!getNoteMeta(name)?.altShortcut));
   noteSelectorInfoCollapsed = $state(false);
 
   isDirty = $state(false);
@@ -44,52 +44,13 @@ class AppState {
   searchIncludeArchived = $state(false);
 
   history: string[] = $state([]); // names of opened notes
-  settings: Settings = $state(defaultSettings); // user settings
+  get settings(): Settings {
+    return getCurrentSettings();
+  }
 
   currentNoteName: string | undefined = $derived(noteNameFromTab(this.settings.currentTab));
 
   forceNewTab = false;
-}
-
-function calcRegular(noteNames: string[]): string[] {
-  return noteNames.filter((name) => !isNoteArchived(name));
-}
-
-function calcWithBoolKey(noteNames: string[], key: "isStarred" | "altShortcut"): string[] {
-  return noteNames.filter((name) => !!getNoteMeta(name, false)?.[key]);
-}
-
-function calcStarred(noteNames: string[]): string[] {
-  return calcWithBoolKey(noteNames, "isStarred");
-}
-
-function calcArchived(noteNames: string[]): string[] {
-  return noteNames.filter(isNoteArchived);
-}
-
-function callcWithShortcuts(noteNames: string[]): string[] {
-  // altShortcut is string not bool but it still works
-  return calcWithBoolKey(noteNames, "altShortcut");
-}
-
-export function appStateUpdateAfterNotesChange() {
-  let all = appState.allNotes;
-  appState.regularNotes = calcRegular(all);
-  appState.archivedNotes = calcArchived(all);
-  appState.starredNotes = calcStarred(all);
-  appState.withShortcuts = callcWithShortcuts(all);
-  // console.log(
-  //   "appStateUpdateAfterNotesChange: regular:",
-  //   appState.regularNotes.length,
-  //   "archived:",
-  //   appState.archivedNotes.length,
-  //   "deleted:",
-  //   appState.deletedNotes.length,
-  //   "starred:",
-  //   appState.starredNotes.length,
-  //   "withShortcuts:",
-  //   appState.withShortcuts.length,
-  // );
 }
 
 export const appState = new AppState();

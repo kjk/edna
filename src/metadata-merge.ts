@@ -2,10 +2,7 @@ import type { Metadata } from "./metadata";
 
 // converts old format (array of notes) and fills in missing fields
 export function normalizeMetadata(v: unknown): Metadata {
-  if (Array.isArray(v)) {
-    return { ver: 1, notes: v, functions: [] };
-  }
-  let m = (v && typeof v === "object" ? v : {}) as Partial<Metadata>;
+  let m = (Array.isArray(v) ? { notes: v } : v && typeof v === "object" ? v : {}) as Partial<Metadata>;
   // entries must be objects with a name (U8): metadata is user-editable
   let entries = (a: unknown): any[] =>
     Array.isArray(a) ? a.filter((e) => e && typeof e === "object" && typeof e.name === "string") : [];

@@ -2,13 +2,15 @@ import { history } from "@codemirror/commands";
 import { foldEffect, unfoldEffect } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, Prec, Transaction, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { ednaEvent, kSetContent, kSetFont } from "./annotation";
+import { getBlockDelimiter } from "../block-format";
+import { ednaEvent, kSetContent } from "./annotation";
 import { blockLineNumbers, getBlocks, getNoteBlockFromPos, noteBlockExtension } from "./block/block";
-import { defaultBlockDelimiter, getBlockDelimiter, triggerCurrenciesLoaded } from "./block/commands";
+import { defaultBlockDelimiter, triggerCurrenciesLoaded } from "./block/commands";
+import { mathBlock } from "./block/math";
 import { focusEditorView, getFoldedRanges, isReadOnly } from "./cmutils";
 import { colorPreviewExtension } from "./color-preview";
 import { ednaCopyCut } from "./copy-paste";
-import { emacsKeymap, setEmacsMarkMode } from "./emacs";
+import { emacsKeymap } from "./emacs";
 import { createDynamicCloseBracketsExtension, markdownSelectionWrapping } from "./extensions";
 import { foldGutterExtension, moveSelectionOutOfNewFolds } from "./fold-gutter";
 import { indentationExtension } from "./indentation";
@@ -81,14 +83,13 @@ export class MultiBlockEditor {
   fontTheme = new Compartment();
   deselectOnCopy: boolean;
   emacsMetaKey: string;
+  emacsMarkMode = false;
   saveCallback: (content: string) => Promise<void>;
   setIsDirtyCallback: (dirty: boolean) => void;
   extraKeymapSpec: KeymapSpec;
   view: EditorView;
   diskContent: string;
   contentGen = 0;
-  defaultBlockToken: string;
-  defaultBlockAutoDetect: boolean;
   private historyCompartment = new Compartment();
   private pendingSave: { generation: number; content: string; promise: Promise<void> } | undefined;
   private autosave: ReturnType<typeof autoSaveContent>;
@@ -121,15 +122,14 @@ export class MultiBlockEditor {
     this.extraKeymapSpec = extraKeymap;
     this.emacsMetaKey = emacsMetaKey;
     this.deselectOnCopy = keymap === "emacs";
-    this.defaultBlockToken = defaultBlockToken || "text";
-    this.defaultBlockAutoDetect = defaultBlockAutoDetect;
     this.diskContent = "";
     this.autosave = autoSaveContent(this, 2000);
     const state = EditorState.create({
       doc: this.diskContent,
       extensions: [
         multiBlock(),
-        noteBlockExtension(this),
+        noteBlockExtension,
+        mathBlock,
         customSetup(createFindPanel),
         this.historyCompartment.of(history()),
         moveSelectionOutOfNewFolds,
@@ -140,7 +140,7 @@ export class MultiBlockEditor {
         this.fontTheme.of(getFontTheme(fontFamily, fontSize)),
         this.keymapCompartment.of(this.bindings(keymap)),
         this.readOnlyCompartment.of([]),
-        this.defaultBlockCompartment.of(defaultBlockExt(this.defaultBlockToken, defaultBlockAutoDetect)),
+        this.defaultBlockCompartment.of(defaultBlockExt(defaultBlockToken || "text", defaultBlockAutoDetect)),
         this.closeBracketsCompartment.of(closeBracketsExt(bracketClosing)),
         this.colorPreviewCompartment.of(colorPreviewExt(showColorPreview)),
         this.tabsCompartment.of(indentationExtension(useTabs, tabSize)),
@@ -237,7 +237,7 @@ export class MultiBlockEditor {
     const text = this.view.state.toText(content);
     this.contentGen++;
     this.diskContent = text.toString();
-    setEmacsMarkMode(false);
+    this.emacsMarkMode = false;
     this.view.dispatch({
       changes: { from: 0, to: this.view.state.doc.length, insert: text },
       selection: { anchor: 0 },
@@ -334,10 +334,7 @@ export class MultiBlockEditor {
   }
 
   setFont(fontFamily: string, fontSize: number): void {
-    this.view.dispatch({
-      effects: this.fontTheme.reconfigure(getFontTheme(fontFamily, fontSize)),
-      annotations: ednaEvent.of(kSetFont),
-    });
+    this.reconfigure(this.fontTheme, getFontTheme(fontFamily, fontSize));
   }
 
   setTheme(theme: string): void {
@@ -345,7 +342,7 @@ export class MultiBlockEditor {
   }
 
   setKeymap(keymap: string, emacsMetaKey: string): void {
-    setEmacsMarkMode(false);
+    this.emacsMarkMode = false;
     this.emacsMetaKey = emacsMetaKey;
     this.deselectOnCopy = keymap === "emacs";
     this.reconfigure(this.keymapCompartment, this.bindings(keymap));
@@ -364,9 +361,7 @@ export class MultiBlockEditor {
   }
 
   setDefaultBlockLanguage(token: string, autoDetect = true): void {
-    this.defaultBlockToken = token || "text";
-    this.defaultBlockAutoDetect = autoDetect;
-    this.reconfigure(this.defaultBlockCompartment, defaultBlockExt(this.defaultBlockToken, autoDetect));
+    this.reconfigure(this.defaultBlockCompartment, defaultBlockExt(token || "text", autoDetect));
   }
 
   didLoadCurrencies(): void {

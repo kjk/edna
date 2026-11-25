@@ -2,6 +2,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
 import { appState } from "../../src/appstate.svelte";
 import { createNoteWithName, loadNote, saveNote } from "../../src/notes";
+import { setNoteDailyEntry } from "../../src/metadata";
+import { formatDateYYYYMMDDDay } from "../../src/util";
 import { getSettings } from "../../src/settings.svelte";
 import { kTabHome } from "../../src/constants";
 import { sleep } from "./utils";
@@ -235,20 +237,38 @@ describe("app", () => {
 
   it("command palette has no duplicate commands (U25)", async () => {
     await openWithShortcut(1, "scratch");
-    const errors: string[] = [];
-    const orig = console.error;
-    console.error = (...args: unknown[]) => {
-      errors.push(args.join(" "));
-      orig(...args);
-    };
+    appState.showingCommandPalette = true;
     try {
-      appState.showingCommandPalette = true;
-      await expect.poll(() => document.querySelectorAll('[role="listbox"] [role="option"], .listbox-item, li').length).toBeGreaterThan(5);
-      expect(errors.filter((e) => e.includes("duplicate command id"))).toEqual([]);
+      const options = () => [...document.querySelectorAll('[role="listbox"] [role="option"]')];
+      await expect.poll(() => options().length).toBeGreaterThan(5);
+      const labels = options().map((option) => option.textContent?.trim());
+      expect(new Set(labels).size).toBe(labels.length);
     } finally {
-      console.error = orig;
       appState.showingCommandPalette = false;
     }
+  });
+
+  it("saves a daily entry to its own note before the next note opens", async () => {
+    const dailyNote = "daily-entry-test";
+    await createNoteWithName(dailyNote, "\n\u221e\u221e\u221emarkdown\nDaily entry test");
+    await setNoteDailyEntry(dailyNote, true);
+    const title = document.querySelector("title")!;
+    const requestedScratch = new Promise<void>((resolve) => {
+      const observer = new MutationObserver(() => {
+        if (document.title === dailyNote) {
+          observer.disconnect();
+          altDigit(1);
+          resolve();
+        }
+      });
+      observer.observe(title, { childList: true, characterData: true, subtree: true });
+    });
+    popStateTo(dailyNote);
+    await requestedScratch;
+    await expect.poll(() => document.title).toBe("scratch");
+    const heading = "# " + formatDateYYYYMMDDDay();
+    expect(await loadNote(dailyNote)).toContain(heading);
+    expect(editorText()).not.toContain(heading);
   });
 
   it("deleting the current note when switching to scratch fails keeps the note (U19)", async () => {

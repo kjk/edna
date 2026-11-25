@@ -1,18 +1,6 @@
-import { EditorSelection, StateEffect, StateField } from "@codemirror/state";
+import { EditorSelection } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
-import { getActiveNoteBlock, getFirstNoteBlock } from "./block";
-
-const selectEmptyBlock = StateEffect.define<number>();
-
-export const emptyBlockSelected = StateField.define<number | null>({
-  create: () => null,
-  update(selected, tr) {
-    for (const effect of tr.effects) {
-      if (effect.is(selectEmptyBlock)) return effect.value;
-    }
-    return tr.docChanged || tr.selection ? null : selected;
-  },
-});
+import { emptyBlockSelected, getActiveNoteBlock, getFirstNoteBlock, selectEmptyBlock } from "./block";
 
 export function selectAll({ state, dispatch }: EditorView): boolean {
   const first = getFirstNoteBlock(state);

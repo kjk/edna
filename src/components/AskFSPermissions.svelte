@@ -1,29 +1,18 @@
 <script lang="ts">
   import { requestWritePermission } from "../fileutil";
-  import { boot, switchToBrowserStorage, switchToDirectory } from "../main";
-  import { clearStorageFS, dbGetDirHandle } from "../notes";
 
   interface Props {
-    // set if notes in the directory couldn't be read
+    directory: FileSystemDirectoryHandle;
+    boot: () => Promise<void>;
+    switchToDirectory: () => Promise<void>;
+    switchToBrowserStorage: () => Promise<void>;
     error?: string;
   }
-  let { error = "" }: Props = $props();
+  let { directory, boot, switchToDirectory, switchToBrowserStorage, error = "" }: Props = $props();
 
-  let dirName = $state("");
-
-  $effect(() => {
-    console.log("AskFSPermissions");
-    dbGetDirHandle().then((dh?: FileSystemDirectoryHandle) => {
-      if (!dh) return;
-      dirName = dh.name;
-    });
-  });
   async function allowDirAccess() {
-    if (await requestWritePermission(await dbGetDirHandle())) {
-      console.log("trying to mount app now");
+    if (await requestWritePermission(directory)) {
       await boot();
-    } else {
-      clearStorageFS();
     }
   }
 </script>
@@ -31,7 +20,7 @@
 <div class="fixed inset-0 overflow-hidden bg-gray-50">
   <div class="mt-8 mx-auto px-8 py-4 flex flex-col items-center shadow-2xl bg-white text-base w-fit">
     <div class="mt-2 self-center">
-      You're storing notes on disk in directory <span class="font-bold">{dirName}</span>
+      You're storing notes on disk in directory <span class="font-bold">{directory.name}</span>
     </div>
 
     {#if error}
@@ -44,7 +33,7 @@
         <button onclick={() => boot()} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100">Try again</button>
       {:else}
         <button onclick={allowDirAccess} class="mt-4 px-4 py-1 border border-black hover:bg-gray-100"
-          >Allow Edna to access files in directory <span class="font-bold">{dirName}</span></button
+          >Allow Edna to access files in directory <span class="font-bold">{directory.name}</span></button
         >
       {/if}
       <button onclick={switchToDirectory} class="mt-4 px-2 py-1 border border-black hover:bg-gray-100"

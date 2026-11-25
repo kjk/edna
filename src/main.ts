@@ -1,12 +1,12 @@
 import "./main.css";
 import "./markdown-anti-tailwind.css";
 import "highlight.js/styles/github.css";
-import { mount, unmount } from "svelte";
+import { mount, unmount, type Component } from "svelte";
 import App from "./components/App.svelte";
 import AskFSPermissions from "./components/AskFSPermissions.svelte";
 import { isTabHome, kTabHome } from "./constants";
 import { hasHandlePermission } from "./fileutil";
-import { loadNotesMetadata, upgradeMetadata } from "./metadata";
+import { loadNotesMetadata } from "./metadata";
 import {
   clearStorageFS,
   createDefaultNotes,
@@ -17,6 +17,7 @@ import {
   noteExists,
   pickAnotherDirectory,
   preLoadAllNotes,
+  setStorageFS,
 } from "./notes";
 import { getSettings, settingsAddTab } from "./settings.svelte";
 import { isDev, SerialQueue } from "./util";
@@ -48,11 +49,9 @@ export async function switchToBrowserStorage(): Promise<void> {
   await boot();
 }
 
-function mountRoot(component: any, props: Record<string, unknown> = {}) {
-  if (appSvelte) {
-    unmount(appSvelte);
-    appSvelte = undefined;
-  }
+const storageActions = { boot, switchToBrowserStorage, switchToDirectory };
+
+function mountRoot<Props extends Record<string, unknown>>(component: Component<Props>, props: Props) {
   const target = document.getElementById("app");
   if (!target) return;
   appSvelte = mount(component, { target, props });
@@ -61,31 +60,23 @@ function mountRoot(component: any, props: Record<string, unknown> = {}) {
 async function bootNow() {
   console.log("booting");
 
-  getSettings();
-
-  let dh = await dbGetDirHandle();
-  if (dh) {
-    console.log("storing data in the file system");
-    let ok = await hasHandlePermission(dh, true);
-    if (!ok) {
-      console.log("no permission to write files in directory", dh.name);
-      clearStorageFS();
-      mountRoot(AskFSPermissions);
-      return;
-    }
-  } else {
-    console.log("storing data in localStorage");
+  if (appSvelte) {
+    await unmount(appSvelte);
+    appSvelte = undefined;
   }
 
-  let noteNames: string[];
+  getSettings();
+
+  const dh = await dbGetDirHandle();
   try {
-    await upgradeMetadata();
-    noteNames = await loadNoteNames();
-    let nCreated = await createDefaultNotes(noteNames);
-    if (nCreated > 0) {
-      noteNames = await loadNoteNames();
+    if (dh && !(await hasHandlePermission(dh, true))) {
+      clearStorageFS();
+      mountRoot(AskFSPermissions, { directory: dh, ...storageActions });
+      return;
     }
-    await loadNotesMetadata(); // pre-load
+    setStorageFS(dh);
+    await loadNotesMetadata();
+    await createDefaultNotes(await loadNoteNames());
     try {
       await encryptUnencryptedNotes();
     } catch (e) {
@@ -101,7 +92,7 @@ async function bootNow() {
     // storage, instead of a blank app
     console.error("failed to load notes from directory:", e);
     clearStorageFS();
-    mountRoot(AskFSPermissions, { error: String(e) });
+    mountRoot(AskFSPermissions, { directory: dh, error: String(e), ...storageActions });
     return;
   }
 
@@ -166,7 +157,7 @@ async function bootNow() {
   }
 
   console.log("mounting App");
-  mountRoot(App);
+  mountRoot(App, storageActions);
 }
 
 boot().then(() => {

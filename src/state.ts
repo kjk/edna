@@ -1,4 +1,3 @@
-import { logNoteOp } from "./log";
 import { startTimer, tryParseJSONObject } from "./util";
 
 export interface Stats {
@@ -53,17 +52,7 @@ export function incNoteDeleteCount(): number {
   return incCount("noteDeleteCount");
 }
 
-// notes are auto-saved every few seconds while typing. Total save count is
-// sent with appOpen / appExit stats so we don't need to log every save
-const kLogNoteSaveIntervalMs = 10 * 60 * 1000;
-let lastNoteSaveLogTime = 0;
-
 export function incNoteSaveCount(): number {
-  let now = Date.now();
-  if (now - lastNoteSaveLogTime > kLogNoteSaveIntervalMs) {
-    lastNoteSaveLogTime = now;
-    logNoteOp("noteSave");
-  }
   return incCount("noteSaveCount");
 }
 

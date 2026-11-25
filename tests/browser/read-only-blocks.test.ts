@@ -63,7 +63,7 @@ describe("read-only blocks", () => {
     const view = te.editor.view;
     moveCurrentBlockUp(view);
     expect(doc()).toBe("\n∞∞∞text-ro\nlocked\n∞∞∞text\nfirst\n∞∞∞text\nlast");
-    deleteBlock(te.editor)(view);
+    deleteBlock(view);
     expect(doc()).toContain("locked");
     changeCurrentBlockLanguage(view, "markdown", false);
     expect(doc()).toContain("∞∞∞text-ro\nlocked");

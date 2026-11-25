@@ -31,39 +31,3 @@ const nodeTypes = [
 // Export the node set
 export const nodeSet = new NodeSet(nodeTypes);
 
-// Delimiter pattern: ∞∞∞ (three infinity symbols)
-export const kDelimiterPrefix = "\u221e\u221e\u221e";
-
-// block header line for language token, e.g. "\n\u221e\u221e\u221etext-a\n" (-a: language is auto-detected,
-// -ro: block is read-only)
-// ∞∞∞{token}[-a][-ro], without newlines
-export function delimiterLine(token: string, autoDetect: boolean, readOnly = false): string {
-  return kDelimiterPrefix + token + (autoDetect ? "-a" : "") + (readOnly ? "-ro" : "");
-}
-
-export function getBlockDelimiter(token: string, autoDetect: boolean, readOnly = false): string {
-  return "\n" + delimiterLine(token, autoDetect, readOnly) + "\n";
-}
-
-// This is the single definition of a valid block delimiter. A delimiter is a line
-// ∞∞∞{language}[-a][-ro] where language is lowercase ascii letters, -a means
-// auto-detect language and -ro means the block is read-only (#57). It must be preceded by a newline (except at the
-// start of the document) and followed by a newline.
-
-// matches a delimiter line (without the newlines)
-export const delimiterLineRegex = /^\u221e\u221e\u221e([a-z]+)(-a)?(-ro)?$/;
-
-// matches delimiters including surrounding newlines, for search / replace
-export function delimiterRegexGlobal(): RegExp {
-  return /\n\u221e\u221e\u221e[a-z]+(?:-a)?(?:-ro)?\n/g;
-}
-
-// parses a delimiter line (without the newlines). Returns null if not a valid delimiter
-export function parseDelimiterLine(line: string): { language: string; autoDetect: boolean; readOnly: boolean } | null {
-  let m = delimiterLineRegex.exec(line);
-  if (!m) {
-    return null;
-  }
-  return { language: m[1]!, autoDetect: m[2] !== undefined, readOnly: m[3] !== undefined };
-}
-

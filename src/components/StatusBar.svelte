@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getLanguage, getLanguageNameFromToken, langSupportsFormat } from "../editor/languages";
+  import { getLanguage, getLanguageNameFromToken } from "../editor/languages";
   import { smartRunAction, smartRunLabels } from "../smart-run";
   import { fixUpShortcuts } from "../key-helper";
   import { fmtSize, scrollbarOffsetStyle } from "../util";
@@ -39,8 +39,7 @@
 
   let languageName = $derived(getLanguageNameFromToken(language));
 
-  let lang = $derived(getLanguage(language));
-  let supportsFormat = $derived(langSupportsFormat(lang));
+  let supportsFormat = $derived(!!getLanguage(language)?.formatType);
   // TODO: depend on platform
   let formatBlockTitle = $derived(fixUpShortcuts(`Format Block (Alt + Shift + F)`));
   let runBlockTitle = $derived(smartRunLabels[smartRunAction(selectionSize > 0, language)] + fixUpShortcuts(` (Mod + E)`));

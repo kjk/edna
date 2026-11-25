@@ -1,6 +1,6 @@
 // based mostly on https://github.com/IvanMathy/Boop/tree/main/Scripts
 
-import { getBlocksFromString } from "./editor/block/block-parsing";
+import { getBlocksFromString } from "./block-format";
 import { fixUpNoteContent } from "./note-content";
 import { len, tryParseJSON } from "./util";
 

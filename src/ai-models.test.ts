@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import {
   providerFromModelsURL,
   kModelsCacheKey,
@@ -139,4 +139,24 @@ test("loadModels: invalid key and failures", async () => {
   const an = res.find((r) => r.provider === "anthropic")!;
   expect(an.invalidKey).toBe(true);
   expect(an.models).toEqual([]);
+});
+
+test("an aborted model load cannot overwrite the cache of a newer load", async () => {
+  const storage = new MemStorage() as unknown as Storage;
+  const oldLoad = new AbortController();
+  const oldResponse = Promise.withResolvers<Response>();
+  const oldFetch = vi.fn<typeof fetch>().mockReturnValue(oldResponse.promise);
+  const pending = loadModels({ openAIKey }, { fetchFn: oldFetch, storage, signal: oldLoad.signal });
+  const aborted = expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  oldLoad.abort();
+
+  const newKey = openAIKey + "2";
+  const fresh = fakeFetch({ openai: { status: 200, body: { data: [{ id: "gpt-4o-mini" }] } } });
+  await loadModels({ openAIKey: newKey }, { fetchFn: fresh.fn, storage });
+  oldResponse.resolve(Response.json({ data: [{ id: "gpt-4o" }] }));
+  await aborted;
+
+  const models = await loadModels({ openAIKey: newKey }, { fetchFn: fresh.fn, storage });
+  expect(models[0]!.models.map((m) => m.id)).toEqual(["gpt-4o-mini"]);
+  expect(fresh.calls).toHaveLength(1);
 });

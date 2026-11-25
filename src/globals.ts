@@ -7,7 +7,6 @@ export interface GlobalFuncs {
   focusEditor: () => void;
   getPasswordFromUser: (msg: string) => Promise<string>;
   requestFileWritePermission: (fh: FileSystemFileHandle) => Promise<boolean>;
-  updateAfterNoteStateChange: () => void;
 }
 
 export function getSessionDur(): string {
@@ -34,10 +33,6 @@ export function clearGlobalFuncs(gf: GlobalFuncs) {
 
 export function focusEditor() {
   globalFunctions?.focusEditor();
-}
-
-export function updateAfterNoteStateChange() {
-  globalFunctions?.updateAfterNoteStateChange();
 }
 
 // asks the user for a password; resolves "" if cancelled

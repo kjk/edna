@@ -189,7 +189,6 @@
     };
 
     toggleStarred = (noteInfo: NoteInfo) => {
-      // note: UI is updated via updateAfterNoteStateChange() after metadata is saved
       toggleStarredAndFocus(() => toggleNoteStarred(noteInfo.name), this.input);
     };
 
